@@ -28,7 +28,9 @@ package org.sensorhub.test.module;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.io.IOException;
 import java.util.UUID;
+import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -50,7 +52,7 @@ public class TestModuleConfigDatabaseJson
     @Before
     public void setup()
     {
-        configFolder = new File("junittest/");
+        configFolder = new File("junit-test/");
         configFolder.mkdirs();
         configDb = new ModuleConfigDatabaseJson(configFolder.getAbsolutePath());
     }
@@ -156,8 +158,12 @@ public class TestModuleConfigDatabaseJson
     @After
     public void cleanup()
     {
-        for (File f: configFolder.listFiles())
-            f.delete();
-        configFolder.delete();
+        try
+        {
+            FileUtils.deleteDirectory(configFolder);
+        }
+        catch (IOException e)
+        {
+        }
     }
 }

@@ -26,10 +26,14 @@
 package org.sensorhub.test.osgi;
 
 import static org.junit.Assert.*;
+import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.ServiceLoader;
+import org.apache.commons.io.FileUtils;
+import org.junit.AfterClass;
 import org.junit.Test;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.launch.Framework;
@@ -38,6 +42,8 @@ import org.osgi.framework.launch.FrameworkFactory;
 
 public class TestOsgi
 {
+    private static String CACHE_FOLDER = "osgi-cache";
+    
     
     protected Framework getFramework()
     {
@@ -46,7 +52,7 @@ public class TestOsgi
         
         Map<String,String> osgiConfig = new HashMap<String,String>();
         //osgiConfig.put(AutoProcessor.AUTO_DEPLOY_DIR_PROPERY, "");
-        osgiConfig.put("org.osgi.framework.storage", "sensorhub-cache");
+        osgiConfig.put("org.osgi.framework.storage", CACHE_FOLDER);
         osgiConfig.put("org.osgi.framework.storage.clean", "onFirstInit");
         Framework fw = it.next().newFramework(osgiConfig);
         
@@ -120,5 +126,18 @@ public class TestOsgi
         
         fw.stop();
         fw.waitForStop(0);
+    }
+    
+    
+    @AfterClass
+    public static void cleanup()
+    {
+        try
+        {
+            FileUtils.deleteDirectory(new File(CACHE_FOLDER));
+        }
+        catch (IOException e)
+        {
+        }
     }
 }

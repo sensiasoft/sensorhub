@@ -25,11 +25,15 @@
 
 package org.sensorhub.test.module;
 
+import static org.junit.Assert.assertTrue;
 import java.io.File;
+import java.io.IOException;
+import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.sensorhub.api.module.IModuleProvider;
+import org.sensorhub.api.module.ModuleConfig;
 import org.sensorhub.impl.module.ModuleConfigDatabaseJson;
 import org.sensorhub.impl.module.ModuleRegistry;
 
@@ -44,11 +48,11 @@ public class TestModuleRegistry
     @Before
     public void setup()
     {
-        configFolder = new File("test/");
+        configFolder = new File("junit-test/");
         configFolder.mkdirs();
-        configDb = new ModuleConfigDatabaseJson(configFolder.getAbsolutePath());
-        
-        registry = ModuleRegistry.create(configDb);
+        configDb = new ModuleConfigDatabaseJson(configFolder.getAbsolutePath());        
+        registry = ModuleRegistry.create(configDb, true);
+        registry.loadAllModules();
     }
     
     
@@ -63,19 +67,69 @@ public class TestModuleRegistry
     }
     
     
+    private ModuleConfig createConfModule1()
+    {
+        MyConfig1 conf = new MyConfig1();
+        conf.moduleClass = DummyModule.class.getCanonicalName();
+        conf.enabled = true;
+        conf.name = "Module1";
+        conf.param1 = "text1";
+        conf.param2 = 33;
+        return conf;
+    }
+    
+    
+    private ModuleConfig createConfModule2(String dependencyID)
+    {   
+        MyConfig2 conf = new MyConfig2();
+        conf.moduleClass = DummyModule.class.getCanonicalName();
+        conf.enabled = true;
+        conf.name = "Module2";
+        conf.param1 = "text2";
+        conf.param2 = 0.3256;
+        conf.moduleID = dependencyID;
+        return conf;
+    }   
+    
 
     @Test
-    public void testLoadModule()
+    public void testLoadModule() throws Exception
     {
+        ModuleConfig config = createConfModule1();
+        registry.loadModule(config);
+        System.out.println(registry.getLoadedModules());
+        assertTrue(registry.getLoadedModules().get(0).getName().equals(config.name));
+    }
+    
+    
+    @Test
+    public void testLoadModuleWithDependency() throws Exception
+    {
+        ModuleConfig conf1 = createConfModule1();
+        registry.loadModule(conf1);
         
+        // save and reset registry
+        registry.saveModulesConfiguration();
+        setup();
+        
+        ModuleConfig conf2 = createConfModule2(conf1.id);
+        registry.loadModule(conf2);
+        
+        System.out.println(registry.getLoadedModules());
+        assertTrue(registry.getLoadedModules().get(0).getName().equals(conf1.name));
+        assertTrue(registry.getLoadedModules().get(1).getName().equals(conf2.name));
     }
     
     
     @After
     public void cleanup()
     {
-        for (File f: configFolder.listFiles())
-            f.delete();
-        configFolder.delete();
+        try
+        {
+            FileUtils.deleteDirectory(configFolder);
+        }
+        catch (IOException e)
+        {
+        }
     }
 }
