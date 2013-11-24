@@ -48,6 +48,14 @@ public interface IModuleConfigRepository
     
     
     /**
+     * Checks if A module with the given ID exists
+     * @param moduleID
+     * @return true if the given ID exists in the database
+     */
+    public boolean contains(String moduleID);
+    
+    
+    /**
      * Retrieves the configuration of the module with the given id
      * @param moduleID
      * @return

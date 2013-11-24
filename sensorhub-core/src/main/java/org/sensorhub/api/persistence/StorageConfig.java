@@ -26,7 +26,6 @@
 package org.sensorhub.api.persistence;
 
 import org.sensorhub.api.module.ModuleConfig;
-import org.vast.cdm.common.DataComponent;
 
 
 /**
@@ -53,10 +52,5 @@ public class StorageConfig extends ModuleConfig
 	 * Memory cache size in kilobytes
 	 */
 	public int memoryCacheSize;
-	
-	
-	/**
-	 * Structure of record data persisted in this storage
-	 */
-	public DataComponent dataDescription;
+
 }

@@ -27,8 +27,10 @@ package org.sensorhub.impl;
 
 import org.sensorhub.api.config.IGlobalConfig;
 import org.sensorhub.api.module.IModuleConfigRepository;
+import org.sensorhub.api.sensor.ISensorManager;
 import org.sensorhub.impl.module.ModuleConfigDatabaseJson;
 import org.sensorhub.impl.module.ModuleRegistry;
+import org.sensorhub.impl.sensor.SensorManagerImpl;
 
 
 /**
@@ -47,11 +49,18 @@ public class SensorHub
     private IGlobalConfig config;
     
     
-    public static SensorHub getInstance(IGlobalConfig config)
+    public static SensorHub createInstance(IGlobalConfig config)
     {
         if (instance == null)
             instance = new SensorHub(config);
         
+        instance.start();        
+        return instance;
+    }
+    
+    
+    public static SensorHub getInstance()
+    {
         return instance;
     }
     
@@ -75,6 +84,18 @@ public class SensorHub
     public void stop()
     {
         
+    }
+    
+    
+    public ModuleRegistry getModuleRegistry()
+    {
+        return ModuleRegistry.getInstance();
+    }
+    
+    
+    public ISensorManager getSensorManager()
+    {
+        return new SensorManagerImpl();
     }
 
 }

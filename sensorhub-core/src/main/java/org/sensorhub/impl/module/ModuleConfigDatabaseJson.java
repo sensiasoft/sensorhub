@@ -84,7 +84,15 @@ public class ModuleConfigDatabaseJson implements IModuleConfigRepository
         
         return moduleConfigs;
     }
-
+    
+    
+    @Override
+    public boolean contains(String moduleID)
+    {
+        File configFile = getConfigFile(moduleID);
+        return configFile.exists();
+    }
+    
 
     @Override
     public synchronized ModuleConfig get(String moduleID)

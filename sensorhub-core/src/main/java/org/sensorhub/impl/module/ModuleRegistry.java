@@ -25,6 +25,7 @@
 
 package org.sensorhub.impl.module;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -53,6 +54,9 @@ import org.sensorhub.impl.common.BasicEventHandler;
  * as well as dynamically loading/unloading modules on demand.
  * It also keeps lists of all loaded and available modules.
  * </p>
+ * 
+ * TODO implement global event manager for all modules ? 
+ * TODO return weak references to modules ?
  *
  * <p>Copyright (c) 2013</p>
  * @author Alexandre Robin
@@ -64,17 +68,22 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
     private static ModuleRegistry instance;
     
     IModuleConfigRepository configRepos;
-    List<String> availableModules;
     Map<String, IModule<?>> loadedModules;
     IEventHandler eventHandler;
     
     
-    public static ModuleRegistry create(IModuleConfigRepository configRepos)
+    public static ModuleRegistry create(IModuleConfigRepository configRepos, boolean discardOld)
     {
-        if (instance == null)
+        if (discardOld || instance == null)
             instance = new ModuleRegistry(configRepos);
         
         return instance;
+    }
+    
+    
+    public static ModuleRegistry create(IModuleConfigRepository configRepos)
+    {
+        return ModuleRegistry.create(configRepos, false);
     }
     
     
@@ -90,9 +99,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
     private ModuleRegistry(IModuleConfigRepository configRepos)
     {
         this.configRepos = configRepos;
-        this.availableModules = new ArrayList<String>();
-        this.loadedModules = new LinkedHashMap<String, IModule<?>>();
-        
+        this.loadedModules = new LinkedHashMap<String, IModule<?>>();        
         this.eventHandler = new BasicEventHandler();
     }
     
@@ -108,7 +115,6 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
         {
             try
             {
-                availableModules.add(config.id);
                 if (config.enabled)
                     loadModule(config);
             }
@@ -133,7 +139,11 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
         
         try
         {
-            // generate a new ID if non is provided
+            // first load needed modules if necessary
+            for (String moduleID: getReferencedModules(config))
+                loadModule(configRepos.get(moduleID));
+            
+            // generate a new ID if non was provided
             if (config.id == null)
                 config.id = UUID.randomUUID().toString();
             
@@ -157,6 +167,34 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
     }
     
     
+    /*
+     * Infers module dependencies by scanning all String properties
+     * for a UUID existing in the module database
+     */
+    private String[] getReferencedModules(ModuleConfig config)
+    {
+        List<String> refdModuleIDs = new ArrayList<String>();
+        
+        try
+        {   
+            for (Field f: config.getClass().getFields())
+            {
+                if (f.getDeclaringClass().equals(String.class))
+                {
+                    String text = (String)f.get(config);
+                    if (configRepos.contains(text))
+                        refdModuleIDs.add(text);
+                }
+            }
+        }
+        catch (Exception e)
+        {            
+        }
+        
+        return refdModuleIDs.toArray(new String[0]);
+    }
+    
+    
     /**
      * Enables the module with the given id
      * @param moduleID Local ID of module to enable
@@ -168,15 +206,8 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
         IModule<?> module;
         
         ModuleConfig config = configRepos.get(moduleID);
-        if (!config.enabled)
-        {
-            config.enabled = true;
-            module = loadModule(config);
-        }
-        else
-        {
-            module = loadedModules.get(moduleID);
-        }
+        config.enabled = true;
+        module = loadModule(config);
         
         eventHandler.publishEvent(new ModuleEvent(module, ModuleEvent.Type.ENABLED));
         return module;
@@ -191,8 +222,13 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
     {
         checkID(moduleID);
         
-        IModule<?> module = loadedModules.get(moduleID);
-        module.getConfiguration().enabled = false;
+        ModuleConfig config = configRepos.get(moduleID);
+        config.enabled = false;
+        
+        // also unload module if it was loaded
+        IModule<?> module = loadedModules.remove(moduleID);
+        if (module != null)
+            module.cleanup();
         
         eventHandler.publishEvent(new ModuleEvent(module, ModuleEvent.Type.DISABLED));
     }
@@ -207,7 +243,8 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
         checkID(moduleID);
         
         IModule<?> module = loadedModules.remove(moduleID);
-        module.cleanup();
+        if (module != null)
+            module.cleanup();
         
         configRepos.remove(moduleID);
         
@@ -282,7 +319,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
      */
     private void checkID(String moduleID)
     {
-        if (!availableModules.contains(moduleID))
+        if (!configRepos.contains(moduleID))
             throw new RuntimeException("Module with ID " + moduleID + " is not available");
     }
 

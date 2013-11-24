@@ -44,16 +44,16 @@ public class ModuleConfig implements Serializable, Cloneable
     
     
     /**
-     * Name of module that this configuration is for
-     */
-    public String name;
-    
-    
-    /**
      * Unique ID of the module. It must be unique within the SensorHub instance
      * and remain the same during the whole life-time of the module
      */
     public String id;
+    
+    
+    /**
+     * Name of module that this configuration is for
+     */
+    public String name;
     
     
     /**

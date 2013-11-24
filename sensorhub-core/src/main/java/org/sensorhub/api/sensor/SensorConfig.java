@@ -28,7 +28,6 @@ package org.sensorhub.api.sensor;
 import java.util.HashMap;
 import java.util.Map;
 import org.sensorhub.api.module.ModuleConfig;
-import org.vast.sensorML.system.SMLSystem;
 
 
 /**
@@ -46,9 +45,9 @@ public class SensorConfig extends ModuleConfig
 
 
     /**
-     * SensorML description of the sensor
+     * URL of SensorML description of the sensor
      */
-    public SMLSystem sensorml;
+    public String sensorML;
     
     
     /**
@@ -66,12 +65,12 @@ public class SensorConfig extends ModuleConfig
     /**
      * Allows hiding some of the sensor interfaces
      */
-    public Map<String, Boolean> ioMask;
+    public String[] hiddenIO;
     
         
     /**
      * Driver configuration groups (potentially one for each layer of a protocol stack)
-     * Can be included in SensorML in v2.0
+     * Can be included in SensorML v2.0
      */
     public Map<String, SensorDriverConfig> driverConfigs = new HashMap<String, SensorDriverConfig>();
 }

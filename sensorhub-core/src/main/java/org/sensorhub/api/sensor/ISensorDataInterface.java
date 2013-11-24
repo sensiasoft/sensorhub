@@ -47,7 +47,15 @@ import org.vast.cdm.common.DataComponent;
  */
 public interface ISensorDataInterface extends IEventProducer
 {
-	/**
+	
+    /**
+     * Checks if this interface is enabled
+     * @return true if interface is enabled, false otherwise
+     */
+    public boolean isEnabled();
+    
+    
+    /**
      * Checks data storage capability
      * @return true if sensor or sensor driver supports observation storage natively, false otherwise
      */
@@ -76,10 +84,21 @@ public interface ISensorDataInterface extends IEventProducer
 	public DataComponent getRecordDescription() throws SensorException;
 	
 	
+//	/**
+//	 * Requests acquisition of a new measurement
+//	 * Measurement will be available via getLatestRecord until cleared or
+//	 * replaced by another measurement. It will also be added to storage if supported.
+//	 * Actual reception of the measurement by the driver triggers a NEW_DATA event.
+//	 * @return
+//	 * @throws SensorException
+//	 */
+//	public DataBlock requestNewRecord() throws SensorException;
+	
+	
 	/**
 	 * Gets the latest record from this data channel. Data is also removed from input buffer.
 	 * Implementations must at least retain the last record until it is retrieved or cleared explicitely
-	 * @return the record as a DataBlock object
+	 * @return the record as a DataBlock object or null if no data is available
      * @throws SensorException
 	 */
 	public DataBlock getLatestRecord() throws SensorException;

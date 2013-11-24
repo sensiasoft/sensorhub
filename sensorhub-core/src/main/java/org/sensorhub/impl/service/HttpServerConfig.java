@@ -53,5 +53,29 @@ public class HttpServerConfig extends ModuleConfig
      * This will be the prefix to all servlet URLs
      */
     public String rootURL = "/sensorhub";
+
+
+    public int getHttpPort()
+    {
+        return httpPort;
+    }
+
+
+    public void setHttpPort(int httpPort)
+    {
+        this.httpPort = httpPort;
+    }
+
+
+    public String getRootURL()
+    {
+        return rootURL;
+    }
+
+
+    public void setRootURL(String rootURL)
+    {
+        this.rootURL = rootURL;
+    }
     
 }

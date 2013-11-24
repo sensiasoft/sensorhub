@@ -26,6 +26,7 @@
 package org.sensorhub.impl.service;
 
 import java.io.IOException;
+import java.util.Map;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -95,6 +96,12 @@ public class HttpServer implements IModule<HttpServerConfig>
     }
     
     
+    public boolean isEnabled()
+    {
+        return config.enabled;
+    }
+    
+    
     @Override
     public void init(HttpServerConfig config) throws SensorHubException
     {
@@ -131,7 +138,16 @@ public class HttpServer implements IModule<HttpServerConfig>
     
     public void deployServlet(String path, HttpServlet servlet)
     {
-        handler.addServlet(new ServletHolder(servlet), path);
+        deployServlet(path, servlet, null);
+    }
+    
+    
+    public void deployServlet(String path, HttpServlet servlet, Map<String, String> initParams)
+    {
+        ServletHolder servletHolder = new ServletHolder(servlet);
+        if (initParams != null)
+            servletHolder.setInitParameters(initParams);
+        handler.addServlet(servletHolder, path);
     }
     
     

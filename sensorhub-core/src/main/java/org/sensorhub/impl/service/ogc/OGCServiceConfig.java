@@ -39,7 +39,7 @@ import org.vast.util.ResponsibleParty;
  * @since Sep 6, 2013
  */
 @SuppressWarnings("serial")
-public abstract class OgcServiceConfig extends ServiceConfig
+public abstract class OGCServiceConfig extends ServiceConfig
 {
     public class CapabilitiesInfo
     {
@@ -48,9 +48,7 @@ public abstract class OgcServiceConfig extends ServiceConfig
         public String[] keywords;
         public String fees;
         public String accessConstraints;
-        public String providerName;
-        public String providerURL;
-        public ResponsibleParty contact = new ResponsibleParty(); 
+        public ResponsibleParty serviceProvider = new ResponsibleParty(); 
     }
 
     

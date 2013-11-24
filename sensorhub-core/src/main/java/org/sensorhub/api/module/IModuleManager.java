@@ -25,6 +25,7 @@
 
 package org.sensorhub.api.module;
 
+import java.lang.ref.WeakReference;
 import java.util.List;
 
 

@@ -53,20 +53,19 @@ public class ModuleEvent extends Event
     
     
     public Type type;
-    public IModule<?> moduleInstance;
     public ModuleConfig newConfig;
     
     
     public ModuleEvent(IModule<?> moduleInstance, Type type)
     {
-        this.moduleInstance = moduleInstance;
+        this.source = moduleInstance;
         this.type = type;
     }
     
     
     public ModuleEvent(IModule<?> moduleInstance, ModuleConfig newConfig)
     {
-        this.moduleInstance = moduleInstance;
+        this.source = moduleInstance;
         this.type = Type.CONFIG_CHANGE;
         this.newConfig = newConfig;
     } 

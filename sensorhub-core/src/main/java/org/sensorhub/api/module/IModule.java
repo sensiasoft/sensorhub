@@ -39,6 +39,14 @@ import org.sensorhub.api.common.SensorHubException;
  */
 public interface IModule<ConfigType extends ModuleConfig>
 {    
+    
+    /**
+     * Checks if module is enabled
+     * @return true if module is enabled, false otherwise
+     */
+    public boolean isEnabled();
+    
+    
     /**
      * Initializes the module with the specified configuration
      * @param config
