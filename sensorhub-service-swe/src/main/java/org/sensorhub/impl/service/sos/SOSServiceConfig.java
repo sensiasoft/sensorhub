@@ -25,7 +25,7 @@
 
 package org.sensorhub.impl.service.sos;
 
-import org.sensorhub.impl.service.ogc.OgcServiceConfig;
+import org.sensorhub.impl.service.ogc.OGCServiceConfig;
 
 
 /**
@@ -37,7 +37,7 @@ import org.sensorhub.impl.service.ogc.OgcServiceConfig;
  * @author Alexandre Robin <alex.robin@sensiasoftware.com>
  * @since Sep 7, 2013
  */
-public class SOSServiceConfig extends OgcServiceConfig
+public class SOSServiceConfig extends OGCServiceConfig
 {
     private static final long serialVersionUID = -957079629610700869L;
 

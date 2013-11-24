@@ -45,7 +45,7 @@ public class SensorDataProviderConfig extends SOSProviderConfig
     
     
     /**
-     * Names of sensor output to make available through the SOS
+     * Names of sensor outputs to make available through the SOS
      */
     public String[] selectedOutputs;
     
@@ -55,5 +55,12 @@ public class SensorDataProviderConfig extends SOSProviderConfig
      * interface of the service
      */
     public boolean activateNotifications;
+
+
+    @Override
+    protected IDataProviderFactory getFactory()
+    {
+        return new SensorDataProviderFactory(this);
+    }
 
 }

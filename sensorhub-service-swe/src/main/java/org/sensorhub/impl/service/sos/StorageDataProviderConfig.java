@@ -26,39 +26,34 @@
 package org.sensorhub.impl.service.sos;
 
 
-public abstract class SOSProviderConfig
+/**
+ * <p>
+ * Configuration class for SOS data providers using the persistence API
+ * </p>
+ *
+ * <p>Copyright (c) 2013</p>
+ * @author Alexandre Robin <alex.robin@sensiasoftware.com>
+ * @since Sep 14, 2013
+ */
+public class StorageDataProviderConfig extends SOSProviderConfig
 {
+    
+    /**
+     * Local ID of storage to use as data source
+     */
+    public String storageID;
+    
+    
+    /**
+     * IDs of producers whose data will be exposed through the SOS
+     * If this is null, all producers offered by storage are exposed
+     */
+    public String[] producerIDs;
+    
 
-    /**
-     * Flag set if provider is enabled, unset if disabled
-     */
-    public boolean enabled;
-    
-    
-    /**
-     * Provider/Offering URI
-     * If null, it will be auto-generated from server URL and source metadata
-     */
-    public String uri;
-    
-    
-    /**
-     * Provider name
-     * If null, it will be auto-generated from name of data source
-     */
-    public String name;
-    
-    
-    /**
-     * Provider description
-     * It null, it will be auto-generated from source description
-     */
-    public String description;
-    
-    
-    /**
-     * Retrieves the factory associated with this type of data provider
-     * @return
-     */
-    protected abstract IDataProviderFactory getFactory();
+    @Override
+    protected IDataProviderFactory getFactory()
+    {
+        return new StorageDataProviderFactory(this);
+    }
 }

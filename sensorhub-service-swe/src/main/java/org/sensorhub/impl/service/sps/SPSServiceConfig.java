@@ -25,7 +25,7 @@
 
 package org.sensorhub.impl.service.sps;
 
-import org.sensorhub.impl.service.ogc.OgcServiceConfig;
+import org.sensorhub.impl.service.ogc.OGCServiceConfig;
 
 
 /**
@@ -37,7 +37,7 @@ import org.sensorhub.impl.service.ogc.OgcServiceConfig;
  * @author Alexandre Robin <alex.robin@sensiasoftware.com>
  * @since Sep 6, 2013
  */
-public class SPSServiceConfig extends OgcServiceConfig
+public class SPSServiceConfig extends OGCServiceConfig
 {
     private static final long serialVersionUID = 7925901527120268160L;
     

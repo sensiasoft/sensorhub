@@ -25,17 +25,39 @@
 
 package org.sensorhub.impl.service.sos;
 
-import java.io.OutputStream;
-import java.util.LinkedHashMap;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.sensorhub.api.common.Event;
+import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.module.IModuleStateLoader;
 import org.sensorhub.api.module.IModuleStateSaver;
+import org.sensorhub.api.module.ModuleEvent;
 import org.sensorhub.api.service.IServiceInterface;
-import org.vast.ows.server.SOSDataFilter;
-import org.vast.ows.sos.ISOSDataProvider;
-import org.vast.ows.sos.ISOSDataProviderFactory;
+import org.sensorhub.api.service.ServiceException;
+import org.sensorhub.impl.module.ModuleRegistry;
+import org.sensorhub.impl.service.HttpServer;
+import org.sensorhub.impl.service.ogc.OGCServiceConfig.CapabilitiesInfo;
+import org.vast.ows.GetCapabilitiesRequest;
+import org.vast.ows.OWSExceptionReport;
+import org.vast.ows.OWSRequest;
+import org.vast.ows.OWSUtils;
+import org.vast.ows.sos.GetObservationRequest;
+import org.vast.ows.sos.GetResultRequest;
+import org.vast.ows.sos.GetResultTemplateRequest;
+import org.vast.ows.sos.SOSException;
+import org.vast.ows.sos.SOSOfferingCapabilities;
+import org.vast.ows.sos.SOSServiceCapabilities;
 import org.vast.ows.sos.SOSServlet;
+import org.vast.ows.swe.DescribeSensorRequest;
+import org.vast.sensorML.SMLUtils;
+import org.vast.sensorML.system.SMLSystem;
+import org.vast.util.TimeExtent;
+import org.vast.xml.DOMHelper;
+import org.w3c.dom.Element;
 
 
 /**
@@ -50,52 +72,132 @@ import org.vast.ows.sos.SOSServlet;
  * @since Sep 7, 2013
  */
 @SuppressWarnings("serial")
-public class SOSService extends SOSServlet implements IServiceInterface<SOSServiceConfig>, ISOSDataProviderFactory
+public class SOSService extends SOSServlet implements IServiceInterface<SOSServiceConfig>, IEventListener
 {
+    private static final Log log = LogFactory.getLog(SOSService.class);    
+    
     SOSServiceConfig config;
-    Map<String, SOSProviderConfig> dataProviderConfigs;
+    SOSServiceCapabilities capabilitiesCache;
+    Map<String, IDataProviderFactory> procedureToProviderMap;
+    Map<String, SOSOfferingCapabilities> offeringMap;
     
 
+    @Override
+    public boolean isEnabled()
+    {
+        return config.enabled;
+    }
+    
+    
     @Override
     public void init(SOSServiceConfig config) throws SensorHubException
     {        
-        dataProviderConfigs = new LinkedHashMap<String, SOSProviderConfig>();
+        this.config = config;
+        this.procedureToProviderMap = new HashMap<String, IDataProviderFactory>();
+        this.offeringMap = new HashMap<String, SOSOfferingCapabilities>();
         
+        // pre-generate capabilities
+        this.capabilitiesCache = generateCapabilities();
+        
+        // deploy ourself to HTTP server
+        HttpServer.getInstance().deployServlet(config.endPoint, this);
+        
+        // subscribe to server lifecycle events
+        ModuleRegistry.getInstance().registerListener(this);
+    }
+    
+    
+    /**
+     * Generates the SOSCapabilities object with info from data source
+     * @return
+     * @throws ServiceException
+     */
+    protected SOSServiceCapabilities generateCapabilities() throws ServiceException
+    {
+        procedureToProviderMap.clear();
+        
+        // get main capabilities info from config
+        CapabilitiesInfo serviceInfo = config.ogcCapabilitiesInfo;
+        SOSServiceCapabilities capabilities = new SOSServiceCapabilities();
+        capabilities.getIdentification().setTitle(serviceInfo.title);
+        capabilities.getIdentification().setDescription(serviceInfo.description);
+        capabilities.setFees(serviceInfo.fees);
+        capabilities.setAccessConstraints(serviceInfo.accessConstraints);
+        capabilities.setServiceProvider(serviceInfo.serviceProvider);
+        
+        // TODO generate profile list
+        capabilities.getProfiles().add(SOSServiceCapabilities.PROFILE_RESULT_RETRIEVAL);
+        capabilities.getProfiles().add(SOSServiceCapabilities.PROFILE_RESULT_INSERTION);
+        capabilities.getProfiles().add(SOSServiceCapabilities.PROFILE_OBS_INSERTION);        
+        
+        // process each provider config
         for (SOSProviderConfig providerConf: config.dataProviders)
         {
-            // TODO deal with null URI ??            
-            dataProviderConfigs.put(providerConf.uri, providerConf);
+            if (!providerConf.enabled)
+                continue;
             
-            // register to source events
-            if (providerConf instanceof SensorDataProviderConfig)
+            try
             {
-                //((SensorDataProviderConfig)providerConf).sensorID;
+                // instantiate provider factories and map them to offering URIs
+                IDataProviderFactory factory = providerConf.getFactory();
+                dataProviders.put(providerConf.uri, factory);
+     
+                // add offering metadata to capabilities
+                SOSOfferingCapabilities offCaps = factory.generateCapabilities();
+                capabilities.getLayers().add(offCaps);
+                offeringMap.put(offCaps.getIdentifier(), offCaps);
                 
+                // build procedure map
+                procedureToProviderMap.put(offCaps.getProcedures().get(0), factory);
+                
+                if (log.isDebugEnabled())
+                    log.debug("Offering generated for procedure " + offCaps.getProcedures().get(0) + ":\n" + offCaps.toString());
+            }
+            catch (Exception e)
+            {
+                log.error("Error while generating capabilities for provider " + providerConf.uri, e);
             }
         }
-    }
-
-
-    @Override
-    public void updateConfig(SOSServiceConfig config) throws SensorHubException
-    {
-        // TODO Auto-generated method stub
-
+        
+        capabilitiesCache = capabilities;
+        return capabilities;
     }
     
     
-    @Override
-    public ISOSDataProvider getNewProvider(SOSDataFilter filter) throws Exception
+    /**
+     * Retrieves SensorML object for the given procedure unique ID
+     * @param uri
+     * @return
+     */
+    protected SMLSystem generateSensorML(String uri) throws ServiceException
     {
-        // TODO Auto-generated method stub
-        return null;
+        try
+        {
+            IDataProviderFactory factory = procedureToProviderMap.get(uri);
+            return (SMLSystem)factory.generateSensorMLDescription(null);
+        }
+        catch (Exception e)
+        {
+            throw new ServiceException("Error while retrieving SensorML description for sensor " + uri, e);
+        }
     }
     
     
     @Override
-    public SOSServiceConfig getConfiguration()
+    public synchronized void updateConfig(SOSServiceConfig config) throws SensorHubException
     {
-        return (SOSServiceConfig)config.clone();
+        // cleanup all previously instantiated providers
+        
+        
+        // rebuild everything
+
+    }
+    
+    
+    @Override
+    public synchronized SOSServiceConfig getConfiguration()
+    {
+        return config;
     }
     
     
@@ -130,9 +232,26 @@ public class SOSService extends SOSServlet implements IServiceInterface<SOSServi
 
 
     @Override
+    public void handleEvent(Event e)
+    {
+        // we need to deploy ourself when HTTP server is restarted
+        if (e instanceof ModuleEvent && e.getSource() == HttpServer.getInstance())
+        {
+            if (((ModuleEvent) e).type == ModuleEvent.Type.ENABLED)
+                config.enabled = true;
+        }  
+        
+    }
+    
+    
+    @Override
     public void cleanup() throws SensorHubException
     {
-        // TODO Auto-generated method stub
+        // clean all providers
+        for (IDataProviderFactory provider: procedureToProviderMap.values())
+            provider.cleanup();
+        
+        // undeploy ourself
         
     }
     
@@ -141,9 +260,114 @@ public class SOSService extends SOSServlet implements IServiceInterface<SOSServi
     /////////////////////////////////////////
     
     @Override
-    protected void sendCapabilities(String section, OutputStream resp)
+    protected void handleRequest(GetCapabilitiesRequest request) throws Exception
     {
-        // TODO generate capabilities from config + sensor info
+        DOMHelper dom = new DOMHelper();
+        OWSUtils utils = new OWSUtils();
+        Element respElt = utils.buildXMLResponse(dom, generateCapabilities(), request.getVersion());
+        dom.serialize(respElt, request.getResponseStream(), true);
+    }
+        
+    
+    @Override
+    protected synchronized void handleRequest(DescribeSensorRequest request) throws Exception
+    {
+        String sensorID = request.getProcedureID();
+        if (sensorID == null || !procedureToProviderMap.containsKey(sensorID))
+            throw new SOSException(SOSException.invalid_param_code, "procedure", sensorID, null);
+        
+        DOMHelper dom = new DOMHelper();
+        SMLUtils smlUtils = new SMLUtils();
+        Element respElt = smlUtils.writeSystem(dom, generateSensorML(sensorID));
+        dom.serialize(respElt, request.getResponseStream(), null);
+    }
+
+
+    // overriden to add synchronization
+    @Override
+    protected synchronized void handleRequest(GetResultTemplateRequest request) throws Exception
+    {
+        super.handleRequest(request);
+    }
+
+
+    // overriden to add synchronization
+    @Override
+    protected synchronized void handleRequest(GetResultRequest request) throws Exception
+    {
+        super.handleRequest(request);
+    }
+
+
+    // overriden to add synchronization
+    @Override
+    protected synchronized void handleRequest(GetObservationRequest request) throws Exception
+    {
+        super.handleRequest(request);
+    }
+
+
+    @Override
+    protected void checkQueryObservables(String offeringID, List<String> observables, OWSExceptionReport report) throws SOSException
+    {
+        SOSOfferingCapabilities offering = checkAndGetOffering(offeringID);
+        for (String obsProp: observables)
+        {
+            if (!offering.getObservableProperties().contains(obsProp))
+                report.add(new SOSException(SOSException.invalid_param_code, "observedProperty", obsProp, "Observed property " + obsProp + " is not available for offering " + offeringID));
+        }
+    }
+
+
+    @Override
+    protected void checkQueryProcedures(String offeringID, List<String> procedures, OWSExceptionReport report) throws SOSException
+    {
+        SOSOfferingCapabilities offering = checkAndGetOffering(offeringID);
+        for (String procID: procedures)
+        {
+            if (!offering.getProcedures().contains(procID))
+                report.add(new SOSException(SOSException.invalid_param_code, "procedure", procID, "Procedure " + procID + " is not available for offering " + offeringID));
+        }
+    }
+
+
+    @Override
+    protected void checkQueryFormat(String offeringID, String format, OWSExceptionReport report) throws SOSException
+    {
+        SOSOfferingCapabilities offering = checkAndGetOffering(offeringID);
+        if (!offering.getResponseFormats().contains(format))
+            report.add(new SOSException(SOSException.invalid_param_code, "format", format, "Format " + format + " is not available for offering " + offeringID));
+    }
+
+
+    @Override
+    protected void checkQueryTime(String offeringID, TimeExtent requestTime, OWSExceptionReport report) throws SOSException
+    {
+        SOSOfferingCapabilities offering = checkAndGetOffering(offeringID);
+        
+        boolean ok = false;
+        for (TimeExtent timeRange: offering.getPhenomenonTimes())
+        {
+            if (timeRange.contains(requestTime))
+            {
+                ok = true;
+                break;
+            }            
+        }
+        
+        if (!ok)
+            report.add(new SOSException(SOSException.invalid_param_code, "phenomenonTime", requestTime.getIsoString(0), null));
+    }
+    
+    
+    protected SOSOfferingCapabilities checkAndGetOffering(String offeringID) throws SOSException
+    {
+        SOSOfferingCapabilities offCaps = offeringMap.get(offeringID);
+        
+        if (offCaps == null)
+            throw new SOSException(SOSException.invalid_param_code, "offering", offeringID, null);
+        
+        return offCaps;
     }
 
 }

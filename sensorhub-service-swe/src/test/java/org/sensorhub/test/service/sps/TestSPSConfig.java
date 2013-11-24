@@ -54,7 +54,7 @@ public class TestSPSConfig
         config.ogcCapabilitiesInfo.title = "SensorHub SPS Service";
         config.ogcCapabilitiesInfo.description = "An SPS service deployed on SensorHub that allows to control sensors";
         config.ogcCapabilitiesInfo.keywords = new String[] {"OGC", "sensors", "control"};
-        config.ogcCapabilitiesInfo.contact.setCity("Toulouse");
+        config.ogcCapabilitiesInfo.serviceProvider.setCity("Toulouse");
         db.add(config);
         
         // display stored file

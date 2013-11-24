@@ -25,17 +25,22 @@
 
 package org.sensorhub.impl.service.sos;
 
+import java.util.Iterator;
+import org.sensorhub.api.persistence.IBasicStorage;
+import org.sensorhub.api.persistence.IDataStorage;
+import org.sensorhub.api.persistence.IObsStorage;
 import org.vast.cdm.common.DataBlock;
 import org.vast.cdm.common.DataComponent;
 import org.vast.cdm.common.DataEncoding;
 import org.vast.ogc.om.IObservation;
+import org.vast.ows.server.SOSDataFilter;
 import org.vast.ows.sos.ISOSDataProvider;
 
 
 /**
  * <p>
- * Implementation of SOS data provider connecting to a sensor via 
- * SensorHub's sensor API (ISensorDataInterface)
+ * Implementation of SOS data provider connecting to a storage via 
+ * SensorHub's persistence API (IDataStorage and derived classes)
  * </p>
  *
  * <p>Copyright (c) 2013</p>
@@ -44,10 +49,16 @@ import org.vast.ows.sos.ISOSDataProvider;
  */
 public class StorageDataProvider implements ISOSDataProvider
 {
-
-    public StorageDataProvider()
+    IDataStorage<?,?,?> db;
+    DataComponent srcDataDef;
+    SOSDataFilter filter;
+    Iterator<DataBlock> blkIterator;
+    
+    
+    public StorageDataProvider(StorageDataProviderConfig config, SOSDataFilter filter)
     {
-        
+        this.srcDataDef = db.getDataDescription();
+        this.filter = filter;
     }
     
     
@@ -62,16 +73,15 @@ public class StorageDataProvider implements ISOSDataProvider
     @Override
     public DataBlock getNextResultRecord() throws Exception
     {
-        // TODO Auto-generated method stub
-        return null;
+        DataBlock srcDatablk = blkIterator.next();
+        return selectObservables(this.srcDataDef, srcDatablk, this.filter);
     }
     
 
     @Override
     public DataComponent getResultStructure() throws Exception
     {
-        // TODO Auto-generated method stub
-        return null;
+        return selectObservables(this.srcDataDef, this.filter);
     }
     
 
@@ -79,6 +89,22 @@ public class StorageDataProvider implements ISOSDataProvider
     public DataEncoding getDefaultResultEncoding() throws Exception
     {
         // TODO Auto-generated method stub
+        return null;
+    }
+    
+    
+    private DataComponent selectObservables(DataComponent srcDataDef, SOSDataFilter filter)
+    {
+        
+        
+        return null;
+    }
+    
+    
+    private DataBlock selectObservables(DataComponent srcDataDef, DataBlock srcDatablk, SOSDataFilter filter)
+    {
+        
+        
         return null;
     }
 

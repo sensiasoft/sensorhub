@@ -55,6 +55,13 @@ public class SPSService implements IServiceInterface<SPSServiceConfig>
     
     
     @Override
+    public boolean isEnabled()
+    {
+        return config.enabled;
+    }
+    
+    
+    @Override
     public void init(SPSServiceConfig config) throws SensorHubException
     {
         // TODO Auto-generated method stub

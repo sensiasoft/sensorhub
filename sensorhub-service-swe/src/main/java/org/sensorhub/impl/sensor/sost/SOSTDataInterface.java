@@ -36,13 +36,12 @@ public class SOSTDataInterface implements ISensorDataInterface
 {
 
     @Override
-    public void unregisterListener(IEventListener listener)
+    public boolean isEnabled()
     {
-        // TODO Auto-generated method stub
-
+        return true;
     }
-
-
+    
+    
     @Override
     public boolean isStorageSupported()
     {
@@ -130,4 +129,12 @@ public class SOSTDataInterface implements ISensorDataInterface
 
     }
 
+    
+    @Override
+    public void unregisterListener(IEventListener listener)
+    {
+        // TODO Auto-generated method stub
+
+    }
+    
 }
