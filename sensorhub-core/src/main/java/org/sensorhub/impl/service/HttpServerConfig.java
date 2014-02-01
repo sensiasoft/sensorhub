@@ -55,6 +55,13 @@ public class HttpServerConfig extends ModuleConfig
     public String rootURL = "/sensorhub";
 
 
+    public HttpServerConfig()
+    {
+        this.name = "HTTP Server";
+        this.id = "???";
+    }
+    
+    
     public int getHttpPort()
     {
         return httpPort;
