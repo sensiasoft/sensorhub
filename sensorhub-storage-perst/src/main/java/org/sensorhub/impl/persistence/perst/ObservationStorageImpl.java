@@ -56,6 +56,13 @@ public class ObservationStorageImpl implements IObsStorage<ObsStorageConfig>
 {
 
     @Override
+    public boolean isEnabled()
+    {
+        return false;
+    }
+    
+    
+    @Override
     public void open() throws StorageException
     {
         // TODO Auto-generated method stub
@@ -120,7 +127,7 @@ public class ObservationStorageImpl implements IObsStorage<ObsStorageConfig>
 
 
     @Override
-    public Iterator<IDataRecord<ObsKey>> getDataBlockIterator(IObsFilter filter)
+    public Iterator<DataBlock> getDataBlockIterator(IObsFilter filter)
     {
         // TODO Auto-generated method stub
         return null;
@@ -216,7 +223,7 @@ public class ObservationStorageImpl implements IObsStorage<ObsStorageConfig>
 
 
     @Override
-    public void removeListener(IEventListener listener)
+    public void unregisterListener(IEventListener listener)
     {
         // TODO Auto-generated method stub
 

@@ -27,6 +27,7 @@ package org.sensorhub.impl.persistence.perst;
 
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import org.garret.perst.Index;
@@ -61,7 +62,7 @@ import org.vast.cdm.common.DataComponent;
  */
 public class BasicStorageImpl implements IBasicStorage<BasicStorageConfig>
 {
-    private BasicStorageConfig config;
+    protected BasicStorageConfig config;
     protected IEventHandler eventHandler;
     protected Storage db;
     protected DBRoot dbRoot;
@@ -73,6 +74,7 @@ public class BasicStorageImpl implements IBasicStorage<BasicStorageConfig>
         Index<DBRecord> indexById;
         Index<DBRecord> indexByProducerThenTime;
         Index<DBRecord> indexByTimeThenProducer;
+        DataComponent recordDescription;
         long recordCount;
     }
     
@@ -108,6 +110,13 @@ public class BasicStorageImpl implements IBasicStorage<BasicStorageConfig>
     public BasicStorageImpl()
     {
         this.eventHandler = new BasicEventHandler();
+    }
+    
+    
+    @Override
+    public boolean isEnabled()
+    {
+        return config.enabled;
     }
     
     
@@ -165,7 +174,7 @@ public class BasicStorageImpl implements IBasicStorage<BasicStorageConfig>
     @Override
     public BasicStorageConfig getConfiguration()
     {
-        return (BasicStorageConfig)this.config.clone();
+        return config;
     }
 
 
@@ -173,7 +182,38 @@ public class BasicStorageImpl implements IBasicStorage<BasicStorageConfig>
     @Override
     public DataComponent getDataDescription()
     {
-        return this.config.dataDescription;
+        return this.dbRoot.recordDescription;
+    }
+
+
+    @Override
+    public List<String> getProducerIDs()
+    {
+        List<String> producers = new ArrayList<String>();
+        
+        /*Iterator<DBRecord> it = dbRoot.indexByProducerThenTime.iterator();
+        while (it.hasNext())
+        {
+            String producerID = it.next().getKey().producerID;
+        }*/
+        
+        return producers;
+    }
+
+
+    @Override
+    public long[] getDataTimeRange()
+    {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+
+    @Override
+    public long[] getTimeRangeForProducer(String producerID)
+    {
+        // TODO Auto-generated method stub
+        return null;
     }
 
 
@@ -248,7 +288,7 @@ public class BasicStorageImpl implements IBasicStorage<BasicStorageConfig>
 
 
     @Override
-    public Iterator<IDataRecord<DataKey>> getDataBlockIterator(IDataFilter filter)
+    public Iterator<DataBlock> getDataBlockIterator(IDataFilter filter)
     {
         // TODO Auto-generated method stub
         return null;
@@ -342,7 +382,7 @@ public class BasicStorageImpl implements IBasicStorage<BasicStorageConfig>
 
 
     @Override
-    public void removeListener(IEventListener listener)
+    public void unregisterListener(IEventListener listener)
     {
         eventHandler.unregisterListener(listener);
     }
