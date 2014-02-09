@@ -151,6 +151,12 @@ public class HttpServer implements IModule<HttpServerConfig>
     }
     
     
+    public void undeployServlet(HttpServlet servlet)
+    {
+        handler.removeBean(servlet);
+    }
+    
+    
     public void stop() throws SensorHubException
     {
         try
@@ -198,6 +204,12 @@ public class HttpServer implements IModule<HttpServerConfig>
     public String getLocalID()
     {
         return config.id;
+    }
+    
+    
+    public Server getJettyServer()
+    {
+        return server;
     }
 
 }

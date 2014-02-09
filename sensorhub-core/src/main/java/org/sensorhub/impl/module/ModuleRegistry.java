@@ -65,38 +65,13 @@ import org.sensorhub.impl.common.BasicEventHandler;
 public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProducer
 {
     private static final Log log = LogFactory.getLog(ModuleRegistry.class);    
-    private static ModuleRegistry instance;
     
     IModuleConfigRepository configRepos;
     Map<String, IModule<?>> loadedModules;
     IEventHandler eventHandler;
     
     
-    public static ModuleRegistry create(IModuleConfigRepository configRepos, boolean discardOld)
-    {
-        if (discardOld || instance == null)
-            instance = new ModuleRegistry(configRepos);
-        
-        return instance;
-    }
-    
-    
-    public static ModuleRegistry create(IModuleConfigRepository configRepos)
-    {
-        return ModuleRegistry.create(configRepos, false);
-    }
-    
-    
-    public static ModuleRegistry getInstance()
-    {
-        return instance;
-    }
-    
-    
-    /*
-     * Singleton constructor
-     */
-    private ModuleRegistry(IModuleConfigRepository configRepos)
+    public ModuleRegistry(IModuleConfigRepository configRepos)
     {
         this.configRepos = configRepos;
         this.loadedModules = new LinkedHashMap<String, IModule<?>>();        
@@ -228,7 +203,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
         // also unload module if it was loaded
         IModule<?> module = loadedModules.remove(moduleID);
         if (module != null)
-            module.cleanup();
+            module.stop();
         
         eventHandler.publishEvent(new ModuleEvent(module, ModuleEvent.Type.DISABLED));
     }
@@ -244,10 +219,12 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
         
         IModule<?> module = loadedModules.remove(moduleID);
         if (module != null)
+        {
+            module.stop();            
             module.cleanup();
+        }
         
-        configRepos.remove(moduleID);
-        
+        configRepos.remove(moduleID);        
         eventHandler.publishEvent(new ModuleEvent(module, ModuleEvent.Type.DELETED));
     }
     
@@ -282,7 +259,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
     @Override
     public IModule<?> getModuleById(String moduleID)
     {
-        checkID(moduleID);
+        //checkID(moduleID);
         return loadedModules.get(moduleID);
     }
     
@@ -311,6 +288,34 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
             installedModules.add(provider);
         
         return installedModules;
+    }
+    
+    
+    /**
+     * Shuts down all modules and the config repository
+     * @param saveConfig If true, save current modules config
+     * @param saveState If true, save current module state
+     */
+    public synchronized void shutdown(boolean saveConfig, boolean saveState) throws SensorHubException
+    {
+        // shutdown all modules
+        for (IModule<?> module: getLoadedModules())
+        {
+            // save state if requested
+            // TODO use state saver
+            if (saveState)
+                module.saveState(null);
+            
+            // save config if requested
+            if (saveConfig)
+                configRepos.update(module.getConfiguration());
+            
+            // cleanly stop module
+            this.disableModule(module.getLocalID());
+        }
+        
+        // properly close config database
+        configRepos.close();
     }
     
     

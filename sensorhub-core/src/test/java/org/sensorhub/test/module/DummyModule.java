@@ -40,7 +40,8 @@ public class DummyModule implements IModule<ModuleConfig>
     public ModuleConfig getConfiguration() { return config; }
     public String getName() { return config.name; }
     public String getLocalID() { return null; }
-    public void cleanup() {}
+    public void stop() {}
     public void saveState(IModuleStateSaver saver) {}
     public void loadState(IModuleStateLoader loader) {}
+    public void cleanup() {}
 }

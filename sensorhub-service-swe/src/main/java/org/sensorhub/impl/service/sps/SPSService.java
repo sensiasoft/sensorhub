@@ -100,10 +100,16 @@ public class SPSService implements IServiceInterface<SPSServiceConfig>
 
 
     @Override
+    public void stop()
+    {
+        // TODO Auto-generated method stub
+    }
+    
+
+    @Override
     public void saveState(IModuleStateSaver saver) throws SensorHubException
     {
         // TODO Auto-generated method stub
-
     }
 
 
@@ -111,15 +117,13 @@ public class SPSService implements IServiceInterface<SPSServiceConfig>
     public void loadState(IModuleStateLoader loader) throws SensorHubException
     {
         // TODO Auto-generated method stub
-
     }
 
 
     @Override
     public void cleanup() throws SensorHubException
     {
-        // TODO Auto-generated method stub
-        
+        // TODO Auto-generated method stub        
     }
 
 }

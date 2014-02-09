@@ -255,22 +255,6 @@ public class ObservationStorageImpl implements IObsStorage<ObsStorageConfig>
 
 
     @Override
-    public void saveState(IModuleStateSaver saver)
-    {
-        // TODO Auto-generated method stub
-
-    }
-
-
-    @Override
-    public void loadState(IModuleStateLoader loader)
-    {
-        // TODO Auto-generated method stub
-
-    }
-
-
-    @Override
     public List<String> getFeatureOfInterestIds()
     {
         // TODO Auto-generated method stub
@@ -295,9 +279,29 @@ public class ObservationStorageImpl implements IObsStorage<ObsStorageConfig>
 
 
     @Override
-    public void cleanup() throws StorageException
+    public void stop() throws StorageException
+    {
+        close();
+    }
+    
+
+    @Override
+    public void saveState(IModuleStateSaver saver)
     {
         // TODO Auto-generated method stub
-        
+    }
+
+
+    @Override
+    public void loadState(IModuleStateLoader loader)
+    {
+        // TODO Auto-generated method stub
+    }
+
+
+    @Override
+    public void cleanup() throws StorageException
+    {
+        // TODO Auto-generated method stub        
     }
 }

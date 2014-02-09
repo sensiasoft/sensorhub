@@ -23,7 +23,6 @@ import org.sensorhub.api.module.IModule;
 import org.sensorhub.api.sensor.SensorConfig;
 import org.sensorhub.impl.SensorHub;
 import org.sensorhub.impl.SensorHubConfig;
-import org.sensorhub.impl.module.ModuleRegistry;
 import org.sensorhub.impl.service.HttpServer;
 import org.sensorhub.impl.service.HttpServerConfig;
 import org.sensorhub.impl.service.ogc.OGCServiceConfig.CapabilitiesInfo;
@@ -75,7 +74,7 @@ public class TestSOSService
         srvcMetadata.accessConstraints = "NONE";
         
         // load module into registry
-        SOSService sos = (SOSService)ModuleRegistry.getInstance().loadModule(serviceCfg);    
+        SOSService sos = (SOSService)SensorHub.getInstance().getModuleRegistry().loadModule(serviceCfg);    
         return sos;
     }
     
@@ -87,7 +86,7 @@ public class TestSOSService
         sensorCfg.enabled = true;
         sensorCfg.moduleClass = FakeSensor.class.getCanonicalName();
         sensorCfg.name = "Sensor1";
-        IModule<?> sensor = ModuleRegistry.getInstance().loadModule(sensorCfg);
+        IModule<?> sensor = SensorHub.getInstance().getModuleRegistry().loadModule(sensorCfg);
         String outputName = "out1";
         ((FakeSensor)sensor).setDataInterfaces(new FakeSensorData(outputName, false));
         
@@ -110,7 +109,7 @@ public class TestSOSService
         sensorCfg.enabled = true;
         sensorCfg.moduleClass = FakeSensor.class.getCanonicalName();
         sensorCfg.name = "Sensor2";
-        IModule<?> sensor = ModuleRegistry.getInstance().loadModule(sensorCfg);
+        IModule<?> sensor = SensorHub.getInstance().getModuleRegistry().loadModule(sensorCfg);
         ((FakeSensor)sensor).setDataInterfaces(new FakeSensorData("weatherOut", false), new FakeSensorData2("imgOut", false));
         
         // create SOS data provider config

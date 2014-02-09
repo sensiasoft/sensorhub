@@ -51,7 +51,7 @@ public class TestModuleRegistry
         configFolder = new File("junit-test/");
         configFolder.mkdirs();
         configDb = new ModuleConfigDatabaseJson(configFolder.getAbsolutePath());        
-        registry = ModuleRegistry.create(configDb, true);
+        registry = new ModuleRegistry(configDb);
         registry.loadAllModules();
     }
     

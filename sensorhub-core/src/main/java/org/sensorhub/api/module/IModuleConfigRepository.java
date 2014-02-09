@@ -85,4 +85,10 @@ public interface IModuleConfigRepository
      */
     public void remove(String moduleID);
     
+    
+    /**
+     * Closes the database and release all resources associated to it
+     */
+    public void close();
+    
 }

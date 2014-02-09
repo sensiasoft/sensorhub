@@ -148,6 +148,13 @@ public class ModuleConfigDatabaseJson implements IModuleConfigRepository
     }
     
     
+    @Override
+    public synchronized void close()
+    {
+        // nothing to do
+    }
+    
+    
     /*
      * Build a file name and File object from the given id
      */
@@ -180,5 +187,4 @@ public class ModuleConfigDatabaseJson implements IModuleConfigRepository
             throw new RuntimeException("Error while parsing module config file " + configFile.getAbsolutePath(), e);
         }
     }
-    
 }

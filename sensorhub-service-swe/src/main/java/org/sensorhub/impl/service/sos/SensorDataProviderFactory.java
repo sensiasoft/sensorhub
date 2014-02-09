@@ -18,12 +18,11 @@ import org.sensorhub.api.sensor.ISensorDataInterface;
 import org.sensorhub.api.sensor.ISensorInterface;
 import org.sensorhub.api.sensor.SensorException;
 import org.sensorhub.impl.SensorHub;
-import org.sensorhub.impl.module.ModuleRegistry;
 import org.vast.data.DataIterator;
 import org.vast.ows.server.SOSDataFilter;
 import org.vast.ows.sos.ISOSDataProvider;
 import org.vast.ows.sos.SOSOfferingCapabilities;
-import org.vast.sensorML.SMLFeature;
+import org.vast.sensorML.SMLProcess;
 import org.vast.sweCommon.SweConstants;
 import org.vast.util.DateTime;
 import org.vast.util.TimeExtent;
@@ -49,8 +48,8 @@ import org.vast.util.TimeExtent;
  */
 public class SensorDataProviderFactory implements IDataProviderFactory, IEventListener
 {
-    SensorDataProviderConfig config;
-    ISensorInterface<?> sensor;
+    final SensorDataProviderConfig config;
+    final ISensorInterface<?> sensor;
         
     
     protected SensorDataProviderFactory(SensorDataProviderConfig config)
@@ -62,7 +61,7 @@ public class SensorDataProviderFactory implements IDataProviderFactory, IEventLi
         this.config.enabled = this.sensor.getConfiguration().enabled;
         
         // register to module lifecycle events
-        ModuleRegistry.getInstance().registerListener(this);
+        SensorHub.getInstance().registerListener(this);
     }
     
     
@@ -106,7 +105,7 @@ public class SensorDataProviderFactory implements IDataProviderFactory, IEventLi
             caps.getPhenomenonTimes().add(phenTime);
         
             // use sensor uniqueID as procedure ID
-            caps.getProcedures().add(sensor.getCurrentSensorDescription().getUniqueID());
+            caps.getProcedures().add(sensor.getCurrentSensorDescription().getIdentifier());
             
             // supported formats
             caps.getResponseFormats().add(SOSOfferingCapabilities.FORMAT_OM2);
@@ -148,7 +147,7 @@ public class SensorDataProviderFactory implements IDataProviderFactory, IEventLi
     
     
     @Override
-    public SMLFeature generateSensorMLDescription(DateTime t) throws SensorException
+    public SMLProcess generateSensorMLDescription(DateTime t) throws SensorException
     {
         checkEnabled();
         
@@ -208,7 +207,7 @@ public class SensorDataProviderFactory implements IDataProviderFactory, IEventLi
     @Override
     public void cleanup()
     {
-        ModuleRegistry.getInstance().unregisterListener(this);        
+        SensorHub.getInstance().unregisterListener(this);        
     }
 
 

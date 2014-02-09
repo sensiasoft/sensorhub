@@ -25,6 +25,10 @@
 
 package org.sensorhub.impl;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.sensorhub.api.common.IEventListener;
+import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.config.IGlobalConfig;
 import org.sensorhub.api.module.IModuleConfigRepository;
 import org.sensorhub.api.sensor.ISensorManager;
@@ -44,9 +48,11 @@ import org.sensorhub.impl.sensor.SensorManagerImpl;
  */
 public class SensorHub
 {
+    private static final Log log = LogFactory.getLog(SensorHub.class);    
     private static SensorHub instance;
     
     private IGlobalConfig config;
+    private ModuleRegistry registry;
     
     
     public static SensorHub createInstance(IGlobalConfig config)
@@ -54,7 +60,15 @@ public class SensorHub
         if (instance == null)
             instance = new SensorHub(config);
         
-        instance.start();        
+        return instance;
+    }
+    
+    
+    public static SensorHub createInstance(IGlobalConfig config, ModuleRegistry registry)
+    {
+        if (instance == null)
+            instance = new SensorHub(config, registry);
+        
         return instance;
     }
     
@@ -68,34 +82,100 @@ public class SensorHub
     private SensorHub(IGlobalConfig config)
     {
         this.config = config;
+        
+        IModuleConfigRepository configDB = new ModuleConfigDatabaseJson(config.getModuleConfigPath());
+        this.registry = new ModuleRegistry(configDB);
+    }
+    
+    
+    private SensorHub(IGlobalConfig config, ModuleRegistry registry)
+    {
+        this.config = config;
+        this.registry = registry;
     }
     
     
     public void start()
     {
-        IModuleConfigRepository configDB = new ModuleConfigDatabaseJson(config.getModuleConfigPath());
-        ModuleRegistry.create(configDB);
-        
         // load all modules in the order implied by dependency constraints
-        
+        registry.loadAllModules();
+    }
+    
+    
+    public void saveAndStop()
+    {
+        stop(true, true);
     }
     
     
     public void stop()
     {
-        
+        stop(false, false);
+    }
+    
+    
+    public void stop(boolean saveConfig, boolean saveState)
+    {
+        try
+        {
+            registry.shutdown(saveConfig, saveState);
+        }
+        catch (SensorHubException e)
+        {
+            log.error("Error while stopping SensorHub", e);
+        }
+    }
+    
+    
+    public void registerListener(IEventListener listener)
+    {
+        registry.registerListener(listener);        
+    }
+
+
+    public void unregisterListener(IEventListener listener)
+    {
+        registry.unregisterListener(listener);        
     }
     
     
     public ModuleRegistry getModuleRegistry()
     {
-        return ModuleRegistry.getInstance();
+        return registry;
     }
     
     
     public ISensorManager getSensorManager()
     {
-        return new SensorManagerImpl();
+        return new SensorManagerImpl(registry);
     }
-
+    
+    
+    public static void main(String[] args)
+    {
+        // if no arg provided
+        if (args.length == 0)
+        {
+            // print usage
+            System.out.println("sensorhub [module_config_path]");
+            System.exit(1);
+        }
+        
+        // else only argument is config path pointing to module config path
+        SensorHub instance = null;
+        try
+        {
+            SensorHubConfig config = new SensorHubConfig(args[0]);
+            instance = SensorHub.createInstance(config);
+            instance.start();
+        }
+        catch (Exception e)
+        {
+            if (instance != null)
+                instance.stop();
+            
+            System.err.println("Fatal error during SensorHub execution\n" + e.getLocalizedMessage());
+            System.exit(2);
+        }
+    }
 }

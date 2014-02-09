@@ -85,10 +85,12 @@ public interface IModule<ConfigType extends ModuleConfig>
     
     
     /**
-     * Cleans up all ressources used by the module when deleted
+     * Stops the module
+     * All temporary resources created by the module should be cleaned
+     * when this is called (ex: memory, files, connections, etc.)
      * @throws SensorHubException
      */
-    public void cleanup() throws SensorHubException;
+    public void stop() throws SensorHubException;
            
     
     /**
@@ -103,4 +105,14 @@ public interface IModule<ConfigType extends ModuleConfig>
      * @param loader
      */
     public void loadState(IModuleStateLoader loader) throws SensorHubException;
+    
+    
+    /**
+     * Cleans up all ressources used by the module when deleted
+     * All persistent resources created by the module should be cleaned
+     * when this is called
+     * @throws SensorHubException
+     */
+    public void cleanup() throws SensorHubException;
+    
 }

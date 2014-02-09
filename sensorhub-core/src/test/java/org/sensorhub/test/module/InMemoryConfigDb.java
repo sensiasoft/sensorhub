@@ -88,4 +88,10 @@ public class InMemoryConfigDb implements IModuleConfigRepository
         configMap.remove(moduleID);
     }
 
+
+    @Override
+    public void close()
+    {        
+    }
+
 }

@@ -38,12 +38,11 @@ import org.sensorhub.api.module.IModuleStateSaver;
 import org.sensorhub.api.module.ModuleEvent;
 import org.sensorhub.api.service.IServiceInterface;
 import org.sensorhub.api.service.ServiceException;
-import org.sensorhub.impl.module.ModuleRegistry;
+import org.sensorhub.impl.SensorHub;
 import org.sensorhub.impl.service.HttpServer;
 import org.sensorhub.impl.service.ogc.OGCServiceConfig.CapabilitiesInfo;
 import org.vast.ows.GetCapabilitiesRequest;
 import org.vast.ows.OWSExceptionReport;
-import org.vast.ows.OWSRequest;
 import org.vast.ows.OWSUtils;
 import org.vast.ows.sos.GetObservationRequest;
 import org.vast.ows.sos.GetResultRequest;
@@ -98,12 +97,11 @@ public class SOSService extends SOSServlet implements IServiceInterface<SOSServi
         
         // pre-generate capabilities
         this.capabilitiesCache = generateCapabilities();
-        
-        // deploy ourself to HTTP server
-        HttpServer.getInstance().deployServlet(config.endPoint, this);
-        
+                
         // subscribe to server lifecycle events
-        ModuleRegistry.getInstance().registerListener(this);
+        SensorHub.getInstance().registerListener(this);
+        
+        deploy();
     }
     
     
@@ -219,7 +217,6 @@ public class SOSService extends SOSServlet implements IServiceInterface<SOSServi
     public void saveState(IModuleStateSaver saver) throws SensorHubException
     {
         // TODO Auto-generated method stub
-
     }
 
 
@@ -227,7 +224,6 @@ public class SOSService extends SOSServlet implements IServiceInterface<SOSServi
     public void loadState(IModuleStateLoader loader) throws SensorHubException
     {
         // TODO Auto-generated method stub
-
     }
 
 
@@ -238,22 +234,50 @@ public class SOSService extends SOSServlet implements IServiceInterface<SOSServi
         if (e instanceof ModuleEvent && e.getSource() == HttpServer.getInstance())
         {
             if (((ModuleEvent) e).type == ModuleEvent.Type.ENABLED)
-                config.enabled = true;
-        }  
+                deploy();
+            else if (((ModuleEvent) e).type == ModuleEvent.Type.DISABLED)
+                stop();
+        }        
+    }
+    
+    
+    @Override
+    public synchronized void stop()
+    {
+        // undeploy ourself
+        undeploy();
         
+        // clean all providers
+        for (IDataProviderFactory provider: procedureToProviderMap.values())
+            provider.cleanup();
     }
     
     
     @Override
     public void cleanup() throws SensorHubException
     {
-        // clean all providers
-        for (IDataProviderFactory provider: procedureToProviderMap.values())
-            provider.cleanup();
-        
-        // undeploy ourself
-        
+        // TODO remove template database
     }
+    
+    
+    protected void deploy()
+    {
+        if (!HttpServer.getInstance().isEnabled())
+            return;
+        
+        // deploy ourself to HTTP server
+        HttpServer.getInstance().deployServlet(config.endPoint, this);
+    }
+    
+    
+    protected void undeploy()
+    {
+        if (!HttpServer.getInstance().isEnabled())
+            return;
+        
+        HttpServer.getInstance().undeployServlet(this);
+    }
+    
     
     /////////////////////////////////////////
     /// methods overriden from SOSServlet ///

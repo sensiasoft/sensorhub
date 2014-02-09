@@ -59,6 +59,7 @@ public class HttpServerConfig extends ModuleConfig
     {
         this.name = "HTTP Server";
         this.id = "???";
+        this.enabled = true;
     }
     
     

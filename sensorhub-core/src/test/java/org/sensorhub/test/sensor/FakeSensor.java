@@ -86,24 +86,6 @@ public class FakeSensor implements ISensorInterface<SensorConfig>
 
 
     @Override
-    public void cleanup() throws SensorHubException
-    {
-    }
-
-
-    @Override
-    public void saveState(IModuleStateSaver saver) throws SensorHubException
-    {
-    }
-
-
-    @Override
-    public void loadState(IModuleStateLoader loader) throws SensorHubException
-    {
-    }
-
-
-    @Override
     public boolean isSensorDescriptionUpdateSupported()
     {
         return false;
@@ -121,7 +103,7 @@ public class FakeSensor implements ISensorInterface<SensorConfig>
     public SMLSystem getCurrentSensorDescription() throws SensorException
     {
         SMLSystem sml = new SMLSystem();
-        sml.setUniqueID("urn:sensors:mysensor:001");        
+        sml.setIdentifier("urn:sensors:mysensor:001");        
         return sml;
     }
 
@@ -176,13 +158,36 @@ public class FakeSensor implements ISensorInterface<SensorConfig>
 
     @Override
     public void registerListener(IEventListener listener)
-    {
-        
+    {        
     }
 
 
     @Override
     public void unregisterListener(IEventListener listener)
+    {
+    }
+
+
+    @Override
+    public void stop() throws SensorHubException
+    {        
+    }
+    
+    
+    @Override
+    public void saveState(IModuleStateSaver saver) throws SensorHubException
+    {
+    }
+
+
+    @Override
+    public void loadState(IModuleStateLoader loader) throws SensorHubException
+    {
+    }
+    
+    
+    @Override
+    public void cleanup() throws SensorHubException
     {
     }
 }

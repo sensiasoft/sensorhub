@@ -47,11 +47,12 @@ import org.sensorhub.impl.module.ModuleRegistry;
  */
 public class PersistenceManagerImpl implements IPersistenceManager
 {
+    protected ModuleRegistry moduleRegistry;
     
     
-    public PersistenceManagerImpl()
+    public PersistenceManagerImpl(ModuleRegistry moduleRegistry)
     {
-
+        this.moduleRegistry = moduleRegistry;
     }
     
     
@@ -61,7 +62,7 @@ public class PersistenceManagerImpl implements IPersistenceManager
         List<IDataStorage<?,?,?>> enabledStorages = new ArrayList<IDataStorage<?,?,?>>();
         
         // retrieve all modules implementing ISensorInterface
-        for (IModule<?> module: ModuleRegistry.getInstance().getLoadedModules())
+        for (IModule<?> module: moduleRegistry.getLoadedModules())
         {
             if (module instanceof ISensorInterface)
                 enabledStorages.add((IDataStorage<?,?,?>)module);
@@ -77,7 +78,7 @@ public class PersistenceManagerImpl implements IPersistenceManager
         List<ModuleConfig> configuredSensors = new ArrayList<ModuleConfig>();
         
         // retrieve all modules implementing ISensorInterface
-        for (ModuleConfig config: ModuleRegistry.getInstance().getAvailableModules())
+        for (ModuleConfig config: moduleRegistry.getAvailableModules())
         {
             try
             {
@@ -96,7 +97,7 @@ public class PersistenceManagerImpl implements IPersistenceManager
     @Override
     public IDataStorage<?,?,?> getModuleById(String moduleID)
     {
-        IModule<?> module = ModuleRegistry.getInstance().getModuleById(moduleID);
+        IModule<?> module = moduleRegistry.getModuleById(moduleID);
         
         if (module instanceof IDataStorage<?,?,?>)
             return (IDataStorage<?,?,?>)module;
@@ -108,7 +109,7 @@ public class PersistenceManagerImpl implements IPersistenceManager
     @Override
     public void destroyStorage(String storageId, boolean deleteAllData) throws StorageException
     {
-        IDataStorage<?,?,?> storage = (IDataStorage<?,?,?>)ModuleRegistry.getInstance().getModuleById(storageId);
+        IDataStorage<?,?,?> storage = (IDataStorage<?,?,?>)moduleRegistry.getModuleById(storageId);
         storage.close();
         if (deleteAllData)
             storage.cleanup();       

@@ -12,7 +12,7 @@ package org.sensorhub.impl.service.sos;
 
 import org.vast.ows.sos.ISOSDataProviderFactory;
 import org.vast.ows.sos.SOSOfferingCapabilities;
-import org.vast.sensorML.SMLFeature;
+import org.vast.sensorML.SMLProcess;
 import org.vast.util.DateTime;
 
 
@@ -38,7 +38,7 @@ public interface IDataProviderFactory extends ISOSDataProviderFactory
      * Retrieves the SensorML description associated to this data source
      * @return
      */
-    public SMLFeature generateSensorMLDescription(DateTime t) throws Exception;
+    public SMLProcess generateSensorMLDescription(DateTime t) throws Exception;
     
     
     /**

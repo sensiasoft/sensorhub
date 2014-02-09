@@ -13,7 +13,6 @@ package org.sensorhub.impl.service.sos;
 import org.vast.ows.server.SOSDataFilter;
 import org.vast.ows.sos.ISOSDataProvider;
 import org.vast.ows.sos.SOSOfferingCapabilities;
-import org.vast.sensorML.SMLFeature;
 import org.vast.sensorML.SMLProcess;
 import org.vast.util.DateTime;
 
@@ -65,7 +64,7 @@ public class StorageDataProviderFactory implements IDataProviderFactory
 
 
     @Override
-    public SMLFeature generateSensorMLDescription(DateTime t)
+    public SMLProcess generateSensorMLDescription(DateTime t)
     {
         // TODO Auto-generated method stub
         return null;

@@ -77,13 +77,6 @@ public class InMemoryStorage implements IBasicStorage<StorageConfig>
 
 
     @Override
-    public void cleanup() throws StorageException
-    {
-        recordList.clear();
-    }
-
-
-    @Override
     public DataComponent getDataDescription()
     {
         return dataDescription;
@@ -320,13 +313,19 @@ public class InMemoryStorage implements IBasicStorage<StorageConfig>
     {
         return config.id;
     }
+    
+    
+    @Override
+    public void stop() throws SensorHubException
+    {        
+        recordList.clear();
+    }
 
 
     @Override
     public void saveState(IModuleStateSaver saver) throws SensorHubException
     {
         // TODO Auto-generated method stub
-
     }
 
 
@@ -334,15 +333,20 @@ public class InMemoryStorage implements IBasicStorage<StorageConfig>
     public void loadState(IModuleStateLoader loader) throws SensorHubException
     {
         // TODO Auto-generated method stub
-
     }
+    
+    
+    @Override
+    public void cleanup() throws StorageException
+    {
+        recordList.clear();
+    }    
 
 
     @Override
     public void registerListener(IEventListener listener)
     {
         // TODO Auto-generated method stub
-
     }
 
 
@@ -350,7 +354,6 @@ public class InMemoryStorage implements IBasicStorage<StorageConfig>
     public void unregisterListener(IEventListener listener)
     {
         // TODO Auto-generated method stub
-
     }
 
 }

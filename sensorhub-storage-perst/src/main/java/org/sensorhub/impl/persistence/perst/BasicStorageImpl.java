@@ -25,6 +25,7 @@
 
 package org.sensorhub.impl.persistence.perst;
 
+import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
@@ -419,10 +420,17 @@ public class BasicStorageImpl implements IBasicStorage<BasicStorageConfig>
     
     
     @Override
-    public void cleanup() throws StorageException
+    public void stop() throws StorageException
     {
         close();
-        // TODO remove data on disk
+    }
+    
+
+    @Override
+    public void cleanup() throws StorageException
+    {
+        // delete database file
+        new File(config.storagePath).delete();
     }
 
 }

@@ -34,7 +34,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.sensorhub.api.module.IModule;
 import org.sensorhub.api.persistence.StorageConfig;
-import org.sensorhub.api.sensor.ISensorDataInterface;
 import org.sensorhub.api.sensor.SensorConfig;
 import org.sensorhub.api.sensor.SensorStorageConfig;
 import org.sensorhub.impl.module.ModuleConfigDatabaseJson;
@@ -46,6 +45,7 @@ public class TestSensorStorageHelper
 {
     File configFolder;
     ModuleConfigDatabaseJson configDb;
+    ModuleRegistry registry;
     FakeSensorData fakeSensorData;
     InMemoryStorage db;
     
@@ -56,7 +56,7 @@ public class TestSensorStorageHelper
         configFolder = new File("junit-test/");
         configFolder.mkdirs();
         configDb = new ModuleConfigDatabaseJson(configFolder.getAbsolutePath());        
-        ModuleRegistry registry = ModuleRegistry.create(configDb, true);
+        registry = new ModuleRegistry(configDb);
         registry.loadAllModules();
         
         // create test storage
@@ -83,9 +83,9 @@ public class TestSensorStorageHelper
         SensorStorageConfig config = new SensorStorageConfig();
         config.moduleClass = SensorStorageHelper.class.getCanonicalName();
         config.name = "Sensor Storage Helper";
-        config.storageID = ModuleRegistry.getInstance().getLoadedModules().get(0).getLocalID();
-        config.sensorID = ModuleRegistry.getInstance().getLoadedModules().get(1).getLocalID();
-        ModuleRegistry.getInstance().loadModule(config);
+        config.storageID = registry.getLoadedModules().get(0).getLocalID();
+        config.sensorID = registry.getLoadedModules().get(1).getLocalID();
+        registry.loadModule(config);
         
         Thread.sleep((long)((fakeSensorData.maxSampleCount+1) * 1000.0 / fakeSensorData.getAverageSamplingRate()));
         

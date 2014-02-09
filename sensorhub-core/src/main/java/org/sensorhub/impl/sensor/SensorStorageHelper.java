@@ -38,6 +38,7 @@ import org.sensorhub.api.sensor.ISensorDataInterface;
 import org.sensorhub.api.sensor.ISensorInterface;
 import org.sensorhub.api.sensor.SensorDataEvent;
 import org.sensorhub.api.sensor.SensorStorageConfig;
+import org.sensorhub.impl.SensorHub;
 import org.sensorhub.impl.common.BasicEventHandler;
 import org.sensorhub.impl.module.ModuleRegistry;
 import org.vast.cdm.common.DataBlock;
@@ -80,8 +81,9 @@ public class SensorStorageHelper implements IModule<SensorStorageConfig>, IEvent
         this.config = config;
 
         // get handle to storage and sensor
-        storage = (IBasicStorage<?>)ModuleRegistry.getInstance().getModuleById(config.storageID);
-        sensor = (ISensorInterface<?>)ModuleRegistry.getInstance().getModuleById(config.sensorID);
+        ModuleRegistry moduleReg = SensorHub.getInstance().getModuleRegistry();
+        storage = (IBasicStorage<?>)moduleReg.getModuleById(config.storageID);
+        sensor = (ISensorInterface<?>)moduleReg.getModuleById(config.sensorID);
         
         // register to sensor events
         if (config.selectedOutputs == null || config.selectedOutputs.length == 0)
@@ -133,7 +135,7 @@ public class SensorStorageHelper implements IModule<SensorStorageConfig>, IEvent
         storage.cleanup();
     }
     
-
+    
     @Override
     public void handleEvent(Event e)
     {
@@ -155,10 +157,16 @@ public class SensorStorageHelper implements IModule<SensorStorageConfig>, IEvent
 
     
     @Override
+    public void stop() throws StorageException
+    {
+        // TODO Auto-generated method stub
+    }
+    
+
+    @Override
     public void saveState(IModuleStateSaver saver) throws SensorHubException
     {
         // TODO Auto-generated method stub
-
     }
 
 
@@ -166,7 +174,6 @@ public class SensorStorageHelper implements IModule<SensorStorageConfig>, IEvent
     public void loadState(IModuleStateLoader loader) throws SensorHubException
     {
         // TODO Auto-generated method stub
-
     }
 
 }

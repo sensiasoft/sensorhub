@@ -121,7 +121,7 @@ public class FakeSensor implements ISensorInterface<SensorConfig>
     public SMLSystem getCurrentSensorDescription() throws SensorException
     {
         SMLSystem sml = new SMLSystem();
-        sml.setUniqueID("urn:sensors:mysensor:001");        
+        sml.setIdentifier("urn:sensors:mysensor:001");        
         return sml;
     }
 
@@ -173,6 +173,12 @@ public class FakeSensor implements ISensorInterface<SensorConfig>
         return true;
     }
 
+
+    @Override
+    public void stop()
+    {
+    }
+    
 
     @Override
     public void registerListener(IEventListener listener)
