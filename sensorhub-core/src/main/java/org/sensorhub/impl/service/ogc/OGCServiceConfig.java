@@ -25,6 +25,7 @@
 
 package org.sensorhub.impl.service.ogc;
 
+import org.sensorhub.api.config.Annotations.DisplayInfo;
 import org.sensorhub.api.service.ServiceConfig;
 import org.vast.util.ResponsibleParty;
 
@@ -61,17 +62,20 @@ public abstract class OGCServiceConfig extends ServiceConfig
     /**
      * Enables/disables HTTP GET bindings on operations that support it
      */
+    @DisplayInfo(label="Enable HTTP GET")
     public boolean enableHttpGET = true;
     
     
     /**
      * Enables/disables HTTP POST bindings on operations that support it
      */
+    @DisplayInfo(label="Enable HTTP POST")
     public boolean enableHttpPOST = true;
     
     
     /**
      * Enables/disables HTTP SOAP bindings on operations that support it
      */
+    @DisplayInfo(label="Enable HTTP SOAP")
     public boolean enableSOAP = true;
 }
