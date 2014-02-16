@@ -1,0 +1,28 @@
+[
+  {
+    "objClass": "org.sensorhub.api.sensor.SensorConfig",
+    "sensorML": null,
+    "autoActivate": true,
+    "enableHistory": true,
+    "hiddenIO": null,
+    "driverConfigs": {},
+    "id": "5cb05c9c-9e08-4fa1-8731-ff41e246bdc0",
+    "name": "Sensor1",
+    "moduleClass": "org.sensorhub.sensor.***",
+    "enabled": false,
+    "driverConfigs":
+    [
+      {
+        "objClass": "org.sensorhub.impl.sensor.drivers.RS232DriverConfig",
+        "id": null,
+        "name": "RS-232",
+        "moduleClass": null,
+        "enabled": false,
+        "portNumber": "COM1",
+        "baudRate": 9600,
+        "numberOfBits": 7,
+        "parity": true
+      }
+    ]
+  }
+]

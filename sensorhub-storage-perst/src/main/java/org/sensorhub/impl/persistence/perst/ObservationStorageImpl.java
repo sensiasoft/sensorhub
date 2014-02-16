@@ -55,10 +55,33 @@ import org.vast.cdm.common.DataComponent;
 public class ObservationStorageImpl implements IObsStorage<ObsStorageConfig>
 {
 
+    
     @Override
-    public boolean isEnabled()
+    public void init(ObsStorageConfig config)
     {
-        return false;
+        // TODO Auto-generated method stub
+
+    }
+    
+    
+    @Override
+    public void updateConfig(ObsStorageConfig config)
+    {
+        // TODO Auto-generated method stub        
+    }    
+
+
+    @Override
+    public void start() throws StorageException
+    {
+        
+    }
+    
+    
+    @Override
+    public void stop() throws StorageException
+    {
+        close();
     }
     
     
@@ -231,21 +254,12 @@ public class ObservationStorageImpl implements IObsStorage<ObsStorageConfig>
 
 
     @Override
-    public void init(ObsStorageConfig config)
+    public boolean isEnabled()
     {
-        // TODO Auto-generated method stub
-
+        return false;
     }
     
     
-    @Override
-    public void updateConfig(ObsStorageConfig config)
-    {
-        // TODO Auto-generated method stub
-        
-    }
-
-
     @Override
     public ObsStorageConfig getConfiguration()
     {
@@ -275,13 +289,6 @@ public class ObservationStorageImpl implements IObsStorage<ObsStorageConfig>
     {
         // TODO Auto-generated method stub
         return null;
-    }
-
-
-    @Override
-    public void stop() throws StorageException
-    {
-        close();
     }
     
 

@@ -64,8 +64,7 @@ public class SPSService implements IServiceInterface<SPSServiceConfig>
     @Override
     public void init(SPSServiceConfig config) throws SensorHubException
     {
-        // TODO Auto-generated method stub
-
+        this.config = config;
     }
 
 
@@ -74,6 +73,20 @@ public class SPSService implements IServiceInterface<SPSServiceConfig>
     {
         // TODO Auto-generated method stub
 
+    }
+    
+    
+    @Override
+    public void start()
+    {
+        // TODO Auto-generated method stub
+    }
+    
+    
+    @Override
+    public void stop()
+    {
+        // TODO Auto-generated method stub
     }
 
 
@@ -96,13 +109,6 @@ public class SPSService implements IServiceInterface<SPSServiceConfig>
     public String getLocalID()
     {
         return config.id;
-    }
-
-
-    @Override
-    public void stop()
-    {
-        // TODO Auto-generated method stub
     }
     
 

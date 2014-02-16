@@ -34,6 +34,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.sensorhub.api.module.IModuleProvider;
 import org.sensorhub.api.module.ModuleConfig;
+import org.sensorhub.api.service.IServiceInterface;
 import org.sensorhub.impl.module.ModuleConfigDatabaseJson;
 import org.sensorhub.impl.module.ModuleRegistry;
 
@@ -59,11 +60,19 @@ public class TestModuleRegistry
     @Test
     public void testGetInstalledModuleTypes()
     {
+        System.out.println("\nAvailable Module Types");
         for (IModuleProvider moduleType: registry.getInstalledModuleTypes())
         {
             System.out.println(moduleType.getModuleTypeName() + ": " +
                                moduleType.getModuleClass().getCanonicalName());
-        }        
+        } 
+        
+        System.out.println("\nAvailable Service Types");
+        for (IModuleProvider moduleType: registry.getInstalledModuleTypes(IServiceInterface.class))
+        {
+            System.out.println(moduleType.getModuleTypeName() + ": " +
+                               moduleType.getModuleClass().getCanonicalName());
+        }
     }
     
     

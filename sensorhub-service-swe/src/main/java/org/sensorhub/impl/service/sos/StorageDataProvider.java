@@ -26,9 +26,7 @@
 package org.sensorhub.impl.service.sos;
 
 import java.util.Iterator;
-import org.sensorhub.api.persistence.IBasicStorage;
 import org.sensorhub.api.persistence.IDataStorage;
-import org.sensorhub.api.persistence.IObsStorage;
 import org.vast.cdm.common.DataBlock;
 import org.vast.cdm.common.DataComponent;
 import org.vast.cdm.common.DataEncoding;
@@ -106,6 +104,13 @@ public class StorageDataProvider implements ISOSDataProvider
         
         
         return null;
+    }
+
+
+    @Override
+    public void close()
+    {
+                
     }
 
 }

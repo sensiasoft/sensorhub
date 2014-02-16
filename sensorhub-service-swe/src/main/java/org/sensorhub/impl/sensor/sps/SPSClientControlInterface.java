@@ -29,6 +29,7 @@ import java.util.List;
 import org.sensorhub.api.common.CommandStatus;
 import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.sensor.ISensorControlInterface;
+import org.sensorhub.api.sensor.ISensorInterface;
 import org.sensorhub.api.sensor.SensorException;
 import org.vast.cdm.common.DataBlock;
 import org.vast.cdm.common.DataComponent;
@@ -166,6 +167,22 @@ public class SPSClientControlInterface implements ISensorControlInterface
     {
         // TODO Auto-generated method stub
 
+    }
+
+
+    @Override
+    public ISensorInterface<?> getParentSensor()
+    {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+
+    @Override
+    public boolean isEnabled()
+    {
+        // TODO Auto-generated method stub
+        return false;
     }
 
 }

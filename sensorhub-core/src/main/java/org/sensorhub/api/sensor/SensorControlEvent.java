@@ -51,10 +51,11 @@ public class SensorControlEvent extends SensorEvent
     /**
      * Default constructor
      */
-	public SensorControlEvent(String sensorId, CommandStatus status)
+	public SensorControlEvent(ISensorControlInterface controlInterface, CommandStatus status)
 	{
-	    super(sensorId, Type.COMMAND_STATUS);
+	    super(controlInterface.getParentSensor().getLocalID(), Type.COMMAND_STATUS);
 		this.status = status;
+		this.source = controlInterface;
 	}
 	
 

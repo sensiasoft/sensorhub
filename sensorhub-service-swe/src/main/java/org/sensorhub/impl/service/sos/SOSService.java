@@ -91,7 +91,23 @@ public class SOSService extends SOSServlet implements IServiceInterface<SOSServi
     @Override
     public void init(SOSServiceConfig config) throws SensorHubException
     {        
-        this.config = config;
+        this.config = config;        
+    }
+    
+    
+    @Override
+    public synchronized void updateConfig(SOSServiceConfig config) throws SensorHubException
+    {
+        // cleanup all previously instantiated providers        
+        
+        // rebuild everything
+
+    }
+    
+    
+    @Override
+    public void start() throws SensorHubException
+    {
         this.procedureToProviderMap = new HashMap<String, IDataProviderFactory>();
         this.offeringMap = new HashMap<String, SOSOfferingCapabilities>();
         
@@ -101,7 +117,20 @@ public class SOSService extends SOSServlet implements IServiceInterface<SOSServi
         // subscribe to server lifecycle events
         SensorHub.getInstance().registerListener(this);
         
+        // deploy service
         deploy();
+    }
+    
+    
+    @Override
+    public void stop()
+    {
+        // undeploy ourself
+        undeploy();
+        
+        // clean all providers
+        for (IDataProviderFactory provider: procedureToProviderMap.values())
+            provider.cleanup();
     }
     
     
@@ -126,18 +155,18 @@ public class SOSService extends SOSServlet implements IServiceInterface<SOSServi
         // TODO generate profile list
         capabilities.getProfiles().add(SOSServiceCapabilities.PROFILE_RESULT_RETRIEVAL);
         capabilities.getProfiles().add(SOSServiceCapabilities.PROFILE_RESULT_INSERTION);
-        capabilities.getProfiles().add(SOSServiceCapabilities.PROFILE_OBS_INSERTION);        
+        capabilities.getProfiles().add(SOSServiceCapabilities.PROFILE_OBS_INSERTION);
         
         // process each provider config
         for (SOSProviderConfig providerConf: config.dataProviders)
         {
-            if (!providerConf.enabled)
-                continue;
-            
             try
             {
                 // instantiate provider factories and map them to offering URIs
                 IDataProviderFactory factory = providerConf.getFactory();
+                if (!factory.isEnabled())
+                    continue;
+                                
                 dataProviders.put(providerConf.uri, factory);
      
                 // add offering metadata to capabilities
@@ -149,11 +178,11 @@ public class SOSService extends SOSServlet implements IServiceInterface<SOSServi
                 procedureToProviderMap.put(offCaps.getProcedures().get(0), factory);
                 
                 if (log.isDebugEnabled())
-                    log.debug("Offering generated for procedure " + offCaps.getProcedures().get(0) + ":\n" + offCaps.toString());
+                    log.debug("Offering " + "\"" + offCaps.toString() + "\" generated for procedure " + offCaps.getProcedures().get(0));
             }
             catch (Exception e)
             {
-                log.error("Error while generating capabilities for provider " + providerConf.uri, e);
+                log.error("Error while initializing provider " + providerConf.uri, e);
             }
         }
         
@@ -178,17 +207,6 @@ public class SOSService extends SOSServlet implements IServiceInterface<SOSServi
         {
             throw new ServiceException("Error while retrieving SensorML description for sensor " + uri, e);
         }
-    }
-    
-    
-    @Override
-    public synchronized void updateConfig(SOSServiceConfig config) throws SensorHubException
-    {
-        // cleanup all previously instantiated providers
-        
-        
-        // rebuild everything
-
     }
     
     
@@ -242,18 +260,6 @@ public class SOSService extends SOSServlet implements IServiceInterface<SOSServi
     
     
     @Override
-    public synchronized void stop()
-    {
-        // undeploy ourself
-        undeploy();
-        
-        // clean all providers
-        for (IDataProviderFactory provider: procedureToProviderMap.values())
-            provider.cleanup();
-    }
-    
-    
-    @Override
     public void cleanup() throws SensorHubException
     {
         // TODO remove template database
@@ -294,7 +300,7 @@ public class SOSService extends SOSServlet implements IServiceInterface<SOSServi
         
     
     @Override
-    protected synchronized void handleRequest(DescribeSensorRequest request) throws Exception
+    protected void handleRequest(DescribeSensorRequest request) throws Exception
     {
         String sensorID = request.getProcedureID();
         if (sensorID == null || !procedureToProviderMap.containsKey(sensorID))
@@ -309,7 +315,7 @@ public class SOSService extends SOSServlet implements IServiceInterface<SOSServi
 
     // overriden to add synchronization
     @Override
-    protected synchronized void handleRequest(GetResultTemplateRequest request) throws Exception
+    protected void handleRequest(GetResultTemplateRequest request) throws Exception
     {
         super.handleRequest(request);
     }
@@ -317,7 +323,7 @@ public class SOSService extends SOSServlet implements IServiceInterface<SOSServi
 
     // overriden to add synchronization
     @Override
-    protected synchronized void handleRequest(GetResultRequest request) throws Exception
+    protected void handleRequest(GetResultRequest request) throws Exception
     {
         super.handleRequest(request);
     }
@@ -325,7 +331,7 @@ public class SOSService extends SOSServlet implements IServiceInterface<SOSServi
 
     // overriden to add synchronization
     @Override
-    protected synchronized void handleRequest(GetObservationRequest request) throws Exception
+    protected void handleRequest(GetObservationRequest request) throws Exception
     {
         super.handleRequest(request);
     }

@@ -25,10 +25,10 @@
 
 package org.sensorhub.impl.module;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.UUID;
@@ -90,12 +90,11 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
         {
             try
             {
-                if (config.enabled)
-                    loadModule(config);
+                loadModule(config);
             }
             catch (Exception e)
             {
-                log.error(e);
+                log.error(e.getLocalizedMessage(), e);
             }
         }
     }
@@ -115,8 +114,9 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
         try
         {
             // first load needed modules if necessary
-            for (String moduleID: getReferencedModules(config))
-                loadModule(configRepos.get(moduleID));
+            // not necessary since they can be loaded lazyly by getModuleById method
+            //for (String moduleID: getReferencedModules(config))
+            //    loadModule(configRepos.get(moduleID));
             
             // generate a new ID if non was provided
             if (config.id == null)
@@ -126,6 +126,8 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
             Class<IModule> clazz = (Class<IModule>)Class.forName(config.moduleClass);
             IModule module = clazz.newInstance();
             module.init(config);
+            if (config.enabled)
+                module.start();
             
             // keep track of what modules are loaded
             loadedModules.put(config.id, module);
@@ -137,7 +139,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
         }
         catch (Exception e)
         {
-            throw new SensorHubException("Error while instantiating module " + config.name, e);
+            throw new SensorHubException("Error while initializing module " + config.name, e);
         }
     }
     
@@ -146,7 +148,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
      * Infers module dependencies by scanning all String properties
      * for a UUID existing in the module database
      */
-    private String[] getReferencedModules(ModuleConfig config)
+    /*private String[] getReferencedModules(Object config)
     {
         List<String> refdModuleIDs = new ArrayList<String>();
         
@@ -167,7 +169,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
         }
         
         return refdModuleIDs.toArray(new String[0]);
-    }
+    }*/
     
     
     /**
@@ -175,14 +177,18 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
      * @param moduleID Local ID of module to enable
      * @return
      */
+    @SuppressWarnings("rawtypes")
     public synchronized IModule<?> enableModule(String moduleID) throws SensorHubException
     {
         checkID(moduleID);
-        IModule<?> module;
         
         ModuleConfig config = configRepos.get(moduleID);
         config.enabled = true;
-        module = loadModule(config);
+        
+        // also init module if it is loaded
+        IModule module = loadedModules.get(moduleID);
+        if (module != null)
+            module.start();
         
         eventHandler.publishEvent(new ModuleEvent(module, ModuleEvent.Type.ENABLED));
         return module;
@@ -200,7 +206,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
         ModuleConfig config = configRepos.get(moduleID);
         config.enabled = false;
         
-        // also unload module if it was loaded
+        // also unload and stop module if it was loaded
         IModule<?> module = loadedModules.remove(moduleID);
         if (module != null)
             module.stop();
@@ -235,7 +241,12 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
     public synchronized void saveModulesConfiguration()
     {
         for (IModule<?> module: loadedModules.values())
-            configRepos.update(module.getConfiguration());
+        {
+            if (configRepos.contains(module.getLocalID()))
+                configRepos.update(module.getConfiguration());
+            else
+                configRepos.add(module.getConfiguration());
+        }
     }
     
     
@@ -257,9 +268,17 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
      * @see org.sensorhub.api.module.IModuleManager#getModuleById(java.lang.String)
      */
     @Override
-    public IModule<?> getModuleById(String moduleID)
+    public IModule<?> getModuleById(String moduleID) throws SensorHubException
     {
-        //checkID(moduleID);
+        // start module if necessary
+        if (!loadedModules.containsKey(moduleID))
+        {
+            if (configRepos.contains(moduleID))
+                loadModule(configRepos.get(moduleID));
+            else
+                throw new SensorHubException("Unknown module " + moduleID);
+        }
+        
         return loadedModules.get(moduleID);
     }
     
@@ -286,6 +305,24 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
         ServiceLoader<IModuleProvider> sl = ServiceLoader.load(IModuleProvider.class);
         for (IModuleProvider provider: sl)
             installedModules.add(provider);
+        
+        return installedModules;
+    }
+    
+    
+    /**
+     * Retrieves list of all installed module types
+     * @return
+     */
+    public List<IModuleProvider> getInstalledModuleTypes(Class<?> moduleClass)
+    {
+        List<IModuleProvider> installedModules = getInstalledModuleTypes();
+        ListIterator<IModuleProvider> it = installedModules.listIterator();        
+        while (it.hasNext())
+        {
+            if (!moduleClass.isAssignableFrom(it.next().getModuleClass()))
+                it.remove();
+        }
         
         return installedModules;
     }

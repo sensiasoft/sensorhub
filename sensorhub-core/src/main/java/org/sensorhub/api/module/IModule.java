@@ -63,6 +63,22 @@ public interface IModule<ConfigType extends ModuleConfig>
     
     
     /**
+     * Starts the module with the current configuration
+     * @throws SensorHubException
+     */
+    public void start() throws SensorHubException;
+    
+    
+    /**
+     * Stops the module
+     * All temporary resources created by the module should be cleaned
+     * when this is called (ex: memory, files, connections, etc.)
+     * @throws SensorHubException
+     */
+    public void stop() throws SensorHubException;
+    
+    
+    /**
      * Retrieves a copy of the module configuration
      * (i.e. for reading only since changes won't have any effect until updateConfig is called)
      * @return a copy of the configuration object associated to this module
@@ -83,15 +99,6 @@ public interface IModule<ConfigType extends ModuleConfig>
      */
     public String getLocalID();
     
-    
-    /**
-     * Stops the module
-     * All temporary resources created by the module should be cleaned
-     * when this is called (ex: memory, files, connections, etc.)
-     * @throws SensorHubException
-     */
-    public void stop() throws SensorHubException;
-           
     
     /**
      * Saves the state of this module to the provided output stream

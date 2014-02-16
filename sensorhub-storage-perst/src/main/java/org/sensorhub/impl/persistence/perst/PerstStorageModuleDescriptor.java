@@ -31,7 +31,7 @@ import org.sensorhub.api.module.ModuleConfig;
 import org.sensorhub.api.persistence.StorageConfig;
 
 
-public class PerstStorageProvider implements IModuleProvider
+public class PerstStorageModuleDescriptor implements IModuleProvider
 {
 
     @Override

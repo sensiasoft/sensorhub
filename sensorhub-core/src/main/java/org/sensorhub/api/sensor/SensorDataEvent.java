@@ -63,12 +63,13 @@ public class SensorDataEvent extends SensorEvent
 	 * @param desc
 	 * @param records 
 	 */
-	public SensorDataEvent(String sensorId, long timeStamp, DataComponent desc, DataBlock... records)
+	public SensorDataEvent(ISensorDataInterface dataInterface, long timeStamp, DataComponent desc, DataBlock... records)
 	{
-		super(sensorId, Type.NEW_DATA_AVAILABLE);
+		super(dataInterface.getSensorInterface().getLocalID(), Type.NEW_DATA_AVAILABLE);
 		this.timeStamp = timeStamp;
 		this.recordDescription = desc;
 		this.records = records;
+		this.source = dataInterface;
 	}
 
 

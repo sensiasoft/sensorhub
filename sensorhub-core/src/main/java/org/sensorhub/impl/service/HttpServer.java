@@ -106,7 +106,20 @@ public class HttpServer implements IModule<HttpServerConfig>
     public void init(HttpServerConfig config) throws SensorHubException
     {
         this.config = config;
-        
+    }
+    
+
+    @Override
+    public void updateConfig(HttpServerConfig config) throws SensorHubException
+    {
+        stop();
+        init(config);
+    }
+
+    
+    @Override
+    public void start() throws SensorHubException
+    {
         try
         {
             server = new Server(config.httpPort);
@@ -120,15 +133,21 @@ public class HttpServer implements IModule<HttpServerConfig>
         }
     }
     
-
-    @Override
-    public void updateConfig(HttpServerConfig config) throws SensorHubException
-    {
-        stop();
-        init(config);
-    }
-
     
+    @Override
+    public void stop() throws SensorHubException
+    {
+        try
+        {
+            server.stop();
+        }
+        catch (Exception e)
+        {
+            throw new SensorHubException("Error while stopping SensorHub embedded HTTP server", e);
+        }
+    }
+    
+
     @Override
     public HttpServerConfig getConfiguration()
     {
@@ -157,19 +176,6 @@ public class HttpServer implements IModule<HttpServerConfig>
     }
     
     
-    public void stop() throws SensorHubException
-    {
-        try
-        {
-            server.stop();
-        }
-        catch (Exception e)
-        {
-            throw new SensorHubException("Error while stopping SensorHub embedded HTTP server", e);
-        }
-    }
-    
-
     @Override
     public void saveState(IModuleStateSaver saver) throws SensorHubException
     {

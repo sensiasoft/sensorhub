@@ -282,8 +282,7 @@ public class InMemoryStorage implements IBasicStorage<StorageConfig>
     @Override
     public void init(StorageConfig config) throws SensorHubException
     {
-        this.config = config;
-        open();
+        this.config = config;        
     }
 
 
@@ -291,6 +290,20 @@ public class InMemoryStorage implements IBasicStorage<StorageConfig>
     public void updateConfig(StorageConfig config) throws SensorHubException
     {
         this.config = config;
+    }
+    
+    
+    @Override
+    public void start() throws SensorHubException
+    {        
+        open();
+    }
+    
+    
+    @Override
+    public void stop() throws SensorHubException
+    {        
+        recordList.clear();
     }
 
 
@@ -312,13 +325,6 @@ public class InMemoryStorage implements IBasicStorage<StorageConfig>
     public String getLocalID()
     {
         return config.id;
-    }
-    
-    
-    @Override
-    public void stop() throws SensorHubException
-    {        
-        recordList.clear();
     }
 
 

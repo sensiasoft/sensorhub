@@ -25,6 +25,8 @@
 
 package org.sensorhub.impl.service.sos;
 
+import org.sensorhub.api.common.SensorHubException;
+
 
 public abstract class SOSProviderConfig
 {
@@ -60,5 +62,5 @@ public abstract class SOSProviderConfig
      * Retrieves the factory associated with this type of data provider
      * @return
      */
-    protected abstract IDataProviderFactory getFactory();
+    protected abstract IDataProviderFactory getFactory() throws SensorHubException;
 }

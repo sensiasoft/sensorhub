@@ -11,9 +11,12 @@
 package org.sensorhub.impl.service.sos;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map.Entry;
 import org.sensorhub.api.common.Event;
 import org.sensorhub.api.common.IEventListener;
+import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.sensor.ISensorDataInterface;
 import org.sensorhub.api.sensor.ISensorInterface;
 import org.sensorhub.api.sensor.SensorException;
@@ -52,13 +55,12 @@ public class SensorDataProviderFactory implements IDataProviderFactory, IEventLi
     final ISensorInterface<?> sensor;
         
     
-    protected SensorDataProviderFactory(SensorDataProviderConfig config)
+    protected SensorDataProviderFactory(SensorDataProviderConfig config) throws SensorHubException
     {
         this.config = config;
         
         // get handle to sensor instance using sensor manager
         this.sensor = SensorHub.getInstance().getSensorManager().getModuleById(config.sensorID);
-        this.config.enabled = this.sensor.getConfiguration().enabled;
         
         // register to module lifecycle events
         SensorHub.getInstance().registerListener(this);
@@ -125,13 +127,15 @@ public class SensorDataProviderFactory implements IDataProviderFactory, IEventLi
         List<String> observableUris = new ArrayList<String>();
         
         // process only selected outputs
-        for (String outputName: config.selectedOutputs)
+        for (Entry<String, ISensorDataInterface> entry: sensor.getAllOutputs().entrySet())
         {
-            ISensorDataInterface outputInterface = sensor.getAllOutputs().get(outputName);
+            ISensorDataInterface output = entry.getValue();
+            if (Arrays.binarySearch(config.hiddenOutputs, entry.getKey()) >= 0)
+                continue;
             
             // iterate through all components and add all definition URIs as observables
             // this way only composite with URI will get added
-            DataIterator it = new DataIterator(outputInterface.getRecordDescription());
+            DataIterator it = new DataIterator(output.getRecordDescription());
             while (it.hasNext())
             {
                 String defUri = (String)it.next().getProperty(SweConstants.DEF_URI);
@@ -214,6 +218,6 @@ public class SensorDataProviderFactory implements IDataProviderFactory, IEventLi
     @Override
     public boolean isEnabled()
     {
-        return config.enabled;
+        return (config.enabled && sensor.getConfiguration().enabled);
     }
 }

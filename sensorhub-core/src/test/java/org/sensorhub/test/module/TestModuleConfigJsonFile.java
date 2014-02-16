@@ -28,7 +28,6 @@ package org.sensorhub.test.module;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
-import java.io.IOException;
 import java.util.UUID;
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
@@ -39,22 +38,24 @@ import org.sensorhub.api.persistence.StorageConfig;
 import org.sensorhub.api.processing.ProcessConfig;
 import org.sensorhub.api.sensor.SensorConfig;
 import org.sensorhub.api.service.ServiceConfig;
-import org.sensorhub.impl.module.ModuleConfigDatabaseJson;
+import org.sensorhub.impl.module.ModuleConfigJsonFile;
 import static org.junit.Assert.*;
 
 
-public class TestModuleConfigDatabaseJson
+public class TestModuleConfigJsonFile
 {
-    ModuleConfigDatabaseJson configDb;
-    File configFolder;
+    ModuleConfigJsonFile configDb;
+    File configFile;
     
     
     @Before
-    public void setup()
+    public void setup() throws Exception
     {
-        configFolder = new File("junit-test/");
-        configFolder.mkdirs();
-        configDb = new ModuleConfigDatabaseJson(configFolder.getAbsolutePath());
+        configFile = new File("test-conf.json");
+        configFile.deleteOnExit();
+        
+        FileUtils.copyURLToFile(TestModuleConfigJsonFile.class.getResource("/module-config.json"), configFile);        
+        configDb = new ModuleConfigJsonFile(configFile.getAbsolutePath());
     }
     
     
@@ -68,7 +69,7 @@ public class TestModuleConfigDatabaseJson
         config1.enableHistory = true;
         configDb.add(config1);
         
-        displayFiles();
+        displayFile();
     }
     
     
@@ -82,7 +83,7 @@ public class TestModuleConfigDatabaseJson
         config1.enableHistory = true;
         configDb.add(config1);
         
-        displayFiles();
+        displayFile();
         
         configDb.remove(config1.id);
         configDb.get(config1.id);
@@ -118,7 +119,7 @@ public class TestModuleConfigDatabaseJson
         config4.moduleClass = "org.sensorhub.persistence.FeatureStorage";
         configDb.add(config4);
         
-        displayFiles();
+        displayFile();
         
         storedConf = configDb.get(config1.id);
         assertTrue(storedConf.id.equals(config1.id));
@@ -142,29 +143,21 @@ public class TestModuleConfigDatabaseJson
     }
     
     
-    private void displayFiles() throws Exception
+    private void displayFile() throws Exception
     {
-        for (File f: configFolder.listFiles())
-        {
-            // print out file
-            BufferedReader reader = new BufferedReader(new FileReader(f));
-            String line;
-            while ((line = reader.readLine()) != null)
-                System.out.println(line);
-            reader.close();
-        }
+        // print out file
+        BufferedReader reader = new BufferedReader(new FileReader(configFile));
+        String line;
+        while ((line = reader.readLine()) != null)
+            System.out.println(line);
+        reader.close();
     }
     
     
     @After
     public void cleanup()
     {
-        try
-        {
-            FileUtils.deleteDirectory(configFolder);
-        }
-        catch (IOException e)
-        {
-        }
+        if (configFile != null)
+            configFile.delete();
     }
 }

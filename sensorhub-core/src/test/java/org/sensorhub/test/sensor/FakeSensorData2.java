@@ -13,9 +13,16 @@ package org.sensorhub.test.sensor;
 import java.util.List;
 import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.sensor.ISensorDataInterface;
+import org.sensorhub.api.sensor.ISensorInterface;
 import org.sensorhub.api.sensor.SensorException;
+import org.vast.cdm.common.BinaryComponent;
+import org.vast.cdm.common.BinaryEncoding;
+import org.vast.cdm.common.BinaryEncoding.ByteEncoding;
+import org.vast.cdm.common.BinaryEncoding.ByteOrder;
+import org.vast.cdm.common.BinaryOptions;
 import org.vast.cdm.common.DataBlock;
 import org.vast.cdm.common.DataComponent;
+import org.vast.cdm.common.DataEncoding;
 import org.vast.cdm.common.DataType;
 import org.vast.data.DataArray;
 import org.vast.data.DataBlockByte;
@@ -38,14 +45,16 @@ public class FakeSensorData2 implements ISensorDataInterface
 {
     static int MAX_COUNT = 2;
     static int ARRAY_SIZE = 12000;
+    FakeSensor sensor;
     String name;
     boolean pushEnabled;
     SMLSystem sml;
     int count;
     
     
-    public FakeSensorData2(String name, boolean pushEnabled)
+    public FakeSensorData2(FakeSensor sensor, String name, boolean pushEnabled)
     {
+        this.sensor = sensor;
         this.name = name;
         this.pushEnabled = pushEnabled;
     }
@@ -59,6 +68,13 @@ public class FakeSensorData2 implements ISensorDataInterface
         else
             return true;
     }    
+    
+    
+    @Override
+    public ISensorInterface<?> getSensorInterface()
+    {
+        return sensor;
+    }
     
     
     @Override
@@ -76,7 +92,7 @@ public class FakeSensorData2 implements ISensorDataInterface
 
 
     @Override
-    public double getAverageSamplingRate()
+    public double getAverageSamplingPeriod()
     {
         return 0.01;
     }
@@ -88,15 +104,29 @@ public class FakeSensorData2 implements ISensorDataInterface
         DataArray img = new DataArray(ARRAY_SIZE);
         img.setProperty(SweConstants.DEF_URI, "urn:blabla:image");
         img.setName(this.name);        
-        DataComponent record = new DataGroup(3, this.name);        
+        DataComponent record = new DataGroup(3);        
         DataValue r = new DataValue(DataType.BYTE);
         record.addComponent("red", r);
         DataValue g = new DataValue(DataType.BYTE);
         record.addComponent("green", g);
         DataValue b = new DataValue(DataType.BYTE);
         record.addComponent("blue", b);        
-        img.addComponent(record);        
+        img.addComponent("pixel", record);        
         return img;
+    }
+
+
+    @Override
+    public DataEncoding getRecommendedEncoding() throws SensorException
+    {
+        BinaryEncoding dataEnc = new BinaryEncoding();
+        dataEnc.byteEncoding = ByteEncoding.RAW;
+        dataEnc.byteOrder = ByteOrder.BIG_ENDIAN;
+        dataEnc.componentEncodings = new BinaryOptions[3];
+        dataEnc.componentEncodings[0] = new BinaryComponent("pixel/red", DataType.BYTE);
+        dataEnc.componentEncodings[1] = new BinaryComponent("pixel/green", DataType.BYTE);
+        dataEnc.componentEncodings[2] = new BinaryComponent("pixel/blue", DataType.BYTE);
+        return dataEnc;
     }
 
 

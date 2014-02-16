@@ -65,6 +65,18 @@ public class FakeSensor implements ISensorInterface<SensorConfig>
 
 
     @Override
+    public void start() throws SensorHubException
+    {        
+    }
+    
+    
+    @Override
+    public void stop() throws SensorHubException
+    {        
+    }
+    
+    
+    @Override
     public SensorConfig getConfiguration()
     {
         return config;
@@ -165,12 +177,6 @@ public class FakeSensor implements ISensorInterface<SensorConfig>
     @Override
     public void unregisterListener(IEventListener listener)
     {
-    }
-
-
-    @Override
-    public void stop() throws SensorHubException
-    {        
     }
     
     

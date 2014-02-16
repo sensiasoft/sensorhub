@@ -27,7 +27,6 @@ package org.sensorhub.api.sensor;
 
 import java.util.List;
 import org.sensorhub.api.common.CommandStatus;
-import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.common.IEventProducer;
 import org.vast.cdm.common.DataBlock;
 import org.vast.cdm.common.DataComponent;
@@ -39,6 +38,7 @@ import org.vast.util.DateTime;
  * Interface to be implemented by all sensor drivers connected to the system
  * Commands can be sent to each sensor controllable input via this interface.
  * Commands can be executed synchronously or asynchronously by sensors.
+ * Implementations of this class can produce events of type SensorControlEvent.
  * </p>
  * 
  * <p>Copyright (c) 2010</p>
@@ -47,6 +47,21 @@ import org.vast.util.DateTime;
  */
 public interface ISensorControlInterface extends IEventProducer
 {	
+    
+    /**
+     * Allows by-reference access to parent sensor interface
+     * @return
+     */
+    public ISensorInterface<?> getParentSensor();
+    
+    
+    /**
+     * Checks if this interface is enabled
+     * @return true if interface is enabled, false otherwise
+     */
+    public boolean isEnabled();
+    
+    
 	/**
 	 * Checks asynchronous execution capability 
 	 * @return true if asynchronous command execution is supported, false otherwise
@@ -166,14 +181,5 @@ public interface ISensorControlInterface extends IEventProducer
      * @throws SensorException
      */
     public List<CommandStatus> getCommandStatusHistory(String commandID) throws SensorException;
-	
-	
-	/**
-	 * Registers a listener to receive command status change events
-	 * @see #isAsyncExecSupported()	
-	 * @param listener
-	 */
-    @Override
-	public void registerListener(IEventListener listener);
 
 }

@@ -27,11 +27,11 @@ package org.sensorhub.impl.persistence;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.module.IModule;
 import org.sensorhub.api.module.ModuleConfig;
 import org.sensorhub.api.persistence.IDataStorage;
 import org.sensorhub.api.persistence.IPersistenceManager;
-import org.sensorhub.api.persistence.StorageException;
 import org.sensorhub.api.sensor.ISensorInterface;
 import org.sensorhub.impl.module.ModuleRegistry;
 
@@ -95,7 +95,7 @@ public class PersistenceManagerImpl implements IPersistenceManager
 
 
     @Override
-    public IDataStorage<?,?,?> getModuleById(String moduleID)
+    public IDataStorage<?,?,?> getModuleById(String moduleID) throws SensorHubException
     {
         IModule<?> module = moduleRegistry.getModuleById(moduleID);
         
@@ -104,14 +104,4 @@ public class PersistenceManagerImpl implements IPersistenceManager
         else
             return null;
     }
-
-
-    @Override
-    public void destroyStorage(String storageId, boolean deleteAllData) throws StorageException
-    {
-        IDataStorage<?,?,?> storage = (IDataStorage<?,?,?>)moduleRegistry.getModuleById(storageId);
-        storage.close();
-        if (deleteAllData)
-            storage.cleanup();       
-    }  
 }

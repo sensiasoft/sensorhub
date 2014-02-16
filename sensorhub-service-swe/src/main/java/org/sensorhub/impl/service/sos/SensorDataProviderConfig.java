@@ -25,6 +25,8 @@
 
 package org.sensorhub.impl.service.sos;
 
+import org.sensorhub.api.common.SensorHubException;
+
 
 /**
  * <p>
@@ -45,9 +47,9 @@ public class SensorDataProviderConfig extends SOSProviderConfig
     
     
     /**
-     * Names of sensor outputs to make available through the SOS
+     * Names of sensor outputs to hide from SOS
      */
-    public String[] selectedOutputs;
+    public String[] hiddenOutputs = new String[0];
     
     
     /**
@@ -58,7 +60,7 @@ public class SensorDataProviderConfig extends SOSProviderConfig
 
 
     @Override
-    protected IDataProviderFactory getFactory()
+    protected IDataProviderFactory getFactory() throws SensorHubException
     {
         return new SensorDataProviderFactory(this);
     }

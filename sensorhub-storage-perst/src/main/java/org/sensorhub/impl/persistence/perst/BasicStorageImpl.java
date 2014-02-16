@@ -115,16 +115,22 @@ public class BasicStorageImpl implements IBasicStorage<BasicStorageConfig>
     
     
     @Override
-    public boolean isEnabled()
+    public void init(BasicStorageConfig config)
     {
-        return config.enabled;
+        this.config = config;        
     }
     
     
     @Override
-    public void init(BasicStorageConfig config)
+    public void updateConfig(BasicStorageConfig config)
     {
-        this.config = config;
+        // TODO Auto-generated method stub        
+    }
+    
+    
+    @Override
+    public void start()
+    {
         this.autoCommit = true;
         
         if (db != null && db.isOpened())
@@ -135,9 +141,9 @@ public class BasicStorageImpl implements IBasicStorage<BasicStorageConfig>
     
     
     @Override
-    public void updateConfig(BasicStorageConfig config)
+    public void stop() throws StorageException
     {
-        // TODO Auto-generated method stub        
+        close();
     }
 
 
@@ -173,11 +179,17 @@ public class BasicStorageImpl implements IBasicStorage<BasicStorageConfig>
 
 
     @Override
+    public boolean isEnabled()
+    {
+        return config.enabled;
+    }
+    
+    
+    @Override
     public BasicStorageConfig getConfiguration()
     {
         return config;
     }
-
 
 
     @Override
@@ -416,13 +428,6 @@ public class BasicStorageImpl implements IBasicStorage<BasicStorageConfig>
     public String getLocalID()
     {
         return config.id;
-    }
-    
-    
-    @Override
-    public void stop() throws StorageException
-    {
-        close();
     }
     
 

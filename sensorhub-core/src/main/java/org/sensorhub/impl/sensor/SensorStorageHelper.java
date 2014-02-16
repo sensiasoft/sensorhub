@@ -79,7 +79,20 @@ public class SensorStorageHelper implements IModule<SensorStorageConfig>, IEvent
     public void init(SensorStorageConfig config) throws SensorHubException
     {
         this.config = config;
+    }
 
+
+    @Override
+    public void updateConfig(SensorStorageConfig config) throws SensorHubException
+    {
+        sensor.unregisterListener(this);        
+        init(config);
+    }
+
+    
+    @Override
+    public void start() throws SensorHubException
+    {
         // get handle to storage and sensor
         ModuleRegistry moduleReg = SensorHub.getInstance().getModuleRegistry();
         storage = (IBasicStorage<?>)moduleReg.getModuleById(config.storageID);
@@ -97,16 +110,15 @@ public class SensorStorageHelper implements IModule<SensorStorageConfig>, IEvent
                 sensor.getAllOutputs().get(outputName).registerListener(this);
         }
     }
-
-
+    
+    
     @Override
-    public void updateConfig(SensorStorageConfig config) throws SensorHubException
+    public void stop() throws StorageException
     {
-        sensor.unregisterListener(this);        
-        init(config);
+        // TODO Auto-generated method stub
     }
-
-
+    
+    
     @Override
     public SensorStorageConfig getConfiguration()
     {
@@ -153,13 +165,6 @@ public class SensorStorageHelper implements IModule<SensorStorageConfig>, IEvent
             storage.commit();
             storage.setAutoCommit(true);
         }        
-    }
-
-    
-    @Override
-    public void stop() throws StorageException
-    {
-        // TODO Auto-generated method stub
     }
     
 

@@ -25,8 +25,8 @@
 
 package org.sensorhub.api.module;
 
-import java.lang.ref.WeakReference;
 import java.util.List;
+import org.sensorhub.api.common.SensorHubException;
 
 
 /**
@@ -62,6 +62,6 @@ public interface IModuleManager<ModuleType extends IModule<?>>
      * @param moduleID Id of module to retrieve
      * @return direct reference to the module instance
      */
-    public ModuleType getModuleById(String moduleID);
+    public ModuleType getModuleById(String moduleID) throws SensorHubException;
 
 }

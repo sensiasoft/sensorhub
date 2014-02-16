@@ -27,6 +27,7 @@ package org.sensorhub.impl.sensor;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.module.IModule;
 import org.sensorhub.api.module.IModuleProvider;
 import org.sensorhub.api.module.ModuleConfig;
@@ -95,7 +96,7 @@ public class SensorManagerImpl implements ISensorManager
 
 
     @Override
-    public ISensorInterface<?> getModuleById(String moduleID)
+    public ISensorInterface<?> getModuleById(String moduleID) throws SensorHubException
     {
         IModule<?> module = moduleRegistry.getModuleById(moduleID);
         

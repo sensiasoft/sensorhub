@@ -72,7 +72,7 @@ public class TestSensorStorageHelper
         sensorCfg.moduleClass = FakeSensor.class.getCanonicalName();
         sensorCfg.name = "Sensor1";
         IModule<?> sensor = registry.loadModule(sensorCfg);
-        fakeSensorData = new FakeSensorData("out1", true, 10, 0.1, 10);
+        fakeSensorData = new FakeSensorData((FakeSensor)sensor, "out1", true, 10, 0.1, 10);
         ((FakeSensor)sensor).setDataInterfaces(fakeSensorData);
     }
     
@@ -87,7 +87,7 @@ public class TestSensorStorageHelper
         config.sensorID = registry.getLoadedModules().get(1).getLocalID();
         registry.loadModule(config);
         
-        Thread.sleep((long)((fakeSensorData.maxSampleCount+1) * 1000.0 / fakeSensorData.getAverageSamplingRate()));
+        Thread.sleep((long)((fakeSensorData.maxSampleCount+1) * 1000.0 / fakeSensorData.getAverageSamplingPeriod()));
         
         assertEquals(fakeSensorData.maxSampleCount, db.recordList.size());
     }

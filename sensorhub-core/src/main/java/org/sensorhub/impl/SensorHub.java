@@ -32,7 +32,7 @@ import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.config.IGlobalConfig;
 import org.sensorhub.api.module.IModuleConfigRepository;
 import org.sensorhub.api.sensor.ISensorManager;
-import org.sensorhub.impl.module.ModuleConfigDatabaseJson;
+import org.sensorhub.impl.module.ModuleConfigJsonFile;
 import org.sensorhub.impl.module.ModuleRegistry;
 import org.sensorhub.impl.sensor.SensorManagerImpl;
 
@@ -49,6 +49,7 @@ import org.sensorhub.impl.sensor.SensorManagerImpl;
 public class SensorHub
 {
     private static final Log log = LogFactory.getLog(SensorHub.class);    
+    private static final String ERROR_MSG = "Fatal error during sensorhub execution";
     private static SensorHub instance;
     
     private IGlobalConfig config;
@@ -81,9 +82,8 @@ public class SensorHub
     
     private SensorHub(IGlobalConfig config)
     {
-        this.config = config;
-        
-        IModuleConfigRepository configDB = new ModuleConfigDatabaseJson(config.getModuleConfigPath());
+        this.config = config;        
+        IModuleConfigRepository configDB = new ModuleConfigJsonFile(config.getModuleConfigPath());
         this.registry = new ModuleRegistry(configDB);
     }
     
@@ -157,7 +157,8 @@ public class SensorHub
         if (args.length == 0)
         {
             // print usage
-            System.out.println("sensorhub [module_config_path]");
+            System.out.println("SensorHub v1.0");
+            System.out.println("Command syntax: sensorhub [module_config_path]");
             System.exit(1);
         }
         
@@ -174,7 +175,10 @@ public class SensorHub
             if (instance != null)
                 instance.stop();
             
-            System.err.println("Fatal error during SensorHub execution\n" + e.getLocalizedMessage());
+            System.err.println(ERROR_MSG);
+            System.err.println(e.getLocalizedMessage());
+            log.error(ERROR_MSG, e);
+            
             System.exit(2);
         }
     }

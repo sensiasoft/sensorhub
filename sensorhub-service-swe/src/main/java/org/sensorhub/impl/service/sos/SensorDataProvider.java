@@ -37,17 +37,15 @@ import org.sensorhub.api.sensor.ISensorInterface;
 import org.sensorhub.api.sensor.SensorEvent;
 import org.sensorhub.api.sensor.SensorEvent.Type;
 import org.sensorhub.api.sensor.SensorException;
-import org.vast.cdm.common.AsciiEncoding;
 import org.vast.cdm.common.DataBlock;
 import org.vast.cdm.common.DataComponent;
 import org.vast.cdm.common.DataEncoding;
 import org.vast.data.DataIterator;
-import org.vast.ogc.def.IDefinition;
+import org.vast.ogc.def.DefinitionRef;
 import org.vast.ogc.gml.FeatureRef;
 import org.vast.ogc.om.IObservation;
 import org.vast.ogc.om.ObservationImpl;
 import org.vast.ogc.om.ProcedureRef;
-import org.vast.ogc.xlink.CachedReference;
 import org.vast.ows.server.SOSDataFilter;
 import org.vast.ows.sos.ISOSDataProvider;
 import org.vast.sweCommon.SweConstants;
@@ -91,8 +89,11 @@ public class SensorDataProvider implements ISOSDataProvider, IEventListener
             {
                 String defUri = (String)it.next().getProperty(SweConstants.DEF_URI);
                 if (filter.getObservables().contains(defUri))
+                {
                     dataSources.add(outputInterface);
-            }            
+                    break;
+                }
+            }
             
             // register listener if push is supported
             if (outputInterface.isPushSupported())
@@ -119,7 +120,7 @@ public class SensorDataProvider implements ISOSDataProvider, IEventListener
                 };
                 
                 Timer timer = new Timer(sensor.getName() + " Polling", true);
-                timer.scheduleAtFixedRate(pollTask, 0, (long)(outputInterface.getAverageSamplingRate() * 500.));
+                timer.scheduleAtFixedRate(pollTask, 0, (long)(outputInterface.getAverageSamplingPeriod() * 500.));
             }
         }
     }
@@ -143,7 +144,7 @@ public class SensorDataProvider implements ISOSDataProvider, IEventListener
         // create observation object
         IObservation obs = new ObservationImpl();
         obs.setFeatureOfInterest(new FeatureRef("http://TODO"));
-        obs.setObservedProperty(new CachedReference<IDefinition>("http://TODO"));
+        obs.setObservedProperty(new DefinitionRef("http://TODO"));
         obs.setProcedure(new ProcedureRef(sensor.getCurrentSensorDescription().getIdentifier()));
         obs.setPhenomenonTime(phenTime);
         obs.setResultTime(resultTime);
@@ -166,15 +167,14 @@ public class SensorDataProvider implements ISOSDataProvider, IEventListener
         // TODO generate choice if request includes several outputs
         // not possible in core SOS because only one observed property can be requested at a time
         
-        return nextInterface.getRecordDescription();
+        return dataSources.get(0).getRecordDescription();
     }
     
 
     @Override
     public synchronized DataEncoding getDefaultResultEncoding() throws Exception
     {
-        // TODO get from config
-        return new AsciiEncoding("\n", ",");
+        return dataSources.get(0).getRecommendedEncoding();
     }
 
 
@@ -211,8 +211,8 @@ public class SensorDataProvider implements ISOSDataProvider, IEventListener
     {
         try
         {
-            while (nextInterface == null)
-                this.wait();
+            do { this.wait(); }
+            while (nextInterface == null);
         }
         catch (InterruptedException e)
         {
@@ -237,7 +237,7 @@ public class SensorDataProvider implements ISOSDataProvider, IEventListener
         return interfaceActive;
     }
     
-    
+
     @Override
     public void handleEvent(Event e)
     {
@@ -256,6 +256,17 @@ public class SensorDataProvider implements ISOSDataProvider, IEventListener
                 
             }
         }        
+    }
+    
+    
+    @Override
+    public void close()
+    {
+        for (ISensorDataInterface outputInterface: dataSources)
+        {
+            if (outputInterface.isPushSupported())
+                outputInterface.unregisterListener(this);
+        }
     }
     
     

@@ -15,7 +15,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.InputStream;
 import java.net.URL;
-import org.apache.commons.io.FileUtils;
+import java.util.Arrays;
 import org.apache.commons.io.IOUtils;
 import org.junit.After;
 import org.junit.Test;
@@ -37,20 +37,21 @@ import org.vast.ogc.OGCExceptionReader;
 public class TestSOSService
 {
     private static String SERVICE_ENDPOINT = "/sos";
-    File configFolder;
+    File configFile;
     
     
     protected void setupFramework() throws Exception
     {
         // init sensorhub
-        configFolder = new File("junit-test/");
-        configFolder.mkdirs();
-        SensorHub.createInstance(new SensorHubConfig(configFolder.getAbsolutePath()));
+        configFile = new File("junit-test.json");
+        configFile.deleteOnExit();
+        SensorHub.createInstance(new SensorHubConfig(configFile.getAbsolutePath()));
         
         // start HTTP server
         HttpServer server = HttpServer.getInstance();
         HttpServerConfig config = new HttpServerConfig();
         server.init(config);
+        server.start();
     }
     
     
@@ -69,12 +70,13 @@ public class TestSOSService
         srvcMetadata.serviceProvider.setDeliveryPoint("15 MyStreet");
         srvcMetadata.serviceProvider.setCity("MyCity");
         srvcMetadata.serviceProvider.setCountry("MyCountry");
-        serviceCfg.dataProviders = providerConfigs;
+        serviceCfg.dataProviders = Arrays.asList(providerConfigs);
         srvcMetadata.fees = "NONE";
         srvcMetadata.accessConstraints = "NONE";
         
         // load module into registry
-        SOSService sos = (SOSService)SensorHub.getInstance().getModuleRegistry().loadModule(serviceCfg);    
+        SOSService sos = (SOSService)SensorHub.getInstance().getModuleRegistry().loadModule(serviceCfg);
+        SensorHub.getInstance().getModuleRegistry().saveModulesConfiguration();
         return sos;
     }
     
@@ -88,7 +90,7 @@ public class TestSOSService
         sensorCfg.name = "Sensor1";
         IModule<?> sensor = SensorHub.getInstance().getModuleRegistry().loadModule(sensorCfg);
         String outputName = "out1";
-        ((FakeSensor)sensor).setDataInterfaces(new FakeSensorData(outputName, false));
+        ((FakeSensor)sensor).setDataInterfaces(new FakeSensorData((FakeSensor)sensor, outputName, false));
         
         // create SOS data provider config
         SensorDataProviderConfig provCfg = new SensorDataProviderConfig();
@@ -96,7 +98,7 @@ public class TestSOSService
         provCfg.name = "SOS Sensor Provider #1";
         provCfg.uri = "urn:mysos:sensor1";
         provCfg.sensorID = sensor.getLocalID();
-        provCfg.selectedOutputs = new String[] {outputName};
+        provCfg.hiddenOutputs = new String[] {};
         
         return provCfg;
     }
@@ -110,7 +112,9 @@ public class TestSOSService
         sensorCfg.moduleClass = FakeSensor.class.getCanonicalName();
         sensorCfg.name = "Sensor2";
         IModule<?> sensor = SensorHub.getInstance().getModuleRegistry().loadModule(sensorCfg);
-        ((FakeSensor)sensor).setDataInterfaces(new FakeSensorData("weatherOut", false), new FakeSensorData2("imgOut", false));
+        ((FakeSensor)sensor).setDataInterfaces(
+                new FakeSensorData((FakeSensor)sensor, "weatherOut", false),
+                new FakeSensorData2((FakeSensor)sensor, "imgOut", false));
         
         // create SOS data provider config
         SensorDataProviderConfig provCfg = new SensorDataProviderConfig();
@@ -118,7 +122,7 @@ public class TestSOSService
         provCfg.name = "SOS Sensor Provider #2";
         provCfg.uri = "urn:mysos:sensor2";
         provCfg.sensorID = sensor.getLocalID();
-        provCfg.selectedOutputs = new String[] {"imgOut"};
+        provCfg.hiddenOutputs = new String[] {};
         
         return provCfg;
     }
@@ -221,7 +225,7 @@ public class TestSOSService
     {
         try
         {
-            FileUtils.deleteDirectory(configFolder);
+            configFile.delete();
             HttpServer.getInstance().stop();
         }
         catch (Exception e)

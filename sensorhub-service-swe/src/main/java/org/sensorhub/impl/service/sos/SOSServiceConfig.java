@@ -25,6 +25,7 @@
 
 package org.sensorhub.impl.service.sos;
 
+import java.util.List;
 import org.sensorhub.impl.service.ogc.OGCServiceConfig;
 
 
@@ -45,5 +46,5 @@ public class SOSServiceConfig extends OGCServiceConfig
     /**
      * Providers configuration
      */
-    public SOSProviderConfig[] dataProviders;
+    public List<SOSProviderConfig> dataProviders;
 }

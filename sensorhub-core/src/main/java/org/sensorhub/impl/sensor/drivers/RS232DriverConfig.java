@@ -49,7 +49,7 @@ public class RS232DriverConfig extends SensorDriverConfig
 	
 	public int autodetectInterval;
 	
-	public int portNumber;
+	public String portNumber;
 	
 	public int baudRate;
 	

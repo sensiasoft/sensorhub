@@ -25,8 +25,7 @@
 
 package org.sensorhub.api.sensor;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 import org.sensorhub.api.module.ModuleConfig;
 
 
@@ -72,5 +71,5 @@ public class SensorConfig extends ModuleConfig
      * Driver configuration groups (potentially one for each layer of a protocol stack)
      * Can be included in SensorML v2.0
      */
-    public Map<String, SensorDriverConfig> driverConfigs = new HashMap<String, SensorDriverConfig>();
+    public List<SensorDriverConfig> driverConfigs;
 }

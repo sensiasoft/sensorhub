@@ -19,11 +19,14 @@ import java.util.TimerTask;
 import java.util.concurrent.LinkedBlockingDeque;
 import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.sensor.ISensorDataInterface;
+import org.sensorhub.api.sensor.ISensorInterface;
 import org.sensorhub.api.sensor.SensorDataEvent;
 import org.sensorhub.api.sensor.SensorException;
 import org.sensorhub.impl.common.BasicEventHandler;
+import org.vast.cdm.common.AsciiEncoding;
 import org.vast.cdm.common.DataBlock;
 import org.vast.cdm.common.DataComponent;
+import org.vast.cdm.common.DataEncoding;
 import org.vast.cdm.common.DataType;
 import org.vast.data.DataBlockDouble;
 import org.vast.data.DataGroup;
@@ -43,6 +46,7 @@ import org.vast.sweCommon.SweConstants;
  */
 public class FakeSensorData implements ISensorDataInterface
 {
+    FakeSensor sensor;
     String name;
     boolean pushEnabled;
     SMLSystem sml;
@@ -54,14 +58,15 @@ public class FakeSensorData implements ISensorDataInterface
     BasicEventHandler eventHandler;
     
     
-    public FakeSensorData(String name, boolean pushEnabledFlag)
+    public FakeSensorData(FakeSensor sensor, String name, boolean pushEnabledFlag)
     {
-        this(name, pushEnabledFlag, 1, 1.0, 5);
+        this(sensor, name, pushEnabledFlag, 1, 1.0, 5);
     }
     
     
-    public FakeSensorData(final String name, final boolean pushEnabled, final int bufferSize, final double samplingPeriod, final int maxSampleCount)
+    public FakeSensorData(FakeSensor sensor, final String name, final boolean pushEnabled, final int bufferSize, final double samplingPeriod, final int maxSampleCount)
     {
+        this.sensor =sensor;
         this.name = name;
         this.pushEnabled = pushEnabled;
         this.bufferSize = bufferSize;
@@ -99,7 +104,7 @@ public class FakeSensorData implements ISensorDataInterface
                     dataQueue.offer(data);
                     
                     if (pushEnabled)
-                        eventHandler.publishEvent(new SensorDataEvent("sensorId-001", System.currentTimeMillis(), dataDesc, data));
+                        eventHandler.publishEvent(new SensorDataEvent(FakeSensorData.this, System.currentTimeMillis(), dataDesc, data));
                 }                        
             }                
         };
@@ -120,6 +125,13 @@ public class FakeSensorData implements ISensorDataInterface
     
     
     @Override
+    public ISensorInterface<?> getSensorInterface()
+    {
+        return sensor;
+    }
+
+
+    @Override
     public boolean isStorageSupported()
     {
         return false;
@@ -134,7 +146,7 @@ public class FakeSensorData implements ISensorDataInterface
 
 
     @Override
-    public double getAverageSamplingRate()
+    public double getAverageSamplingPeriod()
     {
         return 1./samplingPeriod;
     }
@@ -167,6 +179,13 @@ public class FakeSensorData implements ISensorDataInterface
         record.addComponent("press", press);
         
         return record;
+    }
+
+
+    @Override
+    public DataEncoding getRecommendedEncoding() throws SensorException
+    {
+        return new AsciiEncoding("\n", ",");
     }
 
 

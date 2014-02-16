@@ -28,9 +28,12 @@ package org.sensorhub.impl.sensor.sost;
 import java.util.List;
 import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.sensor.ISensorDataInterface;
+import org.sensorhub.api.sensor.ISensorInterface;
 import org.sensorhub.api.sensor.SensorException;
 import org.vast.cdm.common.DataBlock;
 import org.vast.cdm.common.DataComponent;
+import org.vast.cdm.common.DataEncoding;
+
 
 public class SOSTDataInterface implements ISensorDataInterface
 {
@@ -59,7 +62,7 @@ public class SOSTDataInterface implements ISensorDataInterface
 
 
     @Override
-    public double getAverageSamplingRate()
+    public double getAverageSamplingPeriod()
     {
         // TODO Auto-generated method stub
         return 0;
@@ -68,6 +71,14 @@ public class SOSTDataInterface implements ISensorDataInterface
 
     @Override
     public DataComponent getRecordDescription() throws SensorException
+    {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+
+    @Override
+    public DataEncoding getRecommendedEncoding() throws SensorException
     {
         // TODO Auto-generated method stub
         return null;
@@ -135,6 +146,14 @@ public class SOSTDataInterface implements ISensorDataInterface
     {
         // TODO Auto-generated method stub
 
+    }
+
+
+    @Override
+    public ISensorInterface<?> getSensorInterface()
+    {
+        // TODO Auto-generated method stub
+        return null;
     }
     
 }

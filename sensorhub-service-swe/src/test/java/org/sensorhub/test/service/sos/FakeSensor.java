@@ -62,6 +62,18 @@ public class FakeSensor implements ISensorInterface<SensorConfig>
     public void updateConfig(SensorConfig config) throws SensorHubException
     {
     }
+    
+    
+    @Override
+    public void start()
+    {
+    }
+    
+    
+    @Override
+    public void stop()
+    {
+    }
 
 
     @Override
@@ -171,12 +183,6 @@ public class FakeSensor implements ISensorInterface<SensorConfig>
     public boolean isConnected()
     {
         return true;
-    }
-
-
-    @Override
-    public void stop()
-    {
     }
     
 

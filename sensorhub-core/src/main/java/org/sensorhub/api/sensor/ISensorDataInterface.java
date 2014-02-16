@@ -26,10 +26,10 @@
 package org.sensorhub.api.sensor;
 
 import java.util.List;
-import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.common.IEventProducer;
 import org.vast.cdm.common.DataBlock;
 import org.vast.cdm.common.DataComponent;
+import org.vast.cdm.common.DataEncoding;
 
 
 /**
@@ -39,6 +39,7 @@ import org.vast.cdm.common.DataComponent;
  * Data can be observations or status information.
  * Implementations must at least be capable of retaining the latest record
  * received from sensor until the getLatestRecord is called.
+ * If push is supported, implementations produce events of type SensorDataEvent.
  * </p>
  * 
  * <p>Copyright (c) 2010</p>
@@ -48,6 +49,13 @@ import org.vast.cdm.common.DataComponent;
 public interface ISensorDataInterface extends IEventProducer
 {
 	
+    /**
+     * Allows by-reference access to parent sensor interface
+     * @return
+     */
+    public ISensorInterface<?> getSensorInterface();
+    
+    
     /**
      * Checks if this interface is enabled
      * @return true if interface is enabled, false otherwise
@@ -73,7 +81,7 @@ public interface ISensorDataInterface extends IEventProducer
 	 * Gets average sampling rate
 	 * @return sampling period in seconds
 	 */
-	public double getAverageSamplingRate(); // to know how often to poll
+	public double getAverageSamplingPeriod(); // to know how often to poll
 	
 	
 	/**
@@ -82,6 +90,14 @@ public interface ISensorDataInterface extends IEventProducer
      * @throws SensorException
 	 */
 	public DataComponent getRecordDescription() throws SensorException;
+	
+	
+	/**
+	 * Provides the recommended encoding for this sensor data
+	 * @return recommending encoding description
+	 * @throws SensorException
+	 */
+	public DataEncoding getRecommendedEncoding() throws SensorException;
 	
 	
 //	/**
@@ -93,6 +109,7 @@ public interface ISensorDataInterface extends IEventProducer
 //	 * @throws SensorException
 //	 */
 //	public DataBlock requestNewRecord() throws SensorException;
+//  SHOULD BE IMPLEMENTED AS A COMMAND?
 	
 	
 	/**
@@ -151,14 +168,5 @@ public interface ISensorDataInterface extends IEventProducer
      * @throws SensorException
 	 */
 	public int clearAllRecords() throws SensorException;
-	
-	
-	/**
-	 * Registers a listener to receive events when new data is available
-	 * @see #isPushSupported()	
-	 * @param listener
-	 */
-	@Override
-	public void registerListener(IEventListener listener);
 
 }
