@@ -44,7 +44,7 @@ import org.sensorhub.api.persistence.DataKey;
 import org.sensorhub.api.persistence.IBasicStorage;
 import org.sensorhub.api.persistence.IDataFilter;
 import org.sensorhub.api.persistence.IDataRecord;
-import org.sensorhub.api.persistence.IDataStorage;
+import org.sensorhub.api.persistence.IStorageModule;
 import org.sensorhub.api.persistence.StorageException;
 import org.sensorhub.impl.common.BasicEventHandler;
 import org.vast.cdm.common.DataBlock;
@@ -193,12 +193,19 @@ public class BasicStorageImpl implements IBasicStorage<BasicStorageConfig>
 
 
     @Override
-    public DataComponent getDataDescription()
+    public DataComponent getRecordDescription()
     {
         return this.dbRoot.recordDescription;
     }
 
 
+    @Override
+    public int getNumRecords()
+    {
+        return dbRoot.indexById.size();
+    }
+    
+    
     @Override
     public List<String> getProducerIDs()
     {
@@ -359,10 +366,17 @@ public class BasicStorageImpl implements IBasicStorage<BasicStorageConfig>
 
 
     @Override
-    public void sync(IDataStorage<DataKey, ?, ?> storage)
+    public void sync(IStorageModule<?> storage)
     {
         // TODO Auto-generated method stub
 
+    }
+
+
+    @Override
+    public boolean isAutoCommit()
+    {
+        return autoCommit;
     }
 
 
@@ -435,6 +449,7 @@ public class BasicStorageImpl implements IBasicStorage<BasicStorageConfig>
     public void cleanup() throws StorageException
     {
         // delete database file
+        close();
         new File(config.storagePath).delete();
     }
 

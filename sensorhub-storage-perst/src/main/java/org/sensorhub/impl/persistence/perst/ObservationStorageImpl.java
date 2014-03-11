@@ -34,9 +34,9 @@ import org.sensorhub.api.module.IModuleStateLoader;
 import org.sensorhub.api.module.IModuleStateSaver;
 import org.sensorhub.api.persistence.DataKey;
 import org.sensorhub.api.persistence.IDataRecord;
-import org.sensorhub.api.persistence.IDataStorage;
 import org.sensorhub.api.persistence.IObsFilter;
 import org.sensorhub.api.persistence.IObsStorage;
+import org.sensorhub.api.persistence.IStorageModule;
 import org.sensorhub.api.persistence.ObsKey;
 import org.sensorhub.api.persistence.StorageException;
 import org.vast.cdm.common.DataBlock;
@@ -102,7 +102,14 @@ public class ObservationStorageImpl implements IObsStorage<ObsStorageConfig>
 
 
     @Override
-    public DataComponent getDataDescription()
+    public int getNumRecords()
+    {
+        return 0;
+    }
+    
+    
+    @Override
+    public DataComponent getRecordDescription()
     {
         // TODO Auto-generated method stub
         return null;
@@ -206,13 +213,21 @@ public class ObservationStorageImpl implements IObsStorage<ObsStorageConfig>
 
 
     @Override
-    public void sync(IDataStorage<ObsKey, ?, ?> storage)
+    public void sync(IStorageModule<?> storage)
     {
         // TODO Auto-generated method stub
 
     }
 
 
+    @Override
+    public boolean isAutoCommit()
+    {
+        // TODO Auto-generated method stub
+        return false;
+    }
+    
+    
     @Override
     public void setAutoCommit(boolean autoCommit)
     {

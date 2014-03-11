@@ -1,1 +1,2 @@
-org.sensorhub.impl.persistence.perst.PerstStorageModuleDescriptor
+org.sensorhub.impl.persistence.perst.BasicStorageModuleDescriptor
+org.sensorhub.impl.persistence.perst.SensorStorageModuleDescriptor

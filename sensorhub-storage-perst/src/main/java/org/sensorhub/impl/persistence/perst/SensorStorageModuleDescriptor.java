@@ -28,30 +28,39 @@ package org.sensorhub.impl.persistence.perst;
 import org.sensorhub.api.module.IModule;
 import org.sensorhub.api.module.IModuleProvider;
 import org.sensorhub.api.module.ModuleConfig;
-import org.sensorhub.api.persistence.StorageConfig;
 
 
-public class PerstStorageModuleDescriptor implements IModuleProvider
+/**
+ * <p>
+ * Descriptor of PERST based sensorML storage module.
+ * This is needed for automatic discovery by the ModuleRegistry.
+ * </p>
+ *
+ * <p>Copyright (c) 2014</p>
+ * @author Alexandre Robin <alex.robin@sensiasoftware.com>
+ * @since March 6, 2014
+ */
+public class SensorStorageModuleDescriptor implements IModuleProvider
 {
 
     @Override
     public String getModuleTypeName()
     {
-        return "PERST Generic Storage";
+        return "PERST SensorML Storage";
     }
 
 
     @Override
     public Class<? extends IModule<?>> getModuleClass()
     {
-        return BasicStorageImpl.class;
+        return SensorStorageImpl.class;
     }
 
 
     @Override
     public Class<? extends ModuleConfig> getModuleConfigClass()
     {
-        return StorageConfig.class;
+        return SensorStorageConfig.class;
     }
 
 }
