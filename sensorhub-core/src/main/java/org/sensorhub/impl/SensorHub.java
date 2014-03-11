@@ -166,7 +166,7 @@ public class SensorHub
         {
             // print usage
             System.out.println("SensorHub v1.0");
-            System.out.println("Command syntax: sensorhub [module_config_path] [base_Storage_path]");
+            System.out.println("Command syntax: sensorhub [module_config_path] [base_storage_path]");
             System.exit(1);
         }
         
