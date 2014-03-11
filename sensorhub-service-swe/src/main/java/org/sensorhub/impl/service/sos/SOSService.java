@@ -26,6 +26,7 @@
 package org.sensorhub.impl.service.sos;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import org.apache.commons.logging.Log;
@@ -36,24 +37,48 @@ import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.module.IModuleStateLoader;
 import org.sensorhub.api.module.IModuleStateSaver;
 import org.sensorhub.api.module.ModuleEvent;
+import org.sensorhub.api.sensor.ISensorDataInterface;
 import org.sensorhub.api.service.IServiceInterface;
 import org.sensorhub.api.service.ServiceException;
 import org.sensorhub.impl.SensorHub;
+import org.sensorhub.impl.sensor.sost.SOSVirtualSensorConfig;
+import org.sensorhub.impl.sensor.sost.SOSVirtualSensor;
 import org.sensorhub.impl.service.HttpServer;
 import org.sensorhub.impl.service.ogc.OGCServiceConfig.CapabilitiesInfo;
+import org.vast.cdm.common.DataBlock;
+import org.vast.cdm.common.DataComponent;
+import org.vast.cdm.common.DataEncoding;
+import org.vast.cdm.common.DataStreamParser;
+import org.vast.ogc.om.IObservation;
 import org.vast.ows.GetCapabilitiesRequest;
 import org.vast.ows.OWSExceptionReport;
-import org.vast.ows.OWSUtils;
-import org.vast.ows.sos.GetObservationRequest;
-import org.vast.ows.sos.GetResultRequest;
-import org.vast.ows.sos.GetResultTemplateRequest;
+import org.vast.ows.OWSRequest;
+import org.vast.ows.server.SOSDataFilter;
+import org.vast.ows.sos.ISOSDataConsumer;
+import org.vast.ows.sos.ISOSDataProvider;
+import org.vast.ows.sos.ISOSDataProviderFactory;
+import org.vast.ows.sos.InsertObservationRequest;
+import org.vast.ows.sos.InsertObservationResponse;
+import org.vast.ows.sos.InsertResultRequest;
+import org.vast.ows.sos.InsertResultResponse;
+import org.vast.ows.sos.InsertResultTemplateRequest;
+import org.vast.ows.sos.InsertResultTemplateResponse;
+import org.vast.ows.sos.InsertSensorRequest;
+import org.vast.ows.sos.InsertSensorResponse;
 import org.vast.ows.sos.SOSException;
 import org.vast.ows.sos.SOSOfferingCapabilities;
 import org.vast.ows.sos.SOSServiceCapabilities;
 import org.vast.ows.sos.SOSServlet;
+import org.vast.ows.sos.SOSUtils;
+import org.vast.ows.swe.DeleteSensorRequest;
+import org.vast.ows.swe.DeleteSensorResponse;
 import org.vast.ows.swe.DescribeSensorRequest;
+import org.vast.ows.swe.UpdateSensorRequest;
+import org.vast.ows.swe.UpdateSensorResponse;
+import org.vast.sensorML.SMLProcess;
 import org.vast.sensorML.SMLUtils;
 import org.vast.sensorML.system.SMLSystem;
+import org.vast.sweCommon.SWEFactory;
 import org.vast.util.TimeExtent;
 import org.vast.xml.DOMHelper;
 import org.w3c.dom.Element;
@@ -73,14 +98,16 @@ import org.w3c.dom.Element;
 @SuppressWarnings("serial")
 public class SOSService extends SOSServlet implements IServiceInterface<SOSServiceConfig>, IEventListener
 {
-    private static final Log log = LogFactory.getLog(SOSService.class);    
+    private static final Log log = LogFactory.getLog(SOSService.class);
     
     SOSServiceConfig config;
     SOSServiceCapabilities capabilitiesCache;
-    Map<String, IDataProviderFactory> procedureToProviderMap;
     Map<String, SOSOfferingCapabilities> offeringMap;
-    
+    Map<String, String> procedureToOfferingMap;
+    Map<String, String> templateToOfferingMap;
+    Map<String, ISOSDataConsumer> dataConsumers;
 
+    
     @Override
     public boolean isEnabled()
     {
@@ -106,9 +133,12 @@ public class SOSService extends SOSServlet implements IServiceInterface<SOSServi
     
     
     @Override
-    public void start() throws SensorHubException
+    public void start()
     {
-        this.procedureToProviderMap = new HashMap<String, IDataProviderFactory>();
+        this.dataProviders.clear();
+        this.dataConsumers = new LinkedHashMap<String, ISOSDataConsumer>();
+        this.procedureToOfferingMap = new HashMap<String, String>();
+        this.templateToOfferingMap = new HashMap<String, String>();
         this.offeringMap = new HashMap<String, SOSOfferingCapabilities>();
         
         // pre-generate capabilities
@@ -129,8 +159,8 @@ public class SOSService extends SOSServlet implements IServiceInterface<SOSServi
         undeploy();
         
         // clean all providers
-        for (IDataProviderFactory provider: procedureToProviderMap.values())
-            provider.cleanup();
+        for (ISOSDataProviderFactory provider: dataProviders.values())
+            ((IDataProviderFactory)provider).cleanup();
     }
     
     
@@ -139,9 +169,9 @@ public class SOSService extends SOSServlet implements IServiceInterface<SOSServi
      * @return
      * @throws ServiceException
      */
-    protected SOSServiceCapabilities generateCapabilities() throws ServiceException
+    protected SOSServiceCapabilities generateCapabilities()
     {
-        procedureToProviderMap.clear();
+        procedureToOfferingMap.clear();
         
         // get main capabilities info from config
         CapabilitiesInfo serviceInfo = config.ogcCapabilitiesInfo;
@@ -154,35 +184,59 @@ public class SOSService extends SOSServlet implements IServiceInterface<SOSServi
         
         // TODO generate profile list
         capabilities.getProfiles().add(SOSServiceCapabilities.PROFILE_RESULT_RETRIEVAL);
-        capabilities.getProfiles().add(SOSServiceCapabilities.PROFILE_RESULT_INSERTION);
-        capabilities.getProfiles().add(SOSServiceCapabilities.PROFILE_OBS_INSERTION);
+        if (config.enableTransactional)
+        {
+            capabilities.getProfiles().add(SOSServiceCapabilities.PROFILE_RESULT_INSERTION);
+            capabilities.getProfiles().add(SOSServiceCapabilities.PROFILE_OBS_INSERTION);
+        }
         
         // process each provider config
-        for (SOSProviderConfig providerConf: config.dataProviders)
+        if (config.dataProviders != null)
         {
-            try
+            for (SOSProviderConfig providerConf: config.dataProviders)
             {
-                // instantiate provider factories and map them to offering URIs
-                IDataProviderFactory factory = providerConf.getFactory();
-                if (!factory.isEnabled())
-                    continue;
-                                
-                dataProviders.put(providerConf.uri, factory);
-     
-                // add offering metadata to capabilities
-                SOSOfferingCapabilities offCaps = factory.generateCapabilities();
-                capabilities.getLayers().add(offCaps);
-                offeringMap.put(offCaps.getIdentifier(), offCaps);
-                
-                // build procedure map
-                procedureToProviderMap.put(offCaps.getProcedures().get(0), factory);
-                
-                if (log.isDebugEnabled())
-                    log.debug("Offering " + "\"" + offCaps.toString() + "\" generated for procedure " + offCaps.getProcedures().get(0));
+                try
+                {
+                    // instantiate provider factories and map them to offering URIs
+                    IDataProviderFactory factory = providerConf.getFactory();
+                    if (!factory.isEnabled())
+                        continue;
+                                    
+                    dataProviders.put(providerConf.uri, factory);
+         
+                    // add offering metadata to capabilities
+                    SOSOfferingCapabilities offCaps = factory.generateCapabilities();
+                    capabilities.getLayers().add(offCaps);
+                    offeringMap.put(offCaps.getIdentifier(), offCaps);
+                    
+                    // build procedure-offering map
+                    procedureToOfferingMap.put(offCaps.getProcedures().get(0), offCaps.getIdentifier());
+                    
+                    if (log.isDebugEnabled())
+                        log.debug("Offering " + "\"" + offCaps.toString() + "\" generated for procedure " + offCaps.getProcedures().get(0));
+                }
+                catch (Exception e)
+                {
+                    log.error("Error while initializing provider " + providerConf.uri, e);
+                }
             }
-            catch (Exception e)
+        }
+        
+        // process each consumer config
+        if (config.dataConsumers != null)
+        {
+            for (SOSConsumerConfig consumerConf: config.dataConsumers)
             {
-                log.error("Error while initializing provider " + providerConf.uri, e);
+                try
+                {
+                    // for now we support only virtual sensors as consumers
+                    SOSVirtualSensor virtualSensor = (SOSVirtualSensor)SensorHub.getInstance().getSensorManager().getModuleById(consumerConf.sensorID);
+                    dataConsumers.put(consumerConf.offering, virtualSensor);
+                }
+                catch (SensorHubException e)
+                {
+                    log.error("Error while initializing virtual sensor " + consumerConf.sensorID, e);
+                }
             }
         }
         
@@ -200,7 +254,7 @@ public class SOSService extends SOSServlet implements IServiceInterface<SOSServi
     {
         try
         {
-            IDataProviderFactory factory = procedureToProviderMap.get(uri);
+            IDataProviderFactory factory = getDataProviderFactoryBySensorID(uri);
             return (SMLSystem)factory.generateSensorMLDescription(null);
         }
         catch (Exception e)
@@ -252,7 +306,7 @@ public class SOSService extends SOSServlet implements IServiceInterface<SOSServi
         if (e instanceof ModuleEvent && e.getSource() == HttpServer.getInstance())
         {
             if (((ModuleEvent) e).type == ModuleEvent.Type.ENABLED)
-                deploy();
+                start();
             else if (((ModuleEvent) e).type == ModuleEvent.Type.DISABLED)
                 stop();
         }        
@@ -262,7 +316,9 @@ public class SOSService extends SOSServlet implements IServiceInterface<SOSServi
     @Override
     public void cleanup() throws SensorHubException
     {
-        // TODO remove template database
+        // cleanup all virtual sensors
+        for (SOSConsumerConfig consumerConf: config.dataConsumers)
+            SensorHub.getInstance().getModuleRegistry().destroyModule(consumerConf.sensorID);
     }
     
     
@@ -292,10 +348,7 @@ public class SOSService extends SOSServlet implements IServiceInterface<SOSServi
     @Override
     protected void handleRequest(GetCapabilitiesRequest request) throws Exception
     {
-        DOMHelper dom = new DOMHelper();
-        OWSUtils utils = new OWSUtils();
-        Element respElt = utils.buildXMLResponse(dom, generateCapabilities(), request.getVersion());
-        dom.serialize(respElt, request.getResponseStream(), true);
+        sendResponse(request, capabilitiesCache);
     }
         
     
@@ -303,37 +356,231 @@ public class SOSService extends SOSServlet implements IServiceInterface<SOSServi
     protected void handleRequest(DescribeSensorRequest request) throws Exception
     {
         String sensorID = request.getProcedureID();
-        if (sensorID == null || !procedureToProviderMap.containsKey(sensorID))
-            throw new SOSException(SOSException.invalid_param_code, "procedure", sensorID, null);
+                
+        // check query parameters        
+        OWSExceptionReport report = new OWSExceptionReport();        
+        checkQueryProcedure(sensorID, report);
+        checkQueryProcedureFormat(procedureToOfferingMap.get(sensorID), request.getFormat(), report);
+        report.process();
         
+        // serialize and send SensorML description
         DOMHelper dom = new DOMHelper();
         SMLUtils smlUtils = new SMLUtils();
         Element respElt = smlUtils.writeSystem(dom, generateSensorML(sensorID));
         dom.serialize(respElt, request.getResponseStream(), null);
     }
-
-
-    // overriden to add synchronization
+    
+    
     @Override
-    protected void handleRequest(GetResultTemplateRequest request) throws Exception
+    protected void handleRequest(InsertSensorRequest request) throws Exception
     {
-        super.handleRequest(request);
+        try
+        {
+            checkTransactionalSupport(request);
+            
+            // check query parameters
+            OWSExceptionReport report = new OWSExceptionReport();
+            checkSensorML(request.getProcedureDescription(), report);
+            report.process();
+            
+            // choose offering name (here derived from sensor ID)
+            String sensorUID = request.getProcedureDescription().getIdentifier();
+            String offering = sensorUID + "-sos";
+            
+            // automatically add outputs with specified observable properties??
+            
+            
+            // create and register new virtual sensor module
+            SOSVirtualSensorConfig sensorConfig = new SOSVirtualSensorConfig();
+            sensorConfig.enabled = true;
+            sensorConfig.sensorUID = sensorUID;
+            sensorConfig.name = request.getProcedureDescription().getName();
+            SensorHub.getInstance().getPersistenceManager().getSensorDescriptionStorage().store(request.getProcedureDescription());
+            SOSVirtualSensor virtualSensor = (SOSVirtualSensor)SensorHub.getInstance().getModuleRegistry().loadModule(sensorConfig);            
+            dataConsumers.put(offering, virtualSensor);
+            
+            // add to SOS config
+            SOSConsumerConfig consumerConfig = new SOSConsumerConfig();
+            consumerConfig.offering = offering;
+            consumerConfig.sensorID = virtualSensor.getLocalID();
+            config.dataConsumers.add(consumerConfig);
+            
+            // create new sensor provider
+            SensorDataProviderConfig providerConfig = new SensorDataProviderConfig();
+            providerConfig.sensorID = virtualSensor.getLocalID();
+            providerConfig.enabled = true;
+            providerConfig.uri = offering;
+            SensorDataProviderFactory provider = new SensorDataProviderFactory(providerConfig);
+            dataProviders.put(offering, provider);
+            config.dataProviders.add(providerConfig);
+            
+            // create new offering
+            SOSOfferingCapabilities offCaps = provider.generateCapabilities();
+            capabilitiesCache.getLayers().add(offCaps);
+            offeringMap.put(offCaps.getIdentifier(), offCaps);
+            procedureToOfferingMap.put(sensorUID, offering);
+            
+            // setup data storage
+            //StorageConfig storageConfig = new StorageConfig();
+            //SensorHub.getInstance().getModuleRegistry().loadModule(storageConfig);
+            
+            // save config so that registered sensor stays active after restart
+            SensorHub.getInstance().getModuleRegistry().saveConfiguration(this);
+            
+            // build and send response
+            InsertSensorResponse resp = new InsertSensorResponse();
+            resp.setAssignedOffering(offering);
+            resp.setAssignedProcedureId(sensorUID);
+            sendResponse(request, resp);
+        }
+        finally
+        {
+            
+        }        
     }
-
-
-    // overriden to add synchronization
+    
+    
     @Override
-    protected void handleRequest(GetResultRequest request) throws Exception
+    protected void handleRequest(DeleteSensorRequest request) throws Exception
     {
-        super.handleRequest(request);
+        try
+        {
+            checkTransactionalSupport(request);
+            String sensorUID = request.getProcedureId();
+            
+            // check query parameters
+            OWSExceptionReport report = new OWSExceptionReport();
+            checkQueryProcedure(sensorUID, report);
+            report.process();
+
+            // destroy associated virtual sensor
+            String offering = procedureToOfferingMap.get(sensorUID);
+            SOSVirtualSensor virtualSensor = (SOSVirtualSensor)dataConsumers.remove(offering);
+            procedureToOfferingMap.remove(sensorUID);
+            SensorHub.getInstance().getModuleRegistry().destroyModule(virtualSensor.getLocalID());
+            
+            // TODO destroy storage if requested in config 
+            
+            // build and send response
+            DeleteSensorResponse resp = new DeleteSensorResponse(SOSUtils.SOS);
+            resp.setDeletedProcedure(sensorUID);
+            sendResponse(request, resp);
+        }
+        finally
+        {
+
+        }
     }
-
-
-    // overriden to add synchronization
+    
+    
     @Override
-    protected void handleRequest(GetObservationRequest request) throws Exception
+    protected void handleRequest(UpdateSensorRequest request) throws Exception
     {
-        super.handleRequest(request);
+        try
+        {
+            checkTransactionalSupport(request);
+            String sensorUID = request.getProcedureId();
+            
+            // check query parameters
+            OWSExceptionReport report = new OWSExceptionReport();
+            checkQueryProcedure(sensorUID, report);
+            checkQueryProcedureFormat(procedureToOfferingMap.get(sensorUID), request.getProcedureDescriptionFormat(), report);
+            report.process();
+            
+            // get consumer and update
+            ISOSDataConsumer consumer = getDataConsumerBySensorID(request.getProcedureId());
+            consumer.updateSensor((SMLProcess) request.getProcedureDescription());
+            
+            // build and send response
+            UpdateSensorResponse resp = new UpdateSensorResponse(SOSUtils.SOS);
+            resp.setUpdatedProcedure(sensorUID);
+            sendResponse(request, resp);
+        }
+        finally
+        {
+
+        }
+    }
+    
+    
+    @Override
+    protected void handleRequest(InsertObservationRequest request) throws Exception
+    {
+        try
+        {
+            checkTransactionalSupport(request);
+            
+            ISOSDataConsumer consumer = getDataConsumerByOfferingID(request.getOffering());
+            consumer.newObservation(request.getObservations().toArray(new IObservation[0]));            
+            
+            // build and send response
+            InsertObservationResponse resp = new InsertObservationResponse();
+            sendResponse(request, resp);
+        }
+        finally
+        {
+            
+        }
+    }
+    
+    
+    @Override
+    protected void handleRequest(InsertResultTemplateRequest request) throws Exception
+    {
+        try
+        {
+            checkTransactionalSupport(request);
+            
+            ISOSDataConsumer consumer = getDataConsumerByOfferingID(request.getOffering());
+            String templateID = consumer.newResultTemplate(request.getResultStructure(), request.getResultEncoding());
+            
+            // build and send response
+            InsertResultTemplateResponse resp = new InsertResultTemplateResponse();
+            resp.setAcceptedTemplateId(templateID);
+            sendResponse(request, resp);
+        }
+        finally
+        {
+            
+        }
+    }
+    
+    
+    @Override
+    protected void handleRequest(InsertResultRequest request) throws Exception
+    {
+        DataStreamParser parser = null;
+        
+        try
+        {
+            checkTransactionalSupport(request);
+            String templateID = request.getTemplateId();
+            
+            // retrieve consumer based on template id
+            SOSVirtualSensor sensor = (SOSVirtualSensor)getDataConsumerByTemplateID(templateID);
+            ISensorDataInterface output = sensor.getObservationOutputs().get(templateID);
+            DataComponent dataStructure = output.getRecordDescription();
+            DataEncoding encoding = output.getRecommendedEncoding();
+            
+            // prepare parser
+            parser = SWEFactory.createDataParser(encoding);
+            parser.setDataComponents(dataStructure);
+            parser.setInput(request.getResultDataSource().getDataStream());
+            
+            // parse each record and send it to consumer
+            DataBlock nextBlock = null;
+            while ((nextBlock = parser.parseNextBlock()) != null)
+                sensor.newResultRecord(templateID, nextBlock);
+            
+            // build and send response
+            InsertResultResponse resp = new InsertResultResponse();
+            sendResponse(request, resp);
+        }
+        finally
+        {
+            if (parser != null)
+                parser.close();
+        }
     }
 
 
@@ -390,6 +637,25 @@ public class SOSService extends SOSServlet implements IServiceInterface<SOSServi
     }
     
     
+    protected void checkQueryProcedure(String sensorUID, OWSExceptionReport report) throws SOSException
+    {
+        if (sensorUID == null || !procedureToOfferingMap.containsKey(sensorUID))
+            report.add(new SOSException(SOSException.invalid_param_code, "procedure", sensorUID, null));
+    }
+    
+    
+    protected void checkQueryProcedureFormat(String offeringID, String format, OWSExceptionReport report) throws SOSException
+    {
+        // ok if default format can be used
+        if (format == null)
+            return;
+        
+        SOSOfferingCapabilities offering = checkAndGetOffering(offeringID);
+        if (!offering.getProcedureFormats().contains(format))
+            report.add(new SOSException(SOSException.invalid_param_code, "procedureDescriptionFormat", format, "Procedure description format " + format + " is not available for offering " + offeringID));
+    }
+    
+    
     protected SOSOfferingCapabilities checkAndGetOffering(String offeringID) throws SOSException
     {
         SOSOfferingCapabilities offCaps = offeringMap.get(offeringID);
@@ -399,5 +665,66 @@ public class SOSService extends SOSServlet implements IServiceInterface<SOSServi
         
         return offCaps;
     }
-
+    
+    
+    static String INVALID_SML_MSG = "Invalid SensorML description: ";
+    protected void checkSensorML(SMLProcess smlProcess, OWSExceptionReport report) throws Exception
+    {
+        String sensorUID = smlProcess.getIdentifier();
+        
+        if (sensorUID == null || sensorUID.length() == 0)
+            throw new SOSException(SOSException.invalid_param_code, "procedureDescription", null, INVALID_SML_MSG + "Missing unique ID");
+        
+        if (sensorUID.length() < 10)
+            report.add(new SOSException(SOSException.invalid_param_code, "procedureDescription", sensorUID, INVALID_SML_MSG + "Procedure unique ID is too short"));
+        
+        if (procedureToOfferingMap.containsKey(smlProcess.getIdentifier()))
+            report.add(new SOSException(SOSException.invalid_param_code, "procedureDescription", sensorUID, INVALID_SML_MSG + "A procedure with unique ID " + sensorUID + " is already registered on this server"));
+    }
+    
+    
+    @Override
+    protected ISOSDataProvider getDataProvider(String offering, SOSDataFilter filter) throws Exception
+    {
+        checkAndGetOffering(offering);
+        return super.getDataProvider(offering, filter);
+    }
+    
+    
+    protected IDataProviderFactory getDataProviderFactoryBySensorID(String sensorID) throws Exception
+    {
+        String offering = procedureToOfferingMap.get(sensorID);
+        ISOSDataProviderFactory factory = dataProviders.get(offering);
+        if (factory == null)
+            throw new IllegalStateException("No valid data provider factory found for offering " + offering);
+        return (IDataProviderFactory)factory;
+    }
+    
+    
+    protected ISOSDataConsumer getDataConsumerByOfferingID(String offering) throws Exception
+    {
+        checkAndGetOffering(offering);
+        return dataConsumers.get(offering);
+    }
+    
+    
+    protected ISOSDataConsumer getDataConsumerBySensorID(String sensorID) throws Exception
+    {
+        String offering = procedureToOfferingMap.get(sensorID);
+        return getDataConsumerByOfferingID(offering);
+    }
+    
+    
+    protected ISOSDataConsumer getDataConsumerByTemplateID(String templateID) throws Exception
+    {
+        String offering = templateToOfferingMap.get(templateID);
+        return dataConsumers.get(offering);
+    }
+    
+    
+    protected void checkTransactionalSupport(OWSRequest request) throws Exception
+    {
+        if (!config.enableTransactional)
+            throw new SOSException(SOSException.invalid_param_code, "request", request.getOperation(), request.getOperation() + " operation is not supported on this endpoint"); 
+    }
 }

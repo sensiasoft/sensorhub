@@ -55,7 +55,7 @@ public class StorageDataProvider implements ISOSDataProvider
     
     public StorageDataProvider(StorageDataProviderConfig config, SOSDataFilter filter)
     {
-        this.srcDataDef = db.getDataDescription();
+        this.srcDataDef = db.getRecordDescription();
         this.filter = filter;
     }
     

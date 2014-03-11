@@ -26,18 +26,36 @@
 package org.sensorhub.impl.sensor.sost;
 
 import java.util.List;
+import org.sensorhub.api.common.IEventHandler;
 import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.sensor.ISensorDataInterface;
 import org.sensorhub.api.sensor.ISensorInterface;
+import org.sensorhub.api.sensor.SensorDataEvent;
 import org.sensorhub.api.sensor.SensorException;
+import org.sensorhub.impl.common.BasicEventHandler;
 import org.vast.cdm.common.DataBlock;
 import org.vast.cdm.common.DataComponent;
 import org.vast.cdm.common.DataEncoding;
 
 
-public class SOSTDataInterface implements ISensorDataInterface
+public class SOSVirtualSensorOutput implements ISensorDataInterface
 {
-
+    SOSVirtualSensor parentSensor;
+    IEventHandler eventHandler;
+    DataComponent recordStructure;
+    DataEncoding recordEncoding;
+    DataBlock latestRecord;
+    
+    
+    public SOSVirtualSensorOutput(SOSVirtualSensor sensor, DataComponent recordStructure, DataEncoding recordEncoding)
+    {
+        this.parentSensor = sensor;
+        this.recordStructure = recordStructure;
+        this.recordEncoding = recordEncoding;
+        this.eventHandler = new BasicEventHandler();
+    }
+    
+    
     @Override
     public boolean isEnabled()
     {
@@ -48,7 +66,6 @@ public class SOSTDataInterface implements ISensorDataInterface
     @Override
     public boolean isStorageSupported()
     {
-        // TODO Auto-generated method stub
         return false;
     }
 
@@ -56,47 +73,41 @@ public class SOSTDataInterface implements ISensorDataInterface
     @Override
     public boolean isPushSupported()
     {
-        // TODO Auto-generated method stub
-        return false;
+        return true;
     }
 
 
     @Override
     public double getAverageSamplingPeriod()
     {
-        // TODO Auto-generated method stub
-        return 0;
+        return Double.NaN;
     }
 
 
     @Override
     public DataComponent getRecordDescription() throws SensorException
     {
-        // TODO Auto-generated method stub
-        return null;
+        return recordStructure;
     }
 
 
     @Override
     public DataEncoding getRecommendedEncoding() throws SensorException
     {
-        // TODO Auto-generated method stub
-        return null;
+        return recordEncoding;
     }
 
 
     @Override
     public DataBlock getLatestRecord() throws SensorException
     {
-        // TODO Auto-generated method stub
-        return null;
+        return latestRecord;
     }
 
 
     @Override
     public int getStorageCapacity() throws SensorException
     {
-        // TODO Auto-generated method stub
         return 0;
     }
 
@@ -104,15 +115,13 @@ public class SOSTDataInterface implements ISensorDataInterface
     @Override
     public int getNumberOfAvailableRecords() throws SensorException
     {
-        // TODO Auto-generated method stub
-        return 0;
+        return 1;
     }
 
 
     @Override
     public List<DataBlock> getLatestRecords(int maxRecords, boolean clear) throws SensorException
     {
-        // TODO Auto-generated method stub
         return null;
     }
 
@@ -120,7 +129,6 @@ public class SOSTDataInterface implements ISensorDataInterface
     @Override
     public List<DataBlock> getAllRecords(boolean clear) throws SensorException
     {
-        // TODO Auto-generated method stub
         return null;
     }
 
@@ -128,7 +136,7 @@ public class SOSTDataInterface implements ISensorDataInterface
     @Override
     public int clearAllRecords() throws SensorException
     {
-        // TODO Auto-generated method stub
+        latestRecord = null;
         return 0;
     }
 
@@ -136,24 +144,35 @@ public class SOSTDataInterface implements ISensorDataInterface
     @Override
     public void registerListener(IEventListener listener)
     {
-        // TODO Auto-generated method stub
-
+        eventHandler.registerListener(listener);
     }
 
     
     @Override
     public void unregisterListener(IEventListener listener)
     {
-        // TODO Auto-generated method stub
-
+        eventHandler.unregisterListener(listener);
     }
 
 
     @Override
     public ISensorInterface<?> getSensorInterface()
     {
-        // TODO Auto-generated method stub
-        return null;
+        return parentSensor;
+    }
+    
+    
+    public void publishNewRecord(DataBlock dataBlock)
+    {
+        try
+        {
+            latestRecord = dataBlock;
+            eventHandler.publishEvent(new SensorDataEvent(this, System.currentTimeMillis(), getRecordDescription(), dataBlock));
+        }
+        catch (SensorException e)
+        {
+            e.printStackTrace();
+        }
     }
     
 }

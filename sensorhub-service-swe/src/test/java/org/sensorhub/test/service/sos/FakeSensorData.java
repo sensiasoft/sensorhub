@@ -169,7 +169,7 @@ public class FakeSensorData implements ISensorDataInterface
         record.setProperty(SweConstants.DEF_URI, "urn:blabla:weatherData");
         
         DataValue time = new DataValue(DataType.DOUBLE);
-        time.setProperty(SweConstants.DEF_URI, "urn:blabla:samplingTime");
+        time.setProperty(SweConstants.DEF_URI, SweConstants.DEF_SAMPLING_TIME);
         time.setProperty(SweConstants.UOM_URI, SweConstants.ISO_TIME_DEF);
         record.addComponent("time", time);
         

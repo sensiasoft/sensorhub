@@ -10,6 +10,7 @@
 
 package org.sensorhub.test.service.sos;
 
+import static org.junit.Assert.*;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -30,8 +31,19 @@ import org.sensorhub.impl.service.sos.SOSProviderConfig;
 import org.sensorhub.impl.service.sos.SOSService;
 import org.sensorhub.impl.service.sos.SOSServiceConfig;
 import org.sensorhub.impl.service.sos.SensorDataProviderConfig;
+import org.vast.cdm.common.AsciiEncoding;
+import org.vast.cdm.common.DataType;
+import org.vast.data.DataBlockDouble;
+import org.vast.data.DataValue;
 import org.vast.ogc.OGCException;
 import org.vast.ogc.OGCExceptionReader;
+import org.vast.ows.OWSException;
+import org.vast.ows.OWSExceptionReader;
+import org.vast.ows.OWSUtils;
+import org.vast.ows.sos.GetObservationRequest;
+import org.vast.ows.sos.InsertResultRequest;
+import org.vast.sweCommon.SWEData;
+import org.vast.xml.DOMHelper;
 
 
 public class TestSOSService
@@ -45,7 +57,7 @@ public class TestSOSService
         // init sensorhub
         configFile = new File("junit-test.json");
         configFile.deleteOnExit();
-        SensorHub.createInstance(new SensorHubConfig(configFile.getAbsolutePath()));
+        SensorHub.createInstance(new SensorHubConfig(configFile.getAbsolutePath(), configFile.getParent()));
         
         // start HTTP server
         HttpServer server = HttpServer.getInstance();
@@ -195,8 +207,17 @@ public class TestSOSService
         setupFramework();
         deployService(buildSensorProvider1(), buildSensorProvider2());
         
-        InputStream is = new URL("http://localhost:8080/sensorhub" + SERVICE_ENDPOINT + "?service=SOS&version=2.0&request=GetObservation&offering=urn:mysos:sensor1&observedProperty=urn:blabla:temperature").openStream();
-        IOUtils.copy(is, System.out);
+        GetObservationRequest getObs = new GetObservationRequest();
+        getObs.setGetServer("http://localhost:8080/sensorhub" + SERVICE_ENDPOINT);
+        getObs.setVersion("2.0");
+        getObs.setOffering("urn:mysos:sensor1");
+        getObs.getObservables().add("urn:blabla:temperature");
+        
+        OWSUtils utils = new OWSUtils();
+        InputStream is = utils.sendGetRequest(getObs).getInputStream();
+        DOMHelper dom = new DOMHelper(is, false);        
+        OWSExceptionReader.checkException(dom, dom.getBaseElement());
+        dom.serialize(dom.getBaseElement(), System.out, true);
     }
     
     
@@ -217,6 +238,32 @@ public class TestSOSService
         
         // parse and generate exception
         OGCExceptionReader.parseException(bis);
+    }
+    
+    
+    @Test
+    public void testNoTransactional() throws Exception
+    {
+        setupFramework();
+        deployService(buildSensorProvider1());
+        
+        try
+        {
+            InsertResultRequest req = new InsertResultRequest();
+            req.setPostServer("http://localhost:8080/sensorhub" + SERVICE_ENDPOINT);
+            req.setVersion("2.0");
+            req.setTemplateId("template01");
+            SWEData sweData = new SWEData();
+            sweData.setElementType(new DataValue(DataType.DOUBLE));
+            sweData.setEncoding(new AsciiEncoding(" ", ","));
+            sweData.addData(new DataBlockDouble(1));
+            req.setResultData(sweData);
+            new OWSUtils().sendRequest(req, false);
+        }
+        catch (OWSException e)
+        {
+            assertTrue(e.getLocator().equals("request"));
+        }
     }
 
     

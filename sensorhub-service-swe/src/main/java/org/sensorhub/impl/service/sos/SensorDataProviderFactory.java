@@ -21,7 +21,12 @@ import org.sensorhub.api.sensor.ISensorDataInterface;
 import org.sensorhub.api.sensor.ISensorInterface;
 import org.sensorhub.api.sensor.SensorException;
 import org.sensorhub.impl.SensorHub;
+import org.vast.cdm.common.DataComponent;
+import org.vast.data.DataArray;
+import org.vast.data.DataGroup;
 import org.vast.data.DataIterator;
+import org.vast.data.DataValue;
+import org.vast.ogc.om.IObservation;
 import org.vast.ows.server.SOSDataFilter;
 import org.vast.ows.sos.ISOSDataProvider;
 import org.vast.ows.sos.SOSOfferingCapabilities;
@@ -92,7 +97,7 @@ public class SensorDataProviderFactory implements IDataProviderFactory, IEventLi
             if (config.description != null)
                 caps.setDescription(config.description);
             else
-                caps.setDescription("Data produced by sensor " + sensor.getName());
+                caps.setDescription("Data produced by " + sensor.getName());
             
             // observable properties
             List<String> sensorOutputDefs = getObservablePropertiesFromSensor();
@@ -113,6 +118,12 @@ public class SensorDataProviderFactory implements IDataProviderFactory, IEventLi
             caps.getResponseFormats().add(SOSOfferingCapabilities.FORMAT_OM2);
             caps.getProcedureFormats().add(SOSOfferingCapabilities.FORMAT_SML2);
             
+            // foi types
+            
+            // obs types
+            List<String> obsTypes = getObservationTypesFromSensor();
+            caps.getObservationTypes().addAll(obsTypes);
+            
             return caps;
         }
         catch (SensorException e)
@@ -127,7 +138,7 @@ public class SensorDataProviderFactory implements IDataProviderFactory, IEventLi
         List<String> observableUris = new ArrayList<String>();
         
         // process only selected outputs
-        for (Entry<String, ISensorDataInterface> entry: sensor.getAllOutputs().entrySet())
+        for (Entry<String, ? extends ISensorDataInterface> entry: sensor.getAllOutputs().entrySet())
         {
             ISensorDataInterface output = entry.getValue();
             if (Arrays.binarySearch(config.hiddenOutputs, entry.getKey()) >= 0)
@@ -139,7 +150,7 @@ public class SensorDataProviderFactory implements IDataProviderFactory, IEventLi
             while (it.hasNext())
             {
                 String defUri = (String)it.next().getProperty(SweConstants.DEF_URI);
-                if (defUri != null)
+                if (defUri != null && !defUri.equals(SweConstants.DEF_SAMPLING_TIME))
                     observableUris.add(defUri);
             }
             
@@ -147,6 +158,31 @@ public class SensorDataProviderFactory implements IDataProviderFactory, IEventLi
         }
         
         return observableUris;
+    }
+    
+    
+    protected List<String> getObservationTypesFromSensor() throws SensorException
+    {
+        List<String> obsTypes = new ArrayList<String>();
+        obsTypes.add(IObservation.OBS_TYPE_GENERIC);
+        
+        // process only selected outputs
+        for (Entry<String, ? extends ISensorDataInterface> entry: sensor.getAllOutputs().entrySet())
+        {
+            ISensorDataInterface output = entry.getValue();
+            if (Arrays.binarySearch(config.hiddenOutputs, entry.getKey()) >= 0)
+                continue;
+            
+            DataComponent dataStruct = output.getRecordDescription();
+            if (dataStruct instanceof DataValue)
+                obsTypes.add(IObservation.OBS_TYPE_SCALAR);
+            else if (dataStruct instanceof DataGroup)
+                obsTypes.add(IObservation.OBS_TYPE_RECORD);
+            else if (dataStruct instanceof DataArray)
+                obsTypes.add(IObservation.OBS_TYPE_ARRAY);
+        }
+        
+        return obsTypes;
     }
     
     

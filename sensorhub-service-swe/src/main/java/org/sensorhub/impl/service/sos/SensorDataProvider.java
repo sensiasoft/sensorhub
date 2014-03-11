@@ -222,7 +222,7 @@ public class SensorDataProvider implements ISOSDataProvider, IEventListener
     
     private boolean hasMoreData()
     {
-        if (!sensor.isEnabled() && !sensor.isConnected())
+        if (!sensor.isEnabled() || !sensor.isConnected())
             return false;
         
         boolean interfaceActive = false;

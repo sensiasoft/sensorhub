@@ -25,39 +25,24 @@
 
 package org.sensorhub.impl.service.sos;
 
-import java.util.ArrayList;
-import java.util.List;
-import org.sensorhub.impl.service.ogc.OGCServiceConfig;
 
-
-/**
- * <p>
- * Configuration class for the SOS service module
- * </p>
- *
- * <p>Copyright (c) 2013</p>
- * @author Alexandre Robin <alex.robin@sensiasoftware.com>
- * @since Sep 7, 2013
- */
-public class SOSServiceConfig extends OGCServiceConfig
+public class SOSConsumerConfig
 {
-    private static final long serialVersionUID = -957079629610700869L;
 
-    
     /**
-     * set to true to enable transactional operation support
+     * Flag set if consumer is enabled, unset if disabled
      */
-    public boolean enableTransactional = false;
-    
-    
-    /**
-     * Providers configurations
-     */
-    public List<SOSProviderConfig> dataProviders = new ArrayList<SOSProviderConfig>();
+    public boolean enabled;
     
     
     /**
-     * Consumers configurations 
+     * Virtual sensor ID to use as consumer
+     **/
+    public String sensorID;
+    
+    
+    /**
+     * Offering URI
      */
-    public List<SOSConsumerConfig> dataConsumers = new ArrayList<SOSConsumerConfig>();
+    public String offering;
 }
