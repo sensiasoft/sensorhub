@@ -145,7 +145,7 @@ public interface ISensorDataInterface extends IEventProducer
 	 * @see #isStorageSupported()
 	 * @param maxRecords
 	 * @param clear if true, also clears records from driver or sensor memory
-	 * @return a list of records (empty if no records are available)
+	 * @return a list of records sorted by acquisition time (empty if no records are available)
      * @throws SensorException
 	 */
 	public List<DataBlock> getLatestRecords(int maxRecords, boolean clear) throws SensorException;
@@ -155,7 +155,7 @@ public interface ISensorDataInterface extends IEventProducer
 	 * Retrieves all records stored by the driver or sensor
 	 * @see #isStorageSupported()
 	 * @param clear if true, also clears records from driver or sensor memory
-	 * @return the list of all records in storage (empty if no records are available)
+	 * @return the list of all records in storage sorted by acquisition time (empty if no records are available)
      * @throws SensorException
 	 */
 	public List<DataBlock> getAllRecords(boolean clear) throws SensorException;

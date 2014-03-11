@@ -83,7 +83,7 @@ public class SensorManagerImpl implements ISensorManager
         {
             try
             {
-                if (Class.forName(config.moduleClass).isInstance(ISensorInterface.class))
+                if (ISensorInterface.class.isAssignableFrom(Class.forName(config.moduleClass)))
                     configuredSensors.add(config);
             }
             catch (Exception e)

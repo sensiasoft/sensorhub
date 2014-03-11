@@ -25,14 +25,20 @@
 
 package org.sensorhub.impl.persistence;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.module.IModule;
+import org.sensorhub.api.module.IModuleProvider;
 import org.sensorhub.api.module.ModuleConfig;
-import org.sensorhub.api.persistence.IDataStorage;
 import org.sensorhub.api.persistence.IPersistenceManager;
-import org.sensorhub.api.sensor.ISensorInterface;
+import org.sensorhub.api.persistence.ISensorDescriptionStorage;
+import org.sensorhub.api.persistence.IStorageModule;
+import org.sensorhub.api.persistence.StorageConfig;
+import org.sensorhub.api.persistence.StorageException;
 import org.sensorhub.impl.module.ModuleRegistry;
 
 
@@ -47,25 +53,28 @@ import org.sensorhub.impl.module.ModuleRegistry;
  */
 public class PersistenceManagerImpl implements IPersistenceManager
 {
+    private static final Log log = LogFactory.getLog(PersistenceManagerImpl.class);    
     protected ModuleRegistry moduleRegistry;
+    protected String basePath;
     
     
-    public PersistenceManagerImpl(ModuleRegistry moduleRegistry)
+    public PersistenceManagerImpl(ModuleRegistry moduleRegistry, String basePath)
     {
         this.moduleRegistry = moduleRegistry;
+        this.basePath = basePath;
     }
     
     
     @Override
-    public List<IDataStorage<?,?,?>> getLoadedModules()
+    public List<IStorageModule<?>> getLoadedModules()
     {
-        List<IDataStorage<?,?,?>> enabledStorages = new ArrayList<IDataStorage<?,?,?>>();
+        List<IStorageModule<?>> enabledStorages = new ArrayList<IStorageModule<?>>();
         
         // retrieve all modules implementing ISensorInterface
         for (IModule<?> module: moduleRegistry.getLoadedModules())
         {
-            if (module instanceof ISensorInterface)
-                enabledStorages.add((IDataStorage<?,?,?>)module);
+            if (module instanceof IStorageModule)
+                enabledStorages.add((IStorageModule<?>)module);
         }
         
         return enabledStorages;
@@ -75,33 +84,81 @@ public class PersistenceManagerImpl implements IPersistenceManager
     @Override
     public List<ModuleConfig> getAvailableModules()
     {
-        List<ModuleConfig> configuredSensors = new ArrayList<ModuleConfig>();
+        List<ModuleConfig> storageTypes = new ArrayList<ModuleConfig>();
         
-        // retrieve all modules implementing ISensorInterface
+        // retrieve all modules implementing IStorageModule
         for (ModuleConfig config: moduleRegistry.getAvailableModules())
         {
             try
             {
-                if (Class.forName(config.moduleClass).isInstance(ISensorInterface.class))
-                    configuredSensors.add(config);
+                if (IStorageModule.class.isAssignableFrom(Class.forName(config.moduleClass)))
+                    storageTypes.add(config);
             }
             catch (Exception e)
             {
             }
         }
         
-        return configuredSensors;
+        return storageTypes;
     }
 
 
     @Override
-    public IDataStorage<?,?,?> getModuleById(String moduleID) throws SensorHubException
+    public IStorageModule<?> getModuleById(String moduleID) throws SensorHubException
     {
         IModule<?> module = moduleRegistry.getModuleById(moduleID);
         
-        if (module instanceof IDataStorage<?,?,?>)
-            return (IDataStorage<?,?,?>)module;
+        if (module instanceof IStorageModule<?>)
+            return (IStorageModule<?>)module;
         else
             return null;
     }
+
+
+    @Override
+    public ISensorDescriptionStorage<?> getSensorDescriptionStorage() throws SensorHubException
+    {
+        List<ModuleConfig> storageModules = getAvailableModules();
+        for (ModuleConfig config: storageModules)
+        {
+            try
+            {
+                if (ISensorDescriptionStorage.class.isAssignableFrom(Class.forName(config.moduleClass)))
+                    return (ISensorDescriptionStorage<?>)getModuleById(config.id);
+            }
+            catch (ClassNotFoundException e)
+            {
+            }
+        }
+        
+        throw new StorageException("No sensor description storage available");
+    }
+    
+    
+    @Override
+    public StorageConfig getDefaultStorageConfig(Class<?> storageClass) throws SensorHubException
+    {
+        List<IModuleProvider> storageModules = moduleRegistry.getInstalledModuleTypes();
+        for (IModuleProvider provider: storageModules)
+        {
+            try
+            {
+                Class<?> moduleClass = provider.getModuleClass();
+                if (storageClass.isAssignableFrom(moduleClass))
+                {
+                    StorageConfig newConfig = (StorageConfig)provider.getModuleConfigClass().newInstance();
+                    newConfig.moduleClass = moduleClass.getCanonicalName();
+                    newConfig.storagePath = basePath + File.separatorChar;
+                    return newConfig;
+                }
+            }
+            catch (Exception e)
+            {
+                log.error("Invalid configuration for module ", e);
+            }
+        }
+        
+        throw new StorageException("No persistent storage of type " + storageClass.getSimpleName() + " available");
+    }
+
 }

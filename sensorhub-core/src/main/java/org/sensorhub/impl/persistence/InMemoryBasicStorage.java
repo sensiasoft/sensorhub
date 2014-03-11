@@ -23,7 +23,7 @@
  
 ******************************* END LICENSE BLOCK ***************************/
 
-package org.sensorhub.test.sensor;
+package org.sensorhub.impl.persistence;
 
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -40,7 +40,7 @@ import org.sensorhub.api.persistence.DataKey;
 import org.sensorhub.api.persistence.IBasicStorage;
 import org.sensorhub.api.persistence.IDataFilter;
 import org.sensorhub.api.persistence.IDataRecord;
-import org.sensorhub.api.persistence.IDataStorage;
+import org.sensorhub.api.persistence.IStorageModule;
 import org.sensorhub.api.persistence.StorageConfig;
 import org.sensorhub.api.persistence.StorageException;
 import org.vast.cdm.common.DataBlock;
@@ -56,11 +56,40 @@ import org.vast.cdm.common.DataComponent;
  * @author Alexandre Robin <alex.robin@sensiasoftware.com>
  * @since Nov 8, 2013
  */
-public class InMemoryStorage implements IBasicStorage<StorageConfig>
+public class InMemoryBasicStorage implements IBasicStorage<StorageConfig>
 {
     StorageConfig config;
     DataComponent dataDescription;
     List<IDataRecord<DataKey>> recordList;
+    
+    
+    public class DBRecord implements IDataRecord<DataKey>
+    {
+        DataKey key;
+        DataBlock data;
+        
+        
+        public DBRecord(DataKey key, DataBlock data)
+        {
+            this.key = key;
+            this.data = data;
+        }
+
+
+        @Override
+        public DataKey getKey()
+        {
+            return key;
+        }
+        
+
+        @Override
+        public DataBlock getData()
+        {
+            return data;
+        }
+
+    }
     
     
     @Override
@@ -77,9 +106,16 @@ public class InMemoryStorage implements IBasicStorage<StorageConfig>
 
 
     @Override
-    public DataComponent getDataDescription()
+    public DataComponent getRecordDescription()
     {
         return dataDescription;
+    }
+    
+    
+    @Override
+    public int getNumRecords()
+    {
+        return recordList.size();
     }
     
     
@@ -249,7 +285,7 @@ public class InMemoryStorage implements IBasicStorage<StorageConfig>
 
 
     @Override
-    public void sync(IDataStorage<DataKey, ?, ?> storage)
+    public void sync(IStorageModule<?> storage)
     {
     }
 
@@ -258,7 +294,14 @@ public class InMemoryStorage implements IBasicStorage<StorageConfig>
     public void setAutoCommit(boolean autoCommit)
     {
     }
-
+    
+    
+    @Override
+    public boolean isAutoCommit()
+    {
+        return false;
+    }
+    
 
     @Override
     public void commit()
@@ -303,7 +346,7 @@ public class InMemoryStorage implements IBasicStorage<StorageConfig>
     @Override
     public void stop() throws SensorHubException
     {        
-        recordList.clear();
+        close();
     }
 
 

@@ -31,9 +31,11 @@ import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.config.IGlobalConfig;
 import org.sensorhub.api.module.IModuleConfigRepository;
+import org.sensorhub.api.persistence.IPersistenceManager;
 import org.sensorhub.api.sensor.ISensorManager;
 import org.sensorhub.impl.module.ModuleConfigJsonFile;
 import org.sensorhub.impl.module.ModuleRegistry;
+import org.sensorhub.impl.persistence.PersistenceManagerImpl;
 import org.sensorhub.impl.sensor.SensorManagerImpl;
 
 
@@ -151,14 +153,20 @@ public class SensorHub
     }
     
     
+    public IPersistenceManager getPersistenceManager()
+    {
+        return new PersistenceManagerImpl(registry, config.getBaseStoragePath());
+    }
+    
+    
     public static void main(String[] args)
     {
         // if no arg provided
-        if (args.length == 0)
+        if (args.length < 2)
         {
             // print usage
             System.out.println("SensorHub v1.0");
-            System.out.println("Command syntax: sensorhub [module_config_path]");
+            System.out.println("Command syntax: sensorhub [module_config_path] [base_Storage_path]");
             System.exit(1);
         }
         
@@ -166,7 +174,7 @@ public class SensorHub
         SensorHub instance = null;
         try
         {
-            SensorHubConfig config = new SensorHubConfig(args[0]);
+            SensorHubConfig config = new SensorHubConfig(args[0], args[1]);
             instance = SensorHub.createInstance(config);
             instance.start();
         }

@@ -39,16 +39,19 @@ import org.sensorhub.api.config.IGlobalConfig;
  */
 public class SensorHubConfig implements IGlobalConfig
 {
-    public String moduleConfigPath;
+    private String moduleConfigPath;
+    private String baseStoragePath;
+    
     
     public SensorHubConfig()
     {        
     }
     
     
-    public SensorHubConfig(String moduleConfigPath)
+    public SensorHubConfig(String moduleConfigPath, String baseStoragePath)
     {
         this.moduleConfigPath = moduleConfigPath;
+        this.baseStoragePath = baseStoragePath;
     }
     
     
@@ -58,6 +61,13 @@ public class SensorHubConfig implements IGlobalConfig
         return moduleConfigPath;
     }
 
+    
+    @Override
+    public String getBaseStoragePath()
+    {
+        return baseStoragePath;
+    }
+    
 
     @Override
     public String getProperty(String property)
@@ -65,5 +75,4 @@ public class SensorHubConfig implements IGlobalConfig
         // TODO Auto-generated method stub
         return null;
     }
-
 }

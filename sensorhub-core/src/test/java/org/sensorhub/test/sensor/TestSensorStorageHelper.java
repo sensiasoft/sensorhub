@@ -27,8 +27,6 @@ package org.sensorhub.test.sensor;
 
 import static org.junit.Assert.*;
 import java.io.File;
-import java.io.IOException;
-import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -36,35 +34,36 @@ import org.sensorhub.api.module.IModule;
 import org.sensorhub.api.persistence.StorageConfig;
 import org.sensorhub.api.sensor.SensorConfig;
 import org.sensorhub.api.sensor.SensorStorageConfig;
-import org.sensorhub.impl.module.ModuleConfigDatabaseJson;
+import org.sensorhub.impl.SensorHub;
+import org.sensorhub.impl.SensorHubConfig;
 import org.sensorhub.impl.module.ModuleRegistry;
+import org.sensorhub.impl.persistence.InMemoryBasicStorage;
 import org.sensorhub.impl.sensor.SensorStorageHelper;
 
 
 public class TestSensorStorageHelper
 {
-    File configFolder;
-    ModuleConfigDatabaseJson configDb;
-    ModuleRegistry registry;
+    File configFile;
     FakeSensorData fakeSensorData;
-    InMemoryStorage db;
+    InMemoryBasicStorage db;
+    ModuleRegistry registry;
     
     
     @Before
     public void setup() throws Exception
     {
-        configFolder = new File("junit-test/");
-        configFolder.mkdirs();
-        configDb = new ModuleConfigDatabaseJson(configFolder.getAbsolutePath());        
-        registry = new ModuleRegistry(configDb);
-        registry.loadAllModules();
+        configFile = new File("juni-test-config.json");
+        configFile.deleteOnExit();
+        SensorHub hub = SensorHub.createInstance(new SensorHubConfig(configFile.getAbsolutePath(), configFile.getParent()));
+        registry = hub.getModuleRegistry();
         
         // create test storage
         StorageConfig storageConfig = new StorageConfig();
-        storageConfig.moduleClass = InMemoryStorage.class.getCanonicalName();
+        storageConfig.enabled = true;
+        storageConfig.moduleClass = InMemoryBasicStorage.class.getCanonicalName();
         storageConfig.name = "SensorStorageTest";
-        storageConfig.storagePath = new File(configFolder, "sensordb.dbs").getAbsolutePath();
-        db = (InMemoryStorage)registry.loadModule(storageConfig);
+        storageConfig.storagePath = new File(configFile.getParent(), "sensordb.dbs").getAbsolutePath();
+        db = (InMemoryBasicStorage)registry.loadModule(storageConfig);
                
         // create test sensor
         SensorConfig sensorCfg = new SensorConfig();
@@ -81,6 +80,7 @@ public class TestSensorStorageHelper
     public void testCreate() throws Exception
     {
         SensorStorageConfig config = new SensorStorageConfig();
+        config.enabled = true;
         config.moduleClass = SensorStorageHelper.class.getCanonicalName();
         config.name = "Sensor Storage Helper";
         config.storageID = registry.getLoadedModules().get(0).getLocalID();
@@ -89,19 +89,13 @@ public class TestSensorStorageHelper
         
         Thread.sleep((long)((fakeSensorData.maxSampleCount+1) * 1000.0 / fakeSensorData.getAverageSamplingPeriod()));
         
-        assertEquals(fakeSensorData.maxSampleCount, db.recordList.size());
+        assertEquals(fakeSensorData.maxSampleCount, db.getNumRecords());
     }
     
     
     @After
     public void cleanup()
     {
-        try
-        {
-            FileUtils.deleteDirectory(configFolder);
-        }
-        catch (IOException e)
-        {
-        }
+        configFile.delete();
     }
 }

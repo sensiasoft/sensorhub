@@ -25,6 +25,7 @@
 
 package org.sensorhub.api.persistence;
 
+import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.module.IModuleManager;
 
 
@@ -37,7 +38,12 @@ import org.sensorhub.api.module.IModuleManager;
  * @author Alexandre Robin
  * @since Nov 5, 2010
  */
-public interface IPersistenceManager extends IModuleManager<IDataStorage<?,?,?>>
+public interface IPersistenceManager extends IModuleManager<IStorageModule<?>>
 {
-
+    
+    public ISensorDescriptionStorage<?> getSensorDescriptionStorage() throws SensorHubException;
+    
+    
+    public StorageConfig getDefaultStorageConfig(Class<?> storageClass) throws SensorHubException;
+    
 }

@@ -37,6 +37,7 @@ import org.sensorhub.api.persistence.StorageException;
 import org.sensorhub.api.sensor.ISensorDataInterface;
 import org.sensorhub.api.sensor.ISensorInterface;
 import org.sensorhub.api.sensor.SensorDataEvent;
+import org.sensorhub.api.sensor.SensorException;
 import org.sensorhub.api.sensor.SensorStorageConfig;
 import org.sensorhub.impl.SensorHub;
 import org.sensorhub.impl.common.BasicEventHandler;
@@ -84,9 +85,8 @@ public class SensorStorageHelper implements IModule<SensorStorageConfig>, IEvent
 
     @Override
     public void updateConfig(SensorStorageConfig config) throws SensorHubException
-    {
-        sensor.unregisterListener(this);        
-        init(config);
+    {      
+        // TODO Auto-generated method stub
     }
 
     
@@ -115,7 +115,14 @@ public class SensorStorageHelper implements IModule<SensorStorageConfig>, IEvent
     @Override
     public void stop() throws StorageException
     {
-        // TODO Auto-generated method stub
+        try
+        {
+            for (String outputName: config.selectedOutputs)
+                sensor.getAllOutputs().get(outputName).unregisterListener(this);
+        }
+        catch (SensorException e)
+        {
+        }
     }
     
     
@@ -144,7 +151,6 @@ public class SensorStorageHelper implements IModule<SensorStorageConfig>, IEvent
     public void cleanup() throws StorageException
     {
         sensor = null;
-        storage.cleanup();
     }
     
     
@@ -153,17 +159,21 @@ public class SensorStorageHelper implements IModule<SensorStorageConfig>, IEvent
     {
         if (e instanceof SensorDataEvent)
         {
+            boolean saveAutoCommitState = storage.isAutoCommit();
             storage.setAutoCommit(false);
+            
             String producer = ((SensorDataEvent) e).getSensorId();
             
             for (DataBlock record: ((SensorDataEvent) e).getRecords())
             {
                 DataKey key = new DataKey(producer, e.getTimeStamp());
                 storage.store(key, record);
+                System.out.println("Storing record " + key.timeStamp + " in DB");
+                System.out.println("DB size: " + storage.getNumRecords());
             }
             
             storage.commit();
-            storage.setAutoCommit(true);
+            storage.setAutoCommit(saveAutoCommitState);
         }        
     }
     

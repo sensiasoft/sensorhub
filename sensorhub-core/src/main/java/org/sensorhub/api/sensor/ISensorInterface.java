@@ -29,7 +29,7 @@ import java.util.Map;
 import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.common.IEventProducer;
 import org.sensorhub.api.module.IModule;
-import org.vast.sensorML.system.SMLSystem;
+import org.vast.sensorML.SMLProcess;
 import org.vast.util.DateTime;
 
 
@@ -62,7 +62,7 @@ public interface ISensorInterface<ConfigType extends SensorConfig> extends IModu
 	 * Retrieves most current sensor description
 	 * @return SMLSytem object containing all metadata about the sensor
 	 */
-	public SMLSystem getCurrentSensorDescription() throws SensorException;
+	public SMLProcess getCurrentSensorDescription() throws SensorException;
 	
 	
 	/**
@@ -70,42 +70,42 @@ public interface ISensorInterface<ConfigType extends SensorConfig> extends IModu
 	 * @param t
 	 * @return SMLSytem object containing sensor metadata valid at time t
 	 */
-	public SMLSystem getSensorDescription(DateTime t) throws SensorException;
+	public SMLProcess getSensorDescription(DateTime t) throws SensorException;
 	
 	
 	/**
 	 * Updates and historizes system description
 	 * @param systemDesc SMLSystem object with validity period
 	 */
-	public void updateSensorDescription(SMLSystem systemDesc, boolean recordHistory) throws SensorException;
+	public void updateSensorDescription(SMLProcess systemDesc, boolean recordHistory) throws SensorException;
 	
 	
 	/**
 	 * Retrieves the list of interfaces to all sensor data outputs
 	 * @return
 	 */
-	public Map<String, ISensorDataInterface> getAllOutputs() throws SensorException;
+	public Map<String, ? extends ISensorDataInterface> getAllOutputs() throws SensorException;
 	
 	
 	/**
 	 * Retrieves the list of interface to sensor status outputs
 	 * @return
 	 */
-	public Map<String, ISensorDataInterface> getStatusOutputs() throws SensorException;
+	public Map<String, ? extends ISensorDataInterface> getStatusOutputs() throws SensorException;
 	
 	
 	/**
 	 * Retrieves the list of interface to sensor observation outputs
 	 * @return
 	 */
-	public Map<String, ISensorDataInterface> getObservationOutputs() throws SensorException;
+	public Map<String, ? extends ISensorDataInterface> getObservationOutputs() throws SensorException;
 	
 	
 	/**
 	 * Retrieves the list of interface to sensor command inputs
 	 * @return
 	 */
-	public Map<String, ISensorControlInterface> getCommandInputs() throws SensorException;
+	public Map<String, ? extends ISensorControlInterface> getCommandInputs() throws SensorException;
 	
 	
 	/**

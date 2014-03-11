@@ -74,4 +74,15 @@ public class ModuleConfig implements Serializable, Cloneable
         Kryo kryo = new Kryo();
         return kryo.copy(this);
     }
+    
+    
+    public String getModuleIdString()
+    {
+        StringBuilder buf = new StringBuilder();
+        buf.append(name);
+        buf.append(" (");
+        buf.append(id);
+        buf.append(')');
+        return buf.toString();
+    }
 }

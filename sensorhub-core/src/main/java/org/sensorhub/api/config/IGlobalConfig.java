@@ -32,7 +32,9 @@ public interface IGlobalConfig
     public String getModuleConfigPath();
     
     
-    public String getProperty(String property);
+    public String getBaseStoragePath();
     
+    
+    public String getProperty(String property);    
     
 }

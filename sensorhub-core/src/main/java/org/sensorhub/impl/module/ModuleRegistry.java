@@ -241,12 +241,19 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
     public synchronized void saveModulesConfiguration()
     {
         for (IModule<?> module: loadedModules.values())
-        {
-            if (configRepos.contains(module.getLocalID()))
-                configRepos.update(module.getConfiguration());
-            else
-                configRepos.add(module.getConfiguration());
-        }
+            saveConfiguration(module);
+    }
+    
+    
+    /**
+     * Saves the module configuration in the repository
+     */
+    public synchronized void saveConfiguration(IModule<?> module)
+    {
+        if (configRepos.contains(module.getLocalID()))
+            configRepos.update(module.getConfiguration());
+        else
+            configRepos.add(module.getConfiguration());
     }
     
     
