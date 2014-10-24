@@ -28,7 +28,6 @@ package org.sensorhub.impl.module;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.UUID;
@@ -103,7 +102,8 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
     /**
      * Instantiates one module using the given configuration
      * @param config Configuration class to use to instantiate the module
-     * @return
+     * @return loaded module instance
+     * @throws SensorHubException 
      */
     @SuppressWarnings("rawtypes")
     public synchronized IModule<?> loadModule(ModuleConfig config) throws SensorHubException
@@ -175,7 +175,8 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
     /**
      * Enables the module with the given id
      * @param moduleID Local ID of module to enable
-     * @return
+     * @return enabled module instance
+     * @throws SensorHubException 
      */
     @SuppressWarnings("rawtypes")
     public synchronized IModule<?> enableModule(String moduleID) throws SensorHubException
@@ -198,6 +199,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
     /**
      * Disables the module with the given id
      * @param moduleID Local ID of module to disable
+     * @throws SensorHubException 
      */
     public synchronized void disableModule(String moduleID) throws SensorHubException
     {
@@ -218,6 +220,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
     /**
      * Removes the module with the given id
      * @param moduleID Local ID of module to delete
+     * @throws SensorHubException 
      */
     public synchronized void destroyModule(String moduleID) throws SensorHubException
     {
@@ -247,6 +250,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
     
     /**
      * Saves the module configuration in the repository
+     * @param module 
      */
     public synchronized void saveConfiguration(IModule<?> module)
     {
@@ -303,7 +307,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
     
     /**
      * Retrieves list of all installed module types
-     * @return
+     * @return list of module providers (not the module themselves)
      */
     public List<IModuleProvider> getInstalledModuleTypes()
     {
@@ -318,17 +322,20 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
     
     
     /**
-     * Retrieves list of all installed module types
-     * @return
+     * Retrieves list of all installed module types that are sub-types
+     * of the specified class
+     * @param moduleClass Parent class of modules to search for
+     * @return list of module providers (not the module themselves)
      */
     public List<IModuleProvider> getInstalledModuleTypes(Class<?> moduleClass)
     {
         List<IModuleProvider> installedModules = getInstalledModuleTypes();
-        ListIterator<IModuleProvider> it = installedModules.listIterator();        
-        while (it.hasNext())
+
+        ServiceLoader<IModuleProvider> sl = ServiceLoader.load(IModuleProvider.class);
+        for (IModuleProvider provider: sl)
         {
-            if (!moduleClass.isAssignableFrom(it.next().getModuleClass()))
-                it.remove();
+            if (moduleClass.isAssignableFrom(provider.getModuleClass()))
+                installedModules.add(provider);
         }
         
         return installedModules;
@@ -339,6 +346,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
      * Shuts down all modules and the config repository
      * @param saveConfig If true, save current modules config
      * @param saveState If true, save current module state
+     * @throws SensorHubException 
      */
     public synchronized void shutdown(boolean saveConfig, boolean saveState) throws SensorHubException
     {

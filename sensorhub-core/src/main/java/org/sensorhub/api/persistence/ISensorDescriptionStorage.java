@@ -37,7 +37,8 @@ import org.vast.sensorML.SMLProcess;
  *
  * <p>Copyright (c) 2014</p>
  * @author Alexandre Robin
- * @since MArch 1, 2014
+ * @param <ConfigType> Configuration class
+ * @since March 1, 2014
  */
 public interface ISensorDescriptionStorage<ConfigType extends StorageConfig> extends IStorageModule<ConfigType>, IEventProducer
 {    
@@ -45,7 +46,7 @@ public interface ISensorDescriptionStorage<ConfigType extends StorageConfig> ext
 	/**
      * Retrieves sensor description using the specified unique id
      * @param sensorUID
-     * @return 
+     * @return SensorML process description
      */
     public SMLProcess getSensorDescription(String sensorUID);
     
@@ -62,7 +63,7 @@ public interface ISensorDescriptionStorage<ConfigType extends StorageConfig> ext
      * Retrieves sensor description valid at specified time
      * @param sensorUID
      * @param time
-     * @return
+     * @return SensorML process description
      */
     public SMLProcess getSensorDescriptionAtTime(String sensorUID, long time);
     
@@ -70,8 +71,7 @@ public interface ISensorDescriptionStorage<ConfigType extends StorageConfig> ext
     /**
      * Store a new sensor description into storage
      * Validity period must not overlap with existing descriptions
-     * @param sensorUID
-     * @param process
+     * @param process SensorML process description to store
      */
     public void store(SMLProcess process);
     
@@ -79,9 +79,7 @@ public interface ISensorDescriptionStorage<ConfigType extends StorageConfig> ext
 	/**
 	 * Update the sensor description in storage
 	 * Validity period must be exactly the same as the one in storage
-	 * @param sensorUID
-	 * @param process
-	 * @return
+	 * @param process SensorML process description to update
 	 */
     public void update(SMLProcess process);
     
@@ -89,6 +87,7 @@ public interface ISensorDescriptionStorage<ConfigType extends StorageConfig> ext
     /**
      * Removes sensor description valid at specified time
      * @param sensorUID
+     * @param time 
      */
     public void remove(String sensorUID, long time);
     

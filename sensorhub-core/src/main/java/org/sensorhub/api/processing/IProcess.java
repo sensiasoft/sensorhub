@@ -31,7 +31,7 @@ import org.vast.cdm.common.DataComponent;
 
 /**
  * <p>
- * TODO: Base interface for all data processing modules run on the system
+ * Base interface for all SensorHub data processing modules
  * </p>
  *
  * <p>Copyright (c) 2010</p>

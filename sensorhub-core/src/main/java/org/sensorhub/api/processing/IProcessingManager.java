@@ -26,13 +26,14 @@
 package org.sensorhub.api.processing;
 
 import java.util.List;
+import java.util.concurrent.Future;
 import javax.print.DocFlavor.URL;
 import org.sensorhub.api.module.IModuleManager;
 
 
 /**
  * <p>
- * Management interface for process chains
+ * Management interface for process implementations
  * </p>
  *
  * <p>Copyright (c) 2010</p>
@@ -61,4 +62,22 @@ public interface IProcessingManager extends IModuleManager<IProcess>
 	 * @param processURI
 	 */
 	public void uninstallProcessCode(String processURI);
+	
+	
+    
+    /**
+     * Executes the specified process synchronously (method will block until processing is complete)
+     * @param processID 
+     */
+    public void syncExec(String processID);
+    
+    
+    /**
+     * Executes the specified process in a separate thread with specified priority
+     * (If too many processes are already running, process may actually be scheduled for later execution)
+     * @param processID 
+     * @param priority
+     * @return Future object allowing the caller can cancel and know when process is actually terminated
+     */
+    public Future<?> asyncExec(String processID, int priority);
 }
