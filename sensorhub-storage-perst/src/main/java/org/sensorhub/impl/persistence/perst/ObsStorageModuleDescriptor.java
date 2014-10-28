@@ -44,9 +44,30 @@ public class ObsStorageModuleDescriptor implements IModuleProvider
 {
 
     @Override
-    public String getModuleTypeName()
+    public String getModuleName()
     {
         return "PERST Observation Storage";
+    }
+
+
+    @Override
+    public String getModuleDescription()
+    {
+        return "Generic implementation of observation storage using PERST object database";
+    }
+
+
+    @Override
+    public String getModuleVersion()
+    {
+        return "0.5";
+    }
+
+
+    @Override
+    public String getProviderName()
+    {
+        return "Sensia Software LLC";
     }
 
 
