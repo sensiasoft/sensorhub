@@ -13,7 +13,7 @@ package org.sensorhub.test.sensor;
 import java.util.List;
 import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.sensor.ISensorDataInterface;
-import org.sensorhub.api.sensor.ISensorInterface;
+import org.sensorhub.api.sensor.ISensorModule;
 import org.sensorhub.api.sensor.SensorException;
 import org.vast.cdm.common.BinaryComponent;
 import org.vast.cdm.common.BinaryEncoding;
@@ -71,7 +71,7 @@ public class FakeSensorData2 implements ISensorDataInterface
     
     
     @Override
-    public ISensorInterface<?> getSensorInterface()
+    public ISensorModule<?> getSensorInterface()
     {
         return sensor;
     }

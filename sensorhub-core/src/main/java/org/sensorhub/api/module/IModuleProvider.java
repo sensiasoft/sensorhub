@@ -37,7 +37,13 @@ package org.sensorhub.api.module;
  */
 public interface IModuleProvider
 {
-    public String getModuleTypeName();
+    public String getModuleName();
+    
+    public String getModuleDescription();
+    
+    public String getModuleVersion();
+    
+    public String getProviderName();
     
     public Class<? extends IModule<?>> getModuleClass();
     

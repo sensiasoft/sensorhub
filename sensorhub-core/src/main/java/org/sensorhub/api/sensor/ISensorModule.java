@@ -42,7 +42,7 @@ import org.vast.util.DateTime;
  * @author Alexandre Robin
  * @since Nov 5, 2010
  */
-public interface ISensorInterface<ConfigType extends SensorConfig> extends IModule<ConfigType>, IEventProducer
+public interface ISensorModule<ConfigType extends SensorConfig> extends IModule<ConfigType>, IEventProducer
 {
     /**
      * Checks sensor description update capability

@@ -37,7 +37,7 @@ import org.sensorhub.api.module.IModule;
  * @author Alexandre Robin
  * @since Nov 5, 2010
  */
-public interface IServiceInterface<ConfigType extends ServiceConfig> extends IModule<ConfigType>
+public interface IServiceModule<ConfigType extends ServiceConfig> extends IModule<ConfigType>
 {
     
 }

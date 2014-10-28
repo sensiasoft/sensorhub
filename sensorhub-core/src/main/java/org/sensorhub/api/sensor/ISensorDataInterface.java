@@ -53,7 +53,7 @@ public interface ISensorDataInterface extends IEventProducer
      * Allows by-reference access to parent sensor interface
      * @return
      */
-    public ISensorInterface<?> getSensorInterface();
+    public ISensorModule<?> getSensorInterface();
     
     
     /**

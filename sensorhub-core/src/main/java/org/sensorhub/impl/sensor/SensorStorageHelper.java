@@ -35,7 +35,7 @@ import org.sensorhub.api.persistence.DataKey;
 import org.sensorhub.api.persistence.IBasicStorage;
 import org.sensorhub.api.persistence.StorageException;
 import org.sensorhub.api.sensor.ISensorDataInterface;
-import org.sensorhub.api.sensor.ISensorInterface;
+import org.sensorhub.api.sensor.ISensorModule;
 import org.sensorhub.api.sensor.SensorDataEvent;
 import org.sensorhub.api.sensor.SensorException;
 import org.sensorhub.api.sensor.SensorStorageConfig;
@@ -59,7 +59,7 @@ public class SensorStorageHelper implements IModule<SensorStorageConfig>, IEvent
 {
     SensorStorageConfig config;
     IBasicStorage<?> storage;
-    ISensorInterface<?> sensor;
+    ISensorModule<?> sensor;
     BasicEventHandler eventHandler;
 
 
@@ -96,7 +96,7 @@ public class SensorStorageHelper implements IModule<SensorStorageConfig>, IEvent
         // get handle to storage and sensor
         ModuleRegistry moduleReg = SensorHub.getInstance().getModuleRegistry();
         storage = (IBasicStorage<?>)moduleReg.getModuleById(config.storageID);
-        sensor = (ISensorInterface<?>)moduleReg.getModuleById(config.sensorID);
+        sensor = (ISensorModule<?>)moduleReg.getModuleById(config.sensorID);
         
         // register to sensor events
         if (config.selectedOutputs == null || config.selectedOutputs.length == 0)

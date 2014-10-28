@@ -39,7 +39,7 @@ import org.sensorhub.api.module.IModuleProvider;
  * @author Alexandre Robin
  * @since Nov 5, 2010
  */
-public interface ISensorManager extends IModuleManager<ISensorInterface<?>>
+public interface ISensorManager extends IModuleManager<ISensorModule<?>>
 { 
     
     /**
@@ -47,14 +47,14 @@ public interface ISensorManager extends IModuleManager<ISensorInterface<?>>
      * @param uid
      * @return
      */
-    public ISensorInterface<?> findSensor(String uid);
+    public ISensorModule<?> findSensor(String uid);
     
     
 	/**
      * Helper method to get the list of connected sensors only
      * @return the list of sensors actually connected to the system
      */
-    public List<ISensorInterface<?>> getConnectedSensors();
+    public List<ISensorModule<?>> getConnectedSensors();
     
     
     /**

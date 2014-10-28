@@ -31,7 +31,7 @@ import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.module.IModule;
 import org.sensorhub.api.module.IModuleProvider;
 import org.sensorhub.api.module.ModuleConfig;
-import org.sensorhub.api.sensor.ISensorInterface;
+import org.sensorhub.api.sensor.ISensorModule;
 import org.sensorhub.api.sensor.ISensorManager;
 import org.sensorhub.api.sensor.SensorException;
 import org.sensorhub.impl.module.ModuleRegistry;
@@ -58,15 +58,15 @@ public class SensorManagerImpl implements ISensorManager
     
     
     @Override
-    public List<ISensorInterface<?>> getLoadedModules()
+    public List<ISensorModule<?>> getLoadedModules()
     {
-        List<ISensorInterface<?>> enabledSensors = new ArrayList<ISensorInterface<?>>();
+        List<ISensorModule<?>> enabledSensors = new ArrayList<ISensorModule<?>>();
         
         // retrieve all modules implementing ISensorInterface
         for (IModule<?> module: moduleRegistry.getLoadedModules())
         {
-            if (module instanceof ISensorInterface)
-                enabledSensors.add((ISensorInterface<?>)module);
+            if (module instanceof ISensorModule)
+                enabledSensors.add((ISensorModule<?>)module);
         }
         
         return enabledSensors;
@@ -83,7 +83,7 @@ public class SensorManagerImpl implements ISensorManager
         {
             try
             {
-                if (ISensorInterface.class.isAssignableFrom(Class.forName(config.moduleClass)))
+                if (ISensorModule.class.isAssignableFrom(Class.forName(config.moduleClass)))
                     configuredSensors.add(config);
             }
             catch (Exception e)
@@ -96,22 +96,22 @@ public class SensorManagerImpl implements ISensorManager
 
 
     @Override
-    public ISensorInterface<?> getModuleById(String moduleID) throws SensorHubException
+    public ISensorModule<?> getModuleById(String moduleID) throws SensorHubException
     {
         IModule<?> module = moduleRegistry.getModuleById(moduleID);
         
-        if (module instanceof ISensorInterface<?>)
-            return (ISensorInterface<?>)module;
+        if (module instanceof ISensorModule<?>)
+            return (ISensorModule<?>)module;
         else
             return null;
     }
 
 
     @Override
-    public ISensorInterface<?> findSensor(String uid)
+    public ISensorModule<?> findSensor(String uid)
     {
-        List<ISensorInterface<?>> enabledSensors = getLoadedModules();
-        for (ISensorInterface<?> sensor: enabledSensors)
+        List<ISensorModule<?>> enabledSensors = getLoadedModules();
+        for (ISensorModule<?> sensor: enabledSensors)
         {
             try
             {
@@ -128,15 +128,15 @@ public class SensorManagerImpl implements ISensorManager
 
 
     @Override
-    public List<ISensorInterface<?>> getConnectedSensors()
+    public List<ISensorModule<?>> getConnectedSensors()
     {
-        List<ISensorInterface<?>> connectedSensors = new ArrayList<ISensorInterface<?>>();
+        List<ISensorModule<?>> connectedSensors = new ArrayList<ISensorModule<?>>();
         
         // scan module list
         for (IModule<?> module: moduleRegistry.getLoadedModules())
         {
-            if (module instanceof ISensorInterface && ((ISensorInterface<?>)module).isConnected())
-                connectedSensors.add((ISensorInterface<?>)module);
+            if (module instanceof ISensorModule && ((ISensorModule<?>)module).isConnected())
+                connectedSensors.add((ISensorModule<?>)module);
         }
         
         return connectedSensors;
@@ -170,7 +170,7 @@ public class SensorManagerImpl implements ISensorManager
         {
             try
             {
-                if (modType.getModuleClass().isInstance(ISensorInterface.class))
+                if (modType.getModuleClass().isInstance(ISensorModule.class))
                     installedModules.add(modType);
             }
             catch (Exception e)

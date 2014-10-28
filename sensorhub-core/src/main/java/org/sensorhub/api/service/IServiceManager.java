@@ -37,7 +37,7 @@ import org.sensorhub.api.module.IModuleManager;
  * @author Alexandre Robin
  * @since Nov 5, 2010
  */
-public interface IServiceManager extends IModuleManager<IServiceInterface<?>>
+public interface IServiceManager extends IModuleManager<IServiceModule<?>>
 {
 
 }
