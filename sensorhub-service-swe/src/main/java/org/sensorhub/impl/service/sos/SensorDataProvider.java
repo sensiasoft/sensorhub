@@ -33,7 +33,7 @@ import java.util.TimerTask;
 import org.sensorhub.api.common.Event;
 import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.sensor.ISensorDataInterface;
-import org.sensorhub.api.sensor.ISensorInterface;
+import org.sensorhub.api.sensor.ISensorModule;
 import org.sensorhub.api.sensor.SensorEvent;
 import org.sensorhub.api.sensor.SensorEvent.Type;
 import org.sensorhub.api.sensor.SensorException;
@@ -64,13 +64,13 @@ import org.vast.util.TimeExtent;
  */
 public class SensorDataProvider implements ISOSDataProvider, IEventListener
 {
-    ISensorInterface<?> sensor;
+    ISensorModule<?> sensor;
     List<ISensorDataInterface> dataSources;
     List<Timer> pollTimers;
     ISensorDataInterface nextInterface;
         
     
-    public SensorDataProvider(ISensorInterface<?> srcSensor, SOSDataFilter filter) throws SensorException
+    public SensorDataProvider(ISensorModule<?> srcSensor, SOSDataFilter filter) throws SensorException
     {
         this.sensor = srcSensor;
         this.dataSources = new ArrayList<ISensorDataInterface>();

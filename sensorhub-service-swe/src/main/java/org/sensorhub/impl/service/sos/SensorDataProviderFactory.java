@@ -18,7 +18,7 @@ import org.sensorhub.api.common.Event;
 import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.sensor.ISensorDataInterface;
-import org.sensorhub.api.sensor.ISensorInterface;
+import org.sensorhub.api.sensor.ISensorModule;
 import org.sensorhub.api.sensor.SensorException;
 import org.sensorhub.impl.SensorHub;
 import org.vast.cdm.common.DataComponent;
@@ -57,7 +57,7 @@ import org.vast.util.TimeExtent;
 public class SensorDataProviderFactory implements IDataProviderFactory, IEventListener
 {
     final SensorDataProviderConfig config;
-    final ISensorInterface<?> sensor;
+    final ISensorModule<?> sensor;
         
     
     protected SensorDataProviderFactory(SensorDataProviderConfig config) throws SensorHubException

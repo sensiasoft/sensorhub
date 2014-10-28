@@ -38,7 +38,7 @@ import org.sensorhub.api.module.IModuleStateLoader;
 import org.sensorhub.api.module.IModuleStateSaver;
 import org.sensorhub.api.module.ModuleEvent;
 import org.sensorhub.api.sensor.ISensorDataInterface;
-import org.sensorhub.api.service.IServiceInterface;
+import org.sensorhub.api.service.IServiceModule;
 import org.sensorhub.api.service.ServiceException;
 import org.sensorhub.impl.SensorHub;
 import org.sensorhub.impl.sensor.sost.SOSVirtualSensorConfig;
@@ -96,7 +96,7 @@ import org.w3c.dom.Element;
  * @since Sep 7, 2013
  */
 @SuppressWarnings("serial")
-public class SOSService extends SOSServlet implements IServiceInterface<SOSServiceConfig>, IEventListener
+public class SOSService extends SOSServlet implements IServiceModule<SOSServiceConfig>, IEventListener
 {
     private static final Log log = LogFactory.getLog(SOSService.class);
     

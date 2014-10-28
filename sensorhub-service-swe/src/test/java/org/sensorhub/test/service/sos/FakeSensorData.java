@@ -19,7 +19,7 @@ import java.util.TimerTask;
 import java.util.concurrent.LinkedBlockingDeque;
 import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.sensor.ISensorDataInterface;
-import org.sensorhub.api.sensor.ISensorInterface;
+import org.sensorhub.api.sensor.ISensorModule;
 import org.sensorhub.api.sensor.SensorException;
 import org.sensorhub.impl.common.BasicEventHandler;
 import org.vast.cdm.common.AsciiEncoding;
@@ -135,7 +135,7 @@ public class FakeSensorData implements ISensorDataInterface
     
     
     @Override
-    public ISensorInterface<?> getSensorInterface()
+    public ISensorModule<?> getSensorInterface()
     {
         return sensor;
     }

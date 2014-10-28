@@ -44,9 +44,30 @@ public class SPSModuleDescriptor implements IModuleProvider
 {
 
     @Override
-    public String getModuleTypeName()
+    public String getModuleName()
     {
         return "SPS Service";
+    }
+
+
+    @Override
+    public String getModuleDescription()
+    {
+        return "Generic implementation of OGC Sensor Planning Service 2.0";
+    }
+
+
+    @Override
+    public String getModuleVersion()
+    {
+        return "0.5";
+    }
+
+
+    @Override
+    public String getProviderName()
+    {
+        return "Sensia Software LLC";
     }
 
 

@@ -19,7 +19,7 @@ import org.sensorhub.api.module.IModuleStateLoader;
 import org.sensorhub.api.module.IModuleStateSaver;
 import org.sensorhub.api.persistence.ISensorDescriptionStorage;
 import org.sensorhub.api.sensor.ISensorControlInterface;
-import org.sensorhub.api.sensor.ISensorInterface;
+import org.sensorhub.api.sensor.ISensorModule;
 import org.sensorhub.api.sensor.SensorException;
 import org.sensorhub.impl.SensorHub;
 import org.vast.cdm.common.BinaryBlock;
@@ -46,7 +46,7 @@ import org.vast.util.DateTime;
  * @author Alexandre Robin <alex.robin@sensiasoftware.com>
  * @since Mar 2, 2014
  */
-public class SOSVirtualSensor implements ISOSDataConsumer, ISensorInterface<SOSVirtualSensorConfig>
+public class SOSVirtualSensor implements ISOSDataConsumer, ISensorModule<SOSVirtualSensorConfig>
 {
     SOSVirtualSensorConfig config;
     ISensorDescriptionStorage<?> smlStorage;

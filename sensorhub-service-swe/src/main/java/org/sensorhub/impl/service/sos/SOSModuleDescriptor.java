@@ -44,9 +44,30 @@ public class SOSModuleDescriptor implements IModuleProvider
 {
 
     @Override
-    public String getModuleTypeName()
+    public String getModuleName()
     {
         return "SOS Service";
+    }
+
+
+    @Override
+    public String getModuleDescription()
+    {
+        return "Generic implementation of OGC Sensor Observation Service 2.0";
+    }
+
+
+    @Override
+    public String getModuleVersion()
+    {
+        return "0.5";
+    }
+
+
+    @Override
+    public String getProviderName()
+    {
+        return "Sensia Software LLC";
     }
 
 

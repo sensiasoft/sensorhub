@@ -28,7 +28,7 @@ package org.sensorhub.impl.service.sps;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.module.IModuleStateLoader;
 import org.sensorhub.api.module.IModuleStateSaver;
-import org.sensorhub.api.service.IServiceInterface;
+import org.sensorhub.api.service.IServiceModule;
 
 
 /**
@@ -43,7 +43,7 @@ import org.sensorhub.api.service.IServiceInterface;
  * @author Alexandre Robin <alex.robin@sensiasoftware.com>
  * @since Sep 6, 2013
  */
-public class SPSService implements IServiceInterface<SPSServiceConfig>
+public class SPSService implements IServiceModule<SPSServiceConfig>
 {
     SPSServiceConfig config;
     

@@ -18,7 +18,7 @@ import org.sensorhub.api.module.IModuleStateLoader;
 import org.sensorhub.api.module.IModuleStateSaver;
 import org.sensorhub.api.sensor.ISensorControlInterface;
 import org.sensorhub.api.sensor.ISensorDataInterface;
-import org.sensorhub.api.sensor.ISensorInterface;
+import org.sensorhub.api.sensor.ISensorModule;
 import org.sensorhub.api.sensor.SensorConfig;
 import org.sensorhub.api.sensor.SensorException;
 import org.vast.sensorML.SMLProcess;
@@ -26,7 +26,7 @@ import org.vast.sensorML.system.SMLSystem;
 import org.vast.util.DateTime;
 
 
-public class FakeSensor implements ISensorInterface<SensorConfig>
+public class FakeSensor implements ISensorModule<SensorConfig>
 {
     SensorConfig config;
     Map<String, ISensorDataInterface> outputs;
