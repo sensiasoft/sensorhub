@@ -1,0 +1,9 @@
+[submodule "lib-swe-common"]
+	path = lib-swe-common
+	url = https://github.com/sensiasoft/lib-swe-common
+[submodule "lib-sensorml"]
+	path = lib-sensorml
+	url = https://github.com/sensiasoft/lib-sensorml
+[submodule "lib-ows"]
+	path = lib-ows
+	url = https://github.com/sensiasoft/lib-ows
