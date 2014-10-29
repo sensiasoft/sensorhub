@@ -35,6 +35,7 @@ import org.sensorhub.api.common.SensorHubException;
  *
  * <p>Copyright (c) 2010</p>
  * @author Alexandre Robin
+ * @param <ConfigType> 
  * @since Nov 12, 2010
  */
 public interface IModule<ConfigType extends ModuleConfig>
@@ -50,6 +51,7 @@ public interface IModule<ConfigType extends ModuleConfig>
     /**
      * Initializes the module with the specified configuration
      * @param config
+     * @throws SensorHubException 
      */
     public void init(ConfigType config) throws SensorHubException;
     
@@ -58,6 +60,7 @@ public interface IModule<ConfigType extends ModuleConfig>
      * Updates the module's configuration dynamically
      * The module must honor this new configuration unless an error is detected
      * @param config
+     * @throws SensorHubException 
      */
     public void updateConfig(ConfigType config) throws SensorHubException;
     
@@ -88,14 +91,14 @@ public interface IModule<ConfigType extends ModuleConfig>
     
     /**
      * Helper method to get the module's name
-     * @return
+     * @return name string
      */
     public String getName();
     
     
     /**
      * Helper method to get the module's local ID
-     * @return
+     * @return id string
      */
     public String getLocalID();
     
@@ -103,6 +106,7 @@ public interface IModule<ConfigType extends ModuleConfig>
     /**
      * Saves the state of this module to the provided output stream
      * @param saver
+     * @throws SensorHubException 
      */
     public void saveState(IModuleStateSaver saver) throws SensorHubException;
     
@@ -110,6 +114,7 @@ public interface IModule<ConfigType extends ModuleConfig>
     /**
      * Restores the state of this module from info provided by the input stream
      * @param loader
+     * @throws SensorHubException 
      */
     public void loadState(IModuleStateLoader loader) throws SensorHubException;
     
