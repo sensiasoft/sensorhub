@@ -33,6 +33,7 @@ package org.sensorhub.api.common;
  *
  * <p>Copyright (c) 2010</p>
  * @author Alexandre Robin
+ * @param <DataType> 
  * @since Nov 12, 2010
  */
 public class ValueRange<DataType>
