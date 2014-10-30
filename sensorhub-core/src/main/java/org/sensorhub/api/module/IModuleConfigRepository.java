@@ -41,8 +41,7 @@ public interface IModuleConfigRepository
 {
     
     /**
-     * Retrieves the list of all modules configuration
-     * @return
+     * @return list of all modules configuration
      */
     public List<ModuleConfig> getAllModulesConfigurations();
     
@@ -57,8 +56,8 @@ public interface IModuleConfigRepository
     
     /**
      * Retrieves the configuration of the module with the given id
-     * @param moduleID
-     * @return
+     * @param moduleID id of module
+     * @return configuration of the module with the given id
      */
     public ModuleConfig get(String moduleID);
     
@@ -74,7 +73,7 @@ public interface IModuleConfigRepository
     /**
      * Updates the module configuration with the given id in the repository
      * If the id does not exist, the configuration entry is added with the add method
-     * @param config
+     * @param newConfig
      */
     public void update(ModuleConfig newConfig);
     
