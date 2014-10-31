@@ -191,4 +191,18 @@ public class SensorStorageHelper implements IModule<SensorStorageConfig>, IEvent
         // TODO Auto-generated method stub
     }
 
+
+    @Override
+    public void registerListener(IEventListener listener)
+    {
+        // TODO Auto-generated method stub        
+    }
+
+
+    @Override
+    public void unregisterListener(IEventListener listener)
+    {
+        // TODO Auto-generated method stub        
+    }
+
 }

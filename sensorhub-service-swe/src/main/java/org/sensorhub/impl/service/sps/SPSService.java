@@ -25,6 +25,7 @@
 
 package org.sensorhub.impl.service.sps;
 
+import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.module.IModuleStateLoader;
 import org.sensorhub.api.module.IModuleStateSaver;
@@ -132,4 +133,17 @@ public class SPSService implements IServiceModule<SPSServiceConfig>
         // TODO Auto-generated method stub        
     }
 
+
+    @Override
+    public void registerListener(IEventListener listener)
+    {
+        // TODO Auto-generated method stub        
+    }
+
+
+    @Override
+    public void unregisterListener(IEventListener listener)
+    {
+        // TODO Auto-generated method stub        
+    }
 }

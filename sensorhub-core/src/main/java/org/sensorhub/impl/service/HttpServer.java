@@ -34,6 +34,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
+import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.module.IModule;
 import org.sensorhub.api.module.IModuleStateLoader;
@@ -216,6 +217,20 @@ public class HttpServer implements IModule<HttpServerConfig>
     public Server getJettyServer()
     {
         return server;
+    }
+
+
+    @Override
+    public void registerListener(IEventListener listener)
+    {
+        // TODO Auto-generated method stub        
+    }
+
+
+    @Override
+    public void unregisterListener(IEventListener listener)
+    {
+        // TODO Auto-generated method stub        
     }
 
 }

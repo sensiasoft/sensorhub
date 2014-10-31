@@ -727,4 +727,18 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
         if (!config.enableTransactional)
             throw new SOSException(SOSException.invalid_param_code, "request", request.getOperation(), request.getOperation() + " operation is not supported on this endpoint"); 
     }
+
+
+    @Override
+    public void registerListener(IEventListener listener)
+    {
+        // TODO Auto-generated method stub        
+    }
+
+
+    @Override
+    public void unregisterListener(IEventListener listener)
+    {
+        // TODO Auto-generated method stub        
+    }
 }

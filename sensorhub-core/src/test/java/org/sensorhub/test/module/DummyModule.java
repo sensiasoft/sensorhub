@@ -25,6 +25,7 @@
 
 package org.sensorhub.test.module;
 
+import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.module.IModule;
 import org.sensorhub.api.module.IModuleStateLoader;
 import org.sensorhub.api.module.IModuleStateSaver;
@@ -45,4 +46,6 @@ public class DummyModule implements IModule<ModuleConfig>
     public void saveState(IModuleStateSaver saver) {}
     public void loadState(IModuleStateLoader loader) {}
     public void cleanup() {}
+    public void registerListener(IEventListener listener) {}
+    public void unregisterListener(IEventListener listener) {}
 }

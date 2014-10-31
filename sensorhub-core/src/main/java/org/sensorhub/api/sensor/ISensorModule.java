@@ -26,7 +26,6 @@
 package org.sensorhub.api.sensor;
 
 import java.util.Map;
-import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.common.IEventProducer;
 import org.sensorhub.api.module.IModule;
 import org.vast.sensorML.SMLProcess;
@@ -40,12 +39,14 @@ import org.vast.util.DateTime;
  *
  * <p>Copyright (c) 2010</p>
  * @author Alexandre Robin
+ * @param <ConfigType> 
  * @since Nov 5, 2010
  */
 public interface ISensorModule<ConfigType extends SensorConfig> extends IModule<ConfigType>, IEventProducer
 {
     /**
      * Checks sensor description update capability
+     * If true, the updateSensorDescription method should be implemented
      * @return true if sensor description updates is supported, false otherwise
      */
     public boolean isSensorDescriptionUpdateSupported();
@@ -53,6 +54,7 @@ public interface ISensorModule<ConfigType extends SensorConfig> extends IModule<
     
     /**
      * Checks sensor description history capability
+     * If true, the getSensorDescription(DateTime t) method should be implemented
      * @return true if sensor description history is supported, false otherwise
      */
     public boolean isSensorDescriptionHistorySupported();
@@ -61,6 +63,7 @@ public interface ISensorModule<ConfigType extends SensorConfig> extends IModule<
     /**
 	 * Retrieves most current sensor description
 	 * @return SMLSytem object containing all metadata about the sensor
+     * @throws SensorException 
 	 */
 	public SMLProcess getCurrentSensorDescription() throws SensorException;
 	
@@ -69,6 +72,7 @@ public interface ISensorModule<ConfigType extends SensorConfig> extends IModule<
 	 * Retrieves historic sensor description valid at time t
 	 * @param t
 	 * @return SMLSytem object containing sensor metadata valid at time t
+	 * @throws SensorException 
 	 */
 	public SMLProcess getSensorDescription(DateTime t) throws SensorException;
 	
@@ -76,34 +80,41 @@ public interface ISensorModule<ConfigType extends SensorConfig> extends IModule<
 	/**
 	 * Updates and historizes system description
 	 * @param systemDesc SMLSystem object with validity period
+	 * @param recordHistory if true, older versions of the descriptions will be retained
+	 * and made accessible by time
+	 * @throws SensorException 
 	 */
 	public void updateSensorDescription(SMLProcess systemDesc, boolean recordHistory) throws SensorException;
 	
 	
 	/**
 	 * Retrieves the list of interfaces to all sensor data outputs
-	 * @return
+	 * @return map of output names -> data interface objects
+	 * @throws SensorException 
 	 */
 	public Map<String, ? extends ISensorDataInterface> getAllOutputs() throws SensorException;
 	
 	
 	/**
 	 * Retrieves the list of interface to sensor status outputs
-	 * @return
+	 * @return map of output names -> data interface objects
+	 * @throws SensorException 
 	 */
 	public Map<String, ? extends ISensorDataInterface> getStatusOutputs() throws SensorException;
 	
 	
 	/**
 	 * Retrieves the list of interface to sensor observation outputs
-	 * @return
+	 * @return map of output names -> data interface objects
+	 * @throws SensorException 
 	 */
 	public Map<String, ? extends ISensorDataInterface> getObservationOutputs() throws SensorException;
 	
 	
 	/**
 	 * Retrieves the list of interface to sensor command inputs
-	 * @return
+	 * @return map of input names -> control interface objects
+	 * @throws SensorException 
 	 */
 	public Map<String, ? extends ISensorControlInterface> getCommandInputs() throws SensorException;
 	
@@ -113,14 +124,5 @@ public interface ISensorModule<ConfigType extends SensorConfig> extends IModule<
 	 * @return true if sensor is actually connected and can communicate with the driver
 	 */
 	public boolean isConnected();
-	
-	
-	/**
-	 * Registers a listener to receive the following sensor events:
-	 * connected/disconnected, activated/deactivated, sensor configuration change.
-	 * @param listener
-	 */
-	@Override
-	public void registerListener(IEventListener listener);
 	
 }
