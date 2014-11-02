@@ -37,6 +37,7 @@ import org.sensorhub.api.common.SensorHubException;
  *
  * <p>Copyright (c) 2010</p>
  * @author Alexandre Robin
+ * @param <ModuleType> 
  * @since Nov 12, 2010
  */
 public interface IModuleManager<ModuleType extends IModule<?>>
@@ -44,7 +45,7 @@ public interface IModuleManager<ModuleType extends IModule<?>>
     /**
      * Gets the list of all modules handled by this manager
      * that are already loaded (i.e. enabled)
-     * @return
+     * @return list of module instances
      */
     public List<ModuleType> getLoadedModules();
     
@@ -52,7 +53,7 @@ public interface IModuleManager<ModuleType extends IModule<?>>
     /**
      * Gets the list of all modules handled by this manager
      * that are configured but not yet loaded (i.e. disabled)
-     * @return
+     * @return list of module configuration classes
      */
     public List<ModuleConfig> getAvailableModules();
     
@@ -61,6 +62,7 @@ public interface IModuleManager<ModuleType extends IModule<?>>
      * Retrieves a module instance by its local ID
      * @param moduleID Id of module to retrieve
      * @return direct reference to the module instance
+     * @throws SensorHubException 
      */
     public ModuleType getModuleById(String moduleID) throws SensorHubException;
 

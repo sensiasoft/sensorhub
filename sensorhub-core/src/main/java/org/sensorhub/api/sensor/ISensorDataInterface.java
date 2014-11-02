@@ -51,7 +51,7 @@ public interface ISensorDataInterface extends IEventProducer
 	
     /**
      * Allows by-reference access to parent sensor interface
-     * @return
+     * @return parent sensor
      */
     public ISensorModule<?> getSensorInterface();
     
@@ -81,7 +81,7 @@ public interface ISensorDataInterface extends IEventProducer
 	 * Gets average sampling rate
 	 * @return sampling period in seconds
 	 */
-	public double getAverageSamplingPeriod(); // to know how often to poll
+	public double getAverageSamplingPeriod(); // used to know how often to poll
 	
 	
 	/**
@@ -132,10 +132,9 @@ public interface ISensorDataInterface extends IEventProducer
     
 	/**
 	 * Retrieves number of record currectly available from driver or sensor memory.
-	 * Implementations with no storage support can only return 0 or 1
 	 * @see #isStorageSupported()
 	 * @return the number of available records
-     * @throws SensorException
+     * @throws SensorException if storage is not supported or a problem occured while reading storage
 	 */
 	public int getNumberOfAvailableRecords() throws SensorException;
 	
@@ -146,7 +145,7 @@ public interface ISensorDataInterface extends IEventProducer
 	 * @param maxRecords
 	 * @param clear if true, also clears records from driver or sensor memory
 	 * @return a list of records sorted by acquisition time (empty if no records are available)
-     * @throws SensorException
+     * @throws SensorException if storage is not supported or a problem occured while reading storage
 	 */
 	public List<DataBlock> getLatestRecords(int maxRecords, boolean clear) throws SensorException;
 	
@@ -156,7 +155,7 @@ public interface ISensorDataInterface extends IEventProducer
 	 * @see #isStorageSupported()
 	 * @param clear if true, also clears records from driver or sensor memory
 	 * @return the list of all records in storage sorted by acquisition time (empty if no records are available)
-     * @throws SensorException
+     * @throws SensorException if storage is not supported or a problem occured while reading storage
 	 */
 	public List<DataBlock> getAllRecords(boolean clear) throws SensorException;
 	
@@ -165,7 +164,7 @@ public interface ISensorDataInterface extends IEventProducer
 	 * Clears all records currently stored in driver or sensor memory
 	 * @see #isStorageSupported()
 	 * @return number of records removed
-     * @throws SensorException
+     * @throws SensorException if storage is not supported or a problem occured while clearing storage
 	 */
 	public int clearAllRecords() throws SensorException;
 
