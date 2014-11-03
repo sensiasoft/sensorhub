@@ -1,6 +1,4 @@
-<div style="float: right">
-    <img src="../../wiki/images/sensorhub_logo_128.png"/>
-</div>
+![Logo](../../wiki/images/sensorhub_logo_128.png)
 SensorHub
 ===========================================================
 
