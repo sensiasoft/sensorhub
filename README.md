@@ -23,11 +23,11 @@ Refer to the [User's Guide](https://github.com/sensiasoft/sensorhub/wiki/User's-
 
 ## Building
 
-SensorHub can be built using Maven either from the command line or within Eclipse. Please see the [Developer's Guide](../../wiki/Developer%27s-Guide) for detailed instructions.
+SensorHub can be built using Maven either from the command line or within Eclipse. Please see the [Developer's Guide](../../wiki/Developer's-Guide) for detailed instructions.
 
 
 ## Contributing
 
-Refer to the [Developer's Guide](https://github.com/sensiasoft/sensorhub/wiki/Developer's-Guide) for instructions on how to setup your development environment in Eclipse.
+Refer to the [Developer's Guide](../../wiki/Developer's-Guide) for instructions on how to setup your development environment in Eclipse.
 
 Several sensor driver examples are available in the source code to help you get started.
