@@ -23,7 +23,7 @@ Refer to the [User's Guide](https://github.com/sensiasoft/sensorhub/wiki/User's-
 
 ## Building
 
-SensorHub can be built using Maven either from the command line or within Eclipse
+SensorHub can be built using Maven either from the command line or within Eclipse. Please see the [Developer's Guide](../../wiki/Developer%27s-Guide) for detailed instructions.
 
 
 ## Contributing
