@@ -23,7 +23,7 @@
  
 ******************************* END LICENSE BLOCK ***************************/
 
-package org.sensorhub.test.module;
+package org.sensorhub.impl.module;
 
 import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.module.IModule;

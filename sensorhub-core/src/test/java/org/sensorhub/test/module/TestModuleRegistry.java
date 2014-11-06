@@ -35,6 +35,7 @@ import org.junit.Test;
 import org.sensorhub.api.module.IModuleProvider;
 import org.sensorhub.api.module.ModuleConfig;
 import org.sensorhub.api.service.IServiceModule;
+import org.sensorhub.impl.module.DummyModule;
 import org.sensorhub.impl.module.ModuleConfigDatabaseJson;
 import org.sensorhub.impl.module.ModuleRegistry;
 

@@ -67,7 +67,9 @@ public class FakeSensor implements ISensorModule<SensorConfig>
 
     @Override
     public void start() throws SensorHubException
-    {        
+    {
+        for (ISensorDataInterface o: outputs.values())
+            ((FakeSensorData)o).start();
     }
     
     
