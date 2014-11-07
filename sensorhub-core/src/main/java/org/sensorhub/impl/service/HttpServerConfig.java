@@ -53,6 +53,13 @@ public class HttpServerConfig extends ModuleConfig
      * This will be the prefix to all servlet URLs
      */
     public String rootURL = "/sensorhub";
+    
+    
+    /**
+     * Root folder where web documents will be obtained
+     */
+    public String docRoot = null;
+    
 
 
     public HttpServerConfig()
