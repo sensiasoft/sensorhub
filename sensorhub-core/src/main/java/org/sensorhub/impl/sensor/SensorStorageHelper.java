@@ -25,6 +25,7 @@
 
 package org.sensorhub.impl.sensor;
 
+import net.opengis.swe.v20.DataBlock;
 import org.sensorhub.api.common.Event;
 import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.common.SensorHubException;
@@ -42,7 +43,6 @@ import org.sensorhub.api.sensor.SensorStorageConfig;
 import org.sensorhub.impl.SensorHub;
 import org.sensorhub.impl.common.BasicEventHandler;
 import org.sensorhub.impl.module.ModuleRegistry;
-import org.vast.cdm.common.DataBlock;
 
 
 /**

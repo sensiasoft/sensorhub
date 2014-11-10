@@ -27,9 +27,9 @@ package org.sensorhub.api.persistence;
 
 import java.util.Iterator;
 import java.util.List;
+import net.opengis.swe.v20.DataBlock;
+import net.opengis.swe.v20.DataComponent;
 import org.sensorhub.api.common.IEventProducer;
-import org.vast.cdm.common.DataBlock;
-import org.vast.cdm.common.DataComponent;
 
 
 /**

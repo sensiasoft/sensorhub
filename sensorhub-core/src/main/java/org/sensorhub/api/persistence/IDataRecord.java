@@ -25,7 +25,7 @@
 
 package org.sensorhub.api.persistence;
 
-import org.vast.cdm.common.DataBlock;
+import net.opengis.swe.v20.DataBlock;
 
 
 /**

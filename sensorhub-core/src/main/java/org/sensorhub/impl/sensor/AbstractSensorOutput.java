@@ -26,13 +26,13 @@
 package org.sensorhub.impl.sensor;
 
 import java.util.List;
+import net.opengis.swe.v20.DataBlock;
 import org.sensorhub.api.common.IEventHandler;
 import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.sensor.ISensorDataInterface;
 import org.sensorhub.api.sensor.ISensorModule;
 import org.sensorhub.api.sensor.SensorException;
 import org.sensorhub.impl.common.BasicEventHandler;
-import org.vast.cdm.common.DataBlock;
 
 
 /**

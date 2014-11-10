@@ -10,26 +10,26 @@
 
 package org.sensorhub.test.sensor;
 
+import java.nio.ByteOrder;
 import java.util.List;
+import net.opengis.swe.v20.BinaryEncoding;
+import net.opengis.swe.v20.ByteEncoding;
+import net.opengis.swe.v20.DataArray;
+import net.opengis.swe.v20.DataBlock;
+import net.opengis.swe.v20.DataComponent;
+import net.opengis.swe.v20.DataEncoding;
+import net.opengis.swe.v20.DataType;
 import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.sensor.ISensorDataInterface;
 import org.sensorhub.api.sensor.ISensorModule;
 import org.sensorhub.api.sensor.SensorException;
-import org.vast.cdm.common.BinaryComponent;
-import org.vast.cdm.common.BinaryEncoding;
-import org.vast.cdm.common.BinaryEncoding.ByteEncoding;
-import org.vast.cdm.common.BinaryEncoding.ByteOrder;
-import org.vast.cdm.common.BinaryOptions;
-import org.vast.cdm.common.DataBlock;
-import org.vast.cdm.common.DataComponent;
-import org.vast.cdm.common.DataEncoding;
-import org.vast.cdm.common.DataType;
-import org.vast.data.DataArray;
+import org.vast.data.BinaryComponentImpl;
+import org.vast.data.BinaryEncodingImpl;
+import org.vast.data.CountImpl;
+import org.vast.data.DataArrayImpl;
 import org.vast.data.DataBlockByte;
-import org.vast.data.DataGroup;
-import org.vast.data.DataValue;
+import org.vast.data.DataRecordImpl;
 import org.vast.sensorML.system.SMLSystem;
-import org.vast.sweCommon.SweConstants;
 
 
 /**
@@ -101,16 +101,13 @@ public class FakeSensorData2 implements ISensorDataInterface
     @Override
     public DataComponent getRecordDescription() throws SensorException
     {
-        DataArray img = new DataArray(ARRAY_SIZE);
-        img.setProperty(SweConstants.DEF_URI, "urn:blabla:image");
+        DataArray img = new DataArrayImpl(ARRAY_SIZE);
+        img.setDefinition("urn:blabla:image");
         img.setName(this.name);        
-        DataComponent record = new DataGroup(3);        
-        DataValue r = new DataValue(DataType.BYTE);
-        record.addComponent("red", r);
-        DataValue g = new DataValue(DataType.BYTE);
-        record.addComponent("green", g);
-        DataValue b = new DataValue(DataType.BYTE);
-        record.addComponent("blue", b);        
+        DataComponent record = new DataRecordImpl(3);
+        record.addComponent("red", new CountImpl());
+        record.addComponent("green", new CountImpl());
+        record.addComponent("blue", new CountImpl());
         img.addComponent("pixel", record);        
         return img;
     }
@@ -119,13 +116,12 @@ public class FakeSensorData2 implements ISensorDataInterface
     @Override
     public DataEncoding getRecommendedEncoding() throws SensorException
     {
-        BinaryEncoding dataEnc = new BinaryEncoding();
-        dataEnc.byteEncoding = ByteEncoding.RAW;
-        dataEnc.byteOrder = ByteOrder.BIG_ENDIAN;
-        dataEnc.componentEncodings = new BinaryOptions[3];
-        dataEnc.componentEncodings[0] = new BinaryComponent("pixel/red", DataType.BYTE);
-        dataEnc.componentEncodings[1] = new BinaryComponent("pixel/green", DataType.BYTE);
-        dataEnc.componentEncodings[2] = new BinaryComponent("pixel/blue", DataType.BYTE);
+        BinaryEncoding dataEnc = new BinaryEncodingImpl();
+        dataEnc.setByteEncoding(ByteEncoding.RAW);
+        dataEnc.setByteOrder(ByteOrder.BIG_ENDIAN);
+        dataEnc.addMemberAsComponent(new BinaryComponentImpl("pixel/red", DataType.BYTE));
+        dataEnc.addMemberAsComponent(new BinaryComponentImpl("pixel/green", DataType.BYTE));
+        dataEnc.addMemberAsComponent(new BinaryComponentImpl("pixel/blue", DataType.BYTE));
         return dataEnc;
     }
 

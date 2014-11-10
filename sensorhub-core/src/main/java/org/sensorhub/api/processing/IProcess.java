@@ -25,8 +25,8 @@
 
 package org.sensorhub.api.processing;
 
+import net.opengis.swe.v20.DataComponent;
 import org.sensorhub.api.module.IModule;
-import org.vast.cdm.common.DataComponent;
 
 
 /**

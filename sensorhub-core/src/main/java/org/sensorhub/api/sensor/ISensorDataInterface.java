@@ -26,10 +26,10 @@
 package org.sensorhub.api.sensor;
 
 import java.util.List;
+import net.opengis.swe.v20.DataComponent;
+import net.opengis.swe.v20.DataEncoding;
+import net.opengis.swe.v20.DataBlock;
 import org.sensorhub.api.common.IEventProducer;
-import org.vast.cdm.common.DataBlock;
-import org.vast.cdm.common.DataComponent;
-import org.vast.cdm.common.DataEncoding;
 
 
 /**

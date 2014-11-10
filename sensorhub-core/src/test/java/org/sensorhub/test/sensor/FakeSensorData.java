@@ -17,22 +17,23 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.LinkedBlockingDeque;
+import net.opengis.swe.v20.DataComponent;
+import net.opengis.swe.v20.DataEncoding;
+import net.opengis.swe.v20.DataBlock;
+import net.opengis.swe.v20.Quantity;
+import net.opengis.swe.v20.Time;
 import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.sensor.ISensorDataInterface;
 import org.sensorhub.api.sensor.ISensorModule;
 import org.sensorhub.api.sensor.SensorDataEvent;
 import org.sensorhub.api.sensor.SensorException;
 import org.sensorhub.impl.common.BasicEventHandler;
-import org.vast.cdm.common.AsciiEncoding;
-import org.vast.cdm.common.DataBlock;
-import org.vast.cdm.common.DataComponent;
-import org.vast.cdm.common.DataEncoding;
-import org.vast.cdm.common.DataType;
 import org.vast.data.DataBlockDouble;
-import org.vast.data.DataGroup;
-import org.vast.data.DataValue;
+import org.vast.data.DataRecordImpl;
+import org.vast.data.QuantityImpl;
+import org.vast.data.TextEncodingImpl;
+import org.vast.data.TimeImpl;
 import org.vast.sensorML.system.SMLSystem;
-import org.vast.sweCommon.SweConstants;
 
 
 /**
@@ -160,27 +161,28 @@ public class FakeSensorData implements ISensorDataInterface
     @Override
     public DataComponent getRecordDescription()
     {
-        DataComponent record = new DataGroup(3, this.name);
-        record.setProperty(SweConstants.DEF_URI, "urn:blabla:weatherData");
+        DataComponent record = new DataRecordImpl(3);
+        record.setName(this.name);
+        record.setDefinition("urn:blabla:weatherData");
         
-        DataValue time = new DataValue(DataType.DOUBLE);
-        time.setProperty(SweConstants.DEF_URI, "urn:blabla:samplingTime");
-        time.setProperty(SweConstants.UOM_URI, SweConstants.ISO_TIME_DEF);
+        Time time = new TimeImpl();
+        time.setDefinition("urn:blabla:samplingTime");
+        time.getUom().setHref(Time.ISO_TIME_UNIT);
         record.addComponent("time", time);
         
-        DataValue temp = new DataValue(DataType.DOUBLE);
-        temp.setProperty(SweConstants.DEF_URI, "urn:blabla:temperature");
-        temp.setProperty(SweConstants.UOM_CODE, "Cel");
+        Quantity temp = new QuantityImpl();
+        temp.setDefinition("urn:blabla:temperature");
+        temp.getUom().setCode("Cel");
         record.addComponent("temp", temp);
         
-        DataValue wind = new DataValue(DataType.DOUBLE);
-        wind.setProperty(SweConstants.DEF_URI, "urn:blabla:windSpeed");
-        wind.setProperty(SweConstants.UOM_CODE, "m/s");
+        Quantity wind = new QuantityImpl();
+        wind.setDefinition("urn:blabla:windSpeed");
+        wind.getUom().setCode("m/s");
         record.addComponent("windSpeed", wind);
         
-        DataValue press = new DataValue(DataType.DOUBLE);
-        press.setProperty(SweConstants.DEF_URI, "urn:blabla:pressure");
-        press.setProperty(SweConstants.UOM_CODE, "hPa");
+        Quantity press = new QuantityImpl();
+        press.setDefinition("urn:blabla:pressure");
+        press.getUom().setCode("hPa");
         record.addComponent("press", press);
         
         return record;
@@ -190,7 +192,7 @@ public class FakeSensorData implements ISensorDataInterface
     @Override
     public DataEncoding getRecommendedEncoding() throws SensorException
     {
-        return new AsciiEncoding("\n", ",");
+        return new TextEncodingImpl("\n", ",");
     }
 
 

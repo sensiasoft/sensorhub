@@ -25,8 +25,8 @@
 
 package org.sensorhub.api.sensor;
 
-import org.vast.cdm.common.DataBlock;
-import org.vast.cdm.common.DataComponent;
+import net.opengis.swe.v20.DataBlock;
+import net.opengis.swe.v20.DataComponent;
 
 
 /**
@@ -60,6 +60,8 @@ public class SensorDataEvent extends SensorEvent
 	
 	/**
 	 * Constructor from list of records with their descriptor
+	 * @param dataInterface 
+	 * @param timeStamp 
 	 * @param desc
 	 * @param records 
 	 */

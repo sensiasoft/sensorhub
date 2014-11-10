@@ -25,8 +25,8 @@
 
 package org.sensorhub.api.service;
 
-import org.vast.cdm.common.DataBlock;
-import org.vast.cdm.common.DataComponent;
+import net.opengis.swe.v20.DataBlock;
+import net.opengis.swe.v20.DataComponent;
 
 
 /**
@@ -64,13 +64,14 @@ public class CommandEvent extends ServiceEvent
     
     /**
      * Sole constructor
-     * @param serviceId
+     * @param serviceID
+     * @param commandID 
      * @param commandDescriptor
      * @param commandData
      */
-    public CommandEvent(String serviceId, String commandID, DataComponent commandDescriptor, DataBlock commandData)
+    public CommandEvent(String serviceID, String commandID, DataComponent commandDescriptor, DataBlock commandData)
     {
-        super(serviceId, EventType.COMMAND_AVAILABLE);
+        super(serviceID, EventType.COMMAND_AVAILABLE);
         this.commandID = commandID;
         this.commandDescriptor = commandDescriptor;
         this.commandData = commandData;
