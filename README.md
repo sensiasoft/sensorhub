@@ -1,12 +1,33 @@
+![Logo](../../wiki/images/sensorhub_logo_128.png)
 SensorHub
-=========
+===========================================================
 
-SensorHub software allows one to easily build interoperable and evolutive sensor networks with advanced processing capabilities and based on open-standards for all data exchanges. These open-standards are mostly OGC standards from the Sensor Web Enablement (SWE) initiative and are key to design sensor networks that can largely evolve with time (addition of new types of sensors, reconfigurations, etc.).
+SensorHub software allows one to easily build interoperable and evolutive sensor networks with advanced processing capabilities and based on open-standards for all data exchanges. These open-standards are mostly [OGC](http://www.opengeospatial.org) standards from the [Sensor Web Enablement](http://www.opengeospatial.org/projects/groups/sensorwebdwg) (SWE) initiative and are key to design sensor networks that can largely evolve with time (addition of new types of sensors, reconfigurations, etc.).
 
-The framework allows one to connect any kind of sensors and actuators to a common bus via a simple yet generic driver API. Sensors can be connected through any available hardware interface such as RS232/422, SPI, I2C, USB, Ethernet, Wifi, Bluetooth, ZigBee, HTTP, etc... Once drivers are available for a specific sensor, it is automatically connected to the bus and it is then trivial to send commands and read data from it. An intuitive user interface allows the user to configure the network to suit its needs and more advanced processing capabilities are available via a plugin system.
+The framework allows one to connect any kind of sensors and actuators to a common bus via a simple yet generic driver API. Sensors can be connected through any available hardware interface such as [RS232/422](http://en.wikipedia.org/wiki/RS-232), [SPI](http://en.wikipedia.org/wiki/Serial_Peripheral_Interface_Bus), [I2C](http://en.wikipedia.org/wiki/I%C2%B2C), [USB](http://en.wikipedia.org/wiki/USB), [Ethernet](http://en.wikipedia.org/wiki/Ethernet), [Wifi](http://en.wikipedia.org/wiki/Wi-Fi), [Bluetooth](http://en.wikipedia.org/wiki/Bluetooth), [ZigBee](http://en.wikipedia.org/wiki/ZigBee), [HTTP](http://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol), etc... Once drivers are available for a specific sensor, it is automatically connected to the bus and it is then trivial to send commands and read data from it. An intuitive user interface allows the user to configure the network to suit its needs and more advanced processing capabilities are available via a plugin system.
 
-SensorHub embeds the full power of OGC web services ([Sensor Observation Service] or SOS, Sensor Planning Service or SPS) to communicate with all connected sensors in the network as well as to provide robust metadata (owner, location and orientation, calibration, etc.) about them. Through these standard, several SensorHub instance can also communicate with each other to form larger networks.
+SensorHub embeds the full power of OGC web services ([Sensor Observation Service](http://www.opengeospatial.org/standards/sos) or SOS, [Sensor Planning Service](http://www.opengeospatial.org/standards/sps) or SPS) to communicate with all connected sensors in the network as well as to provide robust metadata (owner, location and orientation, calibration, etc.) about them. Through these standard, several SensorHub instances can also communicate with each other to form larger networks.
 
-Low level functions of SensorHub (send commands and read data from sensor) are coded efficiently and can be used on embedded hardware running Java SE®, Java ME® or Android® while more advanced data processing capabilities are fully multi-threaded and can thus benefit from a more powerful hardware platform (e.g. multi-processor servers or even clusters).
+Low level functions of SensorHub (send commands and read data from sensor) are coded efficiently and can be used on embedded hardware running [Java SE®](http://www.oracle.com/technetwork/java/javase), [Java ME®](http://www.oracle.com/technetwork/java/embedded/javame) or [Android®](http://www.android.com) while more advanced data processing capabilities are fully multi-threaded and can thus benefit from a more powerful hardware platform (e.g. multi-processor servers or even clusters).
 
-Please take a look at the User's Guide wiki page and the Developer's Guide if you're planning to tweak the code or contribute to the project.
+
+## License
+
+SensorHub is licensed under the [Mozilla Public License version 1.1](http://www.mozilla.org/MPL/1.1/) (we will be transitioning to MPL v2.0 very soon)
+
+
+## Using
+
+Refer to the [User's Guide](https://github.com/sensiasoft/sensorhub/wiki/User's-Guide) for instructions on how to install and use SensorHub.
+
+
+## Building
+
+SensorHub can be built using Maven either from the command line or within Eclipse. Please see the [Developer's Guide](../../wiki/Developer's-Guide) for detailed instructions.
+
+
+## Contributing
+
+Refer to the [Developer's Guide](../../wiki/Developer's-Guide) for instructions on how to setup your development environment in Eclipse.
+
+Several sensor driver examples are available in the source code to help you get started.

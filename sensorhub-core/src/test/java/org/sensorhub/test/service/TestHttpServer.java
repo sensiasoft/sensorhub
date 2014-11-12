@@ -48,6 +48,7 @@ public class TestHttpServer
         HttpServer server = HttpServer.getInstance();
         HttpServerConfig config = new HttpServerConfig();
         server.init(config);
+        server.start();
         
         // connect to servlet and check response
         URL url = new URL("http://localhost:" + config.httpPort + config.rootURL + "/test");
@@ -68,6 +69,7 @@ public class TestHttpServer
         HttpServer server = HttpServer.getInstance();
         HttpServerConfig config = new HttpServerConfig();
         server.init(config);
+        server.start();
         
         final String testText = "Deploying hot servlet in SensorHub works";
         
@@ -79,44 +81,7 @@ public class TestHttpServer
                 try
                 {
                     resp.getOutputStream().print(testText);
-                }
-                catch (IOException e)
-                {
-                    throw new ServletException(e);
-                }
-            }
-        });
-        
-        // connect to servlet and check response
-        URL url = new URL("http://localhost:" + config.httpPort + config.rootURL + "/junit");
-        BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream()));
-        String resp = reader.readLine();
-        System.out.println(resp);
-        reader.close();
-        
-        assertTrue(resp.equals(testText));
-        server.stop();
-    }
-    
-    
-    @Test
-    public void testChangeConfig() throws Exception
-    {
-        // start server
-        HttpServer server = HttpServer.getInstance();
-        HttpServerConfig config = new HttpServerConfig();
-        server.init(config);
-        
-        final String testText = "Deploying hot servlet in SensorHub works";
-        
-        // deploy new servlet dynamically
-        server.deployServlet("/junit", new HttpServlet() {
-            private static final long serialVersionUID = 1L;
-            protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException
-            {
-                try
-                {
-                    resp.getOutputStream().print(testText);
+                    resp.getOutputStream().flush();
                 }
                 catch (IOException e)
                 {

@@ -74,9 +74,14 @@ public class FakeSensorData implements ISensorDataInterface
         this.dataQueue = new LinkedBlockingDeque<DataBlock>(bufferSize);
         this.maxSampleCount = maxSampleCount;
         
-        final DataComponent dataDesc = getRecordDescription();
         if (pushEnabled)
-            this.eventHandler = new BasicEventHandler();        
+            this.eventHandler = new BasicEventHandler(); 
+    }
+    
+    
+    protected void start()
+    {
+        final DataComponent dataDesc = getRecordDescription();
         
         // start data production timer
         TimerTask sensorTask = new TimerTask()
@@ -148,7 +153,7 @@ public class FakeSensorData implements ISensorDataInterface
     @Override
     public double getAverageSamplingPeriod()
     {
-        return 1./samplingPeriod;
+        return samplingPeriod;
     }
 
 

@@ -31,14 +31,15 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.handler.HandlerList;
+import org.eclipse.jetty.server.handler.ResourceHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
-import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.common.SensorHubException;
-import org.sensorhub.api.module.IModule;
-import org.sensorhub.api.module.IModuleStateLoader;
-import org.sensorhub.api.module.IModuleStateSaver;
+import org.sensorhub.impl.module.AbstractModule;
 
 
 /**
@@ -50,14 +51,14 @@ import org.sensorhub.api.module.IModuleStateSaver;
  * @author Alexandre Robin <alex.robin@sensiasoftware.com>
  * @since Sep 6, 2013
  */
-public class HttpServer implements IModule<HttpServerConfig>
+public class HttpServer extends AbstractModule<HttpServerConfig>
 {
+    private static final Log log = LogFactory.getLog(HttpServer.class);
     public static String TEST_MSG = "SensorHub web server is up";
     private static HttpServer instance;
         
-    HttpServerConfig config;
     Server server;
-    ServletContextHandler handler;
+    ServletContextHandler servletHandler;
     
     
     public HttpServer()
@@ -67,11 +68,11 @@ public class HttpServer implements IModule<HttpServerConfig>
         
         instance = this;
         
-        // create handler
-        this.handler = new ServletContextHandler(ServletContextHandler.SESSIONS);
+        // create servlet handler
+        this.servletHandler = new ServletContextHandler(ServletContextHandler.SESSIONS);
         
         // add default test servlet
-        handler.addServlet(new ServletHolder(new HttpServlet() {
+        servletHandler.addServlet(new ServletHolder(new HttpServlet() {
             private static final long serialVersionUID = 1L;
             protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException
             {
@@ -96,25 +97,13 @@ public class HttpServer implements IModule<HttpServerConfig>
         return instance;
     }
     
-    
-    public boolean isEnabled()
-    {
-        return config.enabled;
-    }
-    
-    
-    @Override
-    public void init(HttpServerConfig config) throws SensorHubException
-    {
-        this.config = config;
-    }
-    
 
     @Override
     public void updateConfig(HttpServerConfig config) throws SensorHubException
     {
         stop();
         init(config);
+        start();
     }
 
     
@@ -124,9 +113,27 @@ public class HttpServer implements IModule<HttpServerConfig>
         try
         {
             server = new Server(config.httpPort);
-            handler.setContextPath(config.rootURL);
-            server.setHandler(handler);
+            
+            HandlerList handlers = new HandlerList();
+            
+            if (config.docRoot != null)
+            {
+                ResourceHandler resourceHandler = new ResourceHandler();
+                resourceHandler.setResourceBase(config.docRoot);
+                handlers.addHandler(resourceHandler);
+                log.info("Serving static resources from " + config.docRoot);
+            }
+            
+            if (config.rootURL != null)
+            {
+                servletHandler.setContextPath(config.rootURL);
+                handlers.addHandler(servletHandler);
+                log.info("Serving servlets at " + config.rootURL);
+            }
+            
+            server.setHandler(handlers);
             server.start();
+            log.info("HTTP server started");
         }
         catch (Exception e)
         {
@@ -148,13 +155,6 @@ public class HttpServer implements IModule<HttpServerConfig>
         }
     }
     
-
-    @Override
-    public HttpServerConfig getConfiguration()
-    {
-        return config;
-    }
-    
     
     public void deployServlet(String path, HttpServlet servlet)
     {
@@ -167,28 +167,13 @@ public class HttpServer implements IModule<HttpServerConfig>
         ServletHolder servletHolder = new ServletHolder(servlet);
         if (initParams != null)
             servletHolder.setInitParameters(initParams);
-        handler.addServlet(servletHolder, path);
+        servletHandler.addServlet(servletHolder, path);
     }
     
     
     public void undeployServlet(HttpServlet servlet)
     {
-        handler.removeBean(servlet);
-    }
-    
-    
-    @Override
-    public void saveState(IModuleStateSaver saver) throws SensorHubException
-    {
-        // TODO Auto-generated method stub
-        
-    }
-
-    @Override
-    public void loadState(IModuleStateLoader loader) throws SensorHubException
-    {
-        // TODO Auto-generated method stub
-        
+        servletHandler.removeBean(servlet);
     }
 
 
@@ -198,39 +183,10 @@ public class HttpServer implements IModule<HttpServerConfig>
         stop();
         server = null;
     }
-
-
-    @Override
-    public String getName()
-    {
-        return config.name;
-    }
-
-
-    @Override
-    public String getLocalID()
-    {
-        return config.id;
-    }
     
     
     public Server getJettyServer()
     {
         return server;
     }
-
-
-    @Override
-    public void registerListener(IEventListener listener)
-    {
-        // TODO Auto-generated method stub        
-    }
-
-
-    @Override
-    public void unregisterListener(IEventListener listener)
-    {
-        // TODO Auto-generated method stub        
-    }
-
 }

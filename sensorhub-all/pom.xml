@@ -82,6 +82,7 @@
             <version>2.4.0</version>
             <extensions>true</extensions>
             <configuration>
+               <excludeDependencies>*;scope=compile|runtime</excludeDependencies>
                <archive>
                   <addMavenDescriptor>false</addMavenDescriptor>
                   <manifestEntries>
@@ -93,8 +94,10 @@
                   <Bundle-Name>${pom.name}</Bundle-Name>
                   <Bundle-DocURL/>
                   <Bundle-Activator>${pom.groupId}.Activator</Bundle-Activator>
-                  <Embed-Dependency>*;scope=compile|runtime|system</Embed-Dependency>
-                  <Export-Package>org.sensorhub.*</Export-Package>
+                  <Embed-Dependency>*;scope=system</Embed-Dependency>
+                  <!--<Export-Package>org.sensorhub.*</Export-Package>-->
+                  <!-- use exportcontents instead of Export-Package otherwise it also includes all classes from dependencies -->
+                  <_exportcontents>org.sensorhub.*</_exportcontents>
                </instructions>
             </configuration>
          </plugin>

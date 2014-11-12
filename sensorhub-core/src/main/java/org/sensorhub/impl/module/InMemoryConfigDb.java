@@ -23,7 +23,7 @@
  
 ******************************* END LICENSE BLOCK ***************************/
 
-package org.sensorhub.test.module;
+package org.sensorhub.impl.module;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;

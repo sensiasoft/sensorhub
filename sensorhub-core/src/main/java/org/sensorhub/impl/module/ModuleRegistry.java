@@ -126,14 +126,19 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
             Class<IModule> clazz = (Class<IModule>)Class.forName(config.moduleClass);
             IModule module = clazz.newInstance();
             module.init(config);
-            if (config.enabled)
-                module.start();
-            
+                        
             // keep track of what modules are loaded
             loadedModules.put(config.id, module);
             
             // send event
             eventHandler.publishEvent(new ModuleEvent(module, ModuleEvent.Type.LOADED));
+            
+            // start it if enabled by default
+            if (config.enabled)
+            {
+                module.start();
+                eventHandler.publishEvent(new ModuleEvent(module, ModuleEvent.Type.ENABLED));
+            }
             
             return module;
         }
@@ -181,17 +186,24 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
     @SuppressWarnings("rawtypes")
     public synchronized IModule<?> enableModule(String moduleID) throws SensorHubException
     {
-        checkID(moduleID);
-        
-        ModuleConfig config = configRepos.get(moduleID);
-        config.enabled = true;
-        
-        // also init module if it is loaded
+        checkID(moduleID);        
         IModule module = loadedModules.get(moduleID);
-        if (module != null)
-            module.start();
         
-        eventHandler.publishEvent(new ModuleEvent(module, ModuleEvent.Type.ENABLED));
+        // load module if not already loaded
+        if (module == null)
+        {
+            ModuleConfig config = configRepos.get(moduleID);
+            config.enabled = true;
+            module = loadModule(config);
+        }
+        
+        // otherwise just start it
+        else
+        {
+            module.start();        
+            eventHandler.publishEvent(new ModuleEvent(module, ModuleEvent.Type.ENABLED));
+        }
+        
         return module;
     }
     
@@ -376,7 +388,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
      */
     private void checkID(String moduleID)
     {
-        if (!configRepos.contains(moduleID))
+        if (!loadedModules.containsKey(moduleID) && !configRepos.contains(moduleID))
             throw new RuntimeException("Module with ID " + moduleID + " is not available");
     }
 

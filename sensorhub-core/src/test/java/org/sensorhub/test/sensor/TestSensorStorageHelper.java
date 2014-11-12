@@ -67,7 +67,7 @@ public class TestSensorStorageHelper
                
         // create test sensor
         SensorConfig sensorCfg = new SensorConfig();
-        sensorCfg.enabled = true;
+        sensorCfg.enabled = false;
         sensorCfg.moduleClass = FakeSensor.class.getCanonicalName();
         sensorCfg.name = "Sensor1";
         IModule<?> sensor = registry.loadModule(sensorCfg);
@@ -77,7 +77,7 @@ public class TestSensorStorageHelper
     
     
     @Test
-    public void testCreate() throws Exception
+    public void testAddRecordToStorage() throws Exception
     {
         SensorStorageConfig config = new SensorStorageConfig();
         config.enabled = true;
@@ -86,8 +86,9 @@ public class TestSensorStorageHelper
         config.storageID = registry.getLoadedModules().get(0).getLocalID();
         config.sensorID = registry.getLoadedModules().get(1).getLocalID();
         registry.loadModule(config);
+        registry.enableModule(config.sensorID);
         
-        Thread.sleep((long)((fakeSensorData.maxSampleCount+1) * 1000.0 / fakeSensorData.getAverageSamplingPeriod()));
+        Thread.sleep((long)((fakeSensorData.maxSampleCount * fakeSensorData.getAverageSamplingPeriod() + 1.) * 1000));
         
         assertEquals(fakeSensorData.maxSampleCount, db.getNumRecords());
     }

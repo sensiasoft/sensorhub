@@ -29,6 +29,8 @@ import org.sensorhub.api.common.IEventHandler;
 import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.module.IModule;
+import org.sensorhub.api.module.IModuleStateLoader;
+import org.sensorhub.api.module.IModuleStateSaver;
 import org.sensorhub.api.module.ModuleConfig;
 import org.sensorhub.impl.common.BasicEventHandler;
 
@@ -94,6 +96,20 @@ public abstract class AbstractModule<ConfigType extends ModuleConfig> implements
     public void updateConfig(ConfigType config) throws SensorHubException
     {
         this.config = config;
+    }
+
+
+    @Override
+    public void saveState(IModuleStateSaver saver) throws SensorHubException
+    {
+        // does nothing in the default implementation        
+    }
+
+
+    @Override
+    public void loadState(IModuleStateLoader loader) throws SensorHubException
+    {
+        // does nothing in the default implementation
     }
 
 

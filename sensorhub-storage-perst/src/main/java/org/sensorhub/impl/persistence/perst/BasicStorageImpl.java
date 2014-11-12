@@ -129,14 +129,9 @@ public class BasicStorageImpl implements IBasicStorage<BasicStorageConfig>
     
     
     @Override
-    public void start()
+    public void start() throws StorageException
     {
-        this.autoCommit = true;
-        
-        if (db != null && db.isOpened())
-            db.close();
-        
-        db = StorageFactory.getInstance().createStorage();
+        open();
     }
     
     
@@ -152,6 +147,13 @@ public class BasicStorageImpl implements IBasicStorage<BasicStorageConfig>
     {
         try
         {
+            this.autoCommit = true;
+            
+            // first make sure it's not already opened
+            if (db != null && db.isOpened())
+                throw new StorageException("Storage " + getLocalID() + " is already opened");
+            
+            db = StorageFactory.getInstance().createStorage();            
             db.open(config.storagePath, config.memoryCacheSize*1024);
             dbRoot = (DBRoot)db.getRoot();
             
