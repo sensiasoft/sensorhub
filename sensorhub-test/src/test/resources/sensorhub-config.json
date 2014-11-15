@@ -5,7 +5,8 @@
     "name": "HTTP Server",
     "moduleClass": "org.sensorhub.impl.service.HttpServer",
     "httpPort": 8080,
-    "rootURL": "/sensorhub"
+    "rootURL": "/sensorhub",
+    "docRoot": "/home/alex/Documents/Projects/Workspace_OGC/sensorhub/sensorhub-test/web"
   },
   {
     "objClass": "org.sensorhub.impl.service.sos.SOSServiceConfig",
@@ -91,7 +92,7 @@
     "centerLatitude": 34.7300,
     "centerLongitude": -86.5850,
     "areaSize": 0.1,
-    "vehicleSpeed": 40
+    "vehicleSpeed": 200
   },
   {
     "objClass": "org.sensorhub.api.persistence.StorageConfig",
@@ -105,7 +106,7 @@
     "id": "5cb05c9c-9e08-4cca-5691-ff4ff948bdc0",
     "name": "Sensor Storage Helper",
     "moduleClass": "org.sensorhub.impl.sensor.SensorStorageHelper",
-    "enabled": true,
+    "enabled": false,
     "storageID": "5cb05c9c-9e08-4fa1-8731-ff4ff948bdc0",
     "sensorID": "5cb05c9c-9e08-4fa1-8731-ff41e246bdc0"
   }
