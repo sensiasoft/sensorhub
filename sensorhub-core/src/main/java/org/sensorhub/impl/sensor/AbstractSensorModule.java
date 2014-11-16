@@ -25,17 +25,23 @@
 
 package org.sensorhub.impl.sensor;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
+import net.opengis.sensorml.v20.AbstractProcess;
+import net.opengis.swe.v20.DataComponent;
 import org.sensorhub.api.sensor.ISensorControlInterface;
 import org.sensorhub.api.sensor.ISensorDataInterface;
 import org.sensorhub.api.sensor.ISensorModule;
 import org.sensorhub.api.sensor.SensorConfig;
 import org.sensorhub.api.sensor.SensorException;
 import org.sensorhub.impl.module.AbstractModule;
-import org.vast.sensorML.SMLProcess;
-import org.vast.sensorML.system.SMLSystem;
+import org.vast.sensorML.PhysicalSystemImpl;
+import org.vast.sensorML.SMLUtils;
 import org.vast.util.DateTime;
 
 
@@ -54,10 +60,11 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
 {
     protected static String ERROR_NO_UPDATE = "Sensor Description update is not supported by driver ";
     protected static String ERROR_NO_HISTORY = "History of sensor description is not supported by driver ";
-    protected SMLSystem sensorDescription;
     protected Map<String, ISensorDataInterface> obsOutputs = new HashMap<String, ISensorDataInterface>();  
     protected Map<String, ISensorDataInterface> statusOutputs = new HashMap<String, ISensorDataInterface>();  
     protected Map<String, ISensorControlInterface> controlInputs = new HashMap<String, ISensorControlInterface>();  
+    private AbstractProcess sensorDescription;
+    protected long lastUpdatedSensorML;
     
     
     @Override
@@ -75,21 +82,83 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
 
 
     @Override
-    public SMLProcess getCurrentSensorDescription() throws SensorException
+    public AbstractProcess getCurrentSensorDescription() throws SensorException
     {
+        // by default we return the static description provided in config
+        if (sensorDescription == null)
+        {
+            if (config.sensorML != null)
+            {
+                try
+                {
+                    SMLUtils utils = new SMLUtils();
+                    InputStream is = new URL(config.sensorML).openStream();
+                    sensorDescription = utils.readProcess(is);
+                    lastUpdatedSensorML = System.currentTimeMillis();
+                }
+                catch (IOException e)
+                {
+                    throw new SensorException("Error while parsing static SensorML description for sensor " + 
+                                               getName() + " (" + getLocalID() + ")", e);
+                }
+            }
+            else
+            {
+                sensorDescription = new PhysicalSystemImpl();
+                lastUpdatedSensorML = 0;
+            }
+        }
+        
+        // add most common stuff automatically
+        sensorDescription.setUniqueIdentifier(getLocalID());    
+        
+        // append outputs only if not already defined in static doc
+        if (sensorDescription.getNumOutputs() == 0)
+        {
+            for (Entry<String, ? extends ISensorDataInterface> output: getAllOutputs().entrySet())
+            {
+                DataComponent outputDesc = output.getValue().getRecordDescription();
+                if (outputDesc == null)
+                    continue;
+                outputDesc = outputDesc.copy();
+                sensorDescription.addOutput(output.getKey(), outputDesc);
+            }
+        }
+        
+        // append control parameters only if not already defined in static doc
+        if (sensorDescription.getNumParameters() == 0)
+        {
+            for (Entry<String, ? extends ISensorControlInterface> param: getCommandInputs().entrySet())
+            {
+                DataComponent paramDesc = param.getValue().getCommandDescription();
+                if (paramDesc == null)
+                    continue;
+                paramDesc = paramDesc.copy();
+                paramDesc.setUpdatable(true);
+                sensorDescription.addParameter(param.getKey(), paramDesc);
+            }
+        }
+        
         return sensorDescription;
     }
 
 
     @Override
-    public SMLProcess getSensorDescription(DateTime t) throws SensorException
+    public long getLastSensorDescriptionUpdate()
+    {
+        return lastUpdatedSensorML;
+    }
+
+
+    @Override
+    public AbstractProcess getSensorDescription(DateTime t) throws SensorException
     {
         throw new SensorException(ERROR_NO_HISTORY + getName());
     }
 
 
     @Override
-    public void updateSensorDescription(SMLProcess systemDesc, boolean recordHistory) throws SensorException
+    public void updateSensorDescription(AbstractProcess systemDesc, boolean recordHistory) throws SensorException
     {
         throw new SensorException(ERROR_NO_UPDATE + getName());
     }

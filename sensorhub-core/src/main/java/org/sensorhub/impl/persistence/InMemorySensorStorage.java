@@ -32,6 +32,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import net.opengis.gml.v32.AbstractTimeGeometricPrimitive;
+import net.opengis.gml.v32.TimeInstant;
+import net.opengis.gml.v32.TimePeriod;
+import net.opengis.sensorml.v20.AbstractProcess;
 import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.module.IModuleStateLoader;
@@ -40,19 +44,18 @@ import org.sensorhub.api.persistence.ISensorDescriptionStorage;
 import org.sensorhub.api.persistence.IStorageModule;
 import org.sensorhub.api.persistence.StorageConfig;
 import org.sensorhub.api.persistence.StorageException;
-import org.vast.sensorML.SMLProcess;
 
 
 public class InMemorySensorStorage implements ISensorDescriptionStorage<StorageConfig>
 {
     StorageConfig config;
-    Map<String, List<SMLProcess>> smlTable;
+    Map<String, List<AbstractProcess>> smlTable;
 
 
     @Override
     public void open() throws StorageException
     {
-        smlTable = new HashMap<String, List<SMLProcess>>();
+        smlTable = new HashMap<String, List<AbstractProcess>>();
     }
 
 
@@ -192,27 +195,25 @@ public class InMemorySensorStorage implements ISensorDescriptionStorage<StorageC
 
 
     @Override
-    public SMLProcess getSensorDescription(String sensorUID)
+    public AbstractProcess getSensorDescription(String sensorUID)
     {
         return smlTable.get(sensorUID).get(0);
     }
 
 
     @Override
-    public List<SMLProcess> getSensorDescriptionHistory(String sensorUID)
+    public List<AbstractProcess> getSensorDescriptionHistory(String sensorUID)
     {
         return smlTable.get(sensorUID);
     }
 
 
     @Override
-    public SMLProcess getSensorDescriptionAtTime(String sensorUID, long time)
+    public AbstractProcess getSensorDescriptionAtTime(String sensorUID, long time)
     {
-        for (SMLProcess process: smlTable.get(sensorUID))
+        for (AbstractProcess process: smlTable.get(sensorUID))
         {
-            long begin = process.getMetadata().getValidityBegin().getTime();
-            long end = process.getMetadata().getValidityEnd().getTime();
-            if (time > begin && time < end)
+            if (isTimeMatch(process, time))
                 return process;
         }
         
@@ -221,13 +222,13 @@ public class InMemorySensorStorage implements ISensorDescriptionStorage<StorageC
 
 
     @Override
-    public void store(SMLProcess process)
+    public void store(AbstractProcess process)
     {
-        List<SMLProcess> processList = smlTable.get(process.getIdentifier());
+        List<AbstractProcess> processList = smlTable.get(process.getIdentifier());
         if (processList == null)
         {
-            processList = new ArrayList<SMLProcess>();
-            smlTable.put(process.getIdentifier(), processList);
+            processList = new ArrayList<AbstractProcess>();
+            smlTable.put(process.getIdentifier().getValue(), processList);
         }
         
         processList.add(process);
@@ -235,11 +236,11 @@ public class InMemorySensorStorage implements ISensorDescriptionStorage<StorageC
 
 
     @Override
-    public void update(SMLProcess process)
+    public void update(AbstractProcess process)
     {
-        List<SMLProcess> processList = smlTable.get(process.getIdentifier());
+        List<AbstractProcess> processList = smlTable.get(process.getIdentifier());
         if (processList == null)
-            processList = new ArrayList<SMLProcess>();
+            processList = new ArrayList<AbstractProcess>();
         
         processList.add(process);
     }
@@ -248,18 +249,39 @@ public class InMemorySensorStorage implements ISensorDescriptionStorage<StorageC
     @Override
     public void remove(String sensorUID, long time)
     {
-        ListIterator<SMLProcess> it = smlTable.get(sensorUID).listIterator();
+        ListIterator<AbstractProcess> it = smlTable.get(sensorUID).listIterator();
         while (it.hasNext())
         {
-            SMLProcess p = it.next();
-            long begin = p.getMetadata().getValidityBegin().getTime();
-            long end = p.getMetadata().getValidityEnd().getTime();
-            if (time > begin && time < end)
+            AbstractProcess p = it.next();
+            if (isTimeMatch(p, time))
             {
                 it.remove();
                 break;
             }
         }
+    }
+    
+    
+    protected boolean isTimeMatch(AbstractProcess process, long time)
+    {
+        for (AbstractTimeGeometricPrimitive validTime: process.getValidTimeList())
+        {
+            if (validTime instanceof TimePeriod)
+            {
+                long begin = (long) ((TimePeriod)validTime).getBeginPosition().getDateTimeValue().getAsDouble() * 1000;
+                long end = (long) ((TimePeriod)validTime).getEndPosition().getDateTimeValue().getAsDouble() * 1000;
+                if (time > begin && time < end)
+                    return true;
+            }
+            else if (validTime instanceof TimeInstant)
+            {
+                long docTime = (long) ((TimeInstant)validTime).getTimePosition().getDateTimeValue().getAsDouble() * 1000;
+                if (time == docTime)
+                    return true;
+            }
+        }
+        
+        return false;
     }
 
 

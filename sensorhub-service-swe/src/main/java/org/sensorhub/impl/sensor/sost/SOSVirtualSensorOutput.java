@@ -26,6 +26,9 @@
 package org.sensorhub.impl.sensor.sost;
 
 import java.util.List;
+import net.opengis.swe.v20.DataBlock;
+import net.opengis.swe.v20.DataComponent;
+import net.opengis.swe.v20.DataEncoding;
 import org.sensorhub.api.common.IEventHandler;
 import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.sensor.ISensorDataInterface;
@@ -33,9 +36,6 @@ import org.sensorhub.api.sensor.ISensorModule;
 import org.sensorhub.api.sensor.SensorDataEvent;
 import org.sensorhub.api.sensor.SensorException;
 import org.sensorhub.impl.common.BasicEventHandler;
-import org.vast.cdm.common.DataBlock;
-import org.vast.cdm.common.DataComponent;
-import org.vast.cdm.common.DataEncoding;
 
 
 public class SOSVirtualSensorOutput implements ISensorDataInterface

@@ -157,7 +157,7 @@ public class SensorStorageHelper implements IModule<SensorStorageConfig>, IEvent
     @Override
     public void handleEvent(Event e)
     {
-        if (e instanceof SensorDataEvent)
+        if (isEnabled() && e instanceof SensorDataEvent)
         {
             boolean saveAutoCommitState = storage.isAutoCommit();
             storage.setAutoCommit(false);

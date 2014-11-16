@@ -30,6 +30,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
+import net.opengis.swe.v20.DataBlock;
+import net.opengis.swe.v20.DataComponent;
+import net.opengis.swe.v20.DataEncoding;
 import org.sensorhub.api.common.Event;
 import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.sensor.ISensorDataInterface;
@@ -37,9 +40,6 @@ import org.sensorhub.api.sensor.ISensorModule;
 import org.sensorhub.api.sensor.SensorEvent;
 import org.sensorhub.api.sensor.SensorEvent.Type;
 import org.sensorhub.api.sensor.SensorException;
-import org.vast.cdm.common.DataBlock;
-import org.vast.cdm.common.DataComponent;
-import org.vast.cdm.common.DataEncoding;
 import org.vast.data.DataIterator;
 import org.vast.ogc.def.DefinitionRef;
 import org.vast.ogc.gml.FeatureRef;
@@ -48,7 +48,6 @@ import org.vast.ogc.om.ObservationImpl;
 import org.vast.ogc.om.ProcedureRef;
 import org.vast.ows.server.SOSDataFilter;
 import org.vast.ows.sos.ISOSDataProvider;
-import org.vast.sweCommon.SweConstants;
 import org.vast.util.TimeExtent;
 
 
@@ -87,7 +86,7 @@ public class SensorDataProvider implements ISOSDataProvider, IEventListener
             DataIterator it = new DataIterator(outputInterface.getRecordDescription());
             while (it.hasNext())
             {
-                String defUri = (String)it.next().getProperty(SweConstants.DEF_URI);
+                String defUri = (String)it.next().getDefinition();
                 if (filter.getObservables().contains(defUri))
                 {
                     dataSources.add(outputInterface);
@@ -127,7 +126,7 @@ public class SensorDataProvider implements ISOSDataProvider, IEventListener
     
     
     @Override
-    public synchronized IObservation getNextObservation() throws Exception
+    public IObservation getNextObservation() throws Exception
     {
         DataComponent result = getNextComponent();
         if (result == null)
@@ -145,7 +144,7 @@ public class SensorDataProvider implements ISOSDataProvider, IEventListener
         IObservation obs = new ObservationImpl();
         obs.setFeatureOfInterest(new FeatureRef("http://TODO"));
         obs.setObservedProperty(new DefinitionRef("http://TODO"));
-        obs.setProcedure(new ProcedureRef(sensor.getCurrentSensorDescription().getIdentifier()));
+        obs.setProcedure(new ProcedureRef(sensor.getCurrentSensorDescription().getUniqueIdentifier()));
         obs.setPhenomenonTime(phenTime);
         obs.setResultTime(resultTime);
         obs.setResult(result);
@@ -155,14 +154,14 @@ public class SensorDataProvider implements ISOSDataProvider, IEventListener
     
 
     @Override
-    public synchronized DataBlock getNextResultRecord() throws SensorException
+    public DataBlock getNextResultRecord() throws SensorException
     {
         return getNextDataBlock();
     }
     
 
     @Override
-    public synchronized DataComponent getResultStructure() throws SensorException
+    public DataComponent getResultStructure() throws SensorException
     {
         // TODO generate choice if request includes several outputs
         // not possible in core SOS because only one observed property can be requested at a time
@@ -172,7 +171,7 @@ public class SensorDataProvider implements ISOSDataProvider, IEventListener
     
 
     @Override
-    public synchronized DataEncoding getDefaultResultEncoding() throws Exception
+    public DataEncoding getDefaultResultEncoding() throws Exception
     {
         return dataSources.get(0).getRecommendedEncoding();
     }
@@ -207,7 +206,7 @@ public class SensorDataProvider implements ISOSDataProvider, IEventListener
     }
     
     
-    private void waitForNextObs()
+    private synchronized void waitForNextObs()
     {
         try
         {

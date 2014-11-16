@@ -16,6 +16,11 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import net.opengis.sensorml.v20.PhysicalSystem;
+import net.opengis.swe.v20.DataRecord;
+import net.opengis.swe.v20.Quantity;
+import net.opengis.swe.v20.Time;
+import net.opengis.swe.v20.Vector;
 import org.apache.commons.io.IOUtils;
 import org.junit.After;
 import org.junit.Test;
@@ -33,9 +38,10 @@ import org.sensorhub.impl.service.sos.SOSProviderConfig;
 import org.sensorhub.impl.service.sos.SOSService;
 import org.sensorhub.impl.service.sos.SOSServiceConfig;
 import org.sensorhub.impl.service.sos.SensorDataProviderConfig;
-import org.vast.cdm.common.DataType;
-import org.vast.data.DataGroup;
-import org.vast.data.DataValue;
+import org.vast.data.DataRecordImpl;
+import org.vast.data.QuantityImpl;
+import org.vast.data.TimeImpl;
+import org.vast.data.VectorImpl;
 import org.vast.ogc.om.IObservation;
 import org.vast.ogc.om.ObservationImpl;
 import org.vast.ogc.om.ProcedureRef;
@@ -48,8 +54,8 @@ import org.vast.ows.sos.InsertSensorRequest;
 import org.vast.ows.sos.SOSOfferingCapabilities;
 import org.vast.ows.sos.SOSServiceCapabilities;
 import org.vast.ows.sos.SOSUtils;
-import org.vast.sensorML.system.SMLSystem;
-import org.vast.sweCommon.SweConstants;
+import org.vast.sensorML.PhysicalSystemImpl;
+import org.vast.sweCommon.SWEConstants;
 import org.vast.util.TimeExtent;
 
 
@@ -143,31 +149,38 @@ public class TestSOSTService
     protected InsertSensorRequest buildInsertSensor() throws Exception
     {
         // create procedure
-        SMLSystem procedure = new SMLSystem();
+        PhysicalSystem procedure = new PhysicalSystemImpl();
         procedure.setName("My weather station");
-        procedure.setIdentifier(SENSOR_UID);
+        procedure.setUniqueIdentifier(SENSOR_UID);
         
-        DataGroup tempOutput = new DataGroup(2, "tempOut");
-        DataValue timeTag = new DataValue("time", DataType.DOUBLE);
-        timeTag.setProperty(SweConstants.DEF_URI, SweConstants.DEF_SAMPLING_TIME);
-        timeTag.setProperty(SweConstants.UOM_URI, SweConstants.ISO_TIME_DEF);
-        tempOutput.addComponent(timeTag);
-        DataValue tempVal = new DataValue("temp", DataType.DOUBLE);
-        tempVal.setProperty(SweConstants.DEF_URI, "http://mmisw.org/ont/cf/parameter/air_temperature");
-        tempVal.setProperty(SweConstants.UOM_CODE, "Cel");
-        tempOutput.addComponent(tempVal);        
-        procedure.getOutputList().addComponent(tempOutput);
+        // output 1
+        DataRecord tempOutput = new DataRecordImpl(2);
+        procedure.addOutput("tempOut", tempOutput);
         
-        DataGroup posOutput = new DataGroup(2, "posOut");
-        posOutput.addComponent(timeTag);
-        DataGroup posVector = new DataGroup(3, "pos");
-        posVector.setProperty(SweConstants.DEF_URI, SweConstants.DEF_SAMPLING_LOC);
-        posVector.setProperty(SweConstants.REF_FRAME, "http://www.opengis.net/def/crs/EPSG/0/4979");
-        posVector.addComponent(new DataValue("lat", DataType.DOUBLE));
-        posVector.addComponent(new DataValue("lon", DataType.DOUBLE));
-        posVector.addComponent(new DataValue("alt", DataType.DOUBLE));
-        posOutput.addComponent(posVector);
-        procedure.getOutputList().addComponent(posOutput);
+        Time timeTag = new TimeImpl();
+        timeTag.setDefinition(SWEConstants.DEF_SAMPLING_TIME);
+        timeTag.getUom().setHref(Time.ISO_TIME_UNIT);
+        tempOutput.addComponent("time", timeTag);
+        
+        Quantity tempVal = new QuantityImpl();
+        tempVal.setDefinition("http://mmisw.org/ont/cf/parameter/air_temperature");
+        tempVal.getUom().setCode("Cel");
+        tempOutput.addComponent("temp", tempVal);
+        
+        // output 2
+        DataRecord posOutput = new DataRecordImpl(2);
+        procedure.addOutput("posOut", posOutput);
+        
+        posOutput.addComponent("time", timeTag.copy());
+        
+        Vector posVector = new VectorImpl(3);
+        posVector.setDefinition(SWEConstants.DEF_SAMPLING_LOC);
+        posVector.setReferenceFrame("http://www.opengis.net/def/crs/EPSG/0/4979");
+        posVector.addComponent("lat", new QuantityImpl());
+        posVector.addComponent("lon", new QuantityImpl());
+        posVector.addComponent("alt", new QuantityImpl());
+        posOutput.addComponent("pos", posVector);
+        
         
         // build insert sensor request
         InsertSensorRequest req = new InsertSensorRequest();
@@ -177,7 +190,7 @@ public class TestSOSTService
         req.setProcedureDescriptionFormat(InsertSensorRequest.DEFAULT_PROCEDURE_FORMAT);
         req.getObservationTypes().add(IObservation.OBS_TYPE_GENERIC);
         req.getObservationTypes().add(IObservation.OBS_TYPE_RECORD);
-        req.getObservableProperties().add(SweConstants.DEF_SAMPLING_LOC);
+        req.getObservableProperties().add(SWEConstants.DEF_SAMPLING_LOC);
         req.getObservableProperties().add("http://mmisw.org/ont/cf/parameter/air_temperature");
         req.getFoiTypes().add("urn:blabla:myfoi1");
         req.getFoiTypes().add("urn:blabla:myfoi2");

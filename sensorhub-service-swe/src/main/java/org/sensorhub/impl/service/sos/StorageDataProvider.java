@@ -26,10 +26,10 @@
 package org.sensorhub.impl.service.sos;
 
 import java.util.Iterator;
+import net.opengis.swe.v20.DataBlock;
+import net.opengis.swe.v20.DataComponent;
+import net.opengis.swe.v20.DataEncoding;
 import org.sensorhub.api.persistence.IDataStorage;
-import org.vast.cdm.common.DataBlock;
-import org.vast.cdm.common.DataComponent;
-import org.vast.cdm.common.DataEncoding;
 import org.vast.ogc.om.IObservation;
 import org.vast.ows.server.SOSDataFilter;
 import org.vast.ows.sos.ISOSDataProvider;

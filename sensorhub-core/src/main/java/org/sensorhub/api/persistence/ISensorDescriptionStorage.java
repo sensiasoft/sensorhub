@@ -26,8 +26,8 @@
 package org.sensorhub.api.persistence;
 
 import java.util.List;
+import net.opengis.sensorml.v20.AbstractProcess;
 import org.sensorhub.api.common.IEventProducer;
-import org.vast.sensorML.SMLProcess;
 
 
 /**
@@ -48,7 +48,7 @@ public interface ISensorDescriptionStorage<ConfigType extends StorageConfig> ext
      * @param sensorUID
      * @return SensorML process description
      */
-    public SMLProcess getSensorDescription(String sensorUID);
+    public AbstractProcess getSensorDescription(String sensorUID);
     
     
     /**
@@ -56,7 +56,7 @@ public interface ISensorDescriptionStorage<ConfigType extends StorageConfig> ext
      * @param sensorUID
      * @return list of descriptions for the selected sensor (with disjoint time validity periods) 
      */
-    public List<SMLProcess> getSensorDescriptionHistory(String sensorUID);
+    public List<AbstractProcess> getSensorDescriptionHistory(String sensorUID);
 	
 	
     /**
@@ -65,7 +65,7 @@ public interface ISensorDescriptionStorage<ConfigType extends StorageConfig> ext
      * @param time
      * @return SensorML process description
      */
-    public SMLProcess getSensorDescriptionAtTime(String sensorUID, long time);
+    public AbstractProcess getSensorDescriptionAtTime(String sensorUID, long time);
     
 	
     /**
@@ -73,7 +73,7 @@ public interface ISensorDescriptionStorage<ConfigType extends StorageConfig> ext
      * Validity period must not overlap with existing descriptions
      * @param process SensorML process description to store
      */
-    public void store(SMLProcess process);
+    public void store(AbstractProcess process);
     
     
 	/**
@@ -81,7 +81,7 @@ public interface ISensorDescriptionStorage<ConfigType extends StorageConfig> ext
 	 * Validity period must be exactly the same as the one in storage
 	 * @param process SensorML process description to update
 	 */
-    public void update(SMLProcess process);
+    public void update(AbstractProcess process);
     
 
     /**

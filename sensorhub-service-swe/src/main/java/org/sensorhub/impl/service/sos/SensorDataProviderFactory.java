@@ -14,6 +14,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map.Entry;
+import net.opengis.sensorml.v20.AbstractProcess;
+import net.opengis.swe.v20.DataArray;
+import net.opengis.swe.v20.DataComponent;
+import net.opengis.swe.v20.DataRecord;
+import net.opengis.swe.v20.SimpleComponent;
 import org.sensorhub.api.common.Event;
 import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.common.SensorHubException;
@@ -21,17 +26,12 @@ import org.sensorhub.api.sensor.ISensorDataInterface;
 import org.sensorhub.api.sensor.ISensorModule;
 import org.sensorhub.api.sensor.SensorException;
 import org.sensorhub.impl.SensorHub;
-import org.vast.cdm.common.DataComponent;
-import org.vast.data.DataArray;
-import org.vast.data.DataGroup;
 import org.vast.data.DataIterator;
-import org.vast.data.DataValue;
 import org.vast.ogc.om.IObservation;
 import org.vast.ows.server.SOSDataFilter;
 import org.vast.ows.sos.ISOSDataProvider;
 import org.vast.ows.sos.SOSOfferingCapabilities;
-import org.vast.sensorML.SMLProcess;
-import org.vast.sweCommon.SweConstants;
+import org.vast.sweCommon.SWEConstants;
 import org.vast.util.DateTime;
 import org.vast.util.TimeExtent;
 
@@ -112,7 +112,7 @@ public class SensorDataProviderFactory implements IDataProviderFactory, IEventLi
             caps.getPhenomenonTimes().add(phenTime);
         
             // use sensor uniqueID as procedure ID
-            caps.getProcedures().add(sensor.getCurrentSensorDescription().getIdentifier());
+            caps.getProcedures().add(sensor.getCurrentSensorDescription().getUniqueIdentifier());
             
             // supported formats
             caps.getResponseFormats().add(SOSOfferingCapabilities.FORMAT_OM2);
@@ -149,8 +149,8 @@ public class SensorDataProviderFactory implements IDataProviderFactory, IEventLi
             DataIterator it = new DataIterator(output.getRecordDescription());
             while (it.hasNext())
             {
-                String defUri = (String)it.next().getProperty(SweConstants.DEF_URI);
-                if (defUri != null && !defUri.equals(SweConstants.DEF_SAMPLING_TIME))
+                String defUri = (String)it.next().getDefinition();
+                if (defUri != null && !defUri.equals(SWEConstants.DEF_SAMPLING_TIME))
                     observableUris.add(defUri);
             }
             
@@ -174,9 +174,9 @@ public class SensorDataProviderFactory implements IDataProviderFactory, IEventLi
                 continue;
             
             DataComponent dataStruct = output.getRecordDescription();
-            if (dataStruct instanceof DataValue)
+            if (dataStruct instanceof SimpleComponent)
                 obsTypes.add(IObservation.OBS_TYPE_SCALAR);
-            else if (dataStruct instanceof DataGroup)
+            else if (dataStruct instanceof DataRecord)
                 obsTypes.add(IObservation.OBS_TYPE_RECORD);
             else if (dataStruct instanceof DataArray)
                 obsTypes.add(IObservation.OBS_TYPE_ARRAY);
@@ -187,7 +187,7 @@ public class SensorDataProviderFactory implements IDataProviderFactory, IEventLi
     
     
     @Override
-    public SMLProcess generateSensorMLDescription(DateTime t) throws SensorException
+    public AbstractProcess generateSensorMLDescription(DateTime t) throws SensorException
     {
         checkEnabled();
         

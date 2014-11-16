@@ -33,7 +33,6 @@ import org.vast.data.DataRecordImpl;
 import org.vast.data.QuantityImpl;
 import org.vast.data.TextEncodingImpl;
 import org.vast.data.TimeImpl;
-import org.vast.sensorML.system.SMLSystem;
 
 
 /**
@@ -50,7 +49,6 @@ public class FakeSensorData implements ISensorDataInterface
     FakeSensor sensor;
     String name;
     boolean pushEnabled;
-    SMLSystem sml;
     int maxSampleCount;
     int count;
     int bufferSize;
@@ -192,7 +190,7 @@ public class FakeSensorData implements ISensorDataInterface
     @Override
     public DataEncoding getRecommendedEncoding() throws SensorException
     {
-        return new TextEncodingImpl("\n", ",");
+        return new TextEncodingImpl(",", "\n");
     }
 
 

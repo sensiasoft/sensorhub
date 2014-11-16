@@ -13,6 +13,7 @@ package org.sensorhub.impl.persistence.perst;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.List;
+import net.opengis.sensorml.v20.AbstractProcess;
 import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.module.IModuleStateLoader;
@@ -21,7 +22,6 @@ import org.sensorhub.api.persistence.ISensorDescriptionStorage;
 import org.sensorhub.api.persistence.IStorageModule;
 import org.sensorhub.api.persistence.StorageConfig;
 import org.sensorhub.api.persistence.StorageException;
-import org.vast.sensorML.SMLProcess;
 
 
 /**
@@ -193,35 +193,35 @@ public class SensorStorageImpl implements ISensorDescriptionStorage<StorageConfi
     }
 
     @Override
-    public SMLProcess getSensorDescription(String sensorUID)
+    public AbstractProcess getSensorDescription(String sensorUID)
     {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public List<SMLProcess> getSensorDescriptionHistory(String sensorUID)
+    public List<AbstractProcess> getSensorDescriptionHistory(String sensorUID)
     {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public SMLProcess getSensorDescriptionAtTime(String sensorUID, long time)
+    public AbstractProcess getSensorDescriptionAtTime(String sensorUID, long time)
     {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public void store(SMLProcess process)
+    public void store(AbstractProcess process)
     {
         // TODO Auto-generated method stub
         
     }
 
     @Override
-    public void update(SMLProcess process)
+    public void update(AbstractProcess process)
     {
         // TODO Auto-generated method stub
         

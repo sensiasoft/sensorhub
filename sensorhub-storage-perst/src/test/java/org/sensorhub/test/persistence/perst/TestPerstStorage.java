@@ -26,12 +26,12 @@
 package org.sensorhub.test.persistence.perst;
 
 import java.io.File;
+import net.opengis.swe.v20.DataBlock;
 import org.sensorhub.api.persistence.DataKey;
 import org.sensorhub.api.persistence.IBasicStorage;
 import org.sensorhub.api.persistence.IDataRecord;
 import org.sensorhub.impl.persistence.perst.BasicStorageConfig;
 import org.sensorhub.impl.persistence.perst.BasicStorageImpl;
-import org.vast.cdm.common.DataBlock;
 import org.vast.data.DataBlockDouble;
 import junit.framework.TestCase;
 

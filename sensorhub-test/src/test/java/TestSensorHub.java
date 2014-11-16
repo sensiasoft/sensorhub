@@ -86,7 +86,7 @@ public class TestSensorHub
                                         
                     DataBlock data;
                     WritableRaster raster = null;
-                    long t0 = System.currentTimeMillis();
+                    //long t0 = System.currentTimeMillis();
                     while ((data = parser.parseNextBlock()) != null)
                     {
                         if (raster == null)
@@ -105,9 +105,9 @@ public class TestSensorHub
 //                            img.getRaster().setSample(u, v, 2, data.getIntValue(i+2));
 //                        }          
                         f.getContentPane().getGraphics().drawImage(img, 0, 0, null);
-                        long t1 = System.currentTimeMillis();
+                        //long t1 = System.currentTimeMillis();
                         //System.out.println(t1 - t0);
-                        t0 = t1;
+                        //t0 = t1;
                         //System.out.println(Runtime.getRuntime().freeMemory());
                     }
                     

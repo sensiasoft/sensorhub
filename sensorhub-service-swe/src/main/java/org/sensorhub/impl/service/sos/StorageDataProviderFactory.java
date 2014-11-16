@@ -10,10 +10,10 @@
 
 package org.sensorhub.impl.service.sos;
 
+import net.opengis.sensorml.v20.AbstractProcess;
 import org.vast.ows.server.SOSDataFilter;
 import org.vast.ows.sos.ISOSDataProvider;
 import org.vast.ows.sos.SOSOfferingCapabilities;
-import org.vast.sensorML.SMLProcess;
 import org.vast.util.DateTime;
 
 
@@ -64,7 +64,7 @@ public class StorageDataProviderFactory implements IDataProviderFactory
 
 
     @Override
-    public SMLProcess generateSensorMLDescription(DateTime t)
+    public AbstractProcess generateSensorMLDescription(DateTime t)
     {
         // TODO Auto-generated method stub
         return null;

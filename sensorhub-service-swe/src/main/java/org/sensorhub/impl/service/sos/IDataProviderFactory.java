@@ -10,9 +10,9 @@
 
 package org.sensorhub.impl.service.sos;
 
+import net.opengis.sensorml.v20.AbstractProcess;
 import org.vast.ows.sos.ISOSDataProviderFactory;
 import org.vast.ows.sos.SOSOfferingCapabilities;
-import org.vast.sensorML.SMLProcess;
 import org.vast.util.DateTime;
 
 
@@ -38,7 +38,7 @@ public interface IDataProviderFactory extends ISOSDataProviderFactory
      * Retrieves the SensorML description associated to this data source
      * @return
      */
-    public SMLProcess generateSensorMLDescription(DateTime t) throws Exception;
+    public AbstractProcess generateSensorMLDescription(DateTime t) throws Exception;
     
     
     /**

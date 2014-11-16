@@ -31,6 +31,8 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import net.opengis.swe.v20.DataBlock;
+import net.opengis.swe.v20.DataComponent;
 import org.garret.perst.Index;
 import org.garret.perst.Key;
 import org.garret.perst.Persistent;
@@ -47,8 +49,6 @@ import org.sensorhub.api.persistence.IDataRecord;
 import org.sensorhub.api.persistence.IStorageModule;
 import org.sensorhub.api.persistence.StorageException;
 import org.sensorhub.impl.common.BasicEventHandler;
-import org.vast.cdm.common.DataBlock;
-import org.vast.cdm.common.DataComponent;
 
 
 /**

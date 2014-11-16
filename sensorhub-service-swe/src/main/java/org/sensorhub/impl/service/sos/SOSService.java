@@ -25,10 +25,16 @@
 
 package org.sensorhub.impl.service.sos;
 
+import java.io.BufferedOutputStream;
+import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import net.opengis.sensorml.v20.AbstractProcess;
+import net.opengis.swe.v20.DataBlock;
+import net.opengis.swe.v20.DataComponent;
+import net.opengis.swe.v20.DataEncoding;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.sensorhub.api.common.Event;
@@ -45,9 +51,6 @@ import org.sensorhub.impl.sensor.sost.SOSVirtualSensorConfig;
 import org.sensorhub.impl.sensor.sost.SOSVirtualSensor;
 import org.sensorhub.impl.service.HttpServer;
 import org.sensorhub.impl.service.ogc.OGCServiceConfig.CapabilitiesInfo;
-import org.vast.cdm.common.DataBlock;
-import org.vast.cdm.common.DataComponent;
-import org.vast.cdm.common.DataEncoding;
 import org.vast.cdm.common.DataStreamParser;
 import org.vast.ogc.om.IObservation;
 import org.vast.ows.GetCapabilitiesRequest;
@@ -75,13 +78,9 @@ import org.vast.ows.swe.DeleteSensorResponse;
 import org.vast.ows.swe.DescribeSensorRequest;
 import org.vast.ows.swe.UpdateSensorRequest;
 import org.vast.ows.swe.UpdateSensorResponse;
-import org.vast.sensorML.SMLProcess;
 import org.vast.sensorML.SMLUtils;
-import org.vast.sensorML.system.SMLSystem;
 import org.vast.sweCommon.SWEFactory;
 import org.vast.util.TimeExtent;
-import org.vast.xml.DOMHelper;
-import org.w3c.dom.Element;
 
 
 /**
@@ -182,7 +181,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
         capabilities.setAccessConstraints(serviceInfo.accessConstraints);
         capabilities.setServiceProvider(serviceInfo.serviceProvider);
         
-        // TODO generate profile list
+        // generate profile list
         capabilities.getProfiles().add(SOSServiceCapabilities.PROFILE_RESULT_RETRIEVAL);
         if (config.enableTransactional)
         {
@@ -250,12 +249,12 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
      * @param uri
      * @return
      */
-    protected SMLSystem generateSensorML(String uri) throws ServiceException
+    protected AbstractProcess generateSensorML(String uri) throws ServiceException
     {
         try
         {
             IDataProviderFactory factory = getDataProviderFactoryBySensorID(uri);
-            return (SMLSystem)factory.generateSensorMLDescription(null);
+            return factory.generateSensorMLDescription(null);
         }
         catch (Exception e)
         {
@@ -364,10 +363,8 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
         report.process();
         
         // serialize and send SensorML description
-        DOMHelper dom = new DOMHelper();
-        SMLUtils smlUtils = new SMLUtils();
-        Element respElt = smlUtils.writeSystem(dom, generateSensorML(sensorID));
-        dom.serialize(respElt, request.getResponseStream(), null);
+        OutputStream os = new BufferedOutputStream(request.getResponseStream());
+        new SMLUtils().writeProcess(os, generateSensorML(sensorID), true);
     }
     
     
@@ -384,7 +381,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
             report.process();
             
             // choose offering name (here derived from sensor ID)
-            String sensorUID = request.getProcedureDescription().getIdentifier();
+            String sensorUID = request.getProcedureDescription().getUniqueIdentifier();
             String offering = sensorUID + "-sos";
             
             // automatically add outputs with specified observable properties??
@@ -489,7 +486,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
             
             // get consumer and update
             ISOSDataConsumer consumer = getDataConsumerBySensorID(request.getProcedureId());
-            consumer.updateSensor((SMLProcess) request.getProcedureDescription());
+            consumer.updateSensor(request.getProcedureDescription());
             
             // build and send response
             UpdateSensorResponse resp = new UpdateSensorResponse(SOSUtils.SOS);
@@ -668,9 +665,9 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     
     
     static String INVALID_SML_MSG = "Invalid SensorML description: ";
-    protected void checkSensorML(SMLProcess smlProcess, OWSExceptionReport report) throws Exception
+    protected void checkSensorML(AbstractProcess smlProcess, OWSExceptionReport report) throws Exception
     {
-        String sensorUID = smlProcess.getIdentifier();
+        String sensorUID = smlProcess.getUniqueIdentifier();
         
         if (sensorUID == null || sensorUID.length() == 0)
             throw new SOSException(SOSException.invalid_param_code, "procedureDescription", null, INVALID_SML_MSG + "Missing unique ID");

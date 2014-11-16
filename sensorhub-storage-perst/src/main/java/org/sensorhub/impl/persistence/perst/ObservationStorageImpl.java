@@ -29,6 +29,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Iterator;
 import java.util.List;
+import net.opengis.swe.v20.DataBlock;
+import net.opengis.swe.v20.DataComponent;
 import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.module.IModuleStateLoader;
 import org.sensorhub.api.module.IModuleStateSaver;
@@ -39,8 +41,6 @@ import org.sensorhub.api.persistence.IObsStorage;
 import org.sensorhub.api.persistence.IStorageModule;
 import org.sensorhub.api.persistence.ObsKey;
 import org.sensorhub.api.persistence.StorageException;
-import org.vast.cdm.common.DataBlock;
-import org.vast.cdm.common.DataComponent;
 
 
 /**

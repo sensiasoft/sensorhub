@@ -12,28 +12,27 @@ package org.sensorhub.impl.sensor.sost;
 
 import java.util.HashMap;
 import java.util.Map;
-import javax.xml.namespace.QName;
-import org.sensorhub.api.common.IEventListener;
+import net.opengis.sensorml.v20.AbstractProcess;
+import net.opengis.sensorml.v20.DataInterface;
+import net.opengis.swe.v20.AbstractSWEIdentifiable;
+import net.opengis.swe.v20.BinaryBlock;
+import net.opengis.swe.v20.BinaryComponent;
+import net.opengis.swe.v20.BinaryEncoding;
+import net.opengis.swe.v20.BinaryMember;
+import net.opengis.swe.v20.DataBlock;
+import net.opengis.swe.v20.DataComponent;
+import net.opengis.swe.v20.DataEncoding;
+import net.opengis.swe.v20.DataStream;
 import org.sensorhub.api.common.SensorHubException;
-import org.sensorhub.api.module.IModuleStateLoader;
-import org.sensorhub.api.module.IModuleStateSaver;
 import org.sensorhub.api.persistence.ISensorDescriptionStorage;
-import org.sensorhub.api.sensor.ISensorControlInterface;
-import org.sensorhub.api.sensor.ISensorModule;
 import org.sensorhub.api.sensor.SensorException;
 import org.sensorhub.impl.SensorHub;
-import org.vast.cdm.common.BinaryBlock;
-import org.vast.cdm.common.BinaryComponent;
-import org.vast.cdm.common.BinaryEncoding;
-import org.vast.cdm.common.BinaryOptions;
-import org.vast.cdm.common.DataBlock;
-import org.vast.cdm.common.DataComponent;
-import org.vast.cdm.common.DataEncoding;
+import org.sensorhub.impl.sensor.AbstractSensorModule;
+import org.vast.data.BinaryComponentImpl;
+import org.vast.data.BinaryEncodingImpl;
 import org.vast.data.DataIterator;
 import org.vast.ogc.om.IObservation;
 import org.vast.ows.sos.ISOSDataConsumer;
-import org.vast.sensorML.SMLProcess;
-import org.vast.sweCommon.SweConstants;
 import org.vast.util.DateTime;
 
 
@@ -46,11 +45,9 @@ import org.vast.util.DateTime;
  * @author Alexandre Robin <alex.robin@sensiasoftware.com>
  * @since Mar 2, 2014
  */
-public class SOSVirtualSensor implements ISOSDataConsumer, ISensorModule<SOSVirtualSensorConfig>
+public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfig> implements ISOSDataConsumer
 {
-    SOSVirtualSensorConfig config;
     ISensorDescriptionStorage<?> smlStorage;
-    Map<String, SOSVirtualSensorOutput> outputs = new HashMap<String, SOSVirtualSensorOutput>();
     Map<DataStructureHash, String> structureToOutputMap = new HashMap<DataStructureHash, String>();
     
     
@@ -78,7 +75,7 @@ public class SOSVirtualSensor implements ISOSDataConsumer, ISensorModule<SOSVirt
     
     
     @Override
-    public void updateSensor(SMLProcess newSensorDescription) throws Exception
+    public void updateSensor(AbstractProcess newSensorDescription) throws Exception
     {
         smlStorage.update(newSensorDescription);
     }
@@ -96,8 +93,7 @@ public class SOSVirtualSensor implements ISOSDataConsumer, ISensorModule<SOSVirt
     @Override
     public String newResultTemplate(DataComponent component, DataEncoding encoding)
     {
-        // TODO check if template is compatible with sensor description outputs?
-        
+        // TODO check if template is compatible with sensor description outputs?        
         
         // try to otbain corresponding data interface
         DataStructureHash hashObj = new DataStructureHash(component, encoding);
@@ -108,7 +104,7 @@ public class SOSVirtualSensor implements ISOSDataConsumer, ISensorModule<SOSVirt
         {        
             SOSVirtualSensorOutput newOutput = new SOSVirtualSensorOutput(this, component, encoding);
             templateID = config.sensorUID + "-" + Integer.toHexString(hashObj.hashCode());
-            outputs.put(templateID, newOutput);
+            obsOutputs.put(templateID, newOutput);
             structureToOutputMap.put(hashObj, templateID);
         }
         
@@ -131,14 +127,10 @@ public class SOSVirtualSensor implements ISOSDataConsumer, ISensorModule<SOSVirt
             buf.append(comp.getName());
             buf.append('|');
             
-            QName compQName = (QName)comp.getProperty(SweConstants.COMP_QNAME);
-            if (compQName != null)
-                buf.append(compQName.toString());
-            else
-                buf.append(comp.getClass().getSimpleName());
+            buf.append(comp.getClass().getSimpleName());
             buf.append('|');
             
-            String defUri = (String)comp.getProperty(SweConstants.DEF_URI);
+            String defUri = comp.getDefinition();
             if (defUri != null)
             {
                 buf.append('|');
@@ -150,20 +142,22 @@ public class SOSVirtualSensor implements ISOSDataConsumer, ISensorModule<SOSVirt
         
         if (enc != null)
         {
-            buf.append(enc.getEncodingType());
+            buf.append(enc.getClass().getSimpleName());
             if (enc instanceof BinaryEncoding)
             {
-                for (BinaryOptions opts: ((BinaryEncoding)enc).componentEncodings)
+                for (BinaryMember opts: ((BinaryEncoding) enc).getMemberList())
                 {
-                    buf.append(opts.componentName);
+                    buf.append(opts.getRef());
                     buf.append('|');
                     if (opts instanceof BinaryComponent)
-                        buf.append(((BinaryComponent)opts).type);
+                    {
+                        buf.append(((BinaryComponentImpl)opts).getCdmDataType());
+                    }
                     else if (opts instanceof BinaryBlock)
                     {
-                        buf.append(((BinaryBlock)opts).compression);
+                        buf.append(((BinaryBlock)opts).getCompression());
                         buf.append('|');
-                        buf.append(((BinaryBlock)opts).encryption);
+                        buf.append(((BinaryBlock)opts).getEncryption());
                     }
                 }
             }
@@ -177,28 +171,7 @@ public class SOSVirtualSensor implements ISOSDataConsumer, ISensorModule<SOSVirt
     public void newResultRecord(String templateID, DataBlock... dataBlocks) throws Exception
     {
         for (DataBlock dataBlock: dataBlocks)
-            outputs.get(templateID).publishNewRecord(dataBlock);
-    }
-    
-    
-    @Override
-    public boolean isEnabled()
-    {
-        return config.enabled;
-    }
-
-
-    @Override
-    public void init(SOSVirtualSensorConfig config) throws SensorHubException
-    {
-        this.config = config;
-    }
-
-
-    @Override
-    public void updateConfig(SOSVirtualSensorConfig config) throws SensorHubException
-    {
-        // TODO Auto-generated method stub
+            ((SOSVirtualSensorOutput)obsOutputs.get(templateID)).publishNewRecord(dataBlock);
     }
 
 
@@ -208,12 +181,27 @@ public class SOSVirtualSensor implements ISOSDataConsumer, ISensorModule<SOSVirt
         smlStorage = SensorHub.getInstance().getPersistenceManager().getSensorDescriptionStorage();
         
         // generate output interfaces from description
-        DataComponent outputList = getCurrentSensorDescription().getOutputList();
-        int numOutputs = outputList.getComponentCount();
-        for (int i=0; i<numOutputs; i++)
+        for (AbstractSWEIdentifiable output: getCurrentSensorDescription().getOutputList())
         {
-            DataComponent dataStruct = outputList.getComponent(i);
-            DataEncoding dataEnc = (DataEncoding)dataStruct.getProperty(SweConstants.ENCODING_TYPE);
+            DataComponent dataStruct = null;
+            DataEncoding dataEnc = null;            
+            
+            if (output instanceof DataStream)
+            {
+                dataStruct = ((DataStream) output).getElementType();
+                dataEnc = ((DataStream) output).getEncoding();
+            }
+            else if (output instanceof DataInterface)
+            {
+                dataStruct = ((DataInterface) output).getData().getElementType();
+                dataEnc = ((DataInterface) output).getData().getEncoding();
+            }
+            else
+            {
+                dataStruct = (DataComponent)output;
+                dataEnc = BinaryEncodingImpl.getDefaultEncoding(dataStruct);
+            }
+            
             newResultTemplate(dataStruct, dataEnc);
         }
     }
@@ -227,55 +215,9 @@ public class SOSVirtualSensor implements ISOSDataConsumer, ISensorModule<SOSVirt
 
 
     @Override
-    public SOSVirtualSensorConfig getConfiguration()
-    {
-        return config;
-    }
-
-
-    @Override
-    public String getName()
-    {
-        return config.name;
-    }
-
-
-    @Override
-    public String getLocalID()
-    {
-        return config.id;
-    }
-
-
-    @Override
-    public void saveState(IModuleStateSaver saver) throws SensorHubException
-    {
-        // TODO Auto-generated method stub
-
-    }
-
-
-    @Override
-    public void loadState(IModuleStateLoader loader) throws SensorHubException
-    {
-        // TODO Auto-generated method stub
-
-    }
-
-
-    @Override
     public void cleanup() throws SensorHubException
     {
         // TODO Auto-generated method stub
-
-    }
-
-
-    @Override
-    public void unregisterListener(IEventListener listener)
-    {
-        // TODO Auto-generated method stub
-
     }
 
 
@@ -294,54 +236,26 @@ public class SOSVirtualSensor implements ISOSDataConsumer, ISensorModule<SOSVirt
 
 
     @Override
-    public SMLProcess getCurrentSensorDescription() throws SensorException
+    public AbstractProcess getCurrentSensorDescription() throws SensorException
     {
         return smlStorage.getSensorDescription(config.sensorUID);
     }
 
 
     @Override
-    public SMLProcess getSensorDescription(DateTime t) throws SensorException
+    public AbstractProcess getSensorDescription(DateTime t) throws SensorException
     {
         return smlStorage.getSensorDescriptionAtTime(config.sensorUID, t.getTime());
     }
 
 
     @Override
-    public void updateSensorDescription(SMLProcess systemDesc, boolean recordHistory) throws SensorException
+    public void updateSensorDescription(AbstractProcess systemDesc, boolean recordHistory) throws SensorException
     {
         if (!recordHistory)
-            smlStorage.removeHistory(systemDesc.getIdentifier());
+            smlStorage.removeHistory(systemDesc.getUniqueIdentifier());
         
         smlStorage.update(systemDesc);
-    }
-
-
-    @Override
-    public Map<String, SOSVirtualSensorOutput> getAllOutputs() throws SensorException
-    {
-        return outputs;
-    }
-
-
-    @Override
-    public Map<String, SOSVirtualSensorOutput> getStatusOutputs() throws SensorException
-    {
-        return null;
-    }
-
-
-    @Override
-    public Map<String, SOSVirtualSensorOutput> getObservationOutputs() throws SensorException
-    {
-        return outputs;
-    }
-
-
-    @Override
-    public Map<String, ? extends ISensorControlInterface> getCommandInputs() throws SensorException
-    {
-        return null;
     }
 
 
@@ -349,14 +263,6 @@ public class SOSVirtualSensor implements ISOSDataConsumer, ISensorModule<SOSVirt
     public boolean isConnected()
     {
         return true;
-    }
-
-
-    @Override
-    public void registerListener(IEventListener listener)
-    {
-        // TODO Auto-generated method stub
-
     }
 
 }
