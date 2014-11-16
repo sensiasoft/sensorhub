@@ -50,6 +50,8 @@ public class SensorControlEvent extends SensorEvent
 	
     /**
      * Default constructor
+     * @param controlInterface Source of this event
+     * @param status Status of command at time the event is generated
      */
 	public SensorControlEvent(ISensorControlInterface controlInterface, CommandStatus status)
 	{

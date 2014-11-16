@@ -50,7 +50,7 @@ public interface ISensorControlInterface extends IEventProducer
     
     /**
      * Allows by-reference access to parent sensor interface
-     * @return
+     * @return the parent sensor module instance
      */
     public ISensorModule<?> getParentSensor();
     
@@ -86,15 +86,15 @@ public interface ISensorControlInterface extends IEventProducer
 	/**
 	 * Retrieves description of command message
 	 * Note that this can be a choice of multiple messages
-	 * @return
+	 * @return Data component containing message structure
 	 */
 	public DataComponent getCommandDescription();
 	
 	
 	/**
 	 * Executes the command synchronously, blocking until completion of command
-	 * @param command
-	 * @return
+	 * @param command command message data
+	 * @return status after execution of command
 	 * @throws SensorException
 	 */
 	public CommandStatus execCommand(DataBlock command) throws SensorException;
@@ -103,7 +103,7 @@ public interface ISensorControlInterface extends IEventProducer
 	/**
      * Executes multiple commands synchronously and in the order specified.
      * This method will block until all commands are completed
-     * @param commands
+     * @param commands list of command messages data
      * @return a single status message for the command group
      * @throws SensorException
      */
@@ -113,8 +113,8 @@ public interface ISensorControlInterface extends IEventProducer
 	/**
 	 * Sends a command that will be executed asynchronously
 	 * @see #isAsyncExecSupported()
-	 * @param command
-	 * @return status of the command
+	 * @param command command message data
+	 * @return initial status of the command (can change during the command life cycle)
      * @throws SensorException
 	 */
 	public CommandStatus sendCommand(DataBlock command) throws SensorException;
@@ -124,7 +124,7 @@ public interface ISensorControlInterface extends IEventProducer
 	 * Sends a group of commands for asynchronous execution.
 	 * Order is guaranteed but not atomicity
 	 * @see #isAsyncExecSupported()
-	 * @param commands
+	 * @param commands list of command messages data
 	 * @return a single status object for the command group
      * @throws SensorException
 	 */
@@ -134,9 +134,9 @@ public interface ISensorControlInterface extends IEventProducer
 	/**
 	 * Schedules a command to be executed asynchronously at the specified time
 	 * @see #isSchedulingSupported()
-	 * @param command
-	 * @param execTime
-	 * @return
+	 * @param command command message data
+	 * @param execTime desired time of execution
+	 * @return initial status of the command (can change during the command life cycle)
      * @throws SensorException
 	 */
 	public CommandStatus scheduleCommand(DataBlock command, DateTime execTime) throws SensorException;
@@ -157,7 +157,7 @@ public interface ISensorControlInterface extends IEventProducer
 	/**
 	 * Cancels a command before it is executed (for async or scheduled commands)
 	 * @see #isAsyncExecSupported()
-	 * @param commandID
+	 * @param commandID id of command to be canceled
 	 * @return status of the cancelled command
      * @throws SensorException
 	 */
@@ -165,7 +165,8 @@ public interface ISensorControlInterface extends IEventProducer
 	
 	
 	/**
-     * @param commandID
+     * Retrieves command status
+     * @param commandID id of command to get status for
      * @see #isAsyncExecSupported()
      * @return current status of the command with the specified ID
      * @throws SensorException
@@ -176,8 +177,8 @@ public interface ISensorControlInterface extends IEventProducer
     /**
      * Gets complete status history for the specified command
      * @see #isStatusHistorySupported()
-     * @param commandID
-     * @return
+     * @param commandID id of command to get status history for
+     * @return list of command status, one object for each status change
      * @throws SensorException
      */
     public List<CommandStatus> getCommandStatusHistory(String commandID) throws SensorException;

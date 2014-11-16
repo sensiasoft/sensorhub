@@ -50,87 +50,87 @@ public interface ISensorModule<ConfigType extends SensorConfig> extends IModule<
      * @return true if sensor description updates is supported, false otherwise
      */
     public boolean isSensorDescriptionUpdateSupported();
-    
-    
+
+
     /**
      * Checks sensor description history capability
      * If true, the getSensorDescription(DateTime t) method should be implemented
      * @return true if sensor description history is supported, false otherwise
      */
     public boolean isSensorDescriptionHistorySupported();
-    
-    
+
+
     /**
-	 * Retrieves most current sensor description
-	 * @return SMLSytem object containing all metadata about the sensor
+     * Retrieves most current sensor description
+     * @return SMLSytem object containing all metadata about the sensor
      * @throws SensorException 
-	 */
-	public AbstractProcess getCurrentSensorDescription() throws SensorException;
-	
-	
-	/**
-	 * Used to check when sensor description was last updated.
-	 * This is useful to avoid requesting the object when it hasn't changed.
-	 * @return date/time of last sensor description update 
-	 */
-	public long getLastSensorDescriptionUpdate();
-	
-	
-	/**
-	 * Retrieves historic sensor description valid at time t
-	 * @param t
-	 * @return SMLSytem object containing sensor metadata valid at time t
-	 * @throws SensorException 
-	 */
-	public AbstractProcess getSensorDescription(DateTime t) throws SensorException;
-	
-	
-	/**
-	 * Updates and historizes system description
-	 * @param systemDesc SMLSystem object with validity period
-	 * @param recordHistory if true, older versions of the descriptions will be retained
-	 * and made accessible by time
-	 * @throws SensorException 
-	 */
-	public void updateSensorDescription(AbstractProcess systemDesc, boolean recordHistory) throws SensorException;
-	
-	
-	/**
-	 * Retrieves the list of interfaces to all sensor data outputs
-	 * @return map of output names -> data interface objects
-	 * @throws SensorException 
-	 */
-	public Map<String, ? extends ISensorDataInterface> getAllOutputs() throws SensorException;
-	
-	
-	/**
-	 * Retrieves the list of interface to sensor status outputs
-	 * @return map of output names -> data interface objects
-	 * @throws SensorException 
-	 */
-	public Map<String, ? extends ISensorDataInterface> getStatusOutputs() throws SensorException;
-	
-	
-	/**
-	 * Retrieves the list of interface to sensor observation outputs
-	 * @return map of output names -> data interface objects
-	 * @throws SensorException 
-	 */
-	public Map<String, ? extends ISensorDataInterface> getObservationOutputs() throws SensorException;
-	
-	
-	/**
-	 * Retrieves the list of interface to sensor command inputs
-	 * @return map of input names -> control interface objects
-	 * @throws SensorException 
-	 */
-	public Map<String, ? extends ISensorControlInterface> getCommandInputs() throws SensorException;
-	
-	
-	/**
-	 * Returns the sensor connection status
-	 * @return true if sensor is actually connected and can communicate with the driver
-	 */
-	public boolean isConnected();
-	
+     */
+    public AbstractProcess getCurrentSensorDescription() throws SensorException;
+
+
+    /**
+     * Used to check when sensor description was last updated.
+     * This is useful to avoid requesting the object when it hasn't changed.
+     * @return date/time of last sensor description update 
+     */
+    public long getLastSensorDescriptionUpdate();
+
+
+    /**
+     * Retrieves historic sensor description valid at time t
+     * @param t
+     * @return SMLSytem object containing sensor metadata valid at time t
+     * @throws SensorException 
+     */
+    public AbstractProcess getSensorDescription(DateTime t) throws SensorException;
+
+
+    /**
+     * Updates and historizes system description
+     * @param systemDesc SMLSystem object with validity period
+     * @param recordHistory if true, older versions of the descriptions will be retained
+     * and made accessible by time
+     * @throws SensorException 
+     */
+    public void updateSensorDescription(AbstractProcess systemDesc, boolean recordHistory) throws SensorException;
+
+
+    /**
+     * Retrieves the list of interfaces to all sensor data outputs
+     * @return map of output names -> data interface objects
+     * @throws SensorException 
+     */
+    public Map<String, ? extends ISensorDataInterface> getAllOutputs() throws SensorException;
+
+
+    /**
+     * Retrieves the list of interface to sensor status outputs
+     * @return map of output names -> data interface objects
+     * @throws SensorException 
+     */
+    public Map<String, ? extends ISensorDataInterface> getStatusOutputs() throws SensorException;
+
+
+    /**
+     * Retrieves the list of interface to sensor observation outputs
+     * @return map of output names -> data interface objects
+     * @throws SensorException 
+     */
+    public Map<String, ? extends ISensorDataInterface> getObservationOutputs() throws SensorException;
+
+
+    /**
+     * Retrieves the list of interface to sensor command inputs
+     * @return map of input names -> control interface objects
+     * @throws SensorException 
+     */
+    public Map<String, ? extends ISensorControlInterface> getCommandInputs() throws SensorException;
+
+
+    /**
+     * Returns the sensor connection status
+     * @return true if sensor is actually connected and can communicate with the driver
+     */
+    public boolean isConnected();
+
 }

@@ -43,9 +43,9 @@ public interface ISensorManager extends IModuleManager<ISensorModule<?>>
 { 
     
     /**
-     * Helper method to find a sensor by its global UID
-     * @param uid
-     * @return
+     * Helper method to find a sensor by its global UID (instead of its localID)
+     * @param uid global unique identifier of sensor (= SensorML UID)
+     * @return sensor module instance
      */
     public ISensorModule<?> findSensor(String uid);
     
@@ -59,7 +59,8 @@ public interface ISensorManager extends IModuleManager<ISensorModule<?>>
     
     /**
 	 * Installs a driver package (jar file) from the specified URL
-	 * @param driverPackageuURL URL of jar containing implementation of new driver
+	 * @param driverPackageURL URL of jar containing implementation of new driver
+     * @param replace if true, an older version of the same driver will be replaced
 	 * @return automatically assigned driver ID
 	 */
 	public String installDriver(String driverPackageURL, boolean replace);
