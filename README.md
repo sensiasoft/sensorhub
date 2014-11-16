@@ -13,7 +13,7 @@ Low level functions of SensorHub (send commands and read data from sensor) are c
 
 ## License
 
-SensorHub is licensed under the [Mozilla Public License version 1.1](http://www.mozilla.org/MPL/1.1/) (we will be transitioning to MPL v2.0 very soon)
+SensorHub is licensed under the [Mozilla Public License version 2.0](http://www.mozilla.org/MPL/2.0/).
 
 
 ## Using
