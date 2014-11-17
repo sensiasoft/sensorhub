@@ -31,7 +31,7 @@ import java.util.Map;
 public interface IModuleManagerFactory
 {
     /**
-     * Gets a reference to the manager instance handling the specified type of module.
+     * Gets the manager instance handling the specified type of module.
      * The default manager is created if non have been started explicitely.
      * @param moduleType
      * @return The concrete manager instance
@@ -40,11 +40,11 @@ public interface IModuleManagerFactory
     
     
     /**
-     * Starts a manager handling the specified type of module and that provides as much functionality
-     * specified by the hints table as possible.
+     * Gets the manager instance handling the specified type of module and that provides
+     * as much functionality specified by the hints table as possible.
      * @param moduleType
      * @param hints
-     * @return
+     * @return module manager instance for the given module type
      */
-    public <ModuleType extends IModule<?>> IModuleManager<ModuleType> startManager(Class<ModuleType> moduleType, Map<String, Object> hints);
+    public <ModuleType extends IModule<?>> IModuleManager<ModuleType> getManager(Class<ModuleType> moduleType, Map<String, Object> hints);
 }

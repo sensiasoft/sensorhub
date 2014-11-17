@@ -29,20 +29,21 @@ import org.sensorhub.api.common.IEventProducer;
  *
  * <p>Copyright (c) 2010</p>
  * @author Alexandre Robin
+ * @param <KeyType> Type of record key
+ * @param <FilterType> Type of record-filter object
+ * @param <ConfigType> Type of storage config
  * @since Nov 6, 2010
  */
 public interface IDataStorage<KeyType extends DataKey, FilterType extends IDataFilter, ConfigType extends StorageConfig> extends IStorageModule<ConfigType>, IEventProducer
 {	
     /**
-     * Returns number of records contained in this storage
-     * @return
+     * @return number of records contained in this storage
      */
     public int getNumRecords();
     
     
 	/**
-	 * Retrieves description of data blocks persisted in this storage
-	 * @return
+	 * @return description of data blocks persisted in this storage
 	 */
 	public DataComponent getRecordDescription();
 	
@@ -57,7 +58,7 @@ public interface IDataStorage<KeyType extends DataKey, FilterType extends IDataF
     
 	/**
 	 * Retrieves record with the specified id
-	 * @param id
+	 * @param id record ID
 	 * @return record or null if no record with the specified id were found
 	 */
 	public IDataRecord<KeyType> getRecord(long id);
@@ -73,7 +74,7 @@ public interface IDataStorage<KeyType extends DataKey, FilterType extends IDataF
     
 	/**
 	 * Retrieves record matching filtering criteria from storage
-	 * @param filter
+	 * @param filter filtering parameters
 	 * @return a list of records matching the filter
 	 */
 	public List<IDataRecord<KeyType>> getRecords(FilterType filter);
@@ -81,7 +82,7 @@ public interface IDataStorage<KeyType extends DataKey, FilterType extends IDataF
 	
 	/**
      * Gets iterator of raw data blocks matching the specified filter
-     * @param filter
+     * @param filter filtering parameters
      * @return an iterator among data blocks matching the filter
      */
     public Iterator<DataBlock> getDataBlockIterator(FilterType filter);
@@ -89,7 +90,7 @@ public interface IDataStorage<KeyType extends DataKey, FilterType extends IDataF
     
 	/**
 	 * Gets iterator of records matching the specified filter
-	 * @param filter
+	 * @param filter filtering parameters
 	 * @return an iterator among records matching the filter
 	 */
 	public Iterator<IDataRecord<KeyType>> getRecordIterator(FilterType filter);
@@ -97,8 +98,8 @@ public interface IDataStorage<KeyType extends DataKey, FilterType extends IDataF
 	
 	/**
      * Persists data block in storage
-     * @paran key 
-     * @param data
+     * @param key key object to associate to record
+     * @param data actual record data
      * @return stored data key (containing auto-generated id and time stamp if non was provided)
      */
     public KeyType store(KeyType key, DataBlock data);
@@ -107,7 +108,7 @@ public interface IDataStorage<KeyType extends DataKey, FilterType extends IDataF
 	/**
      * Updates record with specified id with new key and data
      * @param id id of record to update
-     * @paran key new key for upated record
+     * @param key new key for updated record
      * @param data new data block to assign to the record
      * @return updated data key (containing auto-generated id and time stamp if non was provided)
      */
@@ -116,7 +117,7 @@ public interface IDataStorage<KeyType extends DataKey, FilterType extends IDataF
     
 	/**
      * Removes all records matching the filter
-     * @param filter
+     * @param filter filtering parameters
      * @return number of deleted records
      */
     public int remove(FilterType filter);
@@ -124,7 +125,7 @@ public interface IDataStorage<KeyType extends DataKey, FilterType extends IDataF
     
     /**
      * Removes record with the specified id
-     * @param id
+     * @param id recor ID
      */
     public abstract void remove(long id);
     

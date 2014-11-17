@@ -25,6 +25,7 @@ import net.opengis.swe.v20.DataBlock;
  *
  * <p>Copyright (c) 2010</p>
  * @author Alexandre Robin
+ * @param <KeyType> Type of record key
  * @since Nov 12, 2010
  */
 public interface IDataRecord<KeyType extends DataKey>
