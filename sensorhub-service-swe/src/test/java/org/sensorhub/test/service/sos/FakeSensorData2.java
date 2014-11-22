@@ -16,7 +16,6 @@ Developer are Copyright (C) 2014 the Initial Developer. All Rights Reserved.
 package org.sensorhub.test.service.sos;
 
 import java.nio.ByteOrder;
-import java.util.List;
 import net.opengis.swe.v20.BinaryEncoding;
 import net.opengis.swe.v20.ByteEncoding;
 import net.opengis.swe.v20.Count;
@@ -25,10 +24,8 @@ import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataEncoding;
 import net.opengis.swe.v20.DataType;
-import org.sensorhub.api.common.IEventListener;
-import org.sensorhub.api.sensor.ISensorDataInterface;
-import org.sensorhub.api.sensor.ISensorModule;
 import org.sensorhub.api.sensor.SensorException;
+import org.sensorhub.impl.sensor.AbstractSensorOutput;
 import org.vast.data.BinaryComponentImpl;
 import org.vast.data.BinaryEncodingImpl;
 import org.vast.data.CountImpl;
@@ -46,12 +43,11 @@ import org.vast.data.DataRecordImpl;
  * @author Alexandre Robin <alex.robin@sensiasoftware.com>
  * @since Sep 20, 2013
  */
-public class FakeSensorData2 implements ISensorDataInterface
+public class FakeSensorData2 extends AbstractSensorOutput<FakeSensor>
 {
     static int MAX_COUNT = 2;
     static int ARRAY_SIZE = 12000;
     
-    FakeSensor sensor;
     String name;
     boolean pushEnabled;
     int count;
@@ -59,7 +55,7 @@ public class FakeSensorData2 implements ISensorDataInterface
     
     public FakeSensorData2(FakeSensor sensor, String name, boolean pushEnabled)
     {
-        this.sensor = sensor;
+        super(sensor);
         this.name = name;
         this.pushEnabled = pushEnabled;
     }
@@ -73,20 +69,6 @@ public class FakeSensorData2 implements ISensorDataInterface
         else
             return true;
     }    
-    
-    
-    @Override
-    public ISensorModule<?> getSensorInterface()
-    {
-        return sensor;
-    }
-
-
-    @Override
-    public boolean isStorageSupported()
-    {
-        return false;
-    }
 
 
     @Override
@@ -146,51 +128,4 @@ public class FakeSensorData2 implements ISensorDataInterface
             data.setByteValue(i, (byte)(i%255));
         return data;
     }
-
-
-    @Override
-    public int getStorageCapacity() throws SensorException
-    {
-        return 0;
-    }
-
-
-    @Override
-    public int getNumberOfAvailableRecords() throws SensorException
-    {
-        return 1;
-    }
-
-
-    @Override
-    public List<DataBlock> getLatestRecords(int maxRecords, boolean clear) throws SensorException
-    {
-        return null;
-    }
-
-
-    @Override
-    public List<DataBlock> getAllRecords(boolean clear) throws SensorException
-    {
-        return null;
-    }
-
-
-    @Override
-    public int clearAllRecords() throws SensorException
-    {
-        return 0;
-    }
-
-
-    @Override
-    public void registerListener(IEventListener listener)
-    {
-    }
-
-    
-    @Override
-    public void unregisterListener(IEventListener listener)
-    {
-    }    
 }

@@ -40,10 +40,10 @@ public interface ISensorDataInterface extends IEventProducer
 {
 	
     /**
-     * Allows by-reference access to parent sensor interface
+     * Allows by-reference access to parent sensor module
      * @return parent sensor
      */
-    public ISensorModule<?> getSensorInterface();
+    public ISensorModule<?> getParentSensor();
     
     
     /**
@@ -57,7 +57,7 @@ public interface ISensorDataInterface extends IEventProducer
      * Checks data storage capability
      * @return true if sensor or sensor driver supports observation storage natively, false otherwise
      */
-	public boolean isStorageSupported();
+    public boolean isStorageSupported();
 	
 	
 	/**
