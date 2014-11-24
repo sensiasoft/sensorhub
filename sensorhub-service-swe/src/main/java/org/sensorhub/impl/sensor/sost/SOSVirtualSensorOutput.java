@@ -146,7 +146,7 @@ public class SOSVirtualSensorOutput implements ISensorDataInterface
 
 
     @Override
-    public ISensorModule<?> getSensorInterface()
+    public ISensorModule<?> getParentSensor()
     {
         return parentSensor;
     }

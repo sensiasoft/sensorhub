@@ -23,7 +23,7 @@ import org.sensorhub.api.sensor.SensorException;
 import org.sensorhub.impl.sensor.AbstractSensorModule;
 
 
-public class FakeSensor extends  AbstractSensorModule<SensorConfig>
+public class FakeSensor extends AbstractSensorModule<SensorConfig>
 {
         
     public FakeSensor()

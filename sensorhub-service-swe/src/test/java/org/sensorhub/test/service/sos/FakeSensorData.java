@@ -27,11 +27,8 @@ import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataEncoding;
 import net.opengis.swe.v20.Quantity;
 import net.opengis.swe.v20.Time;
-import org.sensorhub.api.common.IEventListener;
-import org.sensorhub.api.sensor.ISensorDataInterface;
-import org.sensorhub.api.sensor.ISensorModule;
 import org.sensorhub.api.sensor.SensorException;
-import org.sensorhub.impl.common.BasicEventHandler;
+import org.sensorhub.impl.sensor.AbstractSensorOutput;
 import org.vast.data.DataBlockDouble;
 import org.vast.data.DataRecordImpl;
 import org.vast.data.QuantityImpl;
@@ -49,18 +46,16 @@ import org.vast.sweCommon.SWEConstants;
  * @author Alexandre Robin <alex.robin@sensiasoftware.com>
  * @since Sep 20, 2013
  */
-public class FakeSensorData implements ISensorDataInterface
+public class FakeSensorData extends AbstractSensorOutput<FakeSensor>
 {
     static int MAX_COUNT = 5;
     
-    FakeSensor sensor;
     String name;
     boolean pushEnabled;
     int count;
     int bufferSize;
     double samplingPeriod; // seconds
     Deque<DataBlock> dataQueue;
-    BasicEventHandler eventHandler;
     
     
     public FakeSensorData(FakeSensor sensor, String name, boolean pushEnabledFlag)
@@ -71,7 +66,7 @@ public class FakeSensorData implements ISensorDataInterface
     
     public FakeSensorData(FakeSensor sensor, final String name, final boolean pushEnabled, final int bufferSize, final double samplingPeriod)
     {
-        this.sensor = sensor;
+        super(sensor);
         this.name = name;
         this.pushEnabled = pushEnabled;
         this.bufferSize = bufferSize;
@@ -137,26 +132,19 @@ public class FakeSensorData implements ISensorDataInterface
         else
             return true;
     }    
-    
-    
-    @Override
-    public ISensorModule<?> getSensorInterface()
-    {
-        return sensor;
-    }
-
-
-    @Override
-    public boolean isStorageSupported()
-    {
-        return false;
-    }
 
 
     @Override
     public boolean isPushSupported()
     {
         return pushEnabled;
+    }
+
+
+    @Override
+    public boolean isStorageSupported()
+    {
+        return (bufferSize > 0);
     }
 
 
@@ -287,19 +275,5 @@ public class FakeSensorData implements ISensorDataInterface
             dataQueue.clear();
             return numRecords;
         }
-    }
-
-
-    @Override
-    public void registerListener(IEventListener listener)
-    {
-        eventHandler.registerListener(listener);
-    }
-
-    
-    @Override
-    public void unregisterListener(IEventListener listener)
-    {
-        eventHandler.unregisterListener(listener);
     }
 }
