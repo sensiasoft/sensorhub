@@ -16,7 +16,6 @@ Developer are Copyright (C) 2014 the Initial Developer. All Rights Reserved.
 package org.sensorhub.test.sensor;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.Deque;
 import java.util.List;
 import java.util.Timer;
@@ -81,8 +80,6 @@ public class FakeSensorData extends AbstractSensorOutput<FakeSensor>
     
     protected void start()
     {
-        final DataComponent dataDesc = getRecordDescription();
-        
         // start data production timer
         TimerTask sensorTask = new TimerTask()
         {
@@ -94,8 +91,9 @@ public class FakeSensorData extends AbstractSensorOutput<FakeSensor>
                     if (Math.random() > 0.8)
                         return;
                     
+                    double time = System.currentTimeMillis() / 1000.;
                     DataBlock data = new DataBlockDouble(4);
-                    data.setDoubleValue(0, new Date().getTime()/1000.0);
+                    data.setDoubleValue(0, time);
                     data.setDoubleValue(1, 1.0 + Math.random()*0.01);
                     data.setDoubleValue(2, 2.0 + Math.random()*0.01);
                     data.setDoubleValue(3, 3.0 + Math.random()*0.01);
@@ -109,7 +107,7 @@ public class FakeSensorData extends AbstractSensorOutput<FakeSensor>
                     dataQueue.offer(data);
                     
                     if (pushEnabled)
-                        eventHandler.publishEvent(new SensorDataEvent(FakeSensorData.this, System.currentTimeMillis(), dataDesc, data));
+                        eventHandler.publishEvent(new SensorDataEvent(time, FakeSensorData.this, data));
                 }                        
             }                
         };
@@ -182,7 +180,7 @@ public class FakeSensorData extends AbstractSensorOutput<FakeSensor>
 
 
     @Override
-    public DataEncoding getRecommendedEncoding() throws SensorException
+    public DataEncoding getRecommendedEncoding()
     {
         return new TextEncodingImpl(",", "\n");
     }
@@ -193,7 +191,17 @@ public class FakeSensorData extends AbstractSensorOutput<FakeSensor>
     {
         synchronized (dataQueue)
         {
-            return dataQueue.poll();
+            return dataQueue.peek();
+        }
+    }
+    
+    
+    @Override
+    public double getLatestRecordTime()
+    {
+        synchronized (dataQueue)
+        {
+            return dataQueue.peek().getDoubleValue(0);
         }
     }
 
@@ -271,4 +279,5 @@ public class FakeSensorData extends AbstractSensorOutput<FakeSensor>
             return numRecords;
         }
     }
+
 }

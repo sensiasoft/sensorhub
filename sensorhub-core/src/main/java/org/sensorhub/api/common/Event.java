@@ -20,7 +20,8 @@ import java.io.Serializable;
 
 /**
  * <p>
- * Base class for all sensor hub events
+ * Immutable base class for all sensor hub events.
+ * All sub-classes should remain immutable.
  * </p>
  *
  * <p>Copyright (c) 2010</p>
@@ -32,9 +33,8 @@ public class Event implements Serializable
     private static final long serialVersionUID = 9176636296502966036L;
     
     protected Object source;
-    protected long timeStamp;
+    protected double timeStamp;
     protected int code;
-    protected String description;
     
     
     public Object getSource()
@@ -43,45 +43,15 @@ public class Event implements Serializable
     }
 
 
-    public void setSource(Object source)
-    {
-        this.source = source;
-    }
-
-
-    public long getTimeStamp()
+    public double getTimeStamp()
     {
         return timeStamp;
-    }
-
-
-    public void setTimeStamp(long timeStamp)
-    {
-        this.timeStamp = timeStamp;
     }
 
 
     public int getCode()
     {
         return code;
-    }
-    
-    
-    public void setCode(int code)
-    {
-        this.code = code;
-    }
-    
-    
-    public String getDescription()
-    {
-        return description;
-    }
-    
-    
-    public void setDescription(String description)
-    {
-        this.description = description;
-    }
+    }    
     
 }

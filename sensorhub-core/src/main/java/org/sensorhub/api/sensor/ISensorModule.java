@@ -19,7 +19,6 @@ import java.util.Map;
 import net.opengis.sensorml.v20.AbstractProcess;
 import org.sensorhub.api.common.IEventProducer;
 import org.sensorhub.api.module.IModule;
-import org.vast.util.DateTime;
 
 
 /**
@@ -61,18 +60,18 @@ public interface ISensorModule<ConfigType extends SensorConfig> extends IModule<
     /**
      * Used to check when sensor description was last updated.
      * This is useful to avoid requesting the object when it hasn't changed.
-     * @return date/time of last sensor description update 
+     * @return date/time of last sensor description update as julian time (1970)
      */
-    public long getLastSensorDescriptionUpdate();
+    public double getLastSensorDescriptionUpdate();
 
 
     /**
      * Retrieves historic sensor description valid at time t
-     * @param t
+     * @param time julian time (1970) at which description is valid
      * @return SMLSytem object containing sensor metadata valid at time t
      * @throws SensorException 
      */
-    public AbstractProcess getSensorDescription(DateTime t) throws SensorException;
+    public AbstractProcess getSensorDescription(double time) throws SensorException;
 
 
     /**

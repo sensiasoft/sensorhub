@@ -32,7 +32,6 @@ import org.sensorhub.api.sensor.SensorException;
 import org.sensorhub.impl.module.AbstractModule;
 import org.vast.sensorML.PhysicalSystemImpl;
 import org.vast.sensorML.SMLUtils;
-import org.vast.util.DateTime;
 
 
 /**
@@ -54,7 +53,7 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
     protected Map<String, ISensorDataInterface> statusOutputs = new HashMap<String, ISensorDataInterface>();  
     protected Map<String, ISensorControlInterface> controlInputs = new HashMap<String, ISensorControlInterface>();  
     private AbstractProcess sensorDescription;
-    protected long lastUpdatedSensorML;
+    protected double lastUpdatedSensorDescription;
     
     
     @Override
@@ -84,7 +83,7 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
                     SMLUtils utils = new SMLUtils();
                     InputStream is = new URL(config.sensorML).openStream();
                     sensorDescription = utils.readProcess(is);
-                    lastUpdatedSensorML = System.currentTimeMillis();
+                    lastUpdatedSensorDescription = System.currentTimeMillis() / 1000.;
                 }
                 catch (IOException e)
                 {
@@ -95,7 +94,7 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
             else
             {
                 sensorDescription = new PhysicalSystemImpl();
-                lastUpdatedSensorML = 0;
+                lastUpdatedSensorDescription = 0;
             }
         }
         
@@ -134,14 +133,14 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
 
 
     @Override
-    public long getLastSensorDescriptionUpdate()
+    public double getLastSensorDescriptionUpdate()
     {
-        return lastUpdatedSensorML;
+        return lastUpdatedSensorDescription;
     }
 
 
     @Override
-    public AbstractProcess getSensorDescription(DateTime t) throws SensorException
+    public AbstractProcess getSensorDescription(double time) throws SensorException
     {
         throw new SensorException(ERROR_NO_HISTORY + getName());
     }

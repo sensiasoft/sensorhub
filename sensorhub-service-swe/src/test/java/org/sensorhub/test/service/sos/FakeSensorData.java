@@ -156,7 +156,7 @@ public class FakeSensorData extends AbstractSensorOutput<FakeSensor>
 
 
     @Override
-    public DataComponent getRecordDescription() throws SensorException
+    public DataComponent getRecordDescription()
     {
         DataComponent record = new DataRecordImpl(3);
         record.setName(name);
@@ -187,7 +187,7 @@ public class FakeSensorData extends AbstractSensorOutput<FakeSensor>
 
 
     @Override
-    public DataEncoding getRecommendedEncoding() throws SensorException
+    public DataEncoding getRecommendedEncoding()
     {
         return new TextEncodingImpl(",", "\n");
     }
@@ -198,7 +198,17 @@ public class FakeSensorData extends AbstractSensorOutput<FakeSensor>
     {
         synchronized (dataQueue)
         {
-            return dataQueue.poll();
+            return dataQueue.peek();
+        }
+    }
+    
+    
+    @Override
+    public double getLatestRecordTime()
+    {
+        synchronized (dataQueue)
+        {
+            return dataQueue.peek().getDoubleValue(0);
         }
     }
 
@@ -276,4 +286,5 @@ public class FakeSensorData extends AbstractSensorOutput<FakeSensor>
             return numRecords;
         }
     }
+    
 }
