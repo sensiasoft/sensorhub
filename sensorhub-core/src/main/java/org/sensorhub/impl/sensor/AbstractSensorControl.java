@@ -26,6 +26,7 @@ import org.sensorhub.api.sensor.ISensorControlInterface;
 import org.sensorhub.api.sensor.ISensorModule;
 import org.sensorhub.api.sensor.SensorException;
 import org.sensorhub.impl.common.BasicEventHandler;
+import org.sensorhub.utils.MsgUtils;
 import org.vast.util.DateTime;
 
 
@@ -119,49 +120,49 @@ public abstract class AbstractSensorControl<SensorType extends ISensorModule<?>>
     @Override
     public CommandStatus sendCommand(DataBlock command) throws SensorException
     {
-        throw new SensorException(ERROR_NO_ASYNC + parentSensor.getName());
+        throw new SensorException(ERROR_NO_ASYNC + MsgUtils.moduleClassAndId(parentSensor));
     }
 
 
     @Override
     public CommandStatus sendCommandGroup(List<DataBlock> commands) throws SensorException
     {
-        throw new SensorException(ERROR_NO_ASYNC + parentSensor.getName());
+        throw new SensorException(ERROR_NO_ASYNC + MsgUtils.moduleClassAndId(parentSensor));
     }
 
 
     @Override
     public CommandStatus scheduleCommand(DataBlock command, DateTime execTime) throws SensorException
     {
-        throw new SensorException(ERROR_NO_SCHED + parentSensor.getName());
+        throw new SensorException(ERROR_NO_SCHED + MsgUtils.moduleClassAndId(parentSensor));
     }
 
 
     @Override
     public CommandStatus scheduleCommandGroup(List<DataBlock> commands, DateTime execTime) throws SensorException
     {
-        throw new SensorException(ERROR_NO_SCHED + parentSensor.getName());
+        throw new SensorException(ERROR_NO_SCHED + MsgUtils.moduleClassAndId(parentSensor));
     }
 
 
     @Override
     public CommandStatus cancelCommand(String commandID) throws SensorException
     {
-        throw new SensorException(ERROR_NO_ASYNC + parentSensor.getName());
+        throw new SensorException(ERROR_NO_ASYNC + MsgUtils.moduleClassAndId(parentSensor));
     }
 
 
     @Override
     public CommandStatus getCommandStatus(String commandID) throws SensorException
     {
-        throw new SensorException(ERROR_NO_ASYNC + parentSensor.getName());
+        throw new SensorException(ERROR_NO_ASYNC + MsgUtils.moduleClassAndId(parentSensor));
     }
 
 
     @Override
     public List<CommandStatus> getCommandStatusHistory(String commandID) throws SensorException
     {
-        throw new SensorException(ERROR_NO_STATUS_HISTORY + parentSensor.getName());
+        throw new SensorException(ERROR_NO_STATUS_HISTORY + MsgUtils.moduleClassAndId(parentSensor));
     }
 
     

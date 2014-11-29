@@ -31,6 +31,7 @@ import org.sensorhub.api.sensor.ISensorModule;
 import org.sensorhub.api.sensor.SensorConfig;
 import org.sensorhub.api.sensor.SensorException;
 import org.sensorhub.impl.module.AbstractModule;
+import org.sensorhub.utils.MsgUtils;
 import org.vast.sensorML.PhysicalSystemImpl;
 import org.vast.sensorML.SMLUtils;
 
@@ -112,8 +113,8 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
                 }
                 catch (IOException e)
                 {
-                    throw new SensorException("Error while parsing static SensorML description for sensor " + 
-                                               getName() + " (" + getLocalID() + ")", e);
+                    throw new SensorException("Error while parsing static SensorML description for sensor " +
+                                                MsgUtils.moduleString(this), e);
                 }
             }
             else
@@ -167,21 +168,21 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
     @Override
     public AbstractProcess getSensorDescription(double time) throws SensorException
     {
-        throw new SensorException(ERROR_NO_HISTORY + getName());
+        throw new SensorException(ERROR_NO_HISTORY + MsgUtils.moduleClassAndId(this));
     }
 
 
     @Override
     public List<AbstractProcess> getSensorDescriptionHistory() throws SensorException
     {
-        throw new SensorException(ERROR_NO_HISTORY + getName());
+        throw new SensorException(ERROR_NO_HISTORY + MsgUtils.moduleClassAndId(this));
     }
 
 
     @Override
     public void updateSensorDescription(AbstractProcess systemDesc, boolean recordHistory) throws SensorException
     {
-        throw new SensorException(ERROR_NO_UPDATE + getName());
+        throw new SensorException(ERROR_NO_UPDATE + MsgUtils.moduleClassAndId(this));
     }
 
 
