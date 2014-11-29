@@ -125,6 +125,13 @@ public class FakeSensorData extends AbstractSensorOutput<FakeSensor>
     
     
     @Override
+    public String getName()
+    {
+        return name;
+    }
+
+
+    @Override
     public boolean isEnabled()
     {
         if (count >= MAX_COUNT)

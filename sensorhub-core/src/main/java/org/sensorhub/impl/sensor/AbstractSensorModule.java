@@ -20,6 +20,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import net.opengis.sensorml.v20.AbstractProcess;
@@ -49,11 +50,35 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
 {
     protected static String ERROR_NO_UPDATE = "Sensor Description update is not supported by driver ";
     protected static String ERROR_NO_HISTORY = "History of sensor description is not supported by driver ";
-    protected Map<String, ISensorDataInterface> obsOutputs = new HashMap<String, ISensorDataInterface>();  
-    protected Map<String, ISensorDataInterface> statusOutputs = new HashMap<String, ISensorDataInterface>();  
-    protected Map<String, ISensorControlInterface> controlInputs = new HashMap<String, ISensorControlInterface>();  
+    private Map<String, ISensorDataInterface> obsOutputs = new HashMap<String, ISensorDataInterface>();  
+    private Map<String, ISensorDataInterface> statusOutputs = new HashMap<String, ISensorDataInterface>();  
+    private Map<String, ISensorControlInterface> controlInputs = new HashMap<String, ISensorControlInterface>();  
     private AbstractProcess sensorDescription;
     protected double lastUpdatedSensorDescription;
+    
+    
+    /**
+     * Call this method to add each sensor observation or status output
+     * @param dataInterface interface to add as sensor output
+     * @param isStatus set to true when registering a status output
+     */
+    protected void addOutput(ISensorDataInterface dataInterface, boolean isStatus)
+    {
+        if (isStatus)
+            statusOutputs.put(dataInterface.getName(), dataInterface);
+        else
+            obsOutputs.put(dataInterface.getName(), dataInterface);
+    }
+    
+    
+    /**
+     * Call this method to add each sensor control input
+     * @param controlInterface interface to add as sensor control input
+     */
+    protected void addControlInput(ISensorControlInterface controlInterface)
+    {
+        controlInputs.put(controlInterface.getName(), controlInterface);
+    }
     
     
     @Override
@@ -141,6 +166,13 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
 
     @Override
     public AbstractProcess getSensorDescription(double time) throws SensorException
+    {
+        throw new SensorException(ERROR_NO_HISTORY + getName());
+    }
+
+
+    @Override
+    public List<AbstractProcess> getSensorDescriptionHistory() throws SensorException
     {
         throw new SensorException(ERROR_NO_HISTORY + getName());
     }

@@ -35,7 +35,7 @@ public class FakeSensor extends AbstractSensorModule<SensorConfig>
     public void setDataInterfaces(ISensorDataInterface... outputs) throws SensorException
     {
         for (ISensorDataInterface o: outputs)
-            obsOutputs.put(o.getRecordDescription().getName(), o);
+            addOutput(o, false);
     }
     
     

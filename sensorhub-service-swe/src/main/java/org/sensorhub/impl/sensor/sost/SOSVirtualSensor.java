@@ -95,13 +95,14 @@ public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfi
         // try to otbain corresponding data interface
         DataStructureHash hashObj = new DataStructureHash(component, encoding);
         String templateID = structureToOutputMap.get(hashObj);
+        component.setName(templateID);
         
         // create a new one if needed
         if (templateID == null)
         {        
             SOSVirtualSensorOutput newOutput = new SOSVirtualSensorOutput(this, component, encoding);
             templateID = config.sensorUID + "-" + Integer.toHexString(hashObj.hashCode());
-            obsOutputs.put(templateID, newOutput);
+            addOutput(newOutput, false);
             structureToOutputMap.put(hashObj, templateID);
         }
         
@@ -168,7 +169,7 @@ public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfi
     public void newResultRecord(String templateID, DataBlock... dataBlocks) throws Exception
     {
         for (DataBlock dataBlock: dataBlocks)
-            ((SOSVirtualSensorOutput)obsOutputs.get(templateID)).publishNewRecord(dataBlock);
+            ((SOSVirtualSensorOutput)getObservationOutputs().get(templateID)).publishNewRecord(dataBlock);
     }
 
 

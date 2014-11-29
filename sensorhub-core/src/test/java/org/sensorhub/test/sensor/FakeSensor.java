@@ -34,7 +34,7 @@ public class FakeSensor extends AbstractSensorModule<SensorConfig>
     public void setDataInterfaces(ISensorDataInterface... outputs) throws SensorException
     {
         for (ISensorDataInterface o: outputs)
-            obsOutputs.put(o.getRecordDescription().getName(), o);
+            addOutput(o, false);
     }
     
 
@@ -47,7 +47,7 @@ public class FakeSensor extends AbstractSensorModule<SensorConfig>
     @Override
     public void start() throws SensorHubException
     {
-        for (ISensorDataInterface o: obsOutputs.values())
+        for (ISensorDataInterface o: getObservationOutputs().values())
             ((FakeSensorData)o).start();
     }
     

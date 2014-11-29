@@ -43,21 +43,21 @@ public class SensorDataEvent extends SensorEvent
 	/**
 	 * New data that triggered this event
 	 */
-	protected DataBlock record;
+	protected DataBlock[] records;
 	
 	
 	/**
 	 * Constructor from list of records with their descriptor
 	 * @param timeStamp time of event generation
      * @param dataInterface sensor output interface that produced the associated data
-	 * @param record new record of data produced at that time
+	 * @param records arrays of records that triggered this notification
 	 */
-	public SensorDataEvent(double timeStamp, ISensorDataInterface dataInterface, DataBlock record)
+	public SensorDataEvent(double timeStamp, ISensorDataInterface dataInterface, DataBlock ... records)
 	{
 		super(timeStamp, dataInterface.getParentSensor().getLocalID(), Type.NEW_DATA_AVAILABLE);
 		this.source = dataInterface;
 		this.recordDescription = dataInterface.getRecordDescription();
-		this.record = record;
+		this.records = records;
 	}
 
 
@@ -67,8 +67,15 @@ public class SensorDataEvent extends SensorEvent
     }
 
 
-    public DataBlock getRecord()
+    public DataBlock[] getRecords()
     {
-        return record;
+        return records;
+    }
+
+
+    @Override
+    public ISensorDataInterface getSource()
+    {
+        return (ISensorDataInterface)this.source;
     }
 }

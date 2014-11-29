@@ -15,6 +15,7 @@ Developer are Copyright (C) 2014 the Initial Developer. All Rights Reserved.
 
 package org.sensorhub.api.sensor;
 
+import java.util.List;
 import java.util.Map;
 import net.opengis.sensorml.v20.AbstractProcess;
 import org.sensorhub.api.common.IEventProducer;
@@ -72,6 +73,14 @@ public interface ISensorModule<ConfigType extends SensorConfig> extends IModule<
      * @throws SensorException 
      */
     public AbstractProcess getSensorDescription(double time) throws SensorException;
+    
+    
+    /**
+     * Gets the whole history of sensor descriptions
+     * @return list of process descriptions (with disjoint time validity periods)
+     * @throws SensorException
+     */
+    public List<AbstractProcess> getSensorDescriptionHistory() throws SensorException;
 
 
     /**

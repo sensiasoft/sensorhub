@@ -78,6 +78,13 @@ public class FakeSensorData extends AbstractSensorOutput<FakeSensor>
     }
     
     
+    @Override
+    public String getName()
+    {
+        return name;
+    }
+
+
     protected void start()
     {
         // start data production timer

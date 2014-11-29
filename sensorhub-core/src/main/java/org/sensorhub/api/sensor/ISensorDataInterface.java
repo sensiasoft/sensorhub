@@ -44,6 +44,15 @@ public interface ISensorDataInterface extends IEventProducer
      * @return parent sensor
      */
     public ISensorModule<?> getParentSensor();
+    
+    
+    /**
+     * Gets the interface name. It should be the name reported in the map by
+     * getXXXOutputs methods of {@link org.sensorhub.api.sensor.ISensorModule} 
+     * @see org.sensorhub.api.sensor.ISensorModule#getAllOutputs()
+     * @return name of this output interface
+     */
+    public String getName();
 
 
     /**

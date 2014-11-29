@@ -62,6 +62,13 @@ public class FakeSensorData2 extends AbstractSensorOutput<FakeSensor>
     
     
     @Override
+    public String getName()
+    {
+        return name;
+    }
+
+
+    @Override
     public boolean isEnabled()
     {
         if (count >= MAX_COUNT)
@@ -86,7 +93,7 @@ public class FakeSensorData2 extends AbstractSensorOutput<FakeSensor>
 
 
     @Override
-    public DataComponent getRecordDescription() throws SensorException
+    public DataComponent getRecordDescription()
     {
         DataArray img = new DataArrayImpl(ARRAY_SIZE);
         img.setDefinition("urn:blabla:image");
@@ -104,7 +111,7 @@ public class FakeSensorData2 extends AbstractSensorOutput<FakeSensor>
     
     
     @Override
-    public DataEncoding getRecommendedEncoding() throws SensorException
+    public DataEncoding getRecommendedEncoding()
     {
         BinaryEncoding dataEnc = new BinaryEncodingImpl();
         dataEnc.setByteEncoding(ByteEncoding.RAW);
@@ -127,5 +134,12 @@ public class FakeSensorData2 extends AbstractSensorOutput<FakeSensor>
         for (int i=0; i<ARRAY_SIZE; i++)
             data.setByteValue(i, (byte)(i%255));
         return data;
+    }
+
+
+    @Override
+    public double getLatestRecordTime()
+    {
+        return 0;
     }
 }
