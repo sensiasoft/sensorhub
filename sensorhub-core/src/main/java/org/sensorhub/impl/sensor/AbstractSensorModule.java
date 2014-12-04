@@ -54,7 +54,7 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
     private Map<String, ISensorDataInterface> obsOutputs = new HashMap<String, ISensorDataInterface>();  
     private Map<String, ISensorDataInterface> statusOutputs = new HashMap<String, ISensorDataInterface>();  
     private Map<String, ISensorControlInterface> controlInputs = new HashMap<String, ISensorControlInterface>();  
-    private AbstractProcess sensorDescription;
+    protected AbstractProcess sensorDescription;
     protected double lastUpdatedSensorDescription;
     
     
@@ -99,17 +99,35 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
     @Override
     public AbstractProcess getCurrentSensorDescription() throws SensorException
     {
-        // by default we return the static description provided in config
-        if (sensorDescription == null)
+        synchronized (sensorDescription)
         {
-            if (config.sensorML != null)
+            if (sensorDescription == null)
+                updateSensorDescription();
+        
+            return sensorDescription;
+        }
+    }
+    
+    
+    /**
+     * This method should be called whenever the sensor description needs to be regenerated.
+     * This default implementation reads the base description from the SensorML file if provided
+     * and then appends the unique sensor identifier as well as the description of all registered
+     * outputs and control inputs. This will also update the lastUpdatedSensorDescription time stamp.
+     * @throws SensorException
+     */
+    protected void updateSensorDescription() throws SensorException
+    {
+        synchronized (sensorDescription)
+        {
+            // by default we return the static description provided in config
+            if (config.sensorML != null && config.sensorML.length() > 0)
             {
                 try
                 {
                     SMLUtils utils = new SMLUtils();
                     InputStream is = new URL(config.sensorML).openStream();
                     sensorDescription = utils.readProcess(is);
-                    lastUpdatedSensorDescription = System.currentTimeMillis() / 1000.;
                 }
                 catch (IOException e)
                 {
@@ -120,41 +138,40 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
             else
             {
                 sensorDescription = new PhysicalSystemImpl();
-                lastUpdatedSensorDescription = 0;
             }
-        }
-        
-        // add most common stuff automatically
-        sensorDescription.setUniqueIdentifier(getLocalID());    
-        
-        // append outputs only if not already defined in static doc
-        if (sensorDescription.getNumOutputs() == 0)
-        {
-            for (Entry<String, ? extends ISensorDataInterface> output: getAllOutputs().entrySet())
+            
+            // add most common stuff automatically
+            sensorDescription.setUniqueIdentifier(getLocalID());    
+            
+            // append outputs only if not already defined in static doc
+            if (sensorDescription.getNumOutputs() == 0)
             {
-                DataComponent outputDesc = output.getValue().getRecordDescription();
-                if (outputDesc == null)
-                    continue;
-                outputDesc = outputDesc.copy();
-                sensorDescription.addOutput(output.getKey(), outputDesc);
+                for (Entry<String, ? extends ISensorDataInterface> output: getAllOutputs().entrySet())
+                {
+                    DataComponent outputDesc = output.getValue().getRecordDescription();
+                    if (outputDesc == null)
+                        continue;
+                    outputDesc = outputDesc.copy();
+                    sensorDescription.addOutput(output.getKey(), outputDesc);
+                }
             }
-        }
-        
-        // append control parameters only if not already defined in static doc
-        if (sensorDescription.getNumParameters() == 0)
-        {
-            for (Entry<String, ? extends ISensorControlInterface> param: getCommandInputs().entrySet())
+            
+            // append control parameters only if not already defined in static doc
+            if (sensorDescription.getNumParameters() == 0)
             {
-                DataComponent paramDesc = param.getValue().getCommandDescription();
-                if (paramDesc == null)
-                    continue;
-                paramDesc = paramDesc.copy();
-                paramDesc.setUpdatable(true);
-                sensorDescription.addParameter(param.getKey(), paramDesc);
+                for (Entry<String, ? extends ISensorControlInterface> param: getCommandInputs().entrySet())
+                {
+                    DataComponent paramDesc = param.getValue().getCommandDescription();
+                    if (paramDesc == null)
+                        continue;
+                    paramDesc = paramDesc.copy();
+                    paramDesc.setUpdatable(true);
+                    sensorDescription.addParameter(param.getKey(), paramDesc);
+                }
             }
+            
+            lastUpdatedSensorDescription = System.currentTimeMillis() / 1000.;
         }
-        
-        return sensorDescription;
     }
 
 

@@ -15,7 +15,6 @@ Developer are Copyright (C) 2014 the Initial Developer. All Rights Reserved.
 
 package org.sensorhub.test.service.sos;
 
-import net.opengis.sensorml.v20.AbstractProcess;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.sensor.ISensorDataInterface;
 import org.sensorhub.api.sensor.SensorConfig;
@@ -60,11 +59,13 @@ public class FakeSensor extends AbstractSensorModule<SensorConfig>
     
     
     @Override
-    public AbstractProcess getCurrentSensorDescription() throws SensorException
+    protected void updateSensorDescription() throws SensorException
     {
-        AbstractProcess sml = super.getCurrentSensorDescription();
-        sml.setUniqueIdentifier("urn:sensors:mysensor:001");        
-        return sml;
+        synchronized (sensorDescription)
+        {
+            super.updateSensorDescription();
+            sensorDescription.setUniqueIdentifier("urn:sensors:mysensor:001");
+        }
     }
     
     
