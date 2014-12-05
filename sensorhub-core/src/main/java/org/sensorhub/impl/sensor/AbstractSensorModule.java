@@ -29,6 +29,7 @@ import org.sensorhub.api.sensor.ISensorControlInterface;
 import org.sensorhub.api.sensor.ISensorDataInterface;
 import org.sensorhub.api.sensor.ISensorModule;
 import org.sensorhub.api.sensor.SensorConfig;
+import org.sensorhub.api.sensor.SensorEvent;
 import org.sensorhub.api.sensor.SensorException;
 import org.sensorhub.impl.module.AbstractModule;
 import org.sensorhub.utils.MsgUtils;
@@ -54,8 +55,8 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
     private Map<String, ISensorDataInterface> obsOutputs = new HashMap<String, ISensorDataInterface>();  
     private Map<String, ISensorDataInterface> statusOutputs = new HashMap<String, ISensorDataInterface>();  
     private Map<String, ISensorControlInterface> controlInputs = new HashMap<String, ISensorControlInterface>();  
-    protected AbstractProcess sensorDescription;
-    protected double lastUpdatedSensorDescription;
+    protected AbstractProcess sensorDescription = new PhysicalSystemImpl();
+    protected double lastUpdatedSensorDescription = Double.NEGATIVE_INFINITY;
     
     
     /**
@@ -101,7 +102,7 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
     {
         synchronized (sensorDescription)
         {
-            if (sensorDescription == null)
+            if (lastUpdatedSensorDescription == Double.NEGATIVE_INFINITY)
                 updateSensorDescription();
         
             return sensorDescription;
@@ -171,6 +172,7 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
             }
             
             lastUpdatedSensorDescription = System.currentTimeMillis() / 1000.;
+            eventHandler.publishEvent(new SensorEvent(lastUpdatedSensorDescription, getLocalID(), SensorEvent.Type.SENSOR_CHANGED));
         }
     }
 
