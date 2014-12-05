@@ -383,7 +383,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
             }
             catch (Exception e)
             {
-                log.error(e);
+                log.error("Error during shutdown", e);
             }
         }
         
