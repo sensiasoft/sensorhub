@@ -172,6 +172,7 @@ public class HttpServer extends AbstractModule<HttpServerConfig>
     {
         stop();
         server = null;
+        instance = null;
     }
     
     

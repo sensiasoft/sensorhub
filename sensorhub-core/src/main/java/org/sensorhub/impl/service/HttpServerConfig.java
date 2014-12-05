@@ -54,8 +54,9 @@ public class HttpServerConfig extends ModuleConfig
 
     public HttpServerConfig()
     {
-        this.name = "HTTP Server";
         this.id = "???";
+        this.name = "HTTP Server";
+        this.moduleClass = HttpServer.class.getCanonicalName();
         this.enabled = true;
     }
     
