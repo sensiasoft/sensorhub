@@ -16,7 +16,9 @@ Developer are Copyright (C) 2014 the Initial Developer. All Rights Reserved.
 package org.sensorhub.impl.common;
 
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.List;
+import java.util.concurrent.LinkedBlockingDeque;
 import org.sensorhub.api.common.Event;
 import org.sensorhub.api.common.IEventHandler;
 import org.sensorhub.api.common.IEventListener;
@@ -24,45 +26,87 @@ import org.sensorhub.api.common.IEventListener;
 
 /**
  * <p>
- * Basic synchronous event manager
+ * Basic synchronous event manager.
+ * We still have to take care of cases of calls to register/unregister
+ * initiated synchronously (in same thread) by listeners while an event is being 
+ * dispatched. This is done by using temporary lists and committing changes that
+ * occured during the iteration only at the end of the call to publish().
+ * Likewise recursive calls to publish have to be handled as well. This is done 
+ * by accumulating events in a queue and dispatching them one by one.
  * </p>
  *
- * <p>Copyright (c) 2010</p>
+ * <p>Copyright (c) 2014</p>
  * @author Alexandre Robin
  * @since Nov 16, 2010
  */
 public class BasicEventHandler implements IEventHandler
 {
-    protected List<IEventListener> listeners = new ArrayList<IEventListener>();
+    List<IEventListener> listeners = new ArrayList<IEventListener>();
+    List<IEventListener> toDelete = new ArrayList<IEventListener>();
+    List<IEventListener> toAdd = new ArrayList<IEventListener>();
+    Deque<Event> eventQueue = new LinkedBlockingDeque<Event>();
+    boolean inPublish = false;
     
     
-    /* (non-Javadoc)
-     * @see org.sensorhub.impl.common.IEventHandler#registerListener(org.sensorhub.api.common.IEventListener)
-     */
     @Override
-    public void registerListener(IEventListener listener)
+    public synchronized void registerListener(IEventListener listener)
     {
-        listeners.add(listener);
+        if (!listeners.contains(listener))
+        {
+            // add directly or through temporary list if publishing
+            if (!inPublish)
+                listeners.add(listener);
+            else
+                toAdd.add(listener);
+        }
     }
 
 
-    /* (non-Javadoc)
-     * @see org.sensorhub.impl.common.IEventHandler#removeListener(org.sensorhub.api.common.IEventListener)
-     */
     @Override
-    public void unregisterListener(IEventListener listener)
+    public synchronized void unregisterListener(IEventListener listener)
     {
-        listeners.remove(listener);
+        // remove directly or through temporary list if publishing
+        if (!inPublish)
+            listeners.remove(listener);
+        else
+            toDelete.add(listener);
     }
     
     
-    /* (non-Javadoc)
-     * @see org.sensorhub.impl.common.IEventHandler#publishEvent(org.sensorhub.api.common.Event)
-     */
     @Override
-    public void publishEvent(Event e)
+    public synchronized void publishEvent(Event e)
     {
-        for (IEventListener listener: listeners)
-            listener.handleEvent(e);
+        // case of recursive call
+        if (inPublish)
+        {
+            eventQueue.addLast(e);
+        }
+        else
+        {        
+            inPublish = true;
+            for (IEventListener listener: listeners)
+                listener.handleEvent(e);
+            inPublish = false;
+            commitChanges();
+        }
+    }
+    
+    
+    private void commitChanges()
+    {
+        listeners.removeAll(toDelete);
+        listeners.addAll(toAdd);
+        toDelete.clear();
+        toAdd.clear();
+        
+        while (!eventQueue.isEmpty())
+            publishEvent(eventQueue.pollFirst());
+    }
+
+
+    @Override
+    public void clearAllListeners()
+    {
+        listeners.clear();        
     }
 }
