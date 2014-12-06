@@ -24,12 +24,15 @@ import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.module.IModule;
 import org.sensorhub.api.module.IModuleProvider;
 import org.sensorhub.api.module.ModuleConfig;
+import org.sensorhub.api.persistence.IBasicStorage;
 import org.sensorhub.api.persistence.IPersistenceManager;
-import org.sensorhub.api.persistence.ISensorDescriptionStorage;
 import org.sensorhub.api.persistence.IStorageModule;
 import org.sensorhub.api.persistence.StorageConfig;
 import org.sensorhub.api.persistence.StorageException;
+import org.sensorhub.api.sensor.ISensorModule;
+import org.sensorhub.impl.SensorHub;
 import org.sensorhub.impl.module.ModuleRegistry;
+import org.sensorhub.utils.MsgUtils;
 
 
 /**
@@ -101,27 +104,32 @@ public class PersistenceManagerImpl implements IPersistenceManager
         if (module instanceof IStorageModule<?>)
             return (IStorageModule<?>)module;
         else
-            return null;
+            throw new SensorHubException("Module " + MsgUtils.moduleString(module) + " is not a storage module");
     }
-
-
+    
+    
     @Override
-    public ISensorDescriptionStorage<?> getSensorDescriptionStorage() throws SensorHubException
+    public List<IBasicStorage<?>> findStorageForSensor(String sensorLocalID) throws SensorHubException
     {
-        List<ModuleConfig> storageModules = getAvailableModules();
-        for (ModuleConfig config: storageModules)
+        List<IBasicStorage<?>> sensorStorageList = new ArrayList<IBasicStorage<?>>();
+        
+        ISensorModule<?> sensorModule = SensorHub.getInstance().getSensorManager().getModuleById(sensorLocalID);
+        String sensorUID = sensorModule.getCurrentSensorDescription().getUniqueIdentifier();
+        
+        // find all basic storage modules whose data source UID is the same as the sensor UID
+        List<IStorageModule<?>> storageModules = getLoadedModules();
+        for (IStorageModule<?> module: storageModules)
         {
-            try
+            if (module instanceof IBasicStorage)
             {
-                if (ISensorDescriptionStorage.class.isAssignableFrom(Class.forName(config.moduleClass)))
-                    return (ISensorDescriptionStorage<?>)getModuleById(config.id);
-            }
-            catch (ClassNotFoundException e)
-            {
+                String dataSourceUID = ((IBasicStorage<?>) module).getLatestDataSourceDescription().getUniqueIdentifier();
+                
+                if (dataSourceUID != null && dataSourceUID.equals(sensorUID))
+                    sensorStorageList.add((IBasicStorage<?>)module);
             }
         }
         
-        throw new StorageException("No sensor description storage available");
+        return sensorStorageList;
     }
     
     
@@ -150,5 +158,4 @@ public class PersistenceManagerImpl implements IPersistenceManager
         
         throw new StorageException("No persistent storage of type " + storageClass.getSimpleName() + " available");
     }
-
 }

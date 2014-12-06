@@ -20,14 +20,14 @@ import java.util.List;
 
 /**
  * <p>
- * Interface for storing and retrieving persistent observation data
+ * Adds support for filtering by features of interest IDs
  * </p>
  *
  * <p>Copyright (c) 2010</p>
  * @author Alexandre Robin
  * @since Nov 6, 2010
  */
-public interface IObsStorage<ConfigType extends StorageConfig> extends IDataStorage<ObsKey, IObsFilter, ConfigType>
+public interface IObsStorage extends ITimeSeriesDataStore<IObsFilter>
 {    
     /**
      * @return list of fois for which observations are available on this storage

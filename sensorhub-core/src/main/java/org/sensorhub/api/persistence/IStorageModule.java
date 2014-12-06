@@ -15,6 +15,7 @@ Developer are Copyright (C) 2014 the Initial Developer. All Rights Reserved.
 
 package org.sensorhub.api.persistence;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import org.sensorhub.api.module.IModule;
@@ -27,15 +28,17 @@ public interface IStorageModule<ConfigType extends StorageConfig> extends IModul
     /**
      * Backups storage to specified output stream
      * @param os
+     * @throws IOException 
      */
-    public void backup(OutputStream os);
+    public void backup(OutputStream os) throws IOException;
 
 
     /**
      * Restores storage from backup obtained from specified input stream
      * @param is
+     * @throws IOException 
      */
-    public void restore(InputStream is);
+    public void restore(InputStream is) throws IOException;
 
 
     /**
@@ -68,7 +71,8 @@ public interface IStorageModule<ConfigType extends StorageConfig> extends IModul
     /**
      * Synchronizes storage with another storage of the same type (potentially remote)
      * @param storage
+     * @throws StorageException 
      */
-    public void sync(IStorageModule<?> storage);
+    public void sync(IStorageModule<?> storage) throws StorageException;
 
 }

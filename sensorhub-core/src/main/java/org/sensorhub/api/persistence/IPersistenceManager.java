@@ -15,6 +15,7 @@ Developer are Copyright (C) 2014 the Initial Developer. All Rights Reserved.
 
 package org.sensorhub.api.persistence;
 
+import java.util.List;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.module.IModuleManager;
 
@@ -29,11 +30,23 @@ import org.sensorhub.api.module.IModuleManager;
  * @since Nov 5, 2010
  */
 public interface IPersistenceManager extends IModuleManager<IStorageModule<?>>
-{
+{  
     
-    public ISensorDescriptionStorage<?> getSensorDescriptionStorage() throws SensorHubException;
+    /**
+     * Finds storage modules where the specified sensor data is archived
+     * @param sensorID Local ID of sensor to find existing storage for
+     * @return list of storage instances or empty list if none are found
+     * @throws SensorHubException
+     */
+    public List<? extends IBasicStorage<?>> findStorageForSensor(String sensorID) throws SensorHubException;
     
     
+    /**
+     * Gets the default config for the specified storage type
+     * @param storageClass Concrete storage class
+     * @return default config class, pre-filled with proper information
+     * @throws SensorHubException
+     */
     public StorageConfig getDefaultStorageConfig(Class<?> storageClass) throws SensorHubException;
     
 }

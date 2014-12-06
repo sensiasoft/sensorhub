@@ -17,6 +17,7 @@ package org.sensorhub.test.sensor;
 
 import java.util.ArrayList;
 import java.util.Deque;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -35,6 +36,7 @@ import org.vast.data.DataRecordImpl;
 import org.vast.data.QuantityImpl;
 import org.vast.data.TextEncodingImpl;
 import org.vast.data.TimeImpl;
+import org.vast.sweCommon.SWEConstants;
 
 
 /**
@@ -46,15 +48,16 @@ import org.vast.data.TimeImpl;
  * @author Alexandre Robin <alex.robin@sensiasoftware.com>
  * @since Sep 20, 2013
  */
-public class FakeSensorData extends AbstractSensorOutput<FakeSensor>
+public class FakeSensorData extends AbstractSensorOutput<FakeSensor> implements IFakeSensorOutput
 {
     String name;
     boolean pushEnabled;
     int maxSampleCount;
-    int count;
+    int sampleCount;
     int bufferSize;
     double samplingPeriod; // seconds
     Deque<DataBlock> dataQueue;
+    Timer timer;
     
     
     public FakeSensorData(FakeSensor sensor, String name, boolean pushEnabledFlag)
@@ -74,7 +77,9 @@ public class FakeSensorData extends AbstractSensorOutput<FakeSensor>
         this.maxSampleCount = maxSampleCount;
         
         if (pushEnabled)
-            this.eventHandler = new BasicEventHandler(); 
+            this.eventHandler = new BasicEventHandler();
+        
+        start();
     }
     
     
@@ -85,7 +90,17 @@ public class FakeSensorData extends AbstractSensorOutput<FakeSensor>
     }
 
 
-    protected void start()
+    public int getMaxSampleCount()
+    {
+        return maxSampleCount;
+    }
+
+
+    /* (non-Javadoc)
+     * @see org.sensorhub.test.sensor.IFakeSensorOutput#start()
+     */
+    @Override
+    public void start()
     {
         // start data production timer
         TimerTask sensorTask = new TimerTask()
@@ -93,20 +108,27 @@ public class FakeSensorData extends AbstractSensorOutput<FakeSensor>
             @Override
             public void run()
             {
+                // safety to make sure we don't output more samples than requested
+                // cancel does not seem to be taken into account early enough with high rates
+                if (sampleCount >= maxSampleCount)
+                    return;
+                
                 synchronized (dataQueue)
                 {
+                    // miss random samples 20% of the time
                     if (Math.random() > 0.8)
                         return;
                     
                     double time = System.currentTimeMillis() / 1000.;
                     DataBlock data = new DataBlockDouble(4);
                     data.setDoubleValue(0, time);
-                    data.setDoubleValue(1, 1.0 + Math.random()*0.01);
-                    data.setDoubleValue(2, 2.0 + Math.random()*0.01);
-                    data.setDoubleValue(3, 3.0 + Math.random()*0.01);
-                    
-                    count++;                    
-                    if (count >= maxSampleCount)
+                    data.setDoubleValue(1, 1.0 + ((int)(Math.random()*100))/1000.);
+                    data.setDoubleValue(2, 2.0 + ((int)(Math.random()*100))/1000.);
+                    data.setDoubleValue(3, 3.0 + ((int)(Math.random()*100))/1000.);
+                               
+                    sampleCount++;
+                    System.out.println("Record #" + sampleCount + " generated");
+                    if (sampleCount >= maxSampleCount)
                         cancel();
                     
                     if (dataQueue.size() == bufferSize)
@@ -119,15 +141,26 @@ public class FakeSensorData extends AbstractSensorOutput<FakeSensor>
             }                
         };
         
-        Timer timer = new Timer(name, true);
-        timer.scheduleAtFixedRate(sensorTask, 0, (long)(samplingPeriod * 1000));
+        timer = new Timer(name, true);
+        timer.scheduleAtFixedRate(sensorTask, 1000, (long)(samplingPeriod * 1000)); // keep 1s delay otherwise sensor starts to early during some tests
+    }
+    
+    
+    /* (non-Javadoc)
+     * @see org.sensorhub.test.sensor.IFakeSensorOutput#stop()
+     */
+    @Override
+    public void stop()
+    {
+        timer.cancel();
+        timer.purge();
     }
     
     
     @Override
     public boolean isEnabled()
     {
-        if (count >= maxSampleCount)
+        if (sampleCount >= maxSampleCount)
             return false;
         else
             return true;
@@ -163,7 +196,7 @@ public class FakeSensorData extends AbstractSensorOutput<FakeSensor>
         record.setDefinition("urn:blabla:weatherData");
         
         Time time = new TimeImpl();
-        time.setDefinition("urn:blabla:samplingTime");
+        time.setDefinition(SWEConstants.DEF_SAMPLING_TIME);
         time.getUom().setHref(Time.ISO_TIME_UNIT);
         record.addComponent("time", time);
         
@@ -198,7 +231,7 @@ public class FakeSensorData extends AbstractSensorOutput<FakeSensor>
     {
         synchronized (dataQueue)
         {
-            return dataQueue.peek();
+            return dataQueue.peekLast();
         }
     }
     
@@ -208,7 +241,10 @@ public class FakeSensorData extends AbstractSensorOutput<FakeSensor>
     {
         synchronized (dataQueue)
         {
-            return dataQueue.peek().getDoubleValue(0);
+            if (dataQueue.isEmpty())
+                return Double.NEGATIVE_INFINITY;
+            
+            return dataQueue.peekLast().getDoubleValue(0);
         }
     }
 
@@ -235,7 +271,7 @@ public class FakeSensorData extends AbstractSensorOutput<FakeSensor>
     {
         synchronized (dataQueue)
         {
-            List<DataBlock> records = new ArrayList<DataBlock>();
+            List<DataBlock> records = new ArrayList<DataBlock>(maxRecords);
             
             if (clear)
             {
@@ -244,8 +280,9 @@ public class FakeSensorData extends AbstractSensorOutput<FakeSensor>
             }
             else
             {
-                for (int i=0; i<maxRecords; i++)
-                    records.add(dataQueue.peek());
+                Iterator<DataBlock> it = dataQueue.descendingIterator();
+                for (int i=0; it.hasNext() && i<maxRecords; i++)
+                    records.add(0, it.next());
             }
             
             return records;

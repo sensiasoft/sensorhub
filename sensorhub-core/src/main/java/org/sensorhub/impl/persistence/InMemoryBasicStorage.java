@@ -18,247 +18,152 @@ package org.sensorhub.impl.persistence;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Map;
+import net.opengis.gml.v32.AbstractTimeGeometricPrimitive;
+import net.opengis.gml.v32.TimeInstant;
+import net.opengis.gml.v32.TimePeriod;
+import net.opengis.sensorml.v20.AbstractProcess;
 import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataComponent;
+import net.opengis.swe.v20.DataEncoding;
 import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.common.SensorHubException;
-import org.sensorhub.api.module.IModuleStateLoader;
-import org.sensorhub.api.module.IModuleStateSaver;
 import org.sensorhub.api.persistence.DataKey;
 import org.sensorhub.api.persistence.IBasicStorage;
 import org.sensorhub.api.persistence.IDataFilter;
 import org.sensorhub.api.persistence.IDataRecord;
 import org.sensorhub.api.persistence.IStorageModule;
+import org.sensorhub.api.persistence.ITimeSeriesDataStore;
 import org.sensorhub.api.persistence.StorageConfig;
+import org.sensorhub.api.persistence.StorageDataEvent;
 import org.sensorhub.api.persistence.StorageException;
+import org.sensorhub.impl.common.BasicEventHandler;
+import org.sensorhub.impl.module.AbstractModule;
 
 
 /**
  * <p>
- * In-memory storage for testing sensor storage helper
+ * In-memory basic storage implementation.
+ * This is used mainly for test purposes but could perhaps be improved to be
+ * used as a local memory cache of a remote storage.
  * </p>
  *
  * <p>Copyright (c) 2013</p>
  * @author Alexandre Robin <alex.robin@sensiasoftware.com>
  * @since Nov 8, 2013
  */
-public class InMemoryBasicStorage implements IBasicStorage<StorageConfig>
+public class InMemoryBasicStorage extends AbstractModule<StorageConfig> implements IBasicStorage<StorageConfig>
 {
-    StorageConfig config;
-    DataComponent dataDescription;
-    List<IDataRecord<DataKey>> recordList;
+    Map<String, TimeSeriesImpl> dataStores = new LinkedHashMap<String, TimeSeriesImpl>();
+    List<AbstractProcess> dataSourceDescriptions = new ArrayList<AbstractProcess>();
     
     
-    public class DBRecord implements IDataRecord<DataKey>
+    public InMemoryBasicStorage()
     {
-        DataKey key;
-        DataBlock data;
-        
-        
-        public DBRecord(DataKey key, DataBlock data)
+    }
+    
+    
+    @Override
+    public void start() throws SensorHubException
+    {
+    }
+
+
+    @Override
+    public void stop() throws SensorHubException
+    {                
+    }
+
+
+    @Override
+    public AbstractProcess getLatestDataSourceDescription()
+    {
+        int historySize = dataSourceDescriptions.size();
+        return dataSourceDescriptions.get(historySize - 1);
+    }
+
+
+    @Override
+    public List<AbstractProcess> getDataSourceDescriptionHistory()
+    {
+        return Collections.unmodifiableList(dataSourceDescriptions);
+    }
+
+
+    @Override
+    public AbstractProcess getDataSourceDescriptionAtTime(double time)
+    {
+        for (AbstractProcess sml: dataSourceDescriptions)
         {
-            this.key = key;
-            this.data = data;
-        }
-
-
-        @Override
-        public DataKey getKey()
-        {
-            return key;
-        }
-        
-
-        @Override
-        public DataBlock getData()
-        {
-            return data;
-        }
-
-    }
-    
-    
-    @Override
-    public void open() throws StorageException
-    {
-        recordList = new LinkedList<IDataRecord<DataKey>>();
-    }
-
-
-    @Override
-    public void close() throws StorageException
-    {        
-    }
-
-
-    @Override
-    public DataComponent getRecordDescription()
-    {
-        return dataDescription;
-    }
-    
-    
-    @Override
-    public int getNumRecords()
-    {
-        return recordList.size();
-    }
-    
-    
-    @Override
-    public List<String> getProducerIDs()
-    {
-        List<String> ids = new ArrayList<String>();
-        
-        Iterator<IDataRecord<DataKey>> it = recordList.iterator();
-        while (it.hasNext())
-        {
-            String producerID = it.next().getKey().producerID;
-            if (producerID != null)
-                ids.add(producerID);
-        }
-        
-        return ids;
-    }
-
-
-    @Override
-    public long[] getDataTimeRange()
-    {
-        long[] period = new long[] { Long.MAX_VALUE, Long.MIN_VALUE};
-        
-        Iterator<IDataRecord<DataKey>> it = recordList.iterator();
-        while (it.hasNext())
-        {
-            long timeStamp = it.next().getKey().timeStamp;
-            if (timeStamp < period[0])
-                period[0] = timeStamp;
-            if (timeStamp > period[1])
-                period[1] = timeStamp;
-        }
-        
-        return period;
-    }
-
-
-    @Override
-    public long[] getTimeRangeForProducer(String selectedProducerID)
-    {
-        long[] period = new long[] { Long.MAX_VALUE, Long.MIN_VALUE};
-        
-        Iterator<IDataRecord<DataKey>> it = recordList.iterator();
-        while (it.hasNext())
-        {
-            IDataRecord<DataKey> rec = it.next();
-            String producerID = rec.getKey().producerID;
-            long timeStamp = rec.getKey().timeStamp;
+            AbstractTimeGeometricPrimitive validTime = sml.getValidTimeList().get(0);
             
-            if (producerID != null && producerID.equals(selectedProducerID))
+            if (validTime instanceof TimeInstant)
             {
-                if (timeStamp < period[0])
-                    period[0] = timeStamp;
-                if (timeStamp > period[1])
-                    period[1] = timeStamp;
+                if (time == ((TimeInstant)validTime).getTimePosition().getDecimalValue())
+                    return sml;
+            }
+            else if (validTime instanceof TimePeriod)
+            {
+                if (time >= ((TimePeriod)validTime).getBeginPosition().getDecimalValue() &&
+                    time <= ((TimePeriod)validTime).getEndPosition().getDecimalValue())
+                    return sml;
             }
         }
         
-        return period;
-    }
-
-
-    @Override
-    public DataKey store(DataKey key, DataBlock data)
-    {
-        recordList.add(new DBRecord(key, data));
-        return key;
-    }
-
-
-    @Override
-    public DataBlock getDataBlock(long id)
-    {
-        IDataRecord<?> rec = getRecord(id);
-        return rec.getData();
-    }
-
-    
-    @Override
-    public List<DataBlock> getDataBlocks(IDataFilter filter)
-    {
-        // TODO Auto-generated method stub
         return null;
     }
 
 
     @Override
-    public Iterator<DataBlock> getDataBlockIterator(IDataFilter filter)
+    public void storeDataSourceDescription(AbstractProcess process)
     {
-        // TODO Auto-generated method stub
-        return null;
+        dataSourceDescriptions.add(process);        
     }
 
 
     @Override
-    public IDataRecord<DataKey> getRecord(long id)
+    public void updateDataSourceDescription(AbstractProcess process)
     {
-        Iterator<IDataRecord<DataKey>> it = recordList.iterator();
-        while (it.hasNext())
-        {
-            IDataRecord<DataKey> rec = it.next();
-            if (rec.getKey().recordID == id)
-                return rec;
-        }
-        
-        return null;
+        int index = dataSourceDescriptions.indexOf(process);
+        dataSourceDescriptions.set(index, process);
     }
 
 
     @Override
-    public List<IDataRecord<DataKey>> getRecords(IDataFilter filter)
+    public void removeDataSourceDescription(double time)
     {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    
-    @Override
-    public Iterator<IDataRecord<DataKey>> getRecordIterator(IDataFilter filter)
-    {
-        // TODO Auto-generated method stub
-        return null;
+        AbstractProcess process = getDataSourceDescriptionAtTime(time);
+        if (process != null)
+            dataSourceDescriptions.remove(process);
     }
 
 
     @Override
-    public DataKey update(long id, DataKey key, DataBlock data)
+    public void removeDataSourceDescriptionHistory()
     {
-        // TODO Auto-generated method stub
-        return null;
+        dataSourceDescriptions.clear();        
     }
 
 
     @Override
-    public void remove(long id)
+    public Map<String, ? extends ITimeSeriesDataStore<IDataFilter>> getDataStores()
     {
-        ListIterator<IDataRecord<DataKey>> it = recordList.listIterator();
-        while (it.hasNext())
-        {
-            IDataRecord<DataKey> rec = it.next();
-            if (rec.getKey().recordID == id)
-                it.remove();
-        }
+        return Collections.unmodifiableMap(dataStores);
     }
 
 
     @Override
-    public int remove(IDataFilter filter)
+    public ITimeSeriesDataStore<IDataFilter> addNewDataStore(String name, DataComponent recordStructure, DataEncoding recommendedEncoding)
     {
-        // TODO Auto-generated method stub
-        return 0;
+        TimeSeriesImpl timeSeries = new TimeSeriesImpl(recordStructure.copy(), recommendedEncoding);
+        dataStores.put(name, timeSeries);
+        return timeSeries;
     }
 
 
@@ -303,96 +208,277 @@ public class InMemoryBasicStorage implements IBasicStorage<StorageConfig>
     public void rollback()
     {
     }
-
-
-    @Override
-    public boolean isEnabled()
-    {
-        return config.enabled;
-    }
-
-
-    @Override
-    public void init(StorageConfig config) throws SensorHubException
-    {
-        this.config = config;        
-    }
-
-
-    @Override
-    public void updateConfig(StorageConfig config) throws SensorHubException
-    {
-        this.config = config;
-    }
-    
-    
-    @Override
-    public void start() throws SensorHubException
-    {        
-        open();
-    }
-    
-    
-    @Override
-    public void stop() throws SensorHubException
-    {        
-        close();
-    }
-
-
-    @Override
-    public StorageConfig getConfiguration()
-    {
-        return config;
-    }
-
-
-    @Override
-    public String getName()
-    {
-        return config.name;
-    }
-
-
-    @Override
-    public String getLocalID()
-    {
-        return config.id;
-    }
-
-
-    @Override
-    public void saveState(IModuleStateSaver saver) throws SensorHubException
-    {
-        // TODO Auto-generated method stub
-    }
-
-
-    @Override
-    public void loadState(IModuleStateLoader loader) throws SensorHubException
-    {
-        // TODO Auto-generated method stub
-    }
     
     
     @Override
     public void cleanup() throws StorageException
     {
-        recordList.clear();
+        dataStores.clear();
+        dataSourceDescriptions.clear();
     }    
 
 
-    @Override
-    public void registerListener(IEventListener listener)
+    /*
+     * Implementation of individual time series {key,record} pair
+     */
+    private class DBRecord implements IDataRecord<DataKey>
     {
-        // TODO Auto-generated method stub
+        DataKey key;
+        DataBlock data;
+        
+        public DBRecord(DataKey key, DataBlock data)
+        {
+            this.key = key;
+            this.data = data;
+        }
+
+        @Override
+        public final DataKey getKey()
+        {
+            return key;
+        }
+        
+        @Override
+        public final DataBlock getData()
+        {
+            return data;
+        }
+        
+        protected final boolean matches(DataKey key)
+        {
+            return ( (key.producerID == null || key.producerID.equals(this.key.producerID)) &&
+                 (key.timeStamp == Double.NaN || (key.timeStamp == this.key.timeStamp)) );
+        }
+        
+        protected final boolean matches(IDataFilter filter)
+        {
+            return ( (filter.getProducerID() == null || filter.getProducerID().equals(this.key.producerID)) &&
+                 (filter.getTimeStampRange() == null || (filter.getTimeStampRange()[0] <= this.key.timeStamp && filter.getTimeStampRange()[1] >= this.key.timeStamp)) );
+        }
     }
-
-
-    @Override
-    public void unregisterListener(IEventListener listener)
+    
+    
+    /*
+     * Implementation of an individual time series data store
+     */
+    public class TimeSeriesImpl implements ITimeSeriesDataStore<IDataFilter>
     {
-        // TODO Auto-generated method stub
-    }
+        List<DBRecord> recordList = new LinkedList<DBRecord>();;
+        DataComponent recordDescription;
+        DataEncoding recommendedEncoding;
+        BasicEventHandler eventHandler;
+        
+        TimeSeriesImpl(DataComponent recordDescription, DataEncoding recommendedEncoding)
+        {
+            this.recordDescription = recordDescription;
+            this.recommendedEncoding = recommendedEncoding;
+            this.eventHandler = new BasicEventHandler();
+        }
+        
+        @Override
+        public IStorageModule<?> getParentStorage()
+        {
+            return InMemoryBasicStorage.this;
+        }
 
+        @Override
+        public int getNumRecords()
+        {
+            return recordList.size();
+        }        
+        
+        @Override
+        public DataComponent getRecordDescription()
+        {
+            return recordDescription;
+        }
+        
+        @Override
+        public DataEncoding getRecommendedEncoding()
+        {
+            return recommendedEncoding;
+        }
+        
+        @Override
+        public DataBlock getDataBlock(DataKey key)
+        {
+            IDataRecord<?> rec = getRecord(key);
+            return rec.getData();
+        }
+
+        @Override
+        public Iterator<DataBlock> getDataBlockIterator(IDataFilter filter)
+        {
+            final Iterator<DBRecord> it = getRecordIterator(filter);
+            return new Iterator<DataBlock>() {
+
+                public final boolean hasNext()
+                {
+                    return it.hasNext();
+                }
+
+                public final DataBlock next()
+                {
+                    return it.next().getData();
+                }
+
+                public final void remove()
+                {
+                    it.remove();                    
+                }                
+            };
+        }
+
+        @Override
+        public IDataRecord<DataKey> getRecord(DataKey key)
+        {
+            Iterator<DBRecord> it = recordList.iterator();
+            while (it.hasNext())
+            {
+                DBRecord rec = it.next();
+                if (rec.matches(key))
+                    return rec;
+            }
+            
+            return null;
+        }
+
+        @Override
+        public int getNumMatchingRecords(IDataFilter filter)
+        {
+            final Iterator<DBRecord> it = getRecordIterator(filter);
+            int matchCount = 0;
+            while (it.hasNext())
+            {
+                if (it.next().matches(filter))
+                    matchCount++;
+            }
+            return matchCount;
+        }
+        
+        @Override
+        public Iterator<DBRecord> getRecordIterator(final IDataFilter filter)
+        {
+            final Iterator<DBRecord> it = recordList.iterator();
+            return new Iterator<DBRecord>() {
+                DBRecord nextRec;
+                
+                public final boolean hasNext()
+                {
+                    nextRec = fetchNext();
+                    return (nextRec != null);
+                }
+
+                public final DBRecord next()
+                {
+                    if (nextRec != null)
+                    {
+                        // get already fetched record and clear it
+                        DBRecord rec = nextRec;
+                        nextRec = null;
+                        return rec;
+                    }
+                    
+                    return fetchNext();
+                }
+                
+                protected final DBRecord fetchNext()
+                {
+                    while (it.hasNext())
+                    {
+                        DBRecord rec = it.next();
+                        if (rec.matches(filter))
+                            return rec;
+                    }
+                    
+                    return null;
+                }
+
+                public final void remove()
+                {
+                    it.remove();                    
+                }                
+            };
+        }
+
+        @Override
+        public DataKey store(DataKey key, DataBlock data)
+        {
+            recordList.add(new DBRecord(key, data));
+            eventHandler.publishEvent(new StorageDataEvent(System.currentTimeMillis(), this, data));
+            return key;
+        }
+
+        @Override
+        public void update(DataKey key, DataBlock data)
+        {
+            ListIterator<DBRecord> it = recordList.listIterator();
+            while (it.hasNext())
+            {
+                DBRecord rec = it.next();                
+                if (rec.matches(key))
+                    rec.data = data;
+            }
+        }
+
+        @Override
+        public void remove(DataKey key)
+        {
+            ListIterator<DBRecord> it = recordList.listIterator();
+            while (it.hasNext())
+            {
+                DBRecord rec = it.next();                
+                if (rec.matches(key))
+                    it.remove();
+            }
+        }
+
+        @Override
+        public int remove(IDataFilter filter)
+        {
+            ListIterator<DBRecord> it = recordList.listIterator();
+            int count = 0;
+            while (it.hasNext())
+            {
+                DBRecord rec = it.next();
+                if (rec.matches(filter))
+                {
+                    it.remove();
+                    count++;
+                }
+            }
+            
+            return count;
+        }
+        
+        @Override
+        public double[] getDataTimeRange()
+        {
+            double[] period = new double[] { Long.MAX_VALUE, Long.MIN_VALUE};
+            
+            Iterator<DBRecord> it = recordList.iterator();
+            while (it.hasNext())
+            {
+                double timeStamp = it.next().getKey().timeStamp;
+                if (timeStamp < period[0])
+                    period[0] = timeStamp;
+                if (timeStamp > period[1])
+                    period[1] = timeStamp;
+            }
+            
+            return period;
+        }
+
+        @Override
+        public void registerListener(IEventListener listener)
+        {
+            eventHandler.registerListener(listener);
+        }
+
+        @Override
+        public void unregisterListener(IEventListener listener)
+        {
+            eventHandler.unregisterListener(listener);
+        }
+    }
 }

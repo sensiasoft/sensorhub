@@ -13,7 +13,7 @@ Developer are Copyright (C) 2014 the Initial Developer. All Rights Reserved.
  
 ******************************* END LICENSE BLOCK ***************************/
 
-package org.sensorhub.api.sensor;
+package org.sensorhub.impl.persistence;
 
 import org.sensorhub.api.module.ModuleConfig;
 
@@ -39,4 +39,11 @@ public class SensorStorageConfig extends ModuleConfig
      * Names of sensor outputs to save to storage
      */
     public String[] selectedOutputs;
+    
+    
+    public SensorStorageConfig()
+    {
+        // set default associated implementation
+        this.moduleClass = SensorStorageHelper.class.getCanonicalName();
+    }
 }

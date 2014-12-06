@@ -17,7 +17,6 @@ package org.sensorhub.api.persistence;
 
 import java.util.List;
 import net.opengis.sensorml.v20.AbstractProcess;
-import org.sensorhub.api.common.IEventProducer;
 
 
 /**
@@ -30,7 +29,7 @@ import org.sensorhub.api.common.IEventProducer;
  * @param <ConfigType> Configuration class
  * @since March 1, 2014
  */
-public interface ISensorDescriptionStorage<ConfigType extends StorageConfig> extends IStorageModule<ConfigType>, IEventProducer
+public interface IProcedureStorage<ConfigType extends StorageConfig> extends IStorageModule<ConfigType>
 {    
     
 	/**

@@ -16,26 +16,32 @@ Developer are Copyright (C) 2014 the Initial Developer. All Rights Reserved.
 package org.sensorhub.api.persistence;
 
 import java.util.Iterator;
-import java.util.List;
 import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataComponent;
+import net.opengis.swe.v20.DataEncoding;
 import org.sensorhub.api.common.IEventProducer;
 
 
 /**
  * <p>
- * Base interface for all data storage implementations
+ * Base interface for all record storage implementations
  * </p>
  *
  * <p>Copyright (c) 2010</p>
  * @author Alexandre Robin
  * @param <KeyType> Type of record key
  * @param <FilterType> Type of record-filter object
- * @param <ConfigType> Type of storage config
  * @since Nov 6, 2010
  */
-public interface IDataStorage<KeyType extends DataKey, FilterType extends IDataFilter, ConfigType extends StorageConfig> extends IStorageModule<ConfigType>, IEventProducer
+public interface IRecordDataStore<KeyType extends DataKey, FilterType extends IDataFilter> extends IEventProducer
 {	
+    
+    /**
+     * @return parent storage instance
+     */
+    public IStorageModule<?> getParentStorage();
+    
+    
     /**
      * @return number of records contained in this storage
      */
@@ -49,35 +55,25 @@ public interface IDataStorage<KeyType extends DataKey, FilterType extends IDataF
 	
 	
 	/**
-     * Retrieves raw data block with the specified id
-     * @param id
-     * @return data block or null if no record with the specified id were found
+     * @return recommended encoding for records contained in this storage
      */
-    public DataBlock getDataBlock(long id);
-    
-    
-	/**
-	 * Retrieves record with the specified id
-	 * @param id record ID
-	 * @return record or null if no record with the specified id were found
-	 */
-	public IDataRecord<KeyType> getRecord(long id);
+    public DataEncoding getRecommendedEncoding();
 	
 	
 	/**
-     * Retrieves raw data blocks matching filtering criteria from storage
-     * @param filter
-     * @return a list of data blocks matching the filter
+     * Retrieves raw data block with the specified key
+     * @param key Record key
+     * @return data block or null if no record with the specified key was found
      */
-    public List<DataBlock> getDataBlocks(FilterType filter);
+    public DataBlock getDataBlock(KeyType key);
     
     
 	/**
-	 * Retrieves record matching filtering criteria from storage
-	 * @param filter filtering parameters
-	 * @return a list of records matching the filter
+	 * Retrieves record with the specified key
+	 * @param key record key
+	 * @return record or null if no record with the specified key was found
 	 */
-	public List<IDataRecord<KeyType>> getRecords(FilterType filter);
+	public IDataRecord<KeyType> getRecord(KeyType key);
 	
 	
 	/**
@@ -93,7 +89,19 @@ public interface IDataStorage<KeyType extends DataKey, FilterType extends IDataF
 	 * @param filter filtering parameters
 	 * @return an iterator among records matching the filter
 	 */
-	public Iterator<IDataRecord<KeyType>> getRecordIterator(FilterType filter);
+	public Iterator<? extends IDataRecord<KeyType>> getRecordIterator(FilterType filter);
+	
+	
+	/**
+	 * Computes the (potentially approximate) number of records matching the given filter.
+	 * Since the returned value can be approximate and the number of matching records can
+	 * change before or even during the actual call to {@link #getRecordIterator(IDataFilter)},
+	 * the exact number of records can only be obtained by counting the number of records
+	 * returned by the iterator next() function.
+	 * @param filter filtering parameters
+	 * @return number of matching records
+	 */
+	public int getNumMatchingRecords(FilterType filter);
 	
 	
 	/**
@@ -106,13 +114,18 @@ public interface IDataStorage<KeyType extends DataKey, FilterType extends IDataF
     
     
 	/**
-     * Updates record with specified id with new key and data
-     * @param id id of record to update
-     * @param key new key for updated record
+     * Updates record with specified key with new data
+     * @param key key of record to update
      * @param data new data block to assign to the record
-     * @return updated data key (containing auto-generated id and time stamp if non was provided)
      */
-    public DataKey update(long id, KeyType key, DataBlock data);
+    public void update(KeyType key, DataBlock data);
+    
+    
+    /**
+     * Removes record with the specified key
+     * @param key record key
+     */
+    public void remove(KeyType key);
     
     
 	/**
@@ -121,12 +134,5 @@ public interface IDataStorage<KeyType extends DataKey, FilterType extends IDataF
      * @return number of deleted records
      */
     public int remove(FilterType filter);
-	
-    
-    /**
-     * Removes record with the specified id
-     * @param id recor ID
-     */
-    public abstract void remove(long id);
     
 }

@@ -16,10 +16,12 @@ Developer are Copyright (C) 2014 the Initial Developer. All Rights Reserved.
 package org.sensorhub.impl.service.sos;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.BlockingDeque;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.TimeUnit;
 import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataEncoding;
@@ -27,9 +29,12 @@ import org.sensorhub.api.common.Event;
 import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.sensor.ISensorDataInterface;
 import org.sensorhub.api.sensor.ISensorModule;
+import org.sensorhub.api.sensor.SensorDataEvent;
 import org.sensorhub.api.sensor.SensorEvent;
 import org.sensorhub.api.sensor.SensorEvent.Type;
 import org.sensorhub.api.sensor.SensorException;
+import org.sensorhub.api.service.ServiceException;
+import org.sensorhub.utils.MsgUtils;
 import org.vast.data.DataIterator;
 import org.vast.ogc.def.DefinitionRef;
 import org.vast.ogc.gml.FeatureRef;
@@ -38,6 +43,7 @@ import org.vast.ogc.om.ObservationImpl;
 import org.vast.ogc.om.ProcedureRef;
 import org.vast.ows.server.SOSDataFilter;
 import org.vast.ows.sos.ISOSDataProvider;
+import org.vast.sweCommon.SWEConstants;
 import org.vast.util.TimeExtent;
 
 
@@ -55,59 +61,92 @@ public class SensorDataProvider implements ISOSDataProvider, IEventListener
 {
     ISensorModule<?> sensor;
     List<ISensorDataInterface> dataSources;
+    BlockingDeque<SensorDataEvent> eventQueue;
     List<Timer> pollTimers;
-    ISensorDataInterface nextInterface;
-        
+    long timeOut;
     
-    public SensorDataProvider(ISensorModule<?> srcSensor, SOSDataFilter filter) throws SensorException
+    SensorDataEvent lastDataEvent;
+    int nextEventRecordIndex = 0;
+            
+    
+    public SensorDataProvider(ISensorModule<?> srcSensor, SOSDataFilter filter) throws ServiceException
     {
         this.sensor = srcSensor;
         this.dataSources = new ArrayList<ISensorDataInterface>();
+        this.eventQueue = new LinkedBlockingDeque<SensorDataEvent>();
         this.pollTimers = new ArrayList<Timer>();
         
-        // loop through all outputs connect to the ones containing observables we need
-        for (final ISensorDataInterface outputInterface: sensor.getAllOutputs().values())
+        // get list of desired sensor outputs
+        try
         {
-            // skip if disabled
-            if (!outputInterface.isEnabled())
-                continue;
-            
-            // keep it if we can find one of the observables
-            DataIterator it = new DataIterator(outputInterface.getRecordDescription());
-            while (it.hasNext())
+            // loop through all outputs and connect to the ones containing observables we need
+            for (ISensorDataInterface outputInterface: sensor.getAllOutputs().values())
             {
-                String defUri = (String)it.next().getDefinition();
-                if (filter.getObservables().contains(defUri))
+                // skip if disabled
+                if (!outputInterface.isEnabled())
+                    continue;
+                
+                // keep it if we can find one of the observables
+                DataIterator it = new DataIterator(outputInterface.getRecordDescription());
+                while (it.hasNext())
                 {
-                    dataSources.add(outputInterface);
-                    break;
+                    String defUri = (String)it.next().getDefinition();
+                    if (filter.getObservables().contains(defUri))
+                    {
+                        // set to time out if no data is received after 10 sampling periods. Is this good?
+                        timeOut = (long)(outputInterface.getAverageSamplingPeriod() * 10);
+                        dataSources.add(outputInterface);
+                        
+                        // break for now since we support only requesting data from one output at a time
+                        // TODO support case of multiple outputs since it is technically possible with GetObservation
+                        break; 
+                    }
                 }
             }
-            
+        }
+        catch (SensorException e)
+        {
+            throw new ServiceException("Error while fetching output description for sensor " + MsgUtils.moduleString(sensor), e);
+        }
+        
+        // if everything went well listen or poll sensor outputs
+        for (final ISensorDataInterface outputInterface: dataSources)
+        {
             // register listener if push is supported
             if (outputInterface.isPushSupported())
-            {
                 outputInterface.registerListener(this);
-            }
-            
+                        
             // otherwise setup timer task to poll regularly
-            // poll at twice the sampling rate
             else
             {
-                final Object lock = this;
                 TimerTask pollTask = new TimerTask()
                 {
+                    double lastRecordTime = Double.NEGATIVE_INFINITY;
+                    
                     @Override
                     public void run()
                     {
-                        synchronized (lock)
+                        double time = outputInterface.getLatestRecordTime();
+                        
+                        // wait until a new record is available
+                        if (time > lastRecordTime)
                         {
-                            nextInterface = outputInterface;
-                            lock.notifyAll();
-                        }                        
+                            try
+                            {
+                                // add event to queue to simulate push case
+                                DataBlock data = outputInterface.getLatestRecord();                            
+                                eventQueue.offerLast(new SensorDataEvent(time, outputInterface, data));
+                                lastRecordTime = time;
+                            }
+                            catch (SensorException e)
+                            {
+                                e.printStackTrace();
+                            } 
+                        }
                     }                
                 };
                 
+                // poll at twice the sampling rate
                 Timer timer = new Timer(sensor.getName() + " Polling", true);
                 timer.scheduleAtFixedRate(pollTask, 0, (long)(outputInterface.getAverageSamplingPeriod() * 500.));
             }
@@ -122,13 +161,28 @@ public class SensorDataProvider implements ISOSDataProvider, IEventListener
         if (result == null)
             return null;
         
-        // generate resultTime as now
-        TimeExtent resultTime = new TimeExtent();
-        resultTime.setBaseTime(new Date().getTime()/1000.);
+        // get phenomenon time from record 'SamplingTime' if present
+        // otherwise use current time
+        double samplingTime = System.currentTimeMillis()/1000.;
+        for (int i=0; i<result.getComponentCount(); i++)
+        {
+            DataComponent comp = result.getComponent(i);
+            if (comp.isSetDefinition())
+            {
+                String def = comp.getDefinition();
+                if (def.equals(SWEConstants.DEF_SAMPLING_TIME))
+                {
+                    samplingTime = comp.getData().getDoubleValue();
+                }
+            }
+        }
         
-        // TODO extract phenomenon time from record 'SamplingTime'
         TimeExtent phenTime = new TimeExtent();
-        phenTime.setBaseTime(new Date().getTime()/1000.);
+        phenTime.setBaseTime(samplingTime);
+        
+        // use same value for resultTime for now
+        TimeExtent resultTime = new TimeExtent();
+        resultTime.setBaseTime(samplingTime);        
         
         // create observation object
         IObservation obs = new ObservationImpl();
@@ -142,52 +196,11 @@ public class SensorDataProvider implements ISOSDataProvider, IEventListener
         return obs;
     }
     
-
-    @Override
-    public DataBlock getNextResultRecord() throws SensorException
-    {
-        return getNextDataBlock();
-    }
-    
-
-    @Override
-    public DataComponent getResultStructure() throws SensorException
-    {
-        // TODO generate choice if request includes several outputs
-        // not possible in core SOS because only one observed property can be requested at a time
-        
-        return dataSources.get(0).getRecordDescription();
-    }
-    
-
-    @Override
-    public DataEncoding getDefaultResultEncoding() throws Exception
-    {
-        return dataSources.get(0).getRecommendedEncoding();
-    }
-
-
-    private DataBlock getNextDataBlock() throws SensorException
-    {
-        DataBlock data = null;
-        
-        if (!hasMoreData())
-            return null;
-        
-        while (data == null)
-        {
-            waitForNextObs();
-            data = nextInterface.getLatestRecord();
-        }
-        
-        return data;
-    }
-    
     
     private DataComponent getNextComponent() throws SensorException
     {
-        DataBlock data = null;
-        if ((data = getNextDataBlock()) == null)
+        DataBlock data = getNextResultRecord();
+        if (data == null)
             return null;
         
         DataComponent copyComponent = getResultStructure().copy();
@@ -195,20 +208,40 @@ public class SensorDataProvider implements ISOSDataProvider, IEventListener
         return copyComponent;
     }
     
-    
-    private synchronized void waitForNextObs()
+
+    @Override
+    public DataBlock getNextResultRecord() throws SensorException
     {
+        if (!hasMoreData())
+            return null;
+        
         try
         {
-            do { this.wait(); }
-            while (nextInterface == null);
+            // only poll next event from queue once we have returned all records associated to last event
+            if (lastDataEvent == null || nextEventRecordIndex >= lastDataEvent.getRecords().length)
+            {
+                lastDataEvent = eventQueue.pollFirst(timeOut, TimeUnit.SECONDS);
+                if (lastDataEvent == null)
+                    return null;
+                
+                nextEventRecordIndex = 0;
+            }
+            
+            return lastDataEvent.getRecords()[nextEventRecordIndex++];
+            
+            // TODO add choice token value if request includes several outputs
         }
         catch (InterruptedException e)
         {
+            return null;
         }
     }
     
     
+    /*
+     * For real-time streams, more data is always available unless
+     * sensor is disabled, disconnected or all sensor outputs are disabled
+     */
     private boolean hasMoreData()
     {
         if (!sensor.isEnabled() || !sensor.isConnected())
@@ -228,17 +261,33 @@ public class SensorDataProvider implements ISOSDataProvider, IEventListener
     
 
     @Override
+    public DataComponent getResultStructure() throws SensorException
+    {
+        // TODO generate choice if request includes several outputs
+        
+        return dataSources.get(0).getRecordDescription();
+    }
+    
+
+    @Override
+    public DataEncoding getDefaultResultEncoding() throws Exception
+    {
+        return dataSources.get(0).getRecommendedEncoding();
+    }
+    
+    
+    @Override
     public void handleEvent(Event e)
     {
         if (e instanceof SensorEvent)
         {
             if (((SensorEvent) e).getType() == Type.NEW_DATA_AVAILABLE)
             {
-                synchronized (this)
-                {
-                    nextInterface = (ISensorDataInterface)e.getSource();
-                    this.notifyAll();
-                }
+                // TODO there is no guarantee that records are processed in chronological order
+                // this is because events may not be received in chronological order in the 1st place
+                // it's not as simple as using a sorting queue because we never know when is the next event!
+                // we could use the average sampling period to decide how much to wait to confirm the order
+                eventQueue.offer((SensorDataEvent)e);
             }
             else if (((SensorEvent) e).getType() == Type.DISCONNECTED)
             {
@@ -256,6 +305,8 @@ public class SensorDataProvider implements ISOSDataProvider, IEventListener
             if (outputInterface.isPushSupported())
                 outputInterface.unregisterListener(this);
         }
+        
+        eventQueue.clear();
     }
     
     

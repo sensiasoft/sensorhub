@@ -15,6 +15,9 @@ Developer are Copyright (C) 2014 the Initial Developer. All Rights Reserved.
 
 package org.sensorhub.test.sensor;
 
+import net.opengis.gml.v32.Point;
+import net.opengis.gml.v32.impl.PointImpl;
+import net.opengis.sensorml.v20.PhysicalSystem;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.sensor.ISensorDataInterface;
 import org.sensorhub.api.sensor.SensorConfig;
@@ -47,13 +50,15 @@ public class FakeSensor extends AbstractSensorModule<SensorConfig>
     public void start() throws SensorHubException
     {
         for (ISensorDataInterface o: getObservationOutputs().values())
-            ((FakeSensorData)o).start();
+            ((IFakeSensorOutput)o).start();
     }
     
     
     @Override
     public void stop() throws SensorHubException
-    {        
+    {
+        for (ISensorDataInterface o: getObservationOutputs().values())
+            ((IFakeSensorOutput)o).stop();
     }
 
 
@@ -64,6 +69,11 @@ public class FakeSensor extends AbstractSensorModule<SensorConfig>
         {
             super.updateSensorDescription();
             sensorDescription.setUniqueIdentifier("urn:sensors:mysensor:001");
+            Point pos = new PointImpl();
+            pos.setId("P01");
+            pos.setSrsName("http://www.opengis.net/def/crs/EPSG/0/4979");
+            pos.setPos(new double[] {45.6, 2.3, 193.2});
+            ((PhysicalSystem)sensorDescription).addPositionAsPoint(pos);
         }
     }
 

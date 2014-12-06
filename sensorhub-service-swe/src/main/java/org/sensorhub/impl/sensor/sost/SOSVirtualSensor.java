@@ -30,12 +30,12 @@ import net.opengis.swe.v20.DataEncoding;
 import net.opengis.swe.v20.DataStream;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.sensor.SensorEvent;
-import org.sensorhub.api.sensor.SensorEvent.Type;
 import org.sensorhub.api.sensor.SensorException;
 import org.sensorhub.impl.sensor.AbstractSensorModule;
 import org.vast.data.BinaryComponentImpl;
 import org.vast.data.BinaryEncodingImpl;
 import org.vast.data.DataIterator;
+import org.vast.data.TextEncodingImpl;
 import org.vast.ogc.om.IObservation;
 import org.vast.ows.sos.ISOSDataConsumer;
 
@@ -52,7 +52,6 @@ import org.vast.ows.sos.ISOSDataConsumer;
 public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfig> implements ISOSDataConsumer
 {
     Map<DataStructureHash, String> structureToOutputMap = new HashMap<DataStructureHash, String>();
-    AbstractProcess latestSensorDescription;
     
     
     // utility class to compute data component hashcode
@@ -95,13 +94,13 @@ public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfi
         // try to otbain corresponding data interface
         DataStructureHash hashObj = new DataStructureHash(component, encoding);
         String templateID = structureToOutputMap.get(hashObj);
-        component.setName(templateID);
-        
+                
         // create a new one if needed
         if (templateID == null)
         {        
             SOSVirtualSensorOutput newOutput = new SOSVirtualSensorOutput(this, component, encoding);
             templateID = config.sensorUID + "-" + Integer.toHexString(hashObj.hashCode());
+            component.setName(templateID);
             addOutput(newOutput, false);
             structureToOutputMap.put(hashObj, templateID);
         }
@@ -195,7 +194,10 @@ public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfi
             else
             {
                 dataStruct = (DataComponent)output;
-                dataEnc = BinaryEncodingImpl.getDefaultEncoding(dataStruct);
+                if (dataStruct.createDataBlock().getAtomCount() > 30)
+                    dataEnc = BinaryEncodingImpl.getDefaultEncoding(dataStruct);
+                else
+                    dataEnc = new TextEncodingImpl(",", "\n");
             }
             
             newResultTemplate(dataStruct, dataEnc);
@@ -225,18 +227,12 @@ public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfi
 
 
     @Override
-    public AbstractProcess getCurrentSensorDescription() throws SensorException
-    {
-        return latestSensorDescription;
-    }
-
-
-    @Override
     public void updateSensorDescription(AbstractProcess systemDesc, boolean recordHistory) throws SensorException
     {
-        latestSensorDescription = systemDesc;
-        lastUpdatedSensorDescription = System.currentTimeMillis() / 1000.;
-        eventHandler.publishEvent(new SensorEvent(lastUpdatedSensorDescription, getLocalID(), Type.SENSOR_CHANGED));
+        sensorDescription = systemDesc;
+        long unixTime = System.currentTimeMillis();
+        lastUpdatedSensorDescription = unixTime / 1000.;
+        eventHandler.publishEvent(new SensorEvent(unixTime, getLocalID(), SensorEvent.Type.SENSOR_CHANGED));
     }
 
 

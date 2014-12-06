@@ -26,6 +26,8 @@ import net.opengis.swe.v20.DataEncoding;
 import net.opengis.swe.v20.DataType;
 import org.sensorhub.api.sensor.SensorException;
 import org.sensorhub.impl.sensor.AbstractSensorOutput;
+import org.sensorhub.test.sensor.FakeSensor;
+import org.sensorhub.test.sensor.IFakeSensorOutput;
 import org.vast.data.BinaryComponentImpl;
 import org.vast.data.BinaryEncodingImpl;
 import org.vast.data.CountImpl;
@@ -43,7 +45,7 @@ import org.vast.data.DataRecordImpl;
  * @author Alexandre Robin <alex.robin@sensiasoftware.com>
  * @since Sep 20, 2013
  */
-public class FakeSensorData2 extends AbstractSensorOutput<FakeSensor>
+public class FakeSensorData2 extends AbstractSensorOutput<FakeSensor> implements IFakeSensorOutput
 {
     static int MAX_COUNT = 2;
     static int ARRAY_SIZE = 12000;
@@ -141,5 +143,21 @@ public class FakeSensorData2 extends AbstractSensorOutput<FakeSensor>
     public double getLatestRecordTime()
     {
         return 0;
+    }
+
+
+    @Override
+    public void start()
+    {
+        // TODO Auto-generated method stub
+        
+    }
+
+
+    @Override
+    public void stop()
+    {
+        // TODO Auto-generated method stub
+        
     }
 }

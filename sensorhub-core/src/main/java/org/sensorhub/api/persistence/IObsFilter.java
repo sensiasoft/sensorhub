@@ -33,25 +33,25 @@ import com.vividsolutions.jts.geom.Polygon;
 public interface IObsFilter extends IDataFilter
 {
     /**
-     * Sampling time period from which to select observation
+     * @return the sampling time period from which to retrieve observations
      */
     public TimeExtent getSamplingTimeRange();
     
     
     /**
-     * List of features of interest
+     * @return the list of features of interest to retrieve observations of
      */
     public List<String> getFoiIds();
     
     
     /**
-     * List of data components/observed properties to retrieve from storage
+     * @return the list of observed properties to retrieved data for
      */
     public List<String> getObservedProperties();
     
     
     /**
-     * Region of interest    
+     * @return the region of interest from which to retrieve observations
      */
     public Polygon getRoi();
 }

@@ -41,7 +41,7 @@ public class TestHttpServer
         server.start();
         
         // connect to servlet and check response
-        URL url = new URL("http://localhost:" + config.httpPort + config.rootURL + "/test");
+        URL url = new URL("http://localhost:" + config.httpPort + config.servletsRootUrl + "/test");
         BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream()));
         String resp = reader.readLine();
         System.out.println(resp);
@@ -81,7 +81,7 @@ public class TestHttpServer
         });
         
         // connect to servlet and check response
-        URL url = new URL("http://localhost:" + config.httpPort + config.rootURL + "/junit");
+        URL url = new URL("http://localhost:" + config.httpPort + config.servletsRootUrl + "/junit");
         BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream()));
         String resp = reader.readLine();
         System.out.println(resp);
