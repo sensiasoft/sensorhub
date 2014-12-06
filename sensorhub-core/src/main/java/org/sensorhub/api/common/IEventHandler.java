@@ -32,6 +32,17 @@ package org.sensorhub.api.common;
 public interface IEventHandler extends IEventProducer
 {
 
-    public abstract void publishEvent(Event e);
+    /**
+     * Dispatch event to all registered listeners
+     * @param e event to dispatch
+     */
+    public void publishEvent(Event e);
+    
+    
+    /**
+     * Clear all listeners.
+     * Usually called on producer side during cleanup phase
+     */
+    public void clearAllListeners();
 
 }

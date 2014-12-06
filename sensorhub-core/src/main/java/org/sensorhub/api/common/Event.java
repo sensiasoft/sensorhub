@@ -33,7 +33,7 @@ public class Event implements Serializable
     private static final long serialVersionUID = 9176636296502966036L;
     
     protected Object source;
-    protected double timeStamp;
+    protected long timeStamp;
     protected int code;
     
     
@@ -43,7 +43,7 @@ public class Event implements Serializable
     }
 
 
-    public double getTimeStamp()
+    public long getTimeStamp()
     {
         return timeStamp;
     }

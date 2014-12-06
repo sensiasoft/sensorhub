@@ -171,8 +171,9 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
                 }
             }
             
-            lastUpdatedSensorDescription = System.currentTimeMillis() / 1000.;
-            eventHandler.publishEvent(new SensorEvent(lastUpdatedSensorDescription, getLocalID(), SensorEvent.Type.SENSOR_CHANGED));
+            long unixTime = System.currentTimeMillis();
+            lastUpdatedSensorDescription = unixTime / 1000.;
+            eventHandler.publishEvent(new SensorEvent(unixTime, getLocalID(), SensorEvent.Type.SENSOR_CHANGED));
         }
     }
 

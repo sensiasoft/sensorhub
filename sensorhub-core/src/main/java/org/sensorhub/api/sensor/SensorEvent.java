@@ -62,10 +62,10 @@ public class SensorEvent extends Event
 	/**
 	 * Sole constructor
 	 * @param sensorId ID of originating sensor
-	 * @param timeStamp time of event generation
+	 * @param timeStamp unix time of event generation
 	 * @param type type of event
 	 */
-	public SensorEvent(double timeStamp, String sensorId, Type type)
+	public SensorEvent(long timeStamp, String sensorId, Type type)
 	{
 	    this.sensorId = sensorId;
 	    this.timeStamp = timeStamp;

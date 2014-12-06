@@ -40,11 +40,11 @@ public class SensorControlEvent extends SensorEvent
 	
     /**
      * Default constructor
-     * @param time time of event generation
+     * @param time unix time of event generation
      * @param controlInterface source of this event
      * @param status status of command at time the event is generated
      */
-	public SensorControlEvent(double time, ISensorControlInterface controlInterface, CommandStatus status)
+	public SensorControlEvent(long time, ISensorControlInterface controlInterface, CommandStatus status)
 	{
 	    super(time, controlInterface.getParentSensor().getLocalID(), Type.COMMAND_STATUS);
 		this.source = controlInterface;

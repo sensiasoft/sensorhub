@@ -13,7 +13,7 @@ Developer are Copyright (C) 2014 the Initial Developer. All Rights Reserved.
  
 ******************************* END LICENSE BLOCK ***************************/
 
-package org.sensorhub.api.sensor;
+package org.sensorhub.api.persistence;
 
 import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataComponent;
@@ -21,15 +21,15 @@ import net.opengis.swe.v20.DataComponent;
 
 /**
  * <p>
- * Type of event generated when new data is avaible from sensors.
- * It is immutable and carries sensor data by reference
+ * Type of event generated when new data is available from storage.
+ * It is immutable and carries data records by reference
  * </p>
  *
- * <p>Copyright (c) 2010</p>
+ * <p>Copyright (c) 2014</p>
  * @author Alexandre Robin
- * @since Nov 5, 2010
+ * @since Dec 5, 2014
  */
-public class SensorDataEvent extends SensorEvent
+public class StorageDataEvent extends StorageEvent
 {
 	private static final long serialVersionUID = 2124599187504793797L;
     
@@ -51,15 +51,15 @@ public class SensorDataEvent extends SensorEvent
 	
 	/**
 	 * Constructor from list of records with their descriptor
-	 * @param timeStamp time of event generation (julian time, base 1970)
-     * @param dataInterface sensor output interface that produced the associated data
+	 * @param timeStamp unix time of event generation
+     * @param dataStore data store that received the associated data
 	 * @param records arrays of records that triggered this notification
 	 */
-	public SensorDataEvent(double timeStamp, ISensorDataInterface dataInterface, DataBlock ... records)
+	public StorageDataEvent(long timeStamp, IRecordDataStore<?,?> dataStore, DataBlock ... records)
 	{
-		super((long)(timeStamp*1000), dataInterface.getParentSensor().getLocalID(), Type.NEW_DATA_AVAILABLE);
-		this.source = dataInterface;
-		this.recordDescription = dataInterface.getRecordDescription();
+		super(timeStamp, dataStore.getParentStorage().getLocalID(), Type.STORE);
+		this.source = dataStore;
+		this.recordDescription = dataStore.getRecordDescription();
 		this.records = records;
 	}
 
@@ -77,8 +77,8 @@ public class SensorDataEvent extends SensorEvent
 
 
     @Override
-    public ISensorDataInterface getSource()
+    public IRecordDataStore<?,?> getSource()
     {
-        return (ISensorDataInterface)this.source;
+        return (IRecordDataStore<?,?>)this.source;
     }
 }
