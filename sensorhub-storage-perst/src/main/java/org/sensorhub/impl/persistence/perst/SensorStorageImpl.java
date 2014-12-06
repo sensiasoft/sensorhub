@@ -23,7 +23,7 @@ import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.module.IModuleStateLoader;
 import org.sensorhub.api.module.IModuleStateSaver;
-import org.sensorhub.api.persistence.ISensorDescriptionStorage;
+import org.sensorhub.api.persistence.IProcedureStorage;
 import org.sensorhub.api.persistence.IStorageModule;
 import org.sensorhub.api.persistence.StorageConfig;
 import org.sensorhub.api.persistence.StorageException;
@@ -40,22 +40,8 @@ import org.sensorhub.api.persistence.StorageException;
  * @author Alexandre Robin <alex.robin@sensiasoftware.com>
  * @since Mar 6, 2014
  */
-public class SensorStorageImpl implements ISensorDescriptionStorage<StorageConfig>
+public class SensorStorageImpl implements IProcedureStorage<StorageConfig>
 {
-
-    @Override
-    public void open() throws StorageException
-    {
-        // TODO Auto-generated method stub
-        
-    }
-
-    @Override
-    public void close() throws StorageException
-    {
-        // TODO Auto-generated method stub
-        
-    }
 
     @Override
     public void cleanup() throws StorageException

@@ -18,6 +18,13 @@
          <scope>provided</scope>
       </dependency>
       <dependency>
+         <groupId>org.sensorhub</groupId>
+         <artifactId>sensorhub-core</artifactId>
+         <version>0.5</version>
+         <type>test-jar</type>
+         <scope>test</scope>
+      </dependency>
+      <dependency>
          <groupId>org.garret</groupId>
          <artifactId>perst</artifactId>
          <version>4.10.0</version>
