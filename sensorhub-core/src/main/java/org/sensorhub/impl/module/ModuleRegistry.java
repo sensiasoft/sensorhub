@@ -169,7 +169,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
     
     
     /**
-     * Enables the module with the given id
+     * Enables/Start the module with the given id
      * @param moduleID Local ID of module to enable
      * @return enabled module instance
      * @throws SensorHubException 
@@ -191,7 +191,8 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
         // otherwise just start it
         else
         {
-            module.start();        
+            module.getConfiguration().enabled = true;
+            module.start();      
             eventHandler.publishEvent(new ModuleEvent(module, ModuleEvent.Type.ENABLED));
         }
         
@@ -208,16 +209,14 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
     {
         checkID(moduleID);
                 
-        ModuleConfig config = configRepos.get(moduleID);
-        config.enabled = false;
-        
-        // also unload and stop module if it was loaded
+        // unload and stop module if it was loaded
         IModule<?> module = loadedModules.remove(moduleID);
         if (module != null)
         {
             try
             {
                 module.stop();
+                module.getConfiguration().enabled = false;
             }
             catch (Exception e)
             {
@@ -343,7 +342,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
      */
     public List<IModuleProvider> getInstalledModuleTypes(Class<?> moduleClass)
     {
-        List<IModuleProvider> installedModules = getInstalledModuleTypes();
+        List<IModuleProvider> installedModules = new ArrayList<IModuleProvider>();
 
         ServiceLoader<IModuleProvider> sl = ServiceLoader.load(IModuleProvider.class);
         for (IModuleProvider provider: sl)

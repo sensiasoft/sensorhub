@@ -64,6 +64,8 @@ public class TestModuleRegistry
             System.out.println(moduleType.getModuleName() + ": " +
                                moduleType.getModuleClass().getCanonicalName());
         }
+        
+        System.out.println();
     }
     
     
