@@ -30,4 +30,6 @@ SensorHub can be built using Maven either from the command line or within Eclips
 
 Refer to the [Developer's Guide](../../wiki/Developer's-Guide) for instructions on how to setup your development environment in Eclipse.
 
-Several sensor driver examples are available in the source code to help you get started.
+You can find documentation in the [Javadocs](http://sensiasoft.github.io/sensorhub/apidocs) and [wiki](../../wiki/Home). 
+
+Several sensor driver examples are also available in the source code to help you get started.
