@@ -118,9 +118,9 @@ public interface ISensorDataInterface extends IEventProducer
     
     
     /**
-     * Used to check when the last measurement was made.
-     * This is useful to know if a measurement has really been made since the last call.
-     * @return date/time of last measurement as julian time (1970)
+     * Used to check when the last measurement was made. This is useful to know if a
+     * measurement has really been made since the last call to {@link #getLatestRecord}.
+     * @return time of last measurement as julian time (1970) or NaN if no measurement was made yet
      */
     public double getLatestRecordTime();
 

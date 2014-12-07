@@ -129,7 +129,7 @@ public class SensorDataProvider implements ISOSDataProvider, IEventListener
                         double time = outputInterface.getLatestRecordTime();
                         
                         // wait until a new record is available
-                        if (time > lastRecordTime)
+                        if (!Double.isNaN(time) && time > lastRecordTime)
                         {
                             try
                             {
