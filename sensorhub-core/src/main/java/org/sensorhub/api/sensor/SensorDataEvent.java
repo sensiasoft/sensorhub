@@ -41,27 +41,26 @@ public class SensorDataEvent extends SensorEvent
 	
 	
 	/**
-	 * Array of available data records (by reference)
-	 * Data is NOT automatically cleared from sensor buffer and may still
-	 * be available through the polling API.
+	 * New data that triggered this event.
+	 * Multiple records can be associated to a single event because for performance
+	 * reasonsn with high rate sensors, it is often not practical to generate an
+	 * event for every single record of measurements.
 	 */
 	protected DataBlock[] records;
 	
 	
 	/**
 	 * Constructor from list of records with their descriptor
-	 * @param dataInterface 
-	 * @param timeStamp 
-	 * @param desc
-	 * @param records 
+	 * @param timeStamp time of event generation (julian time, base 1970)
+     * @param dataInterface sensor output interface that produced the associated data
+	 * @param records arrays of records that triggered this notification
 	 */
-	public SensorDataEvent(ISensorDataInterface dataInterface, long timeStamp, DataComponent desc, DataBlock... records)
+	public SensorDataEvent(double timeStamp, ISensorDataInterface dataInterface, DataBlock ... records)
 	{
-		super(dataInterface.getParentSensor().getLocalID(), Type.NEW_DATA_AVAILABLE);
-		this.timeStamp = timeStamp;
-		this.recordDescription = desc;
-		this.records = records;
+		super((long)(timeStamp*1000), dataInterface.getParentSensor().getLocalID(), Type.NEW_DATA_AVAILABLE);
 		this.source = dataInterface;
+		this.recordDescription = dataInterface.getRecordDescription();
+		this.records = records;
 	}
 
 
@@ -74,5 +73,12 @@ public class SensorDataEvent extends SensorEvent
     public DataBlock[] getRecords()
     {
         return records;
+    }
+
+
+    @Override
+    public ISensorDataInterface getSource()
+    {
+        return (ISensorDataInterface)this.source;
     }
 }

@@ -29,21 +29,17 @@ package org.sensorhub.api.persistence;
 public class DataKey
 {
     /**
-     * Local ID of record to uniquely identify it in storage
+     * ID of data producer (i.e. the entity that produced the values in the data block).
+     * If value is null on retrieval, no filtering will be applied on producer ID
      */
-    public long recordID;
-    
-    
-    /**
-     * ID of data producer (i.e. the entity that produced the values in the data block)
-     */
-    public String producerID;
+    public String producerID = null;
     
     
     /**
      * Time stamp of record
+     * If value is NaN on retrieval, no temporal filtering will be applied
      */
-    public long timeStamp;
+    public double timeStamp = Double.NaN;
     
     
     /**
@@ -51,7 +47,7 @@ public class DataKey
      * @param producerID
      * @param timeStamp
      */
-    public DataKey(String producerID, long timeStamp)
+    public DataKey(String producerID, double timeStamp)
     {
         this.producerID = producerID;
         this.timeStamp = timeStamp;

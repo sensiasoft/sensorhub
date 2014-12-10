@@ -15,74 +15,56 @@ Developer are Copyright (C) 2014 the Initial Developer. All Rights Reserved.
 
 package org.sensorhub.impl.sensor.sost;
 
-import java.util.List;
 import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataEncoding;
-import org.sensorhub.api.common.IEventHandler;
-import org.sensorhub.api.common.IEventListener;
-import org.sensorhub.api.sensor.ISensorDataInterface;
-import org.sensorhub.api.sensor.ISensorModule;
 import org.sensorhub.api.sensor.SensorDataEvent;
 import org.sensorhub.api.sensor.SensorException;
-import org.sensorhub.impl.common.BasicEventHandler;
+import org.sensorhub.impl.sensor.AbstractSensorOutput;
 
 
-public class SOSVirtualSensorOutput implements ISensorDataInterface
+public class SOSVirtualSensorOutput extends AbstractSensorOutput<SOSVirtualSensor>
 {
     SOSVirtualSensor parentSensor;
-    IEventHandler eventHandler;
     DataComponent recordStructure;
     DataEncoding recordEncoding;
     DataBlock latestRecord;
+    double lastRecordTime = Double.NEGATIVE_INFINITY;
+    double avgSamplingPeriod = 100;
+    int avgSampleCount = 0;
     
     
     public SOSVirtualSensorOutput(SOSVirtualSensor sensor, DataComponent recordStructure, DataEncoding recordEncoding)
     {
-        this.parentSensor = sensor;
+        super(sensor);
         this.recordStructure = recordStructure;
         this.recordEncoding = recordEncoding;
-        this.eventHandler = new BasicEventHandler();
-    }
-    
-    
-    @Override
-    public boolean isEnabled()
-    {
-        return true;
-    }
-    
-    
-    @Override
-    public boolean isStorageSupported()
-    {
-        return false;
     }
 
 
     @Override
-    public boolean isPushSupported()
+    public String getName()
     {
-        return true;
+        return recordStructure.getName();
     }
 
 
     @Override
     public double getAverageSamplingPeriod()
     {
-        return Double.NaN;
+        return avgSamplingPeriod;
     }
 
 
     @Override
-    public DataComponent getRecordDescription() throws SensorException
+    public DataComponent getRecordDescription()
     {
         return recordStructure;
     }
 
 
     @Override
-    public DataEncoding getRecommendedEncoding() throws SensorException
+    public DataEncoding getRecommendedEncoding()
     {
         return recordEncoding;
     }
@@ -93,75 +75,42 @@ public class SOSVirtualSensorOutput implements ISensorDataInterface
     {
         return latestRecord;
     }
-
-
-    @Override
-    public int getStorageCapacity() throws SensorException
-    {
-        return 0;
-    }
-
-
-    @Override
-    public int getNumberOfAvailableRecords() throws SensorException
-    {
-        return 1;
-    }
-
-
-    @Override
-    public List<DataBlock> getLatestRecords(int maxRecords, boolean clear) throws SensorException
-    {
-        return null;
-    }
-
-
-    @Override
-    public List<DataBlock> getAllRecords(boolean clear) throws SensorException
-    {
-        return null;
-    }
-
-
-    @Override
-    public int clearAllRecords() throws SensorException
-    {
-        latestRecord = null;
-        return 0;
-    }
-
-
-    @Override
-    public void registerListener(IEventListener listener)
-    {
-        eventHandler.registerListener(listener);
-    }
-
+    
     
     @Override
-    public void unregisterListener(IEventListener listener)
+    public double getLatestRecordTime()
     {
-        eventHandler.unregisterListener(listener);
-    }
-
-
-    @Override
-    public ISensorModule<?> getParentSensor()
-    {
-        return parentSensor;
+        return lastRecordTime;
     }
     
     
     public void publishNewRecord(DataBlock dataBlock)
     {
-        try
+        // TODO obtain sampling time from record when possible 
+        double timeStamp =  System.currentTimeMillis() / 1000.;      
+        updateSamplingPeriod(timeStamp);       
+                
+        // publish new sensor data event
+        latestRecord = dataBlock;
+        lastRecordTime = timeStamp;
+        eventHandler.publishEvent(new SensorDataEvent(lastRecordTime, this, dataBlock));
+    }
+    
+    
+    /*
+     * Refine sampling period at each new measure received by 
+     * incrementally computing dt average for the 100 first records
+     */
+    protected void updateSamplingPeriod(double timeStamp)
+    {
+        if (avgSampleCount < 100)
         {
-            latestRecord = dataBlock;
-            eventHandler.publishEvent(new SensorDataEvent(this, System.currentTimeMillis(), getRecordDescription(), dataBlock));
-        }
-        catch (SensorException e)
-        {
-            e.printStackTrace();
+            if (avgSampleCount == 0)
+                avgSamplingPeriod = 0.0;
+            else
+                avgSamplingPeriod *= avgSampleCount / (avgSampleCount+1);
+            avgSampleCount++;
+            avgSamplingPeriod += (timeStamp - lastRecordTime) / avgSampleCount;
         }
     }
     

@@ -42,20 +42,21 @@ public class HttpServerConfig extends ModuleConfig
      * Root URL where the server will accept requests
      * This will be the prefix to all servlet URLs
      */
-    public String rootURL = "/sensorhub";
+    public String servletsRootUrl = "/sensorhub";
     
     
     /**
      * Root folder where web documents will be obtained
      */
-    public String docRoot = null;
+    public String staticDocRootUrl = null;
     
 
 
     public HttpServerConfig()
     {
-        this.name = "HTTP Server";
         this.id = "???";
+        this.name = "HTTP Server";
+        this.moduleClass = HttpServer.class.getCanonicalName();
         this.enabled = true;
     }
     
@@ -72,15 +73,15 @@ public class HttpServerConfig extends ModuleConfig
     }
 
 
-    public String getRootURL()
+    public String getServletsRootUrl()
     {
-        return rootURL;
+        return servletsRootUrl;
     }
 
 
-    public void setRootURL(String rootURL)
+    public void setServletsRootUrl(String rootURL)
     {
-        this.rootURL = rootURL;
+        this.servletsRootUrl = rootURL;
     }
     
 }

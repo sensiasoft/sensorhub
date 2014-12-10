@@ -95,6 +95,8 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     Map<String, String> procedureToOfferingMap;
     Map<String, String> templateToOfferingMap;
     Map<String, ISOSDataConsumer> dataConsumers;
+    
+    boolean needCapabilitiesTimeUpdate = false;
 
     
     @Override
@@ -118,39 +120,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
         
         // rebuild everything
 
-    }
-    
-    
-    @Override
-    public void start()
-    {
-        this.dataProviders.clear();
-        this.dataConsumers = new LinkedHashMap<String, ISOSDataConsumer>();
-        this.procedureToOfferingMap = new HashMap<String, String>();
-        this.templateToOfferingMap = new HashMap<String, String>();
-        this.offeringMap = new HashMap<String, SOSOfferingCapabilities>();
-        
-        // pre-generate capabilities
-        this.capabilitiesCache = generateCapabilities();
-                
-        // subscribe to server lifecycle events
-        SensorHub.getInstance().registerListener(this);
-        
-        // deploy service
-        deploy();
-    }
-    
-    
-    @Override
-    public void stop()
-    {
-        // undeploy ourself
-        undeploy();
-        
-        // clean all providers
-        for (ISOSDataProviderFactory provider: dataProviders.values())
-            ((IDataProviderFactory)provider).cleanup();
-    }
+    }    
     
     
     /**
@@ -160,7 +130,10 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
      */
     protected SOSServiceCapabilities generateCapabilities()
     {
+        dataProviders.clear();
         procedureToOfferingMap.clear();
+        templateToOfferingMap.clear();
+        offeringMap.clear();
         
         // get main capabilities info from config
         CapabilitiesInfo serviceInfo = config.ogcCapabilitiesInfo;
@@ -239,16 +212,98 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
      * @param uri
      * @return
      */
-    protected AbstractProcess generateSensorML(String uri) throws ServiceException
+    protected AbstractProcess generateSensorML(String uri, TimeExtent timeExtent) throws ServiceException
     {
         try
         {
             IDataProviderFactory factory = getDataProviderFactoryBySensorID(uri);
-            return factory.generateSensorMLDescription(null);
+            double time = Double.NaN;
+            if (timeExtent != null)
+                time = timeExtent.getBaseTime();
+            return factory.generateSensorMLDescription(time);
         }
         catch (Exception e)
         {
             throw new ServiceException("Error while retrieving SensorML description for sensor " + uri, e);
+        }
+    }
+    
+    
+    @Override
+    public void start()
+    {
+        this.dataConsumers = new LinkedHashMap<String, ISOSDataConsumer>();
+        this.procedureToOfferingMap = new HashMap<String, String>();
+        this.templateToOfferingMap = new HashMap<String, String>();
+        this.offeringMap = new HashMap<String, SOSOfferingCapabilities>();
+        
+        // pre-generate capabilities
+        this.capabilitiesCache = generateCapabilities();
+                
+        // subscribe to server lifecycle events
+        SensorHub.getInstance().registerListener(this);
+        
+        // deploy servlet
+        deploy();
+    }
+    
+    
+    @Override
+    public void stop()
+    {
+        // undeploy servlet
+        undeploy();
+        
+        // unregister ourself
+        SensorHub.getInstance().unregisterListener(this);
+        
+        // clean all providers
+        for (ISOSDataProviderFactory provider: dataProviders.values())
+            ((IDataProviderFactory)provider).cleanup();
+    }
+   
+    
+    protected void deploy()
+    {
+        if (!HttpServer.getInstance().isEnabled())
+            return;
+        
+        // deploy ourself to HTTP server
+        HttpServer.getInstance().deployServlet(config.endPoint, this);
+    }
+    
+    
+    protected void undeploy()
+    {
+        if (!HttpServer.getInstance().isEnabled())
+            return;
+        
+        HttpServer.getInstance().undeployServlet(this);
+    }
+    
+    
+    @Override
+    public void cleanup() throws SensorHubException
+    {
+        // destroy all virtual sensors
+        for (SOSConsumerConfig consumerConf: config.dataConsumers)
+            SensorHub.getInstance().getModuleRegistry().destroyModule(consumerConf.sensorID);
+    }
+    
+    
+    @Override
+    public void handleEvent(Event e)
+    {
+        // what's important here is to redeploy if HTTP server is restarted
+        if (e instanceof ModuleEvent && e.getSource() == HttpServer.getInstance())
+        {
+            // start when HTTP server is enabled
+            if (((ModuleEvent) e).type == ModuleEvent.Type.ENABLED)
+                start();
+            
+            // stop when HTTP server is disabled
+            else if (((ModuleEvent) e).type == ModuleEvent.Type.DISABLED)
+                stop();
         }
     }
     
@@ -286,48 +341,6 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     {
         // TODO Auto-generated method stub
     }
-
-
-    @Override
-    public void handleEvent(Event e)
-    {
-        // we need to deploy ourself when HTTP server is restarted
-        if (e instanceof ModuleEvent && e.getSource() == HttpServer.getInstance())
-        {
-            if (((ModuleEvent) e).type == ModuleEvent.Type.ENABLED)
-                start();
-            else if (((ModuleEvent) e).type == ModuleEvent.Type.DISABLED)
-                stop();
-        }        
-    }
-    
-    
-    @Override
-    public void cleanup() throws SensorHubException
-    {
-        // cleanup all virtual sensors
-        for (SOSConsumerConfig consumerConf: config.dataConsumers)
-            SensorHub.getInstance().getModuleRegistry().destroyModule(consumerConf.sensorID);
-    }
-    
-    
-    protected void deploy()
-    {
-        if (!HttpServer.getInstance().isEnabled())
-            return;
-        
-        // deploy ourself to HTTP server
-        HttpServer.getInstance().deployServlet(config.endPoint, this);
-    }
-    
-    
-    protected void undeploy()
-    {
-        if (!HttpServer.getInstance().isEnabled())
-            return;
-        
-        HttpServer.getInstance().undeployServlet(this);
-    }
     
     
     /////////////////////////////////////////
@@ -337,6 +350,10 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     @Override
     protected void handleRequest(GetCapabilitiesRequest request) throws Exception
     {
+        // refresh offering capabilities if needed
+        for (ISOSDataProviderFactory provider: dataProviders.values())
+            ((IDataProviderFactory)provider).updateCapabilities();
+        
         sendResponse(request, capabilitiesCache);
     }
         
@@ -354,7 +371,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
         
         // serialize and send SensorML description
         OutputStream os = new BufferedOutputStream(request.getResponseStream());
-        new SMLUtils().writeProcess(os, generateSensorML(sensorID), true);
+        new SMLUtils().writeProcess(os, generateSensorML(sensorID, request.getTime()), true);
     }
     
     
@@ -377,13 +394,14 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
             // automatically add outputs with specified observable properties??
             
             
-            // create and register new virtual sensor module
+            // create and register new virtual sensor module as data consumer
             SOSVirtualSensorConfig sensorConfig = new SOSVirtualSensorConfig();
-            sensorConfig.enabled = true;
+            sensorConfig.enabled = false;
             sensorConfig.sensorUID = sensorUID;
             sensorConfig.name = request.getProcedureDescription().getName();
-            SensorHub.getInstance().getPersistenceManager().getSensorDescriptionStorage().store(request.getProcedureDescription());
             SOSVirtualSensor virtualSensor = (SOSVirtualSensor)SensorHub.getInstance().getModuleRegistry().loadModule(sensorConfig);            
+            virtualSensor.updateSensorDescription(request.getProcedureDescription(), true);
+            SensorHub.getInstance().getModuleRegistry().enableModule(virtualSensor.getLocalID());
             dataConsumers.put(offering, virtualSensor);
             
             // add to SOS config
@@ -609,14 +627,26 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     {
         SOSOfferingCapabilities offering = checkAndGetOffering(offeringID);
         
+        // refresh offering capabilities if needed
+        try
+        {
+            IDataProviderFactory provider = (IDataProviderFactory)dataProviders.get(offeringID);
+            provider.updateCapabilities();
+        }
+        catch (Exception e)
+        {
+            log.error("Error while updating capabilities for offering " + offeringID, e);
+        }
+        
+        // check that request time is within one of the allowed time periods
         boolean ok = false;
         for (TimeExtent timeRange: offering.getPhenomenonTimes())
         {
-            if (timeRange.contains(requestTime))
+            if ((timeRange.isBaseAtNow() && requestTime.isBaseAtNow()) || timeRange.contains(requestTime))
             {
                 ok = true;
                 break;
-            }            
+            }
         }
         
         if (!ok)

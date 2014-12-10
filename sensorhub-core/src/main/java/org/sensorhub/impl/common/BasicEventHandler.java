@@ -15,8 +15,12 @@ Developer are Copyright (C) 2014 the Initial Developer. All Rights Reserved.
 
 package org.sensorhub.impl.common;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.Deque;
+import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.LinkedBlockingDeque;
 import org.sensorhub.api.common.Event;
 import org.sensorhub.api.common.IEventHandler;
 import org.sensorhub.api.common.IEventListener;
@@ -24,45 +28,130 @@ import org.sensorhub.api.common.IEventListener;
 
 /**
  * <p>
- * Basic synchronous event manager
+ * Basic implementation of a synchronous event manager.
+ * </p><p>
+ * We have to take care of cases of calls to register/unregister initiated
+ * synchronously (in same thread) by listeners while an event is being dispatched.
+ * This is done by using temporary lists and committing changes that occured during
+ * the iteration only at the end of the call to publish().
+ * </p><p>
+ * Likewise recursive calls to publish have to be handled as well. This is done 
+ * by accumulating events in a queue and dispatching each one in their own loop,
+ * thus avoiding recursive calls to publish while iterating.
+ * </p><p>
+ * We use weak references in the main list of listeners to prevent memory leaks in
+ * cases where listeners forget to unregister themselves.
  * </p>
  *
- * <p>Copyright (c) 2010</p>
+ * <p>Copyright (c) 2014</p>
  * @author Alexandre Robin
  * @since Nov 16, 2010
  */
 public class BasicEventHandler implements IEventHandler
 {
-    protected List<IEventListener> listeners = new ArrayList<IEventListener>();
+    List<WeakReference<IEventListener>> listeners = new ArrayList<WeakReference<IEventListener>>();
+    List<IEventListener> toDelete = new ArrayList<IEventListener>();
+    List<IEventListener> toAdd = new ArrayList<IEventListener>();
+    Deque<Event> eventQueue = new LinkedBlockingDeque<Event>();
+    boolean inPublish = false;
     
     
-    /* (non-Javadoc)
-     * @see org.sensorhub.impl.common.IEventHandler#registerListener(org.sensorhub.api.common.IEventListener)
-     */
     @Override
-    public void registerListener(IEventListener listener)
+    public synchronized void registerListener(IEventListener listener)
     {
-        listeners.add(listener);
+        if (!listeners.contains(listener))
+        {
+            // add directly or through temporary list if publishing
+            if (!inPublish)
+                addWeakRef(listener);
+            else
+                toAdd.add(listener);
+        }
     }
 
 
-    /* (non-Javadoc)
-     * @see org.sensorhub.impl.common.IEventHandler#removeListener(org.sensorhub.api.common.IEventListener)
-     */
     @Override
-    public void unregisterListener(IEventListener listener)
+    public synchronized void unregisterListener(IEventListener listener)
     {
-        listeners.remove(listener);
+        // remove directly or through temporary list if publishing
+        if (!inPublish)
+            removeWeakRef(listener);
+        else
+            toDelete.add(listener);
     }
     
     
-    /* (non-Javadoc)
-     * @see org.sensorhub.impl.common.IEventHandler#publishEvent(org.sensorhub.api.common.Event)
-     */
     @Override
-    public void publishEvent(Event e)
+    public synchronized void publishEvent(Event e)
     {
-        for (IEventListener listener: listeners)
-            listener.handleEvent(e);
+        // case of recursive call
+        if (inPublish)
+        {
+            eventQueue.addLast(e);
+        }
+        else
+        {        
+            inPublish = true;
+            for (Iterator<WeakReference<IEventListener>> it = listeners.iterator(); it.hasNext(); )
+            {
+                IEventListener listener = it.next().get();
+                if (listener != null)
+                    listener.handleEvent(e);
+                else
+                    it.remove(); // purge cleared references
+            }
+            inPublish = false;
+            commitChanges();
+        }
+    }
+    
+    
+    private final void commitChanges()
+    {
+        commitRemoves();
+        commitAdds();
+        
+        while (!eventQueue.isEmpty())
+            publishEvent(eventQueue.pollFirst());
+    }
+    
+    
+    private final void commitAdds()
+    {
+        for (IEventListener listener: toAdd)
+            addWeakRef(listener);
+        toAdd.clear();
+    }
+    
+    
+    private final void commitRemoves()
+    {
+        for (IEventListener listener: toDelete)
+            removeWeakRef(listener);
+        toDelete.clear();
+    }
+    
+    
+    private final void addWeakRef(IEventListener listener)
+    {
+        listeners.add(new WeakReference<IEventListener>(listener));
+    }
+    
+    
+    private final void removeWeakRef(IEventListener listenerToRemove)
+    {
+        for (Iterator<WeakReference<IEventListener>> it = listeners.iterator(); it.hasNext(); )
+        {
+            IEventListener listener = it.next().get();
+            if (listener == null || listener == listenerToRemove)  // also purge cleared references
+                it.remove();
+        }
+    }
+
+
+    @Override
+    public void clearAllListeners()
+    {
+        listeners.clear();        
     }
 }

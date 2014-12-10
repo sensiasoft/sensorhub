@@ -43,6 +43,8 @@ import org.sensorhub.impl.service.sos.SOSProviderConfig;
 import org.sensorhub.impl.service.sos.SOSService;
 import org.sensorhub.impl.service.sos.SOSServiceConfig;
 import org.sensorhub.impl.service.sos.SensorDataProviderConfig;
+import org.sensorhub.test.sensor.FakeSensor;
+import org.sensorhub.test.sensor.FakeSensorData;
 import org.vast.data.DataRecordImpl;
 import org.vast.data.QuantityImpl;
 import org.vast.data.TimeImpl;
@@ -139,7 +141,7 @@ public class TestSOSTService
         provCfg.name = "SOS Sensor Provider #1";
         provCfg.uri = "urn:mysos:sensor1";
         provCfg.sensorID = sensor.getLocalID();
-        provCfg.hiddenOutputs = new String[] {};
+        //provCfg.hiddenOutputs;
         
         return provCfg;
     }
@@ -274,7 +276,7 @@ public class TestSOSTService
                 }
             }
         };
-        //t.start();
+        t.start();
         
         // create new observation
         IObservation obs = new ObservationImpl();
@@ -331,7 +333,7 @@ public class TestSOSTService
         try
         {
             configFile.delete();
-            HttpServer.getInstance().stop();
+            HttpServer.getInstance().cleanup();
         }
         catch (Exception e)
         {

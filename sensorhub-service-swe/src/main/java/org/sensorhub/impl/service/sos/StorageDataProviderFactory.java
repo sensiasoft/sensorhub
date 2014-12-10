@@ -15,11 +15,34 @@ Developer are Copyright (C) 2014 the Initial Developer. All Rights Reserved.
 
 package org.sensorhub.impl.service.sos;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map.Entry;
 import net.opengis.sensorml.v20.AbstractProcess;
+import net.opengis.swe.v20.DataArray;
+import net.opengis.swe.v20.DataComponent;
+import net.opengis.swe.v20.DataRecord;
+import net.opengis.swe.v20.SimpleComponent;
+import org.sensorhub.api.common.Event;
+import org.sensorhub.api.common.IEventListener;
+import org.sensorhub.api.common.SensorHubException;
+import org.sensorhub.api.module.IModule;
+import org.sensorhub.api.persistence.IBasicStorage;
+import org.sensorhub.api.persistence.IDataFilter;
+import org.sensorhub.api.persistence.ITimeSeriesDataStore;
+import org.sensorhub.api.persistence.StorageDataEvent;
+import org.sensorhub.api.persistence.StorageException;
+import org.sensorhub.api.sensor.SensorException;
+import org.sensorhub.api.service.ServiceException;
+import org.sensorhub.impl.SensorHub;
+import org.sensorhub.utils.MsgUtils;
+import org.vast.data.DataIterator;
+import org.vast.ogc.om.IObservation;
 import org.vast.ows.server.SOSDataFilter;
 import org.vast.ows.sos.ISOSDataProvider;
 import org.vast.ows.sos.SOSOfferingCapabilities;
-import org.vast.util.DateTime;
+import org.vast.sweCommon.SWEConstants;
+import org.vast.util.TimeExtent;
 
 
 /**
@@ -40,55 +63,254 @@ import org.vast.util.DateTime;
  * @author Alexandre Robin <alex.robin@sensiasoftware.com>
  * @since Sep 15, 2013
  */
-public class StorageDataProviderFactory implements IDataProviderFactory
+public class StorageDataProviderFactory implements IDataProviderFactory, IEventListener
 {
-    StorageDataProviderConfig config;
+    final StorageDataProviderConfig config;
+    final IBasicStorage<?> storage;
+    SOSOfferingCapabilities caps;
+    boolean needOfferingTimeUpdate = false;
     
     
-    protected StorageDataProviderFactory(StorageDataProviderConfig config)
+    protected StorageDataProviderFactory(StorageDataProviderConfig config) throws SensorHubException
     {
         this.config = config;
+        IModule<?> storageModule = null;
+        
+        // get handle to data storage instance
+        try
+        {
+            storageModule = SensorHub.getInstance().getPersistenceManager().getModuleById(config.storageID);
+            this.storage = (IBasicStorage<?>)storageModule;
+        }
+        catch (ClassCastException e)
+        {
+            throw new ServiceException("Storage " + MsgUtils.moduleString(storageModule) + " is not a supported data storage", e);
+        }
+        
+        // register to data stores events
+        for (ITimeSeriesDataStore<?> dataStore: storage.getDataStores().values())
+            dataStore.registerListener(this);
     }
     
     
     @Override
-    public SOSOfferingCapabilities generateCapabilities()
+    public SOSOfferingCapabilities generateCapabilities() throws ServiceException
     {
-        SOSOfferingCapabilities offering = new SOSOfferingCapabilities();
+        checkEnabled();
         
-        return offering;
+        try
+        {
+            caps = new SOSOfferingCapabilities();
+            
+            // identifier
+            if (config.uri != null)
+                caps.setIdentifier(config.uri);
+            else
+                caps.setIdentifier("baseURL#" + storage.getLocalID()); // TODO obtain baseURL
+            
+            // name
+            if (config.name != null)
+                caps.setTitle(config.name);
+            else
+                caps.setTitle(storage.getName());
+            
+            // description
+            if (config.description != null)
+                caps.setDescription(config.description);
+            else
+                caps.setDescription("Data available from storage " + storage.getName());
+            
+            // observable properties
+            List<String> outputDefs = getObservablePropertiesFromStorage();
+            caps.getObservableProperties().addAll(outputDefs);
+            
+            // observed area ??
+            
+            // add phenomenon time = period of data available in storage
+            caps.getPhenomenonTimes().add(getTimeExtentFromStorage());
+        
+            // add procedure ID
+            caps.getProcedures().add(storage.getLatestDataSourceDescription().getUniqueIdentifier());
+            
+            // supported formats
+            caps.getResponseFormats().add(SOSOfferingCapabilities.FORMAT_OM2);
+            caps.getProcedureFormats().add(SOSOfferingCapabilities.FORMAT_SML2);
+            
+            // TODO foi types (when using an obs storage)
+            
+            // obs types
+            List<String> obsTypes = getObservationTypesFromStorage();
+            caps.getObservationTypes().addAll(obsTypes);
+            
+            return caps;
+        }
+        catch (SensorHubException e)
+        {
+            throw new ServiceException("Error while generating capabilities for sensor " + MsgUtils.moduleString(storage), e);
+        }
     }
     
     
     @Override
-    public ISOSDataProvider getNewProvider(SOSDataFilter filter) throws Exception
+    public void updateCapabilities() throws ServiceException
     {
-        
-        return null;
+        try
+        {
+            if (needOfferingTimeUpdate)
+            {
+                needOfferingTimeUpdate = false;
+                TimeExtent newTimeExtent = getTimeExtentFromStorage();
+                caps.getPhenomenonTimes().set(0, newTimeExtent);
+            }
+        }
+        catch (StorageException e)
+        {
+            throw new ServiceException("Error while updating capabilities for sensor " + MsgUtils.moduleString(storage), e);
+        }        
     }
 
 
-    @Override
-    public AbstractProcess generateSensorMLDescription(DateTime t)
+    /*
+     * Builds list of observable properties by scanning record structure of each data store
+     */
+    protected TimeExtent getTimeExtentFromStorage() throws StorageException
     {
-        // TODO Auto-generated method stub
-        return null;
+        TimeExtent timeExtent = new TimeExtent();
+        
+        // process outputs descriptions
+        for (Entry<String, ? extends ITimeSeriesDataStore<IDataFilter>> entry: storage.getDataStores().entrySet())
+        {
+            // skip hidden outputs
+            if (config.hiddenOutputs != null && config.hiddenOutputs.contains(entry.getKey()))
+                continue;
+            
+            double[] storedPeriod = entry.getValue().getDataTimeRange();
+            timeExtent.resizeToContain(storedPeriod[0]);
+            timeExtent.resizeToContain(storedPeriod[1]);
+        }
+        
+        return timeExtent;
+    }
+    
+    
+    /*
+     * Builds list of observable properties by scanning record structure of each data store
+     */
+    protected List<String> getObservablePropertiesFromStorage() throws StorageException
+    {
+        List<String> observableUris = new ArrayList<String>();
+        
+        // process outputs descriptions
+        for (Entry<String, ? extends ITimeSeriesDataStore<IDataFilter>> entry: storage.getDataStores().entrySet())
+        {
+            // skip hidden outputs
+            if (config.hiddenOutputs != null && config.hiddenOutputs.contains(entry.getKey()))
+                continue;
+            
+            // iterate through all SWE components and add all definition URIs as observables
+            // this way only composites with URI will get added
+            ITimeSeriesDataStore<?> timeSeries = entry.getValue();
+            DataIterator it = new DataIterator(timeSeries.getRecordDescription());
+            while (it.hasNext())
+            {
+                String defUri = (String)it.next().getDefinition();
+                if (defUri != null && !defUri.equals(SWEConstants.DEF_SAMPLING_TIME))
+                    observableUris.add(defUri);
+            }
+        }
+        
+        return observableUris;
+    }
+    
+    
+    /*
+     * Build list of observertion types by scanning record structure of each data store
+     */
+    protected List<String> getObservationTypesFromStorage() throws StorageException
+    {
+        List<String> obsTypes = new ArrayList<String>();
+        obsTypes.add(IObservation.OBS_TYPE_GENERIC);
+        
+        // process outputs descriptions
+        for (Entry<String, ? extends ITimeSeriesDataStore<IDataFilter>> entry: storage.getDataStores().entrySet())
+        {
+            // skip hidden outputs
+            if (config.hiddenOutputs != null && config.hiddenOutputs.contains(entry.getKey()))
+                continue;
+            
+            // obs type depends on top-level component
+            ITimeSeriesDataStore<?> timeSeries = entry.getValue();
+            DataComponent dataStruct = timeSeries.getRecordDescription();
+            if (dataStruct instanceof SimpleComponent)
+                obsTypes.add(IObservation.OBS_TYPE_SCALAR);
+            else if (dataStruct instanceof DataRecord)
+                obsTypes.add(IObservation.OBS_TYPE_RECORD);
+            else if (dataStruct instanceof DataArray)
+                obsTypes.add(IObservation.OBS_TYPE_ARRAY);
+        }
+        
+        return obsTypes;
+    }
+    
+    
+    @Override
+    public AbstractProcess generateSensorMLDescription(double time)
+    {
+        if (Double.isNaN(time))
+            return storage.getLatestDataSourceDescription();
+        else
+            return storage.getDataSourceDescriptionAtTime(time);
+    }
+    
+    
+    @Override
+    public ISOSDataProvider getNewProvider(SOSDataFilter filter) throws ServiceException
+    {
+        checkEnabled();
+        return new StorageDataProvider(storage, filter);
+    }    
+    
+    
+    /**
+     * Checks if provider and underlying sensor are enabled
+     * @throws SensorException
+     */
+    protected void checkEnabled() throws ServiceException
+    {
+        if (!config.enabled)
+        {
+            String providerName = (config.name != null) ? config.name : "for " + MsgUtils.moduleString(storage);
+            throw new ServiceException("Provider " + providerName + " is disabled");
+        }
+        
+        if (!storage.isEnabled())
+            throw new ServiceException("Storage " + MsgUtils.moduleString(storage) + " is disabled");
     }
 
 
     @Override
     public boolean isEnabled()
     {
-        // TODO Auto-generated method stub
-        return false;
+        return (config.enabled && storage.isEnabled());
+    }
+    
+    
+    @Override
+    public void handleEvent(Event e)
+    {
+        if (e instanceof StorageDataEvent)
+            needOfferingTimeUpdate = true;     
     }
 
 
     @Override
     public void cleanup()
     {
-        // TODO Auto-generated method stub
-        
+        if (storage != null)
+        {
+            for (ITimeSeriesDataStore<?> dataStore: storage.getDataStores().values())
+                dataStore.unregisterListener(this);
+        }
     }
 
 }

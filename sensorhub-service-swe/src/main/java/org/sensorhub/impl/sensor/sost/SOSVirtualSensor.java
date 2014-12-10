@@ -29,16 +29,15 @@ import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataEncoding;
 import net.opengis.swe.v20.DataStream;
 import org.sensorhub.api.common.SensorHubException;
-import org.sensorhub.api.persistence.ISensorDescriptionStorage;
+import org.sensorhub.api.sensor.SensorEvent;
 import org.sensorhub.api.sensor.SensorException;
-import org.sensorhub.impl.SensorHub;
 import org.sensorhub.impl.sensor.AbstractSensorModule;
 import org.vast.data.BinaryComponentImpl;
 import org.vast.data.BinaryEncodingImpl;
 import org.vast.data.DataIterator;
+import org.vast.data.TextEncodingImpl;
 import org.vast.ogc.om.IObservation;
 import org.vast.ows.sos.ISOSDataConsumer;
-import org.vast.util.DateTime;
 
 
 /**
@@ -52,7 +51,6 @@ import org.vast.util.DateTime;
  */
 public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfig> implements ISOSDataConsumer
 {
-    ISensorDescriptionStorage<?> smlStorage;
     Map<DataStructureHash, String> structureToOutputMap = new HashMap<DataStructureHash, String>();
     
     
@@ -77,13 +75,6 @@ public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfi
     public SOSVirtualSensor()
     {
     }
-    
-    
-    @Override
-    public void updateSensor(AbstractProcess newSensorDescription) throws Exception
-    {
-        smlStorage.update(newSensorDescription);
-    }
 
 
     @Override
@@ -103,13 +94,14 @@ public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfi
         // try to otbain corresponding data interface
         DataStructureHash hashObj = new DataStructureHash(component, encoding);
         String templateID = structureToOutputMap.get(hashObj);
-        
+                
         // create a new one if needed
         if (templateID == null)
         {        
             SOSVirtualSensorOutput newOutput = new SOSVirtualSensorOutput(this, component, encoding);
             templateID = config.sensorUID + "-" + Integer.toHexString(hashObj.hashCode());
-            obsOutputs.put(templateID, newOutput);
+            component.setName(templateID);
+            addOutput(newOutput, false);
             structureToOutputMap.put(hashObj, templateID);
         }
         
@@ -176,15 +168,13 @@ public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfi
     public void newResultRecord(String templateID, DataBlock... dataBlocks) throws Exception
     {
         for (DataBlock dataBlock: dataBlocks)
-            ((SOSVirtualSensorOutput)obsOutputs.get(templateID)).publishNewRecord(dataBlock);
+            ((SOSVirtualSensorOutput)getObservationOutputs().get(templateID)).publishNewRecord(dataBlock);
     }
 
 
     @Override
     public void start() throws SensorHubException
     {
-        smlStorage = SensorHub.getInstance().getPersistenceManager().getSensorDescriptionStorage();
-        
         // generate output interfaces from description
         for (AbstractSWEIdentifiable output: getCurrentSensorDescription().getOutputList())
         {
@@ -204,7 +194,10 @@ public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfi
             else
             {
                 dataStruct = (DataComponent)output;
-                dataEnc = BinaryEncodingImpl.getDefaultEncoding(dataStruct);
+                if (dataStruct.createDataBlock().getAtomCount() > 30)
+                    dataEnc = BinaryEncodingImpl.getDefaultEncoding(dataStruct);
+                else
+                    dataEnc = new TextEncodingImpl(",", "\n");
             }
             
             newResultTemplate(dataStruct, dataEnc);
@@ -234,33 +227,12 @@ public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfi
 
 
     @Override
-    public boolean isSensorDescriptionHistorySupported()
-    {
-        return true;
-    }
-
-
-    @Override
-    public AbstractProcess getCurrentSensorDescription() throws SensorException
-    {
-        return smlStorage.getSensorDescription(config.sensorUID);
-    }
-
-
-    @Override
-    public AbstractProcess getSensorDescription(DateTime t) throws SensorException
-    {
-        return smlStorage.getSensorDescriptionAtTime(config.sensorUID, t.getTime());
-    }
-
-
-    @Override
     public void updateSensorDescription(AbstractProcess systemDesc, boolean recordHistory) throws SensorException
     {
-        if (!recordHistory)
-            smlStorage.removeHistory(systemDesc.getUniqueIdentifier());
-        
-        smlStorage.update(systemDesc);
+        sensorDescription = systemDesc;
+        long unixTime = System.currentTimeMillis();
+        lastUpdatedSensorDescription = unixTime / 1000.;
+        eventHandler.publishEvent(new SensorEvent(unixTime, getLocalID(), SensorEvent.Type.SENSOR_CHANGED));
     }
 
 
@@ -268,6 +240,13 @@ public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfi
     public boolean isConnected()
     {
         return true;
+    }
+
+
+    @Override
+    public void updateSensor(AbstractProcess newSensorDescription) throws Exception
+    {
+        updateSensorDescription(newSensorDescription, false);        
     }
 
 }

@@ -26,26 +26,11 @@ package org.sensorhub.api.persistence;
  * @since Nov 12, 2010
  */
 public interface IDataFilter
-{
-    /**
-     * Sets the range of time stamps for which data should be retrieved
-     * @param start
-     * @param stop
-     */
-    public void setTimeStampRange(long start, long stop);
-    
-    
+{    
     /**
      * @return the time stamp range to filter on
      */
-    public long[] getTimeStampRange();
-    
-    
-    /**
-     * Sets the producer ID to filter on
-     * @param localID
-     */
-    public void setProducerID(String localID);
+    public double[] getTimeStampRange();
     
     
     /**

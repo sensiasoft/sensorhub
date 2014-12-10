@@ -15,12 +15,16 @@ Developer are Copyright (C) 2014 the Initial Developer. All Rights Reserved.
 
 package org.sensorhub.impl.service.sos;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.sensorhub.api.common.SensorHubException;
 
 
 /**
  * <p>
- * Configuration class for SOS data providers using the sensor API
+ * Configuration class for SOS data providers using the sensor API.
+ * A storage can also be associated to the sensor so that archive request
+ * for this sensor data can be handled through the same offering.
  * </p>
  *
  * <p>Copyright (c) 2013</p>
@@ -31,15 +35,23 @@ public class SensorDataProviderConfig extends SOSProviderConfig
 {
     
     /**
-     * Local ID of sensor to use as data source
+     * Local ID of sensor to use as data source for
+     * live-stream requests
      */
     public String sensorID;
     
     
     /**
+     * Local ID of storage containing the sensor data
+     * to use as data source for archive requests
+     */
+    public String storageID;
+    
+    
+    /**
      * Names of sensor outputs to hide from SOS
      */
-    public String[] hiddenOutputs = new String[0];
+    public List<String> hiddenOutputs = new ArrayList<String>();
     
     
     /**
@@ -52,7 +64,10 @@ public class SensorDataProviderConfig extends SOSProviderConfig
     @Override
     protected IDataProviderFactory getFactory() throws SensorHubException
     {
-        return new SensorDataProviderFactory(this);
+        if (storageID != null)
+            return new SensorWithStorageProviderFactory(this);
+        else
+            return new SensorDataProviderFactory(this);
     }
 
 }

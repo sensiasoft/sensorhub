@@ -18,6 +18,13 @@
          <type>bundle</type>
       </dependency>
       <dependency>
+         <groupId>org.sensorhub</groupId>
+         <artifactId>sensorhub-core</artifactId>
+         <version>0.5</version>
+         <type>test-jar</type>
+         <scope>test</scope>
+      </dependency>
+      <dependency>
          <groupId>org.vast.opengis</groupId>
          <artifactId>ows-framework-bindings</artifactId>
          <version>1.0</version>

@@ -34,6 +34,7 @@ import org.sensorhub.api.module.IModuleProvider;
 import org.sensorhub.api.module.ModuleConfig;
 import org.sensorhub.api.module.ModuleEvent;
 import org.sensorhub.impl.common.BasicEventHandler;
+import org.sensorhub.utils.MsgUtils;
 
 
 
@@ -168,7 +169,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
     
     
     /**
-     * Enables the module with the given id
+     * Enables/Start the module with the given id
      * @param moduleID Local ID of module to enable
      * @return enabled module instance
      * @throws SensorHubException 
@@ -190,7 +191,8 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
         // otherwise just start it
         else
         {
-            module.start();        
+            module.getConfiguration().enabled = true;
+            module.start();      
             eventHandler.publishEvent(new ModuleEvent(module, ModuleEvent.Type.ENABLED));
         }
         
@@ -206,16 +208,25 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
     public synchronized void disableModule(String moduleID) throws SensorHubException
     {
         checkID(moduleID);
-        
-        ModuleConfig config = configRepos.get(moduleID);
-        config.enabled = false;
-        
-        // also unload and stop module if it was loaded
+                
+        // unload and stop module if it was loaded
         IModule<?> module = loadedModules.remove(moduleID);
         if (module != null)
-            module.stop();
-        
-        eventHandler.publishEvent(new ModuleEvent(module, ModuleEvent.Type.DISABLED));
+        {
+            try
+            {
+                module.stop();
+                module.getConfiguration().enabled = false;
+            }
+            catch (Exception e)
+            {
+                throw new SensorHubException("Error while stopping module " + MsgUtils.moduleString(module), e);
+            }
+            finally
+            {
+                eventHandler.publishEvent(new ModuleEvent(module, ModuleEvent.Type.DISABLED));
+            }
+        }
     }
     
     
@@ -331,7 +342,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
      */
     public List<IModuleProvider> getInstalledModuleTypes(Class<?> moduleClass)
     {
-        List<IModuleProvider> installedModules = getInstalledModuleTypes();
+        List<IModuleProvider> installedModules = new ArrayList<IModuleProvider>();
 
         ServiceLoader<IModuleProvider> sl = ServiceLoader.load(IModuleProvider.class);
         for (IModuleProvider provider: sl)
@@ -352,21 +363,31 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
      */
     public synchronized void shutdown(boolean saveConfig, boolean saveState) throws SensorHubException
     {
-        // shutdown all modules
+        // stop all modules
         for (IModule<?> module: getLoadedModules())
         {
-            // save state if requested
-            // TODO use state saver
-            if (saveState)
-                module.saveState(null);
-            
-            // save config if requested
-            if (saveConfig)
-                configRepos.update(module.getConfiguration());
-            
-            // cleanly stop module
-            this.disableModule(module.getLocalID());
+            try
+            {
+                // save state if requested
+                // TODO use state saver
+                if (saveState)
+                    module.saveState(null);
+                
+                // save config if requested
+                if (saveConfig)
+                    configRepos.update(module.getConfiguration());
+                
+                // cleanly stop module
+                this.disableModule(module.getLocalID());
+            }
+            catch (Exception e)
+            {
+                log.error("Error during shutdown", e);
+            }
         }
+        
+        // make sure to clear all listeners in case some modules failed to unregister themselves
+        eventHandler.clearAllListeners();
         
         // properly close config database
         configRepos.close();
@@ -378,6 +399,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
      */
     private void checkID(String moduleID)
     {
+        // moduleID can exist either in live table, in config repository or both
         if (!loadedModules.containsKey(moduleID) && !configRepos.contains(moduleID))
             throw new RuntimeException("Module with ID " + moduleID + " is not available");
     }

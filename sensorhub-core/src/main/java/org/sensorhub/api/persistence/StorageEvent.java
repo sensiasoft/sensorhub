@@ -37,10 +37,10 @@ public class StorageEvent extends Event
      */
     public enum Type
     {
-        INSERT,
+        STORE,
         UPDATE,
         DELETE,
-        RETRIEVE
+        GET
     };
     
     
@@ -53,17 +53,13 @@ public class StorageEvent extends Event
     /**
      * Type of storage event
      */
-    protected Type type;
-    
-    
-    /**
-     * ID of retrieved, added or updated records
-     */
-    protected long[] recordIds;
+    protected Type type;  
 
 
-    public StorageEvent(String storageId, Type type)
+    public StorageEvent(long timeStamp, String storageId, Type type)
     {
+        this.timeStamp = timeStamp;
+        this.storageId = storageId;
         this.type = type;
     }
     
@@ -91,15 +87,4 @@ public class StorageEvent extends Event
         this.type = type;
     }
 
-
-    public long[] getRecordIds()
-    {
-        return recordIds;
-    }
-
-
-    public void setRecordIds(long[] recordIds)
-    {
-        this.recordIds = recordIds;
-    }
 }

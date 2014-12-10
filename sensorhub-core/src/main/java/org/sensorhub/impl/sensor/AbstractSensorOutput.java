@@ -23,6 +23,7 @@ import org.sensorhub.api.sensor.ISensorDataInterface;
 import org.sensorhub.api.sensor.ISensorModule;
 import org.sensorhub.api.sensor.SensorException;
 import org.sensorhub.impl.common.BasicEventHandler;
+import org.sensorhub.utils.MsgUtils;
 
 
 /**
@@ -89,28 +90,28 @@ public abstract class AbstractSensorOutput<SensorType extends ISensorModule<?>> 
     @Override
     public int getNumberOfAvailableRecords() throws SensorException
     {
-        throw new SensorException(ERROR_NO_STORAGE + parentSensor.getName());
+        throw new SensorException(ERROR_NO_STORAGE + MsgUtils.moduleClassAndId(parentSensor));
     }
 
 
     @Override
     public List<DataBlock> getLatestRecords(int maxRecords, boolean clear) throws SensorException
     {
-        throw new SensorException(ERROR_NO_STORAGE + parentSensor.getName());
+        throw new SensorException(ERROR_NO_STORAGE + MsgUtils.moduleClassAndId(parentSensor));
     }
 
 
     @Override
     public List<DataBlock> getAllRecords(boolean clear) throws SensorException
     {
-        throw new SensorException(ERROR_NO_STORAGE + parentSensor.getName());
+        throw new SensorException(ERROR_NO_STORAGE + MsgUtils.moduleClassAndId(parentSensor));
     }
 
 
     @Override
     public int clearAllRecords() throws SensorException
     {
-        throw new SensorException(ERROR_NO_STORAGE + parentSensor.getName());
+        throw new SensorException(ERROR_NO_STORAGE + MsgUtils.moduleClassAndId(parentSensor));
     }
     
     

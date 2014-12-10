@@ -106,19 +106,19 @@ public class HttpServer extends AbstractModule<HttpServerConfig>
             
             HandlerList handlers = new HandlerList();
             
-            if (config.docRoot != null)
+            if (config.staticDocRootUrl != null)
             {
                 ResourceHandler resourceHandler = new ResourceHandler();
-                resourceHandler.setResourceBase(config.docRoot);
+                resourceHandler.setResourceBase(config.staticDocRootUrl);
                 handlers.addHandler(resourceHandler);
-                log.info("Serving static resources from " + config.docRoot);
+                log.info("Static resources root is " + config.staticDocRootUrl);
             }
             
-            if (config.rootURL != null)
+            if (config.servletsRootUrl != null)
             {
-                servletHandler.setContextPath(config.rootURL);
+                servletHandler.setContextPath(config.servletsRootUrl);
                 handlers.addHandler(servletHandler);
-                log.info("Serving servlets at " + config.rootURL);
+                log.info("Servlets root is " + config.servletsRootUrl);
             }
             
             server.setHandler(handlers);
@@ -172,6 +172,7 @@ public class HttpServer extends AbstractModule<HttpServerConfig>
     {
         stop();
         server = null;
+        instance = null;
     }
     
     
