@@ -16,8 +16,6 @@ Developer are Copyright (C) 2014 the Initial Developer. All Rights Reserved.
 package org.sensorhub.impl.persistence;
 
 import net.opengis.swe.v20.DataBlock;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.sensorhub.api.common.Event;
 import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.common.SensorHubException;
@@ -33,6 +31,8 @@ import org.sensorhub.api.sensor.SensorException;
 import org.sensorhub.impl.SensorHub;
 import org.sensorhub.impl.module.AbstractModule;
 import org.sensorhub.impl.module.ModuleRegistry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -47,7 +47,7 @@ import org.sensorhub.impl.module.ModuleRegistry;
  */
 public class SensorStorageHelper extends AbstractModule<SensorStorageConfig> implements IEventListener
 {
-    private static final Log log = LogFactory.getLog(SensorStorageHelper.class);
+    private static final Logger log = LoggerFactory.getLogger(SensorStorageHelper.class);
     
     IBasicStorage<?> storage;
     ISensorModule<?> sensor;

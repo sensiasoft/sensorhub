@@ -21,8 +21,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.UUID;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.sensorhub.api.common.IEventHandler;
 import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.common.IEventProducer;
@@ -35,7 +33,8 @@ import org.sensorhub.api.module.ModuleConfig;
 import org.sensorhub.api.module.ModuleEvent;
 import org.sensorhub.impl.common.BasicEventHandler;
 import org.sensorhub.utils.MsgUtils;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -54,7 +53,7 @@ import org.sensorhub.utils.MsgUtils;
  */
 public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProducer
 {
-    private static final Log log = LogFactory.getLog(ModuleRegistry.class);    
+    private static final Logger log = LoggerFactory.getLogger(ModuleRegistry.class);    
     
     IModuleConfigRepository configRepos;
     Map<String, IModule<?>> loadedModules;
