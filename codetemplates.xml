@@ -22,7 +22,7 @@ Developer are Copyright (C) 2014 the Initial Developer. All Rights Reserved.&#13
  * TODO ${type_name} type description
  * &lt;/p&gt;
  *
- * &lt;p&gt;Copyright (c) 2013&lt;/p&gt;
+ * &lt;p&gt;Copyright (c) 2014&lt;/p&gt;
  * @author Alexandre Robin &lt;alex.robin@sensiasoftware.com&gt;
  * @since ${date}
  */</template><template autoinsert="true" context="fieldcomment_context" deleted="false" description="Comment for fields" enabled="true" id="org.eclipse.jdt.ui.text.codetemplates.fieldcomment" name="fieldcomment">/**
