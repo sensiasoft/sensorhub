@@ -102,10 +102,10 @@
     "enabled": true
   },
   {
-    "objClass": "org.sensorhub.api.sensor.SensorStorageConfig",
+    "objClass": "org.sensorhub.impl.persistence.SensorStorageConfig",
     "id": "5cb05c9c-9e08-4cca-5691-ff4ff948bdc0",
     "name": "Sensor Storage Helper",
-    "moduleClass": "org.sensorhub.impl.sensor.SensorStorageHelper",
+    "moduleClass": "org.sensorhub.impl.persistence.SensorStorageHelper",
     "enabled": false,
     "storageID": "5cb05c9c-9e08-4fa1-8731-ff4ff948bdc0",
     "sensorID": "5cb05c9c-9e08-4fa1-8731-ff41e246bdc0"
