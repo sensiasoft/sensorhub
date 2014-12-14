@@ -21,7 +21,7 @@ import org.vast.ows.OWSUtils;
 import org.vast.ows.sos.GetResultRequest;
 import org.vast.ows.sos.GetResultTemplateRequest;
 import org.vast.ows.sos.GetResultTemplateResponse;
-import org.vast.sweCommon.SWEFactory;
+import org.vast.swe.SWEFactory;
 import com.vaadin.server.VaadinServlet;
 
 

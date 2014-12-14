@@ -57,7 +57,7 @@ import org.vast.ows.sos.GetObservationRequest;
 import org.vast.ows.sos.InsertResultRequest;
 import org.vast.ows.sos.SOSOfferingCapabilities;
 import org.vast.ows.sos.SOSServiceCapabilities;
-import org.vast.sweCommon.SWEData;
+import org.vast.swe.SWEData;
 import org.vast.util.TimeExtent;
 import org.vast.xml.DOMHelper;
 import org.w3c.dom.Element;
