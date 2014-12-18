@@ -15,8 +15,6 @@ Developer are Copyright (C) 2014 the Initial Developer. All Rights Reserved.
 
 package org.sensorhub.impl;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.config.IGlobalConfig;
@@ -27,6 +25,8 @@ import org.sensorhub.impl.module.ModuleConfigJsonFile;
 import org.sensorhub.impl.module.ModuleRegistry;
 import org.sensorhub.impl.persistence.PersistenceManagerImpl;
 import org.sensorhub.impl.sensor.SensorManagerImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -40,7 +40,7 @@ import org.sensorhub.impl.sensor.SensorManagerImpl;
  */
 public class SensorHub
 {
-    private static final Log log = LogFactory.getLog(SensorHub.class);    
+    private static final Logger log = LoggerFactory.getLogger(SensorHub.class);    
     private static final String ERROR_MSG = "Fatal error during sensorhub execution";
     private static SensorHub instance;
     

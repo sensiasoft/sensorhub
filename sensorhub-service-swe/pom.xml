@@ -10,6 +10,19 @@
    <name>SensorHub SWE Services</name>
    <description>Integration of SWE web services as SensorHub's services and virtual sensors</description>
    <packaging>bundle</packaging>
+   <repositories>
+      <repository>
+         <id>n52-releases</id>
+         <name>52n Releases</name>
+         <url>http://52north.org/maven/repo/releases/</url>
+         <releases>
+            <enabled>true</enabled>
+         </releases>
+         <snapshots>
+            <enabled>false</enabled>
+         </snapshots>
+      </repository>
+   </repositories>
    <dependencies>
       <dependency>
          <groupId>org.sensorhub</groupId>
@@ -28,6 +41,16 @@
          <groupId>org.vast.opengis</groupId>
          <artifactId>ows-framework-bindings</artifactId>
          <version>1.0</version>
+      </dependency>
+      <dependency>
+         <artifactId>amused-core</artifactId>
+         <groupId>org.n52.amused</groupId>
+         <version>1.0.0</version>
+      </dependency>
+      <dependency>
+         <artifactId>amused-wsn-impl</artifactId>
+         <groupId>org.n52.amused</groupId>
+         <version>1.0.0</version>
       </dependency>
    </dependencies>
 </project>

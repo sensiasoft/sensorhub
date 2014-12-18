@@ -18,8 +18,6 @@ package org.sensorhub.impl.persistence;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.module.IModule;
 import org.sensorhub.api.module.IModuleProvider;
@@ -33,6 +31,8 @@ import org.sensorhub.api.sensor.ISensorModule;
 import org.sensorhub.impl.SensorHub;
 import org.sensorhub.impl.module.ModuleRegistry;
 import org.sensorhub.utils.MsgUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -46,7 +46,7 @@ import org.sensorhub.utils.MsgUtils;
  */
 public class PersistenceManagerImpl implements IPersistenceManager
 {
-    private static final Log log = LogFactory.getLog(PersistenceManagerImpl.class);    
+    private static final Logger log = LoggerFactory.getLogger(PersistenceManagerImpl.class);    
     protected ModuleRegistry moduleRegistry;
     protected String basePath;
     

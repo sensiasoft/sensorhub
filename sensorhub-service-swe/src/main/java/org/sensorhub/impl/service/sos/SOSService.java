@@ -25,8 +25,6 @@ import net.opengis.sensorml.v20.AbstractProcess;
 import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataEncoding;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.sensorhub.api.common.Event;
 import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.common.SensorHubException;
@@ -41,6 +39,8 @@ import org.sensorhub.impl.sensor.sost.SOSVirtualSensorConfig;
 import org.sensorhub.impl.sensor.sost.SOSVirtualSensor;
 import org.sensorhub.impl.service.HttpServer;
 import org.sensorhub.impl.service.ogc.OGCServiceConfig.CapabilitiesInfo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.vast.cdm.common.DataStreamParser;
 import org.vast.ogc.om.IObservation;
 import org.vast.ows.GetCapabilitiesRequest;
@@ -87,7 +87,7 @@ import org.vast.util.TimeExtent;
 @SuppressWarnings("serial")
 public class SOSService extends SOSServlet implements IServiceModule<SOSServiceConfig>, IEventListener
 {
-    private static final Log log = LogFactory.getLog(SOSService.class);
+    private static final Logger log = LoggerFactory.getLogger(SOSService.class);
     
     SOSServiceConfig config;
     SOSServiceCapabilities capabilitiesCache;

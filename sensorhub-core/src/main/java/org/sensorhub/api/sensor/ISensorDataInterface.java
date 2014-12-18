@@ -24,15 +24,18 @@ import org.sensorhub.api.common.IEventProducer;
 
 /**
  * <p>
- * Interface to be implemented by all sensor drivers connected to the system
- * Data from each sensor output is made available through this interface.
- * Data can be observations or status information.
- * Implementations must at least be capable of retaining the latest record
- * received from sensor until the getLatestRecord is called.
- * If push is supported, implementations produce events of type SensorDataEvent.
+ * Interface to be implemented by all sensor drivers connected to the system.
+ * <p>Data provided by this interface can be actual measurements but also status
+ * information. Each sensor output is mapped to a separate instance of this
+ * interface, allowing them to have completely independent sampling rates.</p>
+ * <p>Implementations must at least be capable of retaining the latest record
+ * received from sensor and make it available with {@link #getLatestRecord()}</p>
+ * <p>If push is supported, implementation MUST produce events of type
+ * {@link org.sensorhub.api.sensor.SensorDataEvent} when new data is received
+ * or polled from sensor.
  * </p>
  * 
- * <p>Copyright (c) 2010</p>
+ * <p>Copyright (c) 2014</p>
  * @author Alexandre Robin
  * @since Nov 5, 2010
  */
@@ -47,8 +50,9 @@ public interface ISensorDataInterface extends IEventProducer
     
     
     /**
-     * Gets the interface name. It should be the name reported in the map by
-     * getXXXOutputs methods of {@link org.sensorhub.api.sensor.ISensorModule} 
+     * Gets the interface name.
+     * <p><i>It should be the name reported in the map by getXXXOutputs methods
+     * of {@link org.sensorhub.api.sensor.ISensorModule}</i></p>
      * @see org.sensorhub.api.sensor.ISensorModule#getAllOutputs()
      * @return name of this output interface
      */
@@ -64,20 +68,24 @@ public interface ISensorDataInterface extends IEventProducer
 
     /**
      * Checks data storage capability
-     * @return true if sensor or sensor driver supports observation storage natively, false otherwise
+     * <p><i>Note that storage can be provided by the sensor itself or by the
+     * driver.</i></p>
+     * @return true if record storage is supported internally, false otherwise
      */
     public boolean isStorageSupported();
 
 
     /**
      * Checks push capability
-     * @return true if driver can send notifications when new data is available, false otherwise
+     * <p><i>Note that 'push' can generally be simulated by the driver even if
+     * the sensor doesn't support it natively.</i></p>
+     * @return true if notifications are sent when new data is available, false otherwise
      */
     public boolean isPushSupported();
 
 
     /**
-     * Gets average sampling rate
+     * Gets the average rate at which this interface produces data
      * @return sampling period in seconds
      */
     public double getAverageSamplingPeriod(); // used to know how often to poll
@@ -85,6 +93,9 @@ public interface ISensorDataInterface extends IEventProducer
 
     /**
      * Retrieves the record definition for this output
+     * <p><i>Note that this is usually sent by reference and MUST not be modified
+     * by the caller. If you really need to modify it, first get an independent
+     * copy using {@link net.opengis.swe.v20.DataComponent#copy()}</i></p>
      * @return a DataComponent object defining the structure of the output
      */
     public DataComponent getRecordDescription();
@@ -92,7 +103,10 @@ public interface ISensorDataInterface extends IEventProducer
 
     /**
      * Provides the recommended encoding for this sensor data
-     * @return recommending encoding description
+     * <p><i>Note that this is usually sent by reference and MUST not be modified
+     * by the caller. If you really need to modify it, first get an independent
+     * copy using {@link net.opengis.swe.v20.DataEncoding#copy()}</i></p>
+     * @return recommended encoding description
      */
     public DataEncoding getRecommendedEncoding();
 
@@ -106,69 +120,78 @@ public interface ISensorDataInterface extends IEventProducer
     //	 * @throws SensorException
     //	 */
     //	public DataBlock requestNewRecord() throws SensorException;
-    //  SHOULD BE IMPLEMENTED AS A COMMAND?
+    //  SHOULD BE IMPLEMENTED AS A COMMAND
 
     /**
-     * Gets the latest record from this data channel. Data is not removed from input buffer.
-     * Even implementations with no storage support must always retain the last record.
-     * @return the record as a DataBlock object or null if no data is available
-     * @throws SensorException
+     * Gets the latest record received on this data channel. Even implementations with no
+     * storage support must always retain the last record and implement this method.
+     * <p>When storage is supported, this method does not cause data to be removed from memory.</p>
+     * <p><i>Note that this does not trigger a new measurement but simply retrieves the
+     * result of the last measurement made.</i></p>
+     * @return the last measurement record or null if no data is available
+     * @throws SensorException if there is a problem retrieving latest measurement from sensor
      */
     public DataBlock getLatestRecord() throws SensorException;
     
     
     /**
-     * Used to check when the last measurement was made. This is useful to know if a
-     * measurement has really been made since the last call to {@link #getLatestRecord}.
+     * Used to check when the last measurement was made.
+     * <p><i>Note: this method is useful to know if a measurement has really been made since the
+     * last call to {@link #getLatestRecord}.</i></p>
      * @return time of last measurement as julian time (1970) or NaN if no measurement was made yet
      */
     public double getLatestRecordTime();
 
 
     /**
-     * Gets storage capacity
-     * @see #isStorageSupported()
-     * @return maximum number of records that can be stored or 0 if storage is not supported
-     * @throws SensorException
+     * Gets the internal storage capacity.<br/>
+     * This method must be implemented if {@link #isStorageSupported()} returns true.
+     * @return maximum number of records that can be stored
+     * @throws SensorException if storage is not supported or a problem occured while
+     *         checking sensor on-board storage capacity
      */
     public int getStorageCapacity() throws SensorException;
 
 
     /**
-     * Retrieves number of record currectly available from driver or sensor memory.
-     * @see #isStorageSupported()
+     * Retrieves number of record currectly available from driver or on-board sensor memory.<br/>
+     * This method must be implemented if {@link #isStorageSupported()} returns true.
      * @return the number of available records
-     * @throws SensorException if storage is not supported or a problem occured while reading storage
+     * @throws SensorException if storage is not supported or a problem occured while
+     *         reading from on-board sensor storage
      */
     public int getNumberOfAvailableRecords() throws SensorException;
 
 
     /**
-     * Retrieves the N last records stored
-     * @see #isStorageSupported()
-     * @param maxRecords
+     * Retrieves the N last records stored.<br/>
+     * This method must be implemented if {@link #isStorageSupported()} returns true.
+     * @param maxRecords Maximum number of records to retrieve
      * @param clear if true, also clears records from driver or sensor memory
      * @return a list of records sorted by acquisition time (empty if no records are available)
-     * @throws SensorException if storage is not supported or a problem occured while reading storage
+     * @throws SensorException if storage is not supported or a problem occured while 
+     *         reading from on-board sensor storage
      */
     public List<DataBlock> getLatestRecords(int maxRecords, boolean clear) throws SensorException;
 
 
     /**
-     * Retrieves all records stored by the driver or sensor
-     * @see #isStorageSupported()
+     * Retrieves all records stored by the driver or sensor.<br/>
+     * This method must be implemented if {@link #isStorageSupported()} returns true.
      * @param clear if true, also clears records from driver or sensor memory
      * @return the list of all records in storage sorted by acquisition time (empty if no records are available)
-     * @throws SensorException if storage is not supported or a problem occured while reading storage
+     * @throws SensorException if storage is not supported or a problem occured 
+     *         while reading from on-board sensor storage
      */
     public List<DataBlock> getAllRecords(boolean clear) throws SensorException;
 
 
     /**
-     * Clears all records currently stored in driver or sensor memory
-     * @see #isStorageSupported()
+     * Clears all records currently stored in driver or sensor memory.<br/>
+     * This method must be implemented if {@link #isStorageSupported()} returns true.
      * @return number of records removed
-     * @throws SensorException if storage is not supported or a problem occured while clearing storage
+     * @throws SensorException if storage is not supported or a problem occured while
+     *         clearing on-board sensor storage
      */
     public int clearAllRecords() throws SensorException;
 

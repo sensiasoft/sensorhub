@@ -28,7 +28,8 @@ import org.vast.util.DateTime;
  * Interface to be implemented by all sensor drivers connected to the system
  * Commands can be sent to each sensor controllable input via this interface.
  * Commands can be executed synchronously or asynchronously by sensors.
- * Implementations of this class can produce events of type SensorControlEvent.
+ * If asynchronous mode is supported, implementations of this class MUST produce
+ * events of type SensorControlEvent.
  * </p>
  * 
  * <p>Copyright (c) 2010</p>

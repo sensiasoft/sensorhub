@@ -12,11 +12,6 @@
    <packaging>bundle</packaging>
    <dependencies>
       <dependency>
-         <groupId>commons-logging</groupId>
-         <artifactId>commons-logging</artifactId>
-         <version>1.1.3</version>
-      </dependency>
-      <dependency>
          <groupId>org.apache.felix</groupId>
          <artifactId>org.apache.felix.framework</artifactId>
          <version>4.2.1</version>
@@ -57,12 +52,11 @@
          <artifactId>sensorml-core</artifactId>
          <version>1.0</version>
       </dependency>
-      <dependency>
-         <groupId>log4j</groupId>
-         <artifactId>log4j</artifactId>
-         <version>1.2.17</version>
-         <type>bundle</type>
-      </dependency>
+     <dependency> 
+        <groupId>ch.qos.logback</groupId>
+        <artifactId>logback-classic</artifactId>
+        <version>1.1.2</version>
+     </dependency>
    </dependencies>
    <build>
       <plugins>
