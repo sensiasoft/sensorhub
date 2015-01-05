@@ -30,7 +30,7 @@ public class TestSensorHub
 
     public static void main(String[] args) throws Exception
     {
-        SensorHub.main(new String[] {"src/test/resources/sensorhub-config.json", "storage"});
+        SensorHub.main(new String[] {"src/test/resources/tonyTestConfig.json", "storage"});
         Thread.sleep(1000);
         final OWSUtils utils = new OWSUtils();
         
