@@ -91,9 +91,6 @@ public class TestSOSService
         // start HTTP server
         HttpServerConfig httpConfig = new HttpServerConfig();
         SensorHub.getInstance().getModuleRegistry().loadModule(httpConfig);
-        
-        // to preload FES stuff (prevents delay in first SOS request)
-        new org.geotools.filter.v2_0.FESConfiguration();
     }
     
     

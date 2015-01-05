@@ -9,6 +9,12 @@
     "docRoot": "web"
   },
   {
+    "objClass": "org.sensorhub.ui.AdminUIConfig",
+    "id": "5cb05c9c-9123-4fa1-8731-ffaa51489678",
+    "moduleClass": "org.sensorhub.ui.AdminUIModule",
+    "enabled": true
+  },
+  {
     "objClass": "org.sensorhub.impl.service.sos.SOSServiceConfig",
     "id": "5cb05c9c-9e08-4fa1-8731-ff41e246bdc1",
     "name": "SOS Service",
