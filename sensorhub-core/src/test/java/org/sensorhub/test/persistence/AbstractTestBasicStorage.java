@@ -300,6 +300,45 @@ public abstract class AbstractTestBasicStorage<StorageType extends IBasicStorage
     
     
     @Test
+    public void testStoreAndGetTimeRange() throws Exception
+    {
+        Map<String, ? extends ITimeSeriesDataStore<?>> dataStores;
+        String dataStoreName;
+        DataBlock data;
+        DataKey key;
+        
+        dataStoreName = "ds2";
+        DataComponent recordDef = createDs2();
+        dataStores = storage.getDataStores();
+        
+        // write N records
+        double timeStamp = 0.0;
+        double timeStep = 0.1;
+        int numRecords = 100;
+        List<DataBlock> dataList = new ArrayList<DataBlock>(numRecords);
+        storage.setAutoCommit(false);
+        for (int i=0; i<numRecords; i++)
+        {
+            data = recordDef.createDataBlock();
+            data.setDoubleValue(0, i + 0.3);
+            data.setIntValue(1, 2*i);
+            data.setStringValue(2, "test" + i);
+            dataList.add(data);
+            timeStamp = i*timeStep;
+            key = new DataKey("proc", timeStamp);
+            dataStores.get(dataStoreName).store(key, data);
+        }
+        storage.commit();
+        forceReadBackFromStorage();
+        
+        // retrieve them and check their values
+        double[] timeRange = dataStores.get(dataStoreName).getDataTimeRange();
+        assertEquals("Invalid begin time", 0., timeRange[0], 0.0);
+        assertEquals("Invalid end time", timeStamp, timeRange[1], 0.0);
+    }
+    
+    
+    @Test
     public void testStoreIncompatibleRecord() throws Exception
     {
         // TODO check that a datablock that is incompatible with record definition is rejected

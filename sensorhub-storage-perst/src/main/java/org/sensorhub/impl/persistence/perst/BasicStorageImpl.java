@@ -63,8 +63,10 @@ import org.sensorhub.impl.module.AbstractModule;
  */
 public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> implements IBasicStorage<BasicStorageConfig>
 {
-    private static Key KEY_START_ALL_TIME = new Key(Double.NEGATIVE_INFINITY);
-    private static Key KEY_END_ALL_TIME = new Key(Double.POSITIVE_INFINITY);
+    private static Key KEY_SML_START_ALL_TIME = new Key(Double.NEGATIVE_INFINITY);
+    private static Key KEY_SML_END_ALL_TIME = new Key(Double.POSITIVE_INFINITY);
+    private static Key KEY_DATA_START_ALL_TIME = new Key(new Object[] {Double.NEGATIVE_INFINITY});
+    private static Key KEY_DATA_END_ALL_TIME = new Key(new Object[] {Double.POSITIVE_INFINITY});
     
     protected Storage db;
     protected DBRoot dbRoot;
@@ -76,7 +78,6 @@ public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> impleme
      */
     public BasicStorageImpl()
     {
-        this.eventHandler = new BasicEventHandler();
     }
     
     
@@ -186,14 +187,14 @@ public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> impleme
     @Override
     public List<AbstractProcess> getDataSourceDescriptionHistory()
     {
-        return Collections.unmodifiableList(dbRoot.descriptionTimeIndex.getList(KEY_START_ALL_TIME, KEY_END_ALL_TIME));
+        return Collections.unmodifiableList(dbRoot.descriptionTimeIndex.getList(KEY_SML_START_ALL_TIME, KEY_SML_END_ALL_TIME));
     }
 
 
     @Override
     public AbstractProcess getDataSourceDescriptionAtTime(double time)
     {
-        Iterator<AbstractProcess> it = dbRoot.descriptionTimeIndex.iterator(KEY_START_ALL_TIME, new Key(time), Index.DESCENT_ORDER);
+        Iterator<AbstractProcess> it = dbRoot.descriptionTimeIndex.iterator(KEY_SML_START_ALL_TIME, new Key(time), Index.DESCENT_ORDER);
         if (it.hasNext())
             return it.next();
         return null;
@@ -211,9 +212,9 @@ public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> impleme
             try
             {
                 if (validTime instanceof TimeInstant)
-                    time = ((TimeInstant) validTime).getTimePosition().getDateTimeValue().getAsDouble();
+                    time = ((TimeInstant) validTime).getTimePosition().getDecimalValue();
                 else if (validTime instanceof TimePeriod)
-                    time = ((TimePeriod) validTime).getBeginPosition().getDateTimeValue().getAsDouble();
+                    time = ((TimePeriod) validTime).getBeginPosition().getDecimalValue();
             }
             catch (Exception e)
             {
@@ -243,7 +244,7 @@ public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> impleme
     @Override
     public void removeDataSourceDescription(double time)
     {
-        Iterator<AbstractProcess> it = dbRoot.descriptionTimeIndex.iterator(KEY_START_ALL_TIME, new Key(time), Index.DESCENT_ORDER);
+        Iterator<AbstractProcess> it = dbRoot.descriptionTimeIndex.iterator(KEY_SML_START_ALL_TIME, new Key(time), Index.DESCENT_ORDER);
         if (it.hasNext())
         {
             AbstractProcess sml = it.next();
@@ -259,7 +260,7 @@ public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> impleme
     @Override
     public void removeDataSourceDescriptionHistory()
     {
-        Iterator<AbstractProcess> it = dbRoot.descriptionTimeIndex.iterator(KEY_START_ALL_TIME, KEY_END_ALL_TIME, Index.ASCENT_ORDER);
+        Iterator<AbstractProcess> it = dbRoot.descriptionTimeIndex.iterator(KEY_SML_START_ALL_TIME, KEY_SML_END_ALL_TIME, Index.ASCENT_ORDER);
         while (it.hasNext())
         {
             AbstractProcess sml = it.next();
@@ -525,15 +526,17 @@ public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> impleme
         public double[] getDataTimeRange()
         {
             IterableIterator<Entry<Object, DataBlock>> it;
-            it = recordIndex.entryIterator(KEY_START_ALL_TIME, KEY_END_ALL_TIME, Index.ASCENT_ORDER);
+            it = recordIndex.entryIterator(KEY_DATA_START_ALL_TIME, KEY_DATA_END_ALL_TIME, Index.ASCENT_ORDER);
             if (!it.hasNext())
                 return new double[] {0.0, 0.0};
             Entry<Object, DataBlock> first = it.next();
             
-            it = recordIndex.entryIterator(KEY_START_ALL_TIME, KEY_END_ALL_TIME, Index.DESCENT_ORDER);
+            it = recordIndex.entryIterator(KEY_DATA_START_ALL_TIME, KEY_DATA_END_ALL_TIME, Index.DESCENT_ORDER);
             Entry<Object, DataBlock> last = it.next();
             
-            return new double[] {((DataKey)first.getKey()).timeStamp, ((DataKey)last.getKey()).timeStamp};
+            Object[] key1 = (Object[])first.getKey();
+            Object[] key2 = (Object[])last.getKey();
+            return new double[] {(double)key1[0], (double)key2[0]};
         }
 
         @Override
