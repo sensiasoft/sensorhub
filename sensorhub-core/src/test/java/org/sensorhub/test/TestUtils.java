@@ -22,7 +22,7 @@ import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataComponent;
 import org.junit.Assert;
 import org.vast.sensorML.SMLUtils;
-import org.vast.sweCommon.SWECommonUtils;
+import org.vast.swe.SWECommonUtils;
 
 
 public class TestUtils

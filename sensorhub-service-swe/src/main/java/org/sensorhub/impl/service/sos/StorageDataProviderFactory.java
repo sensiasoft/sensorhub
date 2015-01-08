@@ -41,7 +41,8 @@ import org.vast.ogc.om.IObservation;
 import org.vast.ows.server.SOSDataFilter;
 import org.vast.ows.sos.ISOSDataProvider;
 import org.vast.ows.sos.SOSOfferingCapabilities;
-import org.vast.sweCommon.SWEConstants;
+import org.vast.ows.swe.SWESOfferingCapabilities;
+import org.vast.swe.SWEConstants;
 import org.vast.util.TimeExtent;
 
 
@@ -133,8 +134,8 @@ public class StorageDataProviderFactory implements IDataProviderFactory, IEventL
             caps.getProcedures().add(storage.getLatestDataSourceDescription().getUniqueIdentifier());
             
             // supported formats
-            caps.getResponseFormats().add(SOSOfferingCapabilities.FORMAT_OM2);
-            caps.getProcedureFormats().add(SOSOfferingCapabilities.FORMAT_SML2);
+            caps.getResponseFormats().add(SWESOfferingCapabilities.FORMAT_OM2);
+            caps.getProcedureFormats().add(SWESOfferingCapabilities.FORMAT_SML2);
             
             // TODO foi types (when using an obs storage)
             

@@ -154,9 +154,9 @@ public abstract class AbstractTestBasicStorage<StorageType extends IBasicStorage
         // load SensorML doc and set first validity period
         is = new BufferedInputStream(getClass().getResourceAsStream("/gamma2070_more.xml"));
         AbstractProcess smlIn1 = smlUtils.readProcess(is);
-        IDateTime begin1 = new DateTimeDouble(DateTimeFormat.parseIso("2010-05-15Z"));
+        IDateTime begin1 = new DateTimeDouble(new DateTimeFormat().parseIso("2010-05-15Z"));
         ((TimePeriod)smlIn1.getValidTimeList().get(0)).getBeginPosition().setDateTimeValue(begin1);
-        IDateTime end1 = new DateTimeDouble(DateTimeFormat.parseIso("2010-09-23Z"));
+        IDateTime end1 = new DateTimeDouble(new DateTimeFormat().parseIso("2010-09-23Z"));
         ((TimePeriod)smlIn1.getValidTimeList().get(0)).getEndPosition().setDateTimeValue(end1);
         storage.storeDataSourceDescription(smlIn1);
         forceReadBackFromStorage();
@@ -176,9 +176,9 @@ public abstract class AbstractTestBasicStorage<StorageType extends IBasicStorage
         // load SensorML doc another time and set with a different validity period
         is = new BufferedInputStream(getClass().getResourceAsStream("/gamma2070_more.xml"));
         AbstractProcess smlIn2 = smlUtils.readProcess(is);
-        IDateTime begin2 = new DateTimeDouble(DateTimeFormat.parseIso("2010-09-24Z"));
+        IDateTime begin2 = new DateTimeDouble(new DateTimeFormat().parseIso("2010-09-24Z"));
         ((TimePeriod)smlIn2.getValidTimeList().get(0)).getBeginPosition().setDateTimeValue(begin2);
-        IDateTime end2 = new DateTimeDouble(DateTimeFormat.parseIso("2010-12-08Z"));
+        IDateTime end2 = new DateTimeDouble(new DateTimeFormat().parseIso("2010-12-08Z"));
         ((TimePeriod)smlIn2.getValidTimeList().get(0)).getEndPosition().setDateTimeValue(end2);
         storage.storeDataSourceDescription(smlIn2);        
         forceReadBackFromStorage();

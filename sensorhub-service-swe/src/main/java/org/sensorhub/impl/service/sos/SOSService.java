@@ -66,10 +66,11 @@ import org.vast.ows.sos.SOSUtils;
 import org.vast.ows.swe.DeleteSensorRequest;
 import org.vast.ows.swe.DeleteSensorResponse;
 import org.vast.ows.swe.DescribeSensorRequest;
+import org.vast.ows.swe.SWESOfferingCapabilities;
 import org.vast.ows.swe.UpdateSensorRequest;
 import org.vast.ows.swe.UpdateSensorResponse;
 import org.vast.sensorML.SMLUtils;
-import org.vast.sweCommon.SWEFactory;
+import org.vast.swe.SWEFactory;
 import org.vast.util.TimeExtent;
 
 
@@ -592,7 +593,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     @Override
     protected void checkQueryObservables(String offeringID, List<String> observables, OWSExceptionReport report) throws SOSException
     {
-        SOSOfferingCapabilities offering = checkAndGetOffering(offeringID);
+        SWESOfferingCapabilities offering = checkAndGetOffering(offeringID);
         for (String obsProp: observables)
         {
             if (!offering.getObservableProperties().contains(obsProp))
@@ -604,7 +605,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     @Override
     protected void checkQueryProcedures(String offeringID, List<String> procedures, OWSExceptionReport report) throws SOSException
     {
-        SOSOfferingCapabilities offering = checkAndGetOffering(offeringID);
+        SWESOfferingCapabilities offering = checkAndGetOffering(offeringID);
         for (String procID: procedures)
         {
             if (!offering.getProcedures().contains(procID))
@@ -667,7 +668,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
         if (format == null)
             return;
         
-        SOSOfferingCapabilities offering = checkAndGetOffering(offeringID);
+        SWESOfferingCapabilities offering = checkAndGetOffering(offeringID);
         if (!offering.getProcedureFormats().contains(format))
             report.add(new SOSException(SOSException.invalid_param_code, "procedureDescriptionFormat", format, "Procedure description format " + format + " is not available for offering " + offeringID));
     }

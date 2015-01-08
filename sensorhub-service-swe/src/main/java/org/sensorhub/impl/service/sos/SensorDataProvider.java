@@ -43,7 +43,7 @@ import org.vast.ogc.om.ObservationImpl;
 import org.vast.ogc.om.ProcedureRef;
 import org.vast.ows.server.SOSDataFilter;
 import org.vast.ows.sos.ISOSDataProvider;
-import org.vast.sweCommon.SWEConstants;
+import org.vast.swe.SWEConstants;
 import org.vast.util.TimeExtent;
 
 

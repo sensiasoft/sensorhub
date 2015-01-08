@@ -15,11 +15,23 @@ Developer are Copyright (C) 2014 the Initial Developer. All Rights Reserved.
 
 package org.sensorhub.impl.service.sps;
 
+import org.sensorhub.api.common.IEventHandler;
 import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.module.IModuleStateLoader;
 import org.sensorhub.api.module.IModuleStateSaver;
 import org.sensorhub.api.service.IServiceModule;
+import org.sensorhub.impl.common.BasicEventHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.vast.ows.GetCapabilitiesRequest;
+import org.vast.ows.OWSRequest;
+import org.vast.ows.server.OWSServlet;
+import org.vast.ows.sps.*;
+import org.vast.ows.sps.StatusReport.RequestStatus;
+import org.vast.ows.swe.DeleteSensorRequest;
+import org.vast.ows.swe.DescribeSensorRequest;
+import org.vast.ows.swe.UpdateSensorRequest;
 
 
 /**
@@ -34,21 +46,218 @@ import org.sensorhub.api.service.IServiceModule;
  * @author Alexandre Robin <alex.robin@sensiasoftware.com>
  * @since Sep 6, 2013
  */
-public class SPSService implements IServiceModule<SPSServiceConfig>
+public class SPSService extends OWSServlet implements IServiceModule<SPSServiceConfig>
 {
+    private static final Logger log = LoggerFactory.getLogger(SPSService.class);
+    
     SPSServiceConfig config;
+    SPSServiceCapabilities capabilitiesCache;
+    IEventHandler eventHandler;
+    ITaskDB taskDB;
+    SPSNotificationSystem notifSystem;
     
     
     public SPSService()
     {
-        
+        this.eventHandler = new BasicEventHandler();
     }
     
     
     @Override
-    public boolean isEnabled()
+    public void handleRequest(OWSRequest request) throws Exception
     {
-        return config.enabled;
+        if (request instanceof GetCapabilitiesRequest)
+            handleRequest((GetCapabilitiesRequest)request);
+        else if (request instanceof DescribeSensorRequest)
+            handleRequest((DescribeSensorRequest)request);
+        
+    }
+    
+    
+    protected DescribeTaskingResponse describeTasking(DescribeTaskingRequest request) throws Exception
+    {
+        String sensorId = request.getProcedureID();
+        SPSOfferingCapabilities offering = capabilitiesCache.getOffering(sensorId);
+        
+        if (offering != null)
+            return offering.getParametersDescription();
+        else
+            throw new SPSException(SPSException.invalid_param_code, "SensorID", sensorId, null);
+    }
+    
+    
+    protected GetFeasibilityResponse getFeasibility(GetFeasibilityRequest request) throws Exception
+    {               
+        GetFeasibilityResponse gfResponse = new GetFeasibilityResponse();
+        
+        /*// create task in DB
+        ITask newTask = taskDB.createNewTask(request);
+        String studyId = newTask.getID();
+        
+        // launch feasibility study
+        //FeasibilityResult result = doFeasibilityStudy(request);
+        String sensorId = request.getSensorID();
+        
+        // create response
+        GetFeasibilityResponse gfResponse = new GetFeasibilityResponse();
+        gfResponse.setVersion("2.0.0");
+        FeasibilityReport report = gfResponse.getReport();
+        report.setTitle("Automatic Feasibility Results");
+        report.setTaskID(studyId);
+        report.setSensorID(sensorId);
+                
+        if (!isFeasible(result))
+        {
+            report.setRequestStatus(RequestStatus.Rejected);
+        }
+        else
+        {
+            report.setRequestStatus(RequestStatus.Accepted);
+            report.setPercentCompletion(1.0f);            
+        }
+        
+        report.touch();
+        taskDB.updateTaskStatus(report);
+        */
+        return gfResponse;      
+    }
+    
+    
+    protected SubmitResponse submit(final SubmitRequest request) throws Exception
+    {
+        // prepare response
+        SubmitResponse sResponse = new SubmitResponse();
+        sResponse.setVersion("2.0.0");
+        
+        // create task in DB
+        ITask newTask = taskDB.createNewTask(request);
+        final String taskID = newTask.getID();
+        
+        // time tag initial report
+        StatusReport taskStatus = newTask.getStatusReport();
+        taskStatus.setRequestStatus(RequestStatus.Pending);
+        taskStatus.touch();     
+        
+        // runnable to process task asynchronously
+        /*Runnable updateRunnable = new Runnable()
+        {
+            public void run()
+            {
+                // generate new task report
+                ITask newTask = taskDB.getTask(taskID);
+                StatusReport report = newTask.getStatusReport().clone();
+                report.setTitle("Tasking Report");
+                
+                // launch feasibility study
+                FeasibilityResult result = null;
+                try
+                {
+                    // TODO if feasibility level = COMPLETE check or simulate conflicts
+                    result = doFeasibilityStudy(request);
+                }
+                catch (SPSException e)
+                {
+                    e.printStackTrace(); // TODO log
+                    return;
+                }
+                
+                // if not feasible set status to rejected
+                if (!isFeasible(result))
+                {
+                    report.setRequestStatus(RequestStatus.Rejected);
+                    report.setEstimatedToC(null);
+                    
+                    // send notification
+                    notifSystem.notifyRequestRejected(report);
+                }
+                else
+                {
+                    
+                }
+                                
+                // commit to DB
+                report.touch();
+                taskDB.updateTaskStatus(report);
+                
+                // send notification
+                notifSystem.notifyRequestAccepted(report);
+            }
+        };
+                
+        // start async processing (i.e. feasibility)
+        Thread updateThread = new Thread(updateRunnable);
+        updateThread.start();
+        
+        // wait 5s for definite accepted/rejected answer
+        Thread.sleep(5000);*/
+        
+        // add report to response
+        ITask task = findTask(taskID);
+        sResponse.setReport(task.getStatusReport());
+        return sResponse;
+    }
+    
+    
+    protected ITask findTask(String taskID) throws SPSException
+    {
+        ITask task = taskDB.getTask(taskID);
+        
+        if (task == null)
+            throw new SPSException(SPSException.invalid_param_code, "TaskID", taskID, null);
+        
+        return task;
+    }
+    
+    
+    protected GetStatusResponse getStatus(GetStatusRequest request) throws Exception
+    {
+        ITask task = findTask(request.getTaskID());
+        StatusReport status = task.getStatusReport();
+        
+        // TODO change encoding if specified in format!
+        //status.getExtendedData().setDataEncoding(new XmlEncoding("eo", EOConstants.EO_NAMESPACE));
+        
+        GetStatusResponse gsResponse = new GetStatusResponse();
+        gsResponse.setVersion("2.0.0");
+        gsResponse.getReportList().add(status);
+        
+        return gsResponse;
+    }
+
+
+    protected CancelResponse cancel(CancelRequest request) throws Exception
+    {
+        throw new SPSException(SPSException.unsupported_op_code, request.getOperation());
+    }
+
+
+    protected DescribeResultAccessResponse describeResultAccess(DescribeResultAccessRequest request) throws Exception
+    {
+        ITask task = findTask(request.getTaskID());
+        
+        DescribeResultAccessResponse resp = new DescribeResultAccessResponse();     
+        StatusReport status = task.getStatusReport();
+       
+        
+        return resp;
+    }
+
+
+    protected UpdateResponse update(UpdateRequest request) throws Exception
+    {
+        throw new SPSException(SPSException.unsupported_op_code, request.getOperation());
+    }
+    
+
+    protected ReserveResponse reserve(ReserveRequest request) throws Exception
+    {
+        throw new SPSException(SPSException.unsupported_op_code, request.getOperation());
+    }
+    
+    
+    protected ConfirmResponse confirm(ConfirmRequest request) throws Exception
+    {
+        throw new SPSException(SPSException.unsupported_op_code, request.getOperation());
     }
     
     
@@ -62,8 +271,7 @@ public class SPSService implements IServiceModule<SPSServiceConfig>
     @Override
     public void updateConfig(SPSServiceConfig config) throws SensorHubException
     {
-        // TODO Auto-generated method stub
-
+        this.config = config;
     }
     
     
@@ -84,8 +292,7 @@ public class SPSService implements IServiceModule<SPSServiceConfig>
     @Override
     public SPSServiceConfig getConfiguration()
     {
-        // TODO Auto-generated method stub
-        return null;
+        return config;
     }
 
 
@@ -102,18 +309,23 @@ public class SPSService implements IServiceModule<SPSServiceConfig>
         return config.id;
     }
     
+    
+    @Override
+    public boolean isEnabled()
+    {
+        return config.enabled;
+    }
+    
 
     @Override
     public void saveState(IModuleStateSaver saver) throws SensorHubException
     {
-        // TODO Auto-generated method stub
     }
 
 
     @Override
     public void loadState(IModuleStateLoader loader) throws SensorHubException
     {
-        // TODO Auto-generated method stub
     }
 
 
@@ -127,13 +339,20 @@ public class SPSService implements IServiceModule<SPSServiceConfig>
     @Override
     public void registerListener(IEventListener listener)
     {
-        // TODO Auto-generated method stub        
+        eventHandler.registerListener(listener);        
     }
 
 
     @Override
     public void unregisterListener(IEventListener listener)
     {
-        // TODO Auto-generated method stub        
+        eventHandler.unregisterListener(listener);
+    }
+
+
+    @Override
+    protected String getServiceType()
+    {
+        return SPSUtils.SPS;
     }
 }
