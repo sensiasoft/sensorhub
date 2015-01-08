@@ -50,8 +50,10 @@ import org.vast.sensorML.SMLUtils;
  */
 public abstract class AbstractSensorModule<ConfigType extends SensorConfig> extends AbstractModule<ConfigType> implements ISensorModule<ConfigType>
 {
-    protected static String ERROR_NO_UPDATE = "Sensor Description update is not supported by driver ";
-    protected static String ERROR_NO_HISTORY = "History of sensor description is not supported by driver ";
+    public final static String DEFAULT_ID = "SENSOR_DESC";
+    protected final static String ERROR_NO_UPDATE = "Sensor Description update is not supported by driver ";
+    protected final static String ERROR_NO_HISTORY = "History of sensor description is not supported by driver ";
+    
     private Map<String, ISensorDataInterface> obsOutputs = new HashMap<String, ISensorDataInterface>();  
     private Map<String, ISensorDataInterface> statusOutputs = new HashMap<String, ISensorDataInterface>();  
     private Map<String, ISensorControlInterface> controlInputs = new HashMap<String, ISensorControlInterface>();  
@@ -142,6 +144,7 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
             }
             
             // add most common stuff automatically
+            sensorDescription.setId(DEFAULT_ID);
             sensorDescription.setUniqueIdentifier(getLocalID());    
             
             // append outputs only if not already defined in static doc
