@@ -327,7 +327,7 @@ public class TestSOSService
         
         // first get capabilities to know
         SOSServiceCapabilities caps = (SOSServiceCapabilities)new OWSUtils().getCapabilities("http://localhost:8080/sensorhub" + SERVICE_ENDPOINT, "SOS", "2.0");
-        TimeExtent timePeriod = ((SOSOfferingCapabilities)caps.getLayer(URI_OFFERING1)).getPhenomenonTimes().get(0);
+        TimeExtent timePeriod = ((SOSOfferingCapabilities)caps.getLayer(URI_OFFERING1)).getPhenomenonTime();
         System.out.println("Available time period is " + timePeriod.getIsoString(0));
         
         DOMHelper dom = sendRequest(generateGetObsTimeRange(URI_OFFERING1, timePeriod.getStartTime(), timePeriod.getStopTime()), false);

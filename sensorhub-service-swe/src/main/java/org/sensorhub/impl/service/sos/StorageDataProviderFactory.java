@@ -128,7 +128,7 @@ public class StorageDataProviderFactory implements IDataProviderFactory, IEventL
             // observed area ??
             
             // add phenomenon time = period of data available in storage
-            caps.getPhenomenonTimes().add(getTimeExtentFromStorage());
+            caps.setPhenomenonTime(getTimeExtentFromStorage());
         
             // add procedure ID
             caps.getProcedures().add(storage.getLatestDataSourceDescription().getUniqueIdentifier());
@@ -161,7 +161,7 @@ public class StorageDataProviderFactory implements IDataProviderFactory, IEventL
             {
                 needOfferingTimeUpdate = false;
                 TimeExtent newTimeExtent = getTimeExtentFromStorage();
-                caps.getPhenomenonTimes().set(0, newTimeExtent);
+                caps.setPhenomenonTime(newTimeExtent);
             }
         }
         catch (StorageException e)

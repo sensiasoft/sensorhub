@@ -639,19 +639,10 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
             log.error("Error while updating capabilities for offering " + offeringID, e);
         }
         
-        // check that request time is within one of the allowed time periods
-        boolean ok = false;
-        for (TimeExtent timeRange: offering.getPhenomenonTimes())
-        {
-            if ((timeRange.isBaseAtNow() && requestTime.isBaseAtNow()) || timeRange.contains(requestTime))
-            {
-                ok = true;
-                break;
-            }
-        }
-        
-        if (!ok)
-            report.add(new SOSException(SOSException.invalid_param_code, "phenomenonTime", requestTime.getIsoString(0), null));
+        // check that request time is within allowed time periods
+        TimeExtent allowedPeriod = offering.getPhenomenonTime();
+        if ((allowedPeriod.isBaseAtNow() && requestTime.isBaseAtNow()) || allowedPeriod.contains(requestTime))
+            report.add(new SOSException(SOSException.invalid_param_code, "phenomenonTime", requestTime.getIsoString(0), null));            
     }
     
     

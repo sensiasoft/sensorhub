@@ -115,7 +115,7 @@ public class SensorDataProviderFactory implements IDataProviderFactory, IEventLi
             TimeExtent phenTime = new TimeExtent();
             phenTime.setBaseAtNow(true);
             phenTime.setTimeStep(getLowestSamplingPeriodFromSensor());
-            caps.getPhenomenonTimes().add(phenTime);
+            caps.setPhenomenonTime(phenTime);
         
             // use sensor uniqueID as procedure ID
             caps.getProcedures().add(sensor.getCurrentSensorDescription().getUniqueIdentifier());
