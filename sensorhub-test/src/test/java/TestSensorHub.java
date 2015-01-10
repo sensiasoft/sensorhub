@@ -34,13 +34,6 @@ public class TestSensorHub
         Thread.sleep(1000);
         final OWSUtils utils = new OWSUtils();
         
-        // deploy Vaadin servlet
-        VaadinServlet vaadin = new VaadinServlet();
-        Map<String, String> initParams = new HashMap<String, String>();
-        initParams.put("UI", AdminUI.class.getCanonicalName());
-        initParams.put("productionMode", "true");
-        HttpServer.getInstance().deployServlet("/*", vaadin, initParams);
-        
         // GetResultTemplate
         GetResultTemplateRequest gtr = new GetResultTemplateRequest();
         gtr.setGetServer("http://localhost:8080/sensorhub/sos");
