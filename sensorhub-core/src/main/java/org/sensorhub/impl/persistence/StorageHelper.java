@@ -29,7 +29,7 @@ public class StorageHelper
 {
     
     
-    public static void configureStorageForSensor(ISensorModule<?> sensor, IBasicStorage<?> storage, boolean listenToEvents) throws SensorHubException
+    public static void configureStorageForSensor(ISensorModule<?> sensor, IBasicStorage<?> storage, boolean createListener) throws SensorHubException
     {
         if (storage.getDataStores().size() > 0)
             throw new RuntimeException("Storage " + MsgUtils.moduleString(storage) + " is already in use");
@@ -53,10 +53,10 @@ public class StorageHelper
             storage.addNewDataStore(name, output.getRecordDescription(), output.getRecommendedEncoding());
         }
         
-        if (listenToEvents)
+        if (createListener)
         {
             // start storage helper for adding data on data events
-            SensorStorageConfig helperConfig = new SensorStorageConfig();
+            SensorStorageHelperConfig helperConfig = new SensorStorageHelperConfig();
             helperConfig.name = "Storage Listener for " + sensor.getName();
             helperConfig.enabled = true;
             helperConfig.sensorID = sensor.getLocalID();

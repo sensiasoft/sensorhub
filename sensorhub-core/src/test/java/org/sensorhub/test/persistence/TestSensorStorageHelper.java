@@ -27,7 +27,7 @@ import org.sensorhub.impl.SensorHub;
 import org.sensorhub.impl.SensorHubConfig;
 import org.sensorhub.impl.module.ModuleRegistry;
 import org.sensorhub.impl.persistence.InMemoryBasicStorage;
-import org.sensorhub.impl.persistence.SensorStorageConfig;
+import org.sensorhub.impl.persistence.SensorStorageHelperConfig;
 import org.sensorhub.impl.persistence.SensorStorageHelper;
 import org.sensorhub.impl.persistence.StorageHelper;
 import org.sensorhub.test.sensor.FakeSensor;
@@ -73,7 +73,7 @@ public class TestSensorStorageHelper
     @Test
     public void testAddRecordToStorage() throws Exception
     {
-        SensorStorageConfig config = new SensorStorageConfig();
+        SensorStorageHelperConfig config = new SensorStorageHelperConfig();
         config.enabled = true;
         config.moduleClass = SensorStorageHelper.class.getCanonicalName();
         config.name = "Sensor Storage Helper";

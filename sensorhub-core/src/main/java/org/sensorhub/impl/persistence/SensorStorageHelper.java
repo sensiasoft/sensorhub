@@ -45,7 +45,7 @@ import org.slf4j.LoggerFactory;
  * @author Alexandre Robin <alex.robin@sensiasoftware.com>
  * @since Oct 5, 2013
  */
-public class SensorStorageHelper extends AbstractModule<SensorStorageConfig> implements IEventListener
+public class SensorStorageHelper extends AbstractModule<SensorStorageHelperConfig> implements IEventListener
 {
     private static final Logger log = LoggerFactory.getLogger(SensorStorageHelper.class);
     
@@ -77,6 +77,10 @@ public class SensorStorageHelper extends AbstractModule<SensorStorageConfig> imp
             for (String outputName: config.selectedOutputs)
                 sensor.getAllOutputs().get(outputName).registerListener(this);
         }
+        
+        // if storage is empty, initialize it
+        if (storage.getLatestDataSourceDescription() == null)
+            StorageHelper.configureStorageForSensor(sensor, storage, false);
         
         // get the latest sensor description in case we were down during the last update
         storage.storeDataSourceDescription(sensor.getCurrentSensorDescription());

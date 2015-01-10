@@ -18,7 +18,7 @@ package org.sensorhub.impl.persistence;
 import org.sensorhub.api.module.ModuleConfig;
 
 
-public class SensorStorageConfig extends ModuleConfig
+public class SensorStorageHelperConfig extends ModuleConfig
 {
     private static final long serialVersionUID = -7523211661433806575L;
 
@@ -41,7 +41,7 @@ public class SensorStorageConfig extends ModuleConfig
     public String[] selectedOutputs;
     
     
-    public SensorStorageConfig()
+    public SensorStorageHelperConfig()
     {
         // set default associated implementation
         this.moduleClass = SensorStorageHelper.class.getCanonicalName();
