@@ -494,7 +494,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
             report.process();
             
             // get consumer and update
-            ISOSDataConsumer consumer = getDataConsumerBySensorID(request.getProcedureId());
+            ISOSDataConsumer consumer = getDataConsumerBySensorID(request.getProcedureId());                
             consumer.updateSensor(request.getProcedureDescription());
             
             // build and send response
@@ -722,13 +722,22 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     protected ISOSDataConsumer getDataConsumerByOfferingID(String offering) throws Exception
     {
         checkAndGetOffering(offering);
-        return dataConsumers.get(offering);
+        ISOSDataConsumer consumer = dataConsumers.get(offering);
+        
+        if (consumer == null)
+            throw new SOSException(SOSException.invalid_param_code, "offering", offering, "Transactional operations are not supported for offering " + offering);
+            
+        return consumer;
     }
     
     
     protected ISOSDataConsumer getDataConsumerBySensorID(String sensorID) throws Exception
     {
         String offering = procedureToOfferingMap.get(sensorID);
+        
+        if (offering == null)
+            throw new SOSException(SOSException.invalid_param_code, "procedure", sensorID, "Transactional operations are not supported for sensor " + sensorID);
+        
         return getDataConsumerByOfferingID(offering);
     }
     
@@ -736,7 +745,9 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     protected ISOSDataConsumer getDataConsumerByTemplateID(String templateID) throws Exception
     {
         String offering = templateToOfferingMap.get(templateID);
-        return dataConsumers.get(offering);
+        ISOSDataConsumer consumer = dataConsumers.get(offering);
+        
+        return consumer;
     }
     
     
