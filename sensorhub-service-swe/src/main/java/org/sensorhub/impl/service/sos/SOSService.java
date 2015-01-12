@@ -641,7 +641,8 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
         
         // check that request time is within allowed time periods
         TimeExtent allowedPeriod = offering.getPhenomenonTime();
-        if ((allowedPeriod.isBaseAtNow() && requestTime.isBaseAtNow()) || allowedPeriod.contains(requestTime))
+        boolean nowOk = allowedPeriod.isBaseAtNow() || allowedPeriod.isEndNow();
+        if (!((requestTime.isBaseAtNow() && nowOk) || requestTime.intersects(allowedPeriod)))
             report.add(new SOSException(SOSException.invalid_param_code, "phenomenonTime", requestTime.getIsoString(0), null));            
     }
     
