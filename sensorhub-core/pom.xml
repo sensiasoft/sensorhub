@@ -35,7 +35,17 @@
       <dependency>
          <groupId>org.eclipse.jetty.aggregate</groupId>
          <artifactId>jetty-servlet</artifactId>
-         <version>8.1.12.v20130726</version>
+         <version>8.1.16.v20140903</version>
+      </dependency>
+      <dependency>
+         <groupId>org.eclipse.jetty</groupId>
+         <artifactId>jetty-rewrite</artifactId>
+         <version>8.1.16.v20140903</version>
+      </dependency>
+      <dependency>
+         <groupId>org.eclipse.jetty</groupId>
+         <artifactId>jetty-websocket</artifactId>
+         <version>8.1.16.v20140903</version>
       </dependency>
       <dependency>
          <groupId>org.vast.opengis</groupId>
