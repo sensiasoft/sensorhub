@@ -23,6 +23,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import net.opengis.gml.v32.TimeIndeterminateValue;
+import net.opengis.gml.v32.TimePosition;
+import net.opengis.gml.v32.impl.GMLFactory;
 import net.opengis.sensorml.v20.AbstractProcess;
 import net.opengis.swe.v20.DataComponent;
 import org.sensorhub.api.sensor.ISensorControlInterface;
@@ -143,11 +146,29 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
                 sensorDescription = new PhysicalSystemImpl();
             }
             
-            // add most common stuff automatically
-            sensorDescription.setId(DEFAULT_ID);
-            sensorDescription.setUniqueIdentifier(getLocalID());    
+            //////////////////////////////////////////////////////////////
+            // add stuffs if not already defined in static SensorML doc //
+            //////////////////////////////////////////////////////////////
+            long unixTime = System.currentTimeMillis();
+            lastUpdatedSensorDescription = unixTime / 1000.;
             
-            // append outputs only if not already defined in static doc
+            // default IDs
+            if (sensorDescription.getId() == null)
+                sensorDescription.setId(DEFAULT_ID);            
+            if (!sensorDescription.isSetIdentifier())
+                sensorDescription.setUniqueIdentifier(getLocalID());
+            
+            // time validity
+            if (sensorDescription.getNumValidTimes() == 0)
+            {
+                GMLFactory fac = new GMLFactory();
+                TimePosition begin = fac.newTimePosition(lastUpdatedSensorDescription);
+                TimePosition end = fac.newTimePosition();
+                end.setIndeterminatePosition(TimeIndeterminateValue.NOW);
+                sensorDescription.addValidTimeAsTimePeriod(fac.newTimePeriod(begin, end));
+            }
+            
+            // outputs
             if (sensorDescription.getNumOutputs() == 0)
             {
                 for (Entry<String, ? extends ISensorDataInterface> output: getAllOutputs().entrySet())
@@ -160,7 +181,7 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
                 }
             }
             
-            // append control parameters only if not already defined in static doc
+            // control parameters
             if (sensorDescription.getNumParameters() == 0)
             {
                 for (Entry<String, ? extends ISensorControlInterface> param: getCommandInputs().entrySet())
@@ -174,8 +195,7 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
                 }
             }
             
-            long unixTime = System.currentTimeMillis();
-            lastUpdatedSensorDescription = unixTime / 1000.;
+            // send event
             eventHandler.publishEvent(new SensorEvent(unixTime, getLocalID(), SensorEvent.Type.SENSOR_CHANGED));
         }
     }

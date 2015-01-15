@@ -494,7 +494,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
             report.process();
             
             // get consumer and update
-            ISOSDataConsumer consumer = getDataConsumerBySensorID(request.getProcedureId());
+            ISOSDataConsumer consumer = getDataConsumerBySensorID(request.getProcedureId());                
             consumer.updateSensor(request.getProcedureDescription());
             
             // build and send response
@@ -639,19 +639,10 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
             log.error("Error while updating capabilities for offering " + offeringID, e);
         }
         
-        // check that request time is within one of the allowed time periods
-        boolean ok = false;
-        for (TimeExtent timeRange: offering.getPhenomenonTimes())
-        {
-            if ((timeRange.isBaseAtNow() && requestTime.isBaseAtNow()) || timeRange.contains(requestTime))
-            {
-                ok = true;
-                break;
-            }
-        }
-        
-        if (!ok)
-            report.add(new SOSException(SOSException.invalid_param_code, "phenomenonTime", requestTime.getIsoString(0), null));
+        // check that request time is within allowed time periods
+        TimeExtent allowedPeriod = offering.getPhenomenonTime();
+        if ((allowedPeriod.isBaseAtNow() && requestTime.isBaseAtNow()) || allowedPeriod.contains(requestTime))
+            report.add(new SOSException(SOSException.invalid_param_code, "phenomenonTime", requestTime.getIsoString(0), null));            
     }
     
     
@@ -722,13 +713,22 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     protected ISOSDataConsumer getDataConsumerByOfferingID(String offering) throws Exception
     {
         checkAndGetOffering(offering);
-        return dataConsumers.get(offering);
+        ISOSDataConsumer consumer = dataConsumers.get(offering);
+        
+        if (consumer == null)
+            throw new SOSException(SOSException.invalid_param_code, "offering", offering, "Transactional operations are not supported for offering " + offering);
+            
+        return consumer;
     }
     
     
     protected ISOSDataConsumer getDataConsumerBySensorID(String sensorID) throws Exception
     {
         String offering = procedureToOfferingMap.get(sensorID);
+        
+        if (offering == null)
+            throw new SOSException(SOSException.invalid_param_code, "procedure", sensorID, "Transactional operations are not supported for sensor " + sensorID);
+        
         return getDataConsumerByOfferingID(offering);
     }
     
@@ -736,7 +736,9 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     protected ISOSDataConsumer getDataConsumerByTemplateID(String templateID) throws Exception
     {
         String offering = templateToOfferingMap.get(templateID);
-        return dataConsumers.get(offering);
+        ISOSDataConsumer consumer = dataConsumers.get(offering);
+        
+        return consumer;
     }
     
     

@@ -22,7 +22,7 @@ import java.io.IOException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -65,7 +65,7 @@ public class ModuleConfigJsonFile implements IModuleConfigRepository
     public ModuleConfigJsonFile(String moduleConfigPath)
     {
         configFile = new File(moduleConfigPath);
-        configMap = new HashMap<String, ModuleConfig>();
+        configMap = new LinkedHashMap<String, ModuleConfig>();
         
         // init json serializer/deserializer
         final GsonBuilder builder = new GsonBuilder();
