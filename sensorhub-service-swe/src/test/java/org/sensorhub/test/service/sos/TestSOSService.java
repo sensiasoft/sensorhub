@@ -325,11 +325,12 @@ public class TestSOSService
         while (sensor.getAllOutputs().get(NAME_OUTPUT1).isEnabled())
             Thread.sleep(((long)SAMPLING_PERIOD*500));
         
-        // first get capabilities to know
+        // first get capabilities to knowavailable time range
         SOSServiceCapabilities caps = (SOSServiceCapabilities)new OWSUtils().getCapabilities("http://localhost:8080/sensorhub" + SERVICE_ENDPOINT, "SOS", "2.0");
         TimeExtent timePeriod = ((SOSOfferingCapabilities)caps.getLayer(URI_OFFERING1)).getPhenomenonTime();
         System.out.println("Available time period is " + timePeriod.getIsoString(0));
         
+        // then get obs
         DOMHelper dom = sendRequest(generateGetObsTimeRange(URI_OFFERING1, timePeriod.getStartTime(), timePeriod.getStopTime()), false);
         assertEquals("Wrong number of observations returned", totalSampleCount, dom.getElements("*/OM_Observation").getLength());
     }
