@@ -6,23 +6,18 @@ import java.awt.image.WritableRaster;
 import java.io.BufferedInputStream;
 import java.io.InputStream;
 import java.net.URLConnection;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import javax.swing.JFrame;
 import net.opengis.swe.v20.DataArray;
 import net.opengis.swe.v20.DataBlock;
 import org.sensorhub.impl.SensorHub;
-import org.sensorhub.impl.service.HttpServer;
-import org.sensorhub.ui.AdminUI;
 import org.vast.cdm.common.DataStreamParser;
 import org.vast.ows.OWSUtils;
 import org.vast.ows.sos.GetResultRequest;
 import org.vast.ows.sos.GetResultTemplateRequest;
 import org.vast.ows.sos.GetResultTemplateResponse;
 import org.vast.swe.SWEFactory;
-import com.vaadin.server.VaadinServlet;
 
 
 public class TestSensorHub
@@ -30,7 +25,8 @@ public class TestSensorHub
 
     public static void main(String[] args) throws Exception
     {
-        SensorHub.main(new String[] {"src/test/resources/sensorhub-config.json", "storage"});
+        //SensorHub.main(new String[] {"src/test/resources/sensorhub-config.json", "storage"});
+        SensorHub.main(new String[] {"src/test/resources/config_fakesensors_with_storage.json", "storage"});
         Thread.sleep(1000);
         final OWSUtils utils = new OWSUtils();
         

@@ -39,6 +39,18 @@
     "autoActivate": true,
     "enableHistory": false,
     "hiddenIO": null
+  },
+  {
+    "objClass": "org.sensorhub.impl.sensor.fakecam.FakeCamConfig",
+    "id": "d136b6ea-3950-4691-bf56-c84ec7d89d74",
+    "name": "Fake Camera Sensor",
+    "enabled": true,
+    "moduleClass": "org.sensorhub.impl.sensor.fakecam.FakeCamSensor",
+    "sensorML": null,
+    "autoActivate": true,
+    "enableHistory": false,
+    "hiddenIO": null,
+    "videoFilePath": "/home/alex/Videos/output.mp4"
   },    
   {
     "objClass": "org.sensorhub.impl.persistence.perst.BasicStorageConfig",
@@ -102,6 +114,14 @@
            "uri": "urn:mysos:offering03",
            "sensorID": "d136b6ea-3950-4691-bf56-c84ec7d89d73",           
            "storageID": "5cb05c9c-9e08-4fa1-8731-ff4ff948bdc2"
+       },
+       {
+           "objClass": "org.sensorhub.impl.service.sos.SensorDataProviderConfig",
+           "enabled": true,
+           "name": "Fake Camera",
+           "description": "Fake Camera sensor",
+           "uri": "urn:mysos:offering04",
+           "sensorID": "d136b6ea-3950-4691-bf56-c84ec7d89d74"
        }
     ],
     "ogcCapabilitiesInfo": {
