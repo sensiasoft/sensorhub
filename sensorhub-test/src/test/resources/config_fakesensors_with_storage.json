@@ -5,8 +5,8 @@
     "name": "HTTP Server",
     "moduleClass": "org.sensorhub.impl.service.HttpServer",
     "httpPort": 8080,
-    "rootURL": "/sensorhub",
-    "docRoot": "web"
+    "servletsRootUrl": "/sensorhub",
+    "staticDocRootUrl": "web"
   },
   {
     "objClass": "org.sensorhub.ui.AdminUIConfig",
