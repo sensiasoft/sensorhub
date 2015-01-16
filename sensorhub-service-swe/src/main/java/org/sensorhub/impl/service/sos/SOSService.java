@@ -22,6 +22,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import net.opengis.sensorml.v20.AbstractProcess;
+import net.opengis.swe.v20.BinaryBlock;
+import net.opengis.swe.v20.BinaryEncoding;
+import net.opengis.swe.v20.BinaryMember;
 import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataEncoding;
@@ -42,11 +45,13 @@ import org.sensorhub.impl.service.ogc.OGCServiceConfig.CapabilitiesInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vast.cdm.common.DataStreamParser;
+import org.vast.cdm.common.DataStreamWriter;
 import org.vast.ogc.om.IObservation;
 import org.vast.ows.GetCapabilitiesRequest;
 import org.vast.ows.OWSExceptionReport;
 import org.vast.ows.OWSRequest;
 import org.vast.ows.server.SOSDataFilter;
+import org.vast.ows.sos.GetResultRequest;
 import org.vast.ows.sos.ISOSDataConsumer;
 import org.vast.ows.sos.ISOSDataProvider;
 import org.vast.ows.sos.ISOSDataProviderFactory;
@@ -443,6 +448,55 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
         {
             
         }        
+    }
+    
+    
+    @Override
+    protected boolean writeCustomFormatStream(GetResultRequest request, ISOSDataProvider dataProvider, OutputStream os) throws Exception
+    {
+        DataComponent resultStructure = dataProvider.getResultStructure();
+        DataEncoding resultEncoding = dataProvider.getDefaultResultEncoding();
+        
+        if (resultEncoding instanceof BinaryEncoding)
+        {
+            boolean useMP4 = false;
+            BinaryMember member1 = ((BinaryEncoding)resultEncoding).getMemberList().get(0);
+            if (member1 instanceof BinaryBlock && ((BinaryBlock)member1).getCompression().equals("H264"))
+                useMP4 = true;
+            
+            if (useMP4)
+            {            
+                // set MIME type for MP4 format
+                request.getHttpResponse().setContentType("video/mp4");
+                
+                //os = new FileOutputStream("/home/alex/testsos.mp4");
+                
+                // TODO generate header on the fly using SWE Common structure
+                String header = "00 00 00 20 66 74 79 70 69 73 6F 6D 00 00 02 00 69 73 6F 6D 69 73 6F 32 61 76 63 31 6D 70 34 31 00 00 02 E5 6D 6F 6F 76 00 00 00 6C 6D 76 68 64 00 00 00 00 D0 C3 54 92 D0 C3 54 92 00 00 03 E8 00 00 00 00 00 01 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 40 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 02 00 00 00 18 69 6F 64 73 00 00 00 00 10 80 80 80 07 00 4F FF FF FF FF FF 00 00 01 D1 74 72 61 6B 00 00 00 5C 74 6B 68 64 00 00 00 0F D0 C3 54 92 D0 C3 54 92 00 00 00 01 00 00 00 00 FF FF FF FF 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 40 00 00 00 07 80 00 00 04 38 00 00 00 00 01 6D 6D 64 69 61 00 00 00 20 6D 64 68 64 00 00 00 00 D0 C3 54 92 D0 C3 54 92 00 01 5F 90 FF FF FF FF 15 C7 00 00 00 00 00 2D 68 64 6C 72 00 00 00 00 00 00 00 00 76 69 64 65 00 00 00 00 00 00 00 00 00 00 00 00 56 69 64 65 6F 48 61 6E 64 6C 65 72 00 00 00 01 18 6D 69 6E 66 00 00 00 14 76 6D 68 64 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 24 64 69 6E 66 00 00 00 1C 64 72 65 66 00 00 00 00 00 00 00 01 00 00 00 0C 75 72 6C 20 00 00 00 01 00 00 00 D8 73 74 62 6C 00 00 00 8C 73 74 73 64 00 00 00 00 00 00 00 01 00 00 00 7C 61 76 63 31 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 07 80 04 38 00 48 00 00 00 48 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 18 FF FF 00 00 00 26 61 76 63 43 01 42 80 28 FF E1 00 0F 67 42 80 28 DA 01 E0 08 9F 96 01 B4 28 4D 40 01 00 04 68 CE 06 E2 00 00 00 10 73 74 74 73 00 00 00 00 00 00 00 00 00 00 00 10 73 74 73 63 00 00 00 00 00 00 00 00 00 00 00 14 73 74 73 7A 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 10 73 74 63 6F 00 00 00 00 00 00 00 00 00 00 00 28 6D 76 65 78 00 00 00 20 74 72 65 78 00 00 00 00 00 00 00 01 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 60 75 64 74 61 00 00 00 58 6D 65 74 61 00 00 00 00 00 00 00 21 68 64 6C 72 00 00 00 00 00 00 00 00 6D 64 69 72 61 70 70 6C 00 00 00 00 00 00 00 00 00 00 00 00 2B 69 6C 73 74 00 00 00 23 A9 74 6F 6F 00 00 00 1B 64 61 74 61 00 00 00 01 00 00 00 00 4C 61 76 66 35 34 2E 32 30 2E 34";
+                for (String val: header.split(" ")) {
+                    int b = Integer.parseInt(val, 16);
+                    os.write(b);
+                }
+                
+                // prepare record writer for selected encoding
+                DataStreamWriter writer = SWEFactory.createDataWriter(resultEncoding);
+                writer.setDataComponents(resultStructure);
+                writer.setOutput(os);
+                
+                // write each record in output stream
+                DataBlock nextRecord;
+                while ((nextRecord = dataProvider.getNextResultRecord()) != null)
+                {
+                    writer.write(nextRecord);
+                    writer.flush();
+                }       
+                        
+                os.flush();
+                return true;
+            }
+        }
+        
+        return false;
     }
     
     
