@@ -18,11 +18,6 @@
          <type>bundle</type>
       </dependency>
       <dependency>
-         <groupId>com.esotericsoftware.kryo</groupId>
-         <artifactId>kryo</artifactId>
-         <version>2.21</version>
-      </dependency>
-      <dependency>
          <groupId>com.google.code.gson</groupId>
          <artifactId>gson</artifactId>
          <version>2.2.4</version>
