@@ -58,7 +58,7 @@ public class FakeSensor extends AbstractSensorModule<SensorConfig>
     public void start() throws SensorHubException
     {
         for (ISensorDataInterface o: getObservationOutputs().values())
-            ((IFakeSensorOutput)o).start();
+            ((IFakeSensorOutput)o).init();
     }
     
     

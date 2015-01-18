@@ -18,6 +18,6 @@ package org.sensorhub.test.sensor;
 
 public interface IFakeSensorOutput
 {
-    public abstract void start();
-    public abstract void stop();
+    public void init();
+    public void stop();
 }
