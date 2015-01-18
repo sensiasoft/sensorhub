@@ -15,6 +15,8 @@ Developer are Copyright (C) 2014 the Initial Developer. All Rights Reserved.
 
 package org.sensorhub.impl.service.sps;
 
+import org.sensorhub.api.common.SensorHubException;
+
 
 public abstract class SPSConnectorConfig
 {
@@ -44,5 +46,12 @@ public abstract class SPSConnectorConfig
      * It null, it will be auto-generated from name of target
      */
     public String description;
+    
+    
+    /**
+     * Retrieves the connector instance describe by this configuration
+     * @return
+     */
+    protected abstract ISPSConnector getConnector() throws SensorHubException;
 
 }

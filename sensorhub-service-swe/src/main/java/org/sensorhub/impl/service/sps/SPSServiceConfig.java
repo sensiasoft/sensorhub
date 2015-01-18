@@ -15,6 +15,8 @@ Developer are Copyright (C) 2014 the Initial Developer. All Rights Reserved.
 
 package org.sensorhub.impl.service.sps;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.sensorhub.impl.service.ogc.OGCServiceConfig;
 
 
@@ -33,13 +35,8 @@ public class SPSServiceConfig extends OGCServiceConfig
     
     
     /**
-     * List of local IDs of sensors managed by this SPS.
-     * The service will attempt to connect to the control interface of
-     * each sensor when available.
+     * Consumers configurations 
      */
-    public String[] managedSensors;
-    
-    
-    // TODO deploy SPS associated to processes within SensorML process chains
+    public List<SPSConnectorConfig> connectors = new ArrayList<SPSConnectorConfig>();
 
 }

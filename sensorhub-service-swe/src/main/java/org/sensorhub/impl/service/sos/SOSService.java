@@ -130,9 +130,8 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     
     
     /**
-     * Generates the SOSCapabilities object with info from data source
+     * Generates the SOSServiceCapabilities object with info from data source
      * @return
-     * @throws ServiceException
      */
     protected SOSServiceCapabilities generateCapabilities()
     {

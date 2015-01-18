@@ -26,6 +26,8 @@ import org.sensorhub.api.sensor.SensorException;
 import org.sensorhub.api.service.ServiceException;
 import org.sensorhub.impl.SensorHub;
 import org.sensorhub.utils.MsgUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.vast.data.DataBlockMixed;
 import org.vast.data.SWEFactory;
 import org.vast.data.ScalarIterator;
@@ -33,7 +35,6 @@ import org.vast.ows.sps.DescribeTaskingResponse;
 import org.vast.ows.sps.SPSOfferingCapabilities;
 import org.vast.ows.swe.SWESOfferingCapabilities;
 import org.vast.swe.SWEConstants;
-import com.esotericsoftware.minlog.Log;
 import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataChoice;
 import net.opengis.swe.v20.DataComponent;
@@ -49,15 +50,17 @@ import net.opengis.swe.v20.DataComponent;
  * @author Alexandre Robin <alex.robin@sensiasoftware.com>
  * @since Dec 13, 2014
  */
-public class SensorConnector implements ISPSConnector
+public class DirectSensorConnector implements ISPSConnector
 {
+    private static final Logger log = LoggerFactory.getLogger(DirectSensorConnector.class);
+    
     final SensorConnectorConfig config;
     final ISensorModule<?> sensor;
     DataChoice commandChoice;
     String uniqueInterfaceName;
     
     
-    public SensorConnector(SensorConnectorConfig config) throws SensorHubException
+    public DirectSensorConnector(SensorConnectorConfig config) throws SensorHubException
     {
         this.config = config;
         
@@ -173,7 +176,15 @@ public class SensorConnector implements ISPSConnector
     
     
     @Override
-    public void sendSubmitData(DataBlock data) throws ServiceException
+    public void updateCapabilities() throws Exception
+    {
+        // TODO Auto-generated method stub
+        
+    }
+    
+    
+    @Override
+    public void sendSubmitData(ITask task, DataBlock data) throws ServiceException
     {
         checkEnabled();
         ISensorControlInterface cmdInterface;
@@ -201,7 +212,7 @@ public class SensorConnector implements ISPSConnector
         catch (SensorException e)
         {
             String msg = "Error sending command to sensor " + MsgUtils.moduleString(sensor);
-            Log.error(msg, e);
+            log.error(msg, e);
             throw new ServiceException(msg, e);
         }
     }
@@ -221,5 +232,18 @@ public class SensorConnector implements ISPSConnector
         if (!sensor.isEnabled())
             throw new ServiceException("Sensor " + MsgUtils.moduleString(sensor) + " is disabled");
     }
+    
+    
+    @Override
+    public void cleanup()
+    {
+        //SensorHub.getInstance().unregisterListener(this);
+    }
 
+
+    @Override
+    public boolean isEnabled()
+    {
+        return (config.enabled && sensor.isEnabled());
+    }
 }
