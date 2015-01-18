@@ -19,6 +19,7 @@ import net.opengis.gml.v32.Point;
 import net.opengis.gml.v32.impl.PointImpl;
 import net.opengis.sensorml.v20.PhysicalSystem;
 import org.sensorhub.api.common.SensorHubException;
+import org.sensorhub.api.sensor.ISensorControlInterface;
 import org.sensorhub.api.sensor.ISensorDataInterface;
 import org.sensorhub.api.sensor.SensorConfig;
 import org.sensorhub.api.sensor.SensorException;
@@ -37,6 +38,13 @@ public class FakeSensor extends AbstractSensorModule<SensorConfig>
     {
         for (ISensorDataInterface o: outputs)
             addOutput(o, false);
+    }
+    
+    
+    public void setControlInterfaces(ISensorControlInterface... inputs) throws SensorException
+    {
+        for (ISensorControlInterface i: inputs)
+            addControlInput(i);
     }
     
 
