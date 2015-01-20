@@ -18,11 +18,6 @@
          <type>bundle</type>
       </dependency>
       <dependency>
-         <groupId>com.esotericsoftware.kryo</groupId>
-         <artifactId>kryo</artifactId>
-         <version>2.21</version>
-      </dependency>
-      <dependency>
          <groupId>com.google.code.gson</groupId>
          <artifactId>gson</artifactId>
          <version>2.2.4</version>
@@ -33,9 +28,19 @@
          <version>3.0.1</version>
       </dependency>
       <dependency>
-         <groupId>org.eclipse.jetty.aggregate</groupId>
+         <groupId>org.eclipse.jetty</groupId>
          <artifactId>jetty-servlet</artifactId>
-         <version>8.1.12.v20130726</version>
+         <version>8.1.16.v20140903</version>
+      </dependency>
+      <dependency>
+         <groupId>org.eclipse.jetty</groupId>
+         <artifactId>jetty-rewrite</artifactId>
+         <version>8.1.16.v20140903</version>
+      </dependency>
+      <dependency>
+         <groupId>org.eclipse.jetty</groupId>
+         <artifactId>jetty-websocket</artifactId>
+         <version>8.1.16.v20140903</version>
       </dependency>
       <dependency>
          <groupId>org.vast.opengis</groupId>

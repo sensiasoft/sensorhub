@@ -57,7 +57,7 @@ import org.vast.ows.sos.GetObservationRequest;
 import org.vast.ows.sos.InsertResultRequest;
 import org.vast.ows.sos.SOSOfferingCapabilities;
 import org.vast.ows.sos.SOSServiceCapabilities;
-import org.vast.sweCommon.SWEData;
+import org.vast.swe.SWEData;
 import org.vast.util.TimeExtent;
 import org.vast.xml.DOMHelper;
 import org.w3c.dom.Element;
@@ -73,10 +73,10 @@ public class TestSOSService
     static String URI_OFFERING2 = "urn:mysos:sensor2";
     static String NAME_OFFERING1 = "SOS Sensor Provider #1";
     static String NAME_OFFERING2 = "SOS Sensor Provider #2";
-    static double SAMPLING_PERIOD = 0.5;
+    static final double SAMPLING_PERIOD = 0.5;
+    static final int NUM_GEN_SAMPLES = 5;
     
     File configFile;
-    int totalSampleCount;
     
     
     @Before
@@ -91,9 +91,6 @@ public class TestSOSService
         // start HTTP server
         HttpServerConfig httpConfig = new HttpServerConfig();
         SensorHub.getInstance().getModuleRegistry().loadModule(httpConfig);
-        
-        // to preload FES stuff (prevents delay in first SOS request)
-        new org.geotools.filter.v2_0.FESConfiguration();
     }
     
     
@@ -133,8 +130,7 @@ public class TestSOSService
         IModule<?> sensor = SensorHub.getInstance().getModuleRegistry().loadModule(sensorCfg);
         
         // add custom interfaces
-        totalSampleCount = 5;
-        ((FakeSensor)sensor).setDataInterfaces(new FakeSensorData((FakeSensor)sensor, NAME_OUTPUT1, pushEnabled, 10, SAMPLING_PERIOD, totalSampleCount));
+        ((FakeSensor)sensor).setDataInterfaces(new FakeSensorData((FakeSensor)sensor, NAME_OUTPUT1, pushEnabled, 10, SAMPLING_PERIOD, NUM_GEN_SAMPLES));
         
         // create SOS data provider config
         SensorDataProviderConfig provCfg = new SensorDataProviderConfig();
@@ -304,7 +300,7 @@ public class TestSOSService
         deployService(buildSensorProvider1(false));
         DOMHelper dom = sendRequest(generateGetObsNow(URI_OFFERING1), false);
         
-        assertEquals("Wrong number of observations returned", totalSampleCount, dom.getElements("*/OM_Observation").getLength());
+        assertEquals("Wrong number of observations returned", NUM_GEN_SAMPLES, dom.getElements("*/OM_Observation").getLength());
     }
     
     
@@ -314,7 +310,7 @@ public class TestSOSService
         deployService(buildSensorProvider1(true));
         DOMHelper dom = sendRequest(generateGetObsNow(URI_OFFERING1), false);
         
-        assertEquals("Wrong number of observations returned", totalSampleCount, dom.getElements("*/OM_Observation").getLength());
+        assertEquals("Wrong number of observations returned", NUM_GEN_SAMPLES, dom.getElements("*/OM_Observation").getLength());
     }
     
     
@@ -328,13 +324,15 @@ public class TestSOSService
         while (sensor.getAllOutputs().get(NAME_OUTPUT1).isEnabled())
             Thread.sleep(((long)SAMPLING_PERIOD*500));
         
-        // first get capabilities to know
+        // first get capabilities to knowavailable time range
         SOSServiceCapabilities caps = (SOSServiceCapabilities)new OWSUtils().getCapabilities("http://localhost:8080/sensorhub" + SERVICE_ENDPOINT, "SOS", "2.0");
-        TimeExtent timePeriod = ((SOSOfferingCapabilities)caps.getLayer(URI_OFFERING1)).getPhenomenonTimes().get(0);
+        TimeExtent timePeriod = ((SOSOfferingCapabilities)caps.getLayer(URI_OFFERING1)).getPhenomenonTime();
         System.out.println("Available time period is " + timePeriod.getIsoString(0));
         
-        DOMHelper dom = sendRequest(generateGetObsTimeRange(URI_OFFERING1, timePeriod.getStartTime(), timePeriod.getStopTime()), false);
-        assertEquals("Wrong number of observations returned", totalSampleCount, dom.getElements("*/OM_Observation").getLength());
+        // then get obs
+        double stopTime = System.currentTimeMillis() / 1000.0;
+        DOMHelper dom = sendRequest(generateGetObsTimeRange(URI_OFFERING1, timePeriod.getStartTime(), stopTime), false);
+        assertEquals("Wrong number of observations returned", NUM_GEN_SAMPLES, dom.getElements("*/OM_Observation").getLength());
     }
     
     
@@ -344,7 +342,7 @@ public class TestSOSService
         deployService(buildSensorProvider1(false), buildSensorProvider2());
         DOMHelper dom = sendRequest(generateGetObsNow(URI_OFFERING1), false);
         
-        assertEquals("Wrong number of observations returned", totalSampleCount, dom.getElements("*/OM_Observation").getLength());
+        assertEquals("Wrong number of observations returned", NUM_GEN_SAMPLES, dom.getElements("*/OM_Observation").getLength());
     }
     
     

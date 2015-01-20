@@ -154,9 +154,9 @@ public abstract class AbstractTestBasicStorage<StorageType extends IBasicStorage
         // load SensorML doc and set first validity period
         is = new BufferedInputStream(getClass().getResourceAsStream("/gamma2070_more.xml"));
         AbstractProcess smlIn1 = smlUtils.readProcess(is);
-        IDateTime begin1 = new DateTimeDouble(DateTimeFormat.parseIso("2010-05-15Z"));
+        IDateTime begin1 = new DateTimeDouble(new DateTimeFormat().parseIso("2010-05-15Z"));
         ((TimePeriod)smlIn1.getValidTimeList().get(0)).getBeginPosition().setDateTimeValue(begin1);
-        IDateTime end1 = new DateTimeDouble(DateTimeFormat.parseIso("2010-09-23Z"));
+        IDateTime end1 = new DateTimeDouble(new DateTimeFormat().parseIso("2010-09-23Z"));
         ((TimePeriod)smlIn1.getValidTimeList().get(0)).getEndPosition().setDateTimeValue(end1);
         storage.storeDataSourceDescription(smlIn1);
         forceReadBackFromStorage();
@@ -176,9 +176,9 @@ public abstract class AbstractTestBasicStorage<StorageType extends IBasicStorage
         // load SensorML doc another time and set with a different validity period
         is = new BufferedInputStream(getClass().getResourceAsStream("/gamma2070_more.xml"));
         AbstractProcess smlIn2 = smlUtils.readProcess(is);
-        IDateTime begin2 = new DateTimeDouble(DateTimeFormat.parseIso("2010-09-24Z"));
+        IDateTime begin2 = new DateTimeDouble(new DateTimeFormat().parseIso("2010-09-24Z"));
         ((TimePeriod)smlIn2.getValidTimeList().get(0)).getBeginPosition().setDateTimeValue(begin2);
-        IDateTime end2 = new DateTimeDouble(DateTimeFormat.parseIso("2010-12-08Z"));
+        IDateTime end2 = new DateTimeDouble(new DateTimeFormat().parseIso("2010-12-08Z"));
         ((TimePeriod)smlIn2.getValidTimeList().get(0)).getEndPosition().setDateTimeValue(end2);
         storage.storeDataSourceDescription(smlIn2);        
         forceReadBackFromStorage();
@@ -296,6 +296,45 @@ public abstract class AbstractTestBasicStorage<StorageType extends IBasicStorage
             dbRec = dataStores.get(dataStoreName).getRecord(key);
             TestUtils.assertEquals(dataList.get(i), dbRec.getData());
         }
+    }
+    
+    
+    @Test
+    public void testStoreAndGetTimeRange() throws Exception
+    {
+        Map<String, ? extends ITimeSeriesDataStore<?>> dataStores;
+        String dataStoreName;
+        DataBlock data;
+        DataKey key;
+        
+        dataStoreName = "ds2";
+        DataComponent recordDef = createDs2();
+        dataStores = storage.getDataStores();
+        
+        // write N records
+        double timeStamp = 0.0;
+        double timeStep = 0.1;
+        int numRecords = 100;
+        List<DataBlock> dataList = new ArrayList<DataBlock>(numRecords);
+        storage.setAutoCommit(false);
+        for (int i=0; i<numRecords; i++)
+        {
+            data = recordDef.createDataBlock();
+            data.setDoubleValue(0, i + 0.3);
+            data.setIntValue(1, 2*i);
+            data.setStringValue(2, "test" + i);
+            dataList.add(data);
+            timeStamp = i*timeStep;
+            key = new DataKey("proc", timeStamp);
+            dataStores.get(dataStoreName).store(key, data);
+        }
+        storage.commit();
+        forceReadBackFromStorage();
+        
+        // retrieve them and check their values
+        double[] timeRange = dataStores.get(dataStoreName).getDataTimeRange();
+        assertEquals("Invalid begin time", 0., timeRange[0], 0.0);
+        assertEquals("Invalid end time", timeStamp, timeRange[1], 0.0);
     }
     
     

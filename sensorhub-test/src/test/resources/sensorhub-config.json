@@ -9,6 +9,107 @@
     "docRoot": "web"
   },
   {
+    "objClass": "org.sensorhub.ui.AdminUIConfig",
+    "id": "5cb05c9c-9123-4fa1-8731-ffaa51489678",
+    "moduleClass": "org.sensorhub.ui.AdminUIModule",
+    "enabled": true
+  },
+  {
+    "objClass": "org.sensorhub.impl.sensor.v4l.V4LCameraConfig",
+    "id": "5cb05c9c-9e08-4fa1-8731-ff41e246bdc0",
+    "name": "V4L Camera",
+    "moduleClass": "org.sensorhub.impl.sensor.v4l.V4LCameraDriver",
+    "enabled": false,
+    "sensorML": null,
+    "autoActivate": true,
+    "enableHistory": false,
+    "hiddenIO": null,
+    "deviceName": "/dev/video0",
+    "defaultParams": {
+       "doCapture": true,
+       "imgFormat" = "YUYV",
+       "imgWidth" = 320,
+       "imgHeight" = 240,
+       "frameRate" = 10
+    }
+  },
+  {
+    "objClass": "org.sensorhub.impl.sensor.fakegps.FakeGpsConfig",
+    "id": "d136b6ea-3950-4691-bf56-c84ec7d89d72",
+    "name": "Fake GPS Sensor",
+    "moduleClass": "org.sensorhub.impl.sensor.fakegps.FakeGpsSensor",
+    "enabled": true,
+    "sensorML": null,
+    "autoActivate": true,
+    "enableHistory": false,
+    "hiddenIO": null,
+    "centerLatitude": 34.7300,
+    "centerLongitude": -86.5850,
+    "areaSize": 0.1,
+    "vehicleSpeed": 200
+  },
+  {
+    "objClass": "org.sensorhub.impl.sensor.fakeweather.FakeWeatherConfig",
+    "id": "d136b6ea-3950-4691-bf56-c84ec7d89d73",
+    "name": "Fake Weather Sensor",
+    "enabled": true,
+    "moduleClass": "org.sensorhub.impl.sensor.fakeweather.FakeWeatherSensor",
+    "sensorML": null,
+    "autoActivate": true,
+    "enableHistory": false,
+    "hiddenIO": null
+  },    
+  {
+    "objClass": "org.sensorhub.api.persistence.StorageConfig",
+    "id": "5cb05c9c-9e08-4fa1-8731-ff4ff948bdc0",
+    "name": "Video storage",
+    "moduleClass": "org.sensorhub.impl.persistence.InMemoryBasicStorage",
+    "enabled": true
+  },
+  {
+    "objClass": "org.sensorhub.impl.persistence.SensorStorageHelperConfig",
+    "id": "5cb05c9c-9e08-4cca-5691-ff4ff948bdc0",
+    "name": "V4L Sensor Storage Helper",
+    "moduleClass": "org.sensorhub.impl.persistence.SensorStorageHelper",
+    "enabled": false,
+    "storageID": "5cb05c9c-9e08-4fa1-8731-ff4ff948bdc0",
+    "sensorID": "5cb05c9c-9e08-4fa1-8731-ff41e246bdc0"
+  },  
+  {
+    "objClass": "org.sensorhub.impl.persistence.perst.BasicStorageConfig",
+    "id": "5cb05c9c-9e08-4fa1-8731-ff4ff948bdc1",
+    "name": "GPS Data Storage",
+    "moduleClass": "org.sensorhub.impl.persistence.perst.BasicStorageImpl",
+    "enabled": true,
+    "storagePath": "gps_obs.dat"
+  },
+  {
+    "objClass": "org.sensorhub.impl.persistence.SensorStorageHelperConfig",
+    "id": "5cb05c9c-9e08-4cca-5691-ff4ff948bdc1",
+    "name": "GPS Sensor Storage Helper",
+    "moduleClass": "org.sensorhub.impl.persistence.SensorStorageHelper",
+    "enabled": true,
+    "storageID": "5cb05c9c-9e08-4fa1-8731-ff4ff948bdc1",
+    "sensorID": "d136b6ea-3950-4691-bf56-c84ec7d89d72"
+  },  
+  {
+    "objClass": "org.sensorhub.impl.persistence.perst.BasicStorageConfig",
+    "id": "5cb05c9c-9e08-4fa1-8731-ff4ff948bdc2",
+    "name": "Weather Data Storage",
+    "moduleClass": "org.sensorhub.impl.persistence.perst.BasicStorageImpl",
+    "enabled": true,
+    "storagePath": "weather_obs.dat"
+  },
+  {
+    "objClass": "org.sensorhub.impl.persistence.SensorStorageHelperConfig",
+    "id": "5cb05c9c-9e08-4cca-5691-ff4ff948bdc2",
+    "name": "Weather Sensor Storage Helper",
+    "moduleClass": "org.sensorhub.impl.persistence.SensorStorageHelper",
+    "enabled": true,
+    "storageID": "5cb05c9c-9e08-4fa1-8731-ff4ff948bdc2",
+    "sensorID": "d136b6ea-3950-4691-bf56-c84ec7d89d73"
+  },
+  {
     "objClass": "org.sensorhub.impl.service.sos.SOSServiceConfig",
     "id": "5cb05c9c-9e08-4fa1-8731-ff41e246bdc1",
     "name": "SOS Service",
@@ -33,7 +134,17 @@
            "name": "Fake GPS",
            "description": "Fake GPS sensor",
            "uri": "urn:mysos:offering02",
-           "sensorID": "d136b6ea-3950-4691-bf56-c84ec7d89d72"
+           "sensorID": "d136b6ea-3950-4691-bf56-c84ec7d89d72",
+           "storageID": "5cb05c9c-9e08-4fa1-8731-ff4ff948bdc1"
+       },
+       {
+           "objClass": "org.sensorhub.impl.service.sos.SensorDataProviderConfig",
+           "enabled": true,
+           "name": "Fake Weather",
+           "description": "Fake Weather sensor",
+           "uri": "urn:mysos:offering03",
+           "sensorID": "d136b6ea-3950-4691-bf56-c84ec7d89d73",           
+           "storageID": "5cb05c9c-9e08-4fa1-8731-ff4ff948bdc2"
        }
     ],
     "ogcCapabilitiesInfo": {
@@ -59,55 +170,5 @@
         "contactInstructions": null
       }
     }
-  },
-  {
-    "objClass": "org.sensorhub.impl.sensor.v4l.V4LCameraConfig",
-    "sensorML": null,
-    "autoActivate": true,
-    "enableHistory": false,
-    "hiddenIO": null,
-    "id": "5cb05c9c-9e08-4fa1-8731-ff41e246bdc0",
-    "name": "V4L2 Camera",
-    "moduleClass": "org.sensorhub.impl.sensor.v4l.V4LCameraDriver",
-    "enabled": true,
-    "deviceName": "/dev/video0",
-    "defaultParams": {
-       "doCapture": true,
-       "imgFormat" = "YUYV",
-       "imgWidth" = 320,
-       "imgHeight" = 240,
-       "frameRate" = 10
-    }
-  },
-  {
-    "objClass": "org.sensorhub.impl.sensor.fakegps.FakeGpsConfig",
-    "sensorML": null,
-    "autoActivate": true,
-    "enableHistory": false,
-    "hiddenIO": null,
-    "id": "d136b6ea-3950-4691-bf56-c84ec7d89d72",
-    "name": "Fake GPS",
-    "moduleClass": "org.sensorhub.impl.sensor.fakegps.FakeGpsSensor",
-    "enabled": true,
-    "centerLatitude": 34.7300,
-    "centerLongitude": -86.5850,
-    "areaSize": 0.1,
-    "vehicleSpeed": 200
-  },
-  {
-    "objClass": "org.sensorhub.api.persistence.StorageConfig",
-    "id": "5cb05c9c-9e08-4fa1-8731-ff4ff948bdc0",
-    "name": "Database",
-    "moduleClass": "org.sensorhub.impl.persistence.InMemoryBasicStorage",
-    "enabled": true
-  },
-  {
-    "objClass": "org.sensorhub.impl.persistence.SensorStorageConfig",
-    "id": "5cb05c9c-9e08-4cca-5691-ff4ff948bdc0",
-    "name": "Sensor Storage Helper",
-    "moduleClass": "org.sensorhub.impl.persistence.SensorStorageHelper",
-    "enabled": false,
-    "storageID": "5cb05c9c-9e08-4fa1-8731-ff4ff948bdc0",
-    "sensorID": "5cb05c9c-9e08-4fa1-8731-ff41e246bdc0"
   }
 ]

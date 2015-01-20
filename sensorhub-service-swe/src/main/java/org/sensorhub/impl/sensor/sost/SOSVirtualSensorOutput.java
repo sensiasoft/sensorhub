@@ -43,6 +43,13 @@ public class SOSVirtualSensorOutput extends AbstractSensorOutput<SOSVirtualSenso
 
 
     @Override
+    protected void init() throws SensorException
+    {
+        
+    }
+
+
+    @Override
     public String getName()
     {
         return recordStructure.getName();

@@ -36,7 +36,7 @@ import org.vast.data.DataRecordImpl;
 import org.vast.data.QuantityImpl;
 import org.vast.data.TextEncodingImpl;
 import org.vast.data.TimeImpl;
-import org.vast.sweCommon.SWEConstants;
+import org.vast.swe.SWEConstants;
 
 
 /**
@@ -79,7 +79,7 @@ public class FakeSensorData extends AbstractSensorOutput<FakeSensor> implements 
         if (pushEnabled)
             this.eventHandler = new BasicEventHandler();
         
-        start();
+        init();
     }
     
     
@@ -96,11 +96,8 @@ public class FakeSensorData extends AbstractSensorOutput<FakeSensor> implements 
     }
 
 
-    /* (non-Javadoc)
-     * @see org.sensorhub.test.sensor.IFakeSensorOutput#start()
-     */
     @Override
-    public void start()
+    public void init()
     {
         // start data production timer
         TimerTask sensorTask = new TimerTask()
@@ -146,9 +143,6 @@ public class FakeSensorData extends AbstractSensorOutput<FakeSensor> implements 
     }
     
     
-    /* (non-Javadoc)
-     * @see org.sensorhub.test.sensor.IFakeSensorOutput#stop()
-     */
     @Override
     public void stop()
     {

@@ -37,7 +37,8 @@ import org.vast.ogc.om.IObservation;
 import org.vast.ows.server.SOSDataFilter;
 import org.vast.ows.sos.ISOSDataProvider;
 import org.vast.ows.sos.SOSOfferingCapabilities;
-import org.vast.sweCommon.SWEConstants;
+import org.vast.ows.swe.SWESOfferingCapabilities;
+import org.vast.swe.SWEConstants;
 import org.vast.util.TimeExtent;
 
 
@@ -114,14 +115,14 @@ public class SensorDataProviderFactory implements IDataProviderFactory, IEventLi
             TimeExtent phenTime = new TimeExtent();
             phenTime.setBaseAtNow(true);
             phenTime.setTimeStep(getLowestSamplingPeriodFromSensor());
-            caps.getPhenomenonTimes().add(phenTime);
+            caps.setPhenomenonTime(phenTime);
         
             // use sensor uniqueID as procedure ID
             caps.getProcedures().add(sensor.getCurrentSensorDescription().getUniqueIdentifier());
             
             // supported formats
-            caps.getResponseFormats().add(SOSOfferingCapabilities.FORMAT_OM2);
-            caps.getProcedureFormats().add(SOSOfferingCapabilities.FORMAT_SML2);
+            caps.getResponseFormats().add(SWESOfferingCapabilities.FORMAT_OM2);
+            caps.getProcedureFormats().add(SWESOfferingCapabilities.FORMAT_SML2);
             
             // TODO foi types
             

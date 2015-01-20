@@ -21,6 +21,8 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.eclipse.jetty.rewrite.handler.HeaderPatternRule;
+import org.eclipse.jetty.rewrite.handler.RewriteHandler;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.HandlerList;
 import org.eclipse.jetty.server.handler.ResourceHandler;
@@ -106,6 +108,7 @@ public class HttpServer extends AbstractModule<HttpServerConfig>
             
             HandlerList handlers = new HandlerList();
             
+            // static content
             if (config.staticDocRootUrl != null)
             {
                 ResourceHandler resourceHandler = new ResourceHandler();
@@ -114,8 +117,19 @@ public class HttpServer extends AbstractModule<HttpServerConfig>
                 log.info("Static resources root is " + config.staticDocRootUrl);
             }
             
+            // servlets
             if (config.servletsRootUrl != null)
             {
+                // authorize cross domain requests
+                RewriteHandler rewrite = new RewriteHandler();
+                HeaderPatternRule rule = new HeaderPatternRule();
+                rule.setAdd(true);
+                rule.setPattern("*");//config.servletsRootUrl + "/*");
+                rule.setName("Access-Control-Allow-Origin");
+                rule.setValue("*");
+                rewrite.addRule(rule);
+                handlers.addHandler(rewrite);
+                
                 servletHandler.setContextPath(config.servletsRootUrl);
                 handlers.addHandler(servletHandler);
                 log.info("Servlets root is " + config.servletsRootUrl);

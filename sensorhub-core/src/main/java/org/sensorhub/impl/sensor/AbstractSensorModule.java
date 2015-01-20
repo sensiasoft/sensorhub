@@ -23,6 +23,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import net.opengis.gml.v32.TimeIndeterminateValue;
+import net.opengis.gml.v32.TimePosition;
+import net.opengis.gml.v32.impl.GMLFactory;
 import net.opengis.sensorml.v20.AbstractProcess;
 import net.opengis.swe.v20.DataComponent;
 import org.sensorhub.api.sensor.ISensorControlInterface;
@@ -50,8 +53,10 @@ import org.vast.sensorML.SMLUtils;
  */
 public abstract class AbstractSensorModule<ConfigType extends SensorConfig> extends AbstractModule<ConfigType> implements ISensorModule<ConfigType>
 {
-    protected static String ERROR_NO_UPDATE = "Sensor Description update is not supported by driver ";
-    protected static String ERROR_NO_HISTORY = "History of sensor description is not supported by driver ";
+    public final static String DEFAULT_ID = "SENSOR_DESC";
+    protected final static String ERROR_NO_UPDATE = "Sensor Description update is not supported by driver ";
+    protected final static String ERROR_NO_HISTORY = "History of sensor description is not supported by driver ";
+    
     private Map<String, ISensorDataInterface> obsOutputs = new HashMap<String, ISensorDataInterface>();  
     private Map<String, ISensorDataInterface> statusOutputs = new HashMap<String, ISensorDataInterface>();  
     private Map<String, ISensorControlInterface> controlInputs = new HashMap<String, ISensorControlInterface>();  
@@ -74,12 +79,31 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
     
     
     /**
+     * Removes all outputs previously added to this sensor
+     */
+    protected void removeAllOutputs()
+    {
+        statusOutputs.clear();
+        obsOutputs.clear();
+    }
+    
+    
+    /**
      * Call this method to add each sensor control input
      * @param controlInterface interface to add as sensor control input
      */
     protected void addControlInput(ISensorControlInterface controlInterface)
     {
         controlInputs.put(controlInterface.getName(), controlInterface);
+    }
+    
+    
+    /**
+     * Removes all control inputs previously added to this sensor
+     */
+    protected void removeAllControlInputs()
+    {
+        controlInputs.clear();
     }
     
     
@@ -141,10 +165,29 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
                 sensorDescription = new PhysicalSystemImpl();
             }
             
-            // add most common stuff automatically
-            sensorDescription.setUniqueIdentifier(getLocalID());    
+            //////////////////////////////////////////////////////////////
+            // add stuffs if not already defined in static SensorML doc //
+            //////////////////////////////////////////////////////////////
+            long unixTime = System.currentTimeMillis();
+            lastUpdatedSensorDescription = unixTime / 1000.;
             
-            // append outputs only if not already defined in static doc
+            // default IDs
+            if (sensorDescription.getId() == null)
+                sensorDescription.setId(DEFAULT_ID);            
+            if (!sensorDescription.isSetIdentifier())
+                sensorDescription.setUniqueIdentifier(getLocalID());
+            
+            // time validity
+            if (sensorDescription.getNumValidTimes() == 0)
+            {
+                GMLFactory fac = new GMLFactory();
+                TimePosition begin = fac.newTimePosition(lastUpdatedSensorDescription);
+                TimePosition end = fac.newTimePosition();
+                end.setIndeterminatePosition(TimeIndeterminateValue.NOW);
+                sensorDescription.addValidTimeAsTimePeriod(fac.newTimePeriod(begin, end));
+            }
+            
+            // outputs
             if (sensorDescription.getNumOutputs() == 0)
             {
                 for (Entry<String, ? extends ISensorDataInterface> output: getAllOutputs().entrySet())
@@ -157,7 +200,7 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
                 }
             }
             
-            // append control parameters only if not already defined in static doc
+            // control parameters
             if (sensorDescription.getNumParameters() == 0)
             {
                 for (Entry<String, ? extends ISensorControlInterface> param: getCommandInputs().entrySet())
@@ -171,8 +214,7 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
                 }
             }
             
-            long unixTime = System.currentTimeMillis();
-            lastUpdatedSensorDescription = unixTime / 1000.;
+            // send event
             eventHandler.publishEvent(new SensorEvent(unixTime, getLocalID(), SensorEvent.Type.SENSOR_CHANGED));
         }
     }

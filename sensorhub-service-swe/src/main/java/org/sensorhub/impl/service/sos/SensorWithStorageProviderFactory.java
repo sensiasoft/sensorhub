@@ -23,7 +23,6 @@ import org.sensorhub.utils.MsgUtils;
 import org.vast.ows.server.SOSDataFilter;
 import org.vast.ows.sos.ISOSDataProvider;
 import org.vast.ows.sos.SOSOfferingCapabilities;
-import org.vast.util.TimeExtent;
 
 
 /**
@@ -89,12 +88,23 @@ public class SensorWithStorageProviderFactory extends StorageDataProviderFactory
         
         if (sensor.isEnabled())
         {
-            // enable real-time time requests
-            TimeExtent timeExtent = new TimeExtent();
-            timeExtent.setBaseAtNow(true);
-            capabilities.getPhenomenonTimes().add(timeExtent);
+            // enable real-time requests
+            capabilities.getPhenomenonTime().setEndNow(true);        
         }
         
         return capabilities;
+    }
+    
+    
+    @Override
+    public void updateCapabilities() throws ServiceException
+    {
+        super.updateCapabilities();
+        
+        if (sensor.isEnabled())
+        {
+            // enable real-time requests
+            caps.getPhenomenonTime().setEndNow(true);        
+        }
     }
 }
