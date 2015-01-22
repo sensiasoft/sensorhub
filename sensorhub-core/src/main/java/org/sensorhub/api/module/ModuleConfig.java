@@ -16,7 +16,6 @@ Developer are Copyright (C) 2014 the Initial Developer. All Rights Reserved.
 package org.sensorhub.api.module;
 
 import java.io.Serializable;
-import com.esotericsoftware.kryo.Kryo;
 
 
 /**
@@ -56,14 +55,6 @@ public class ModuleConfig implements Serializable, Cloneable
      * Used to enable/disable the module
      */
     public boolean enabled = false;
-    
-    
-    @Override
-    public ModuleConfig clone()
-    {
-        Kryo kryo = new Kryo();
-        return kryo.copy(this);
-    }
     
     
     public String getModuleIdString()

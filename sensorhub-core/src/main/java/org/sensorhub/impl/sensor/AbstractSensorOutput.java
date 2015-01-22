@@ -52,6 +52,15 @@ public abstract class AbstractSensorOutput<SensorType extends ISensorModule<?>> 
     }
     
     
+    protected abstract void init() throws SensorException;
+    
+    
+    protected void stop()
+    {
+        // do nothing by default
+    }
+    
+    
     @Override
     public SensorType getParentSensor()
     {

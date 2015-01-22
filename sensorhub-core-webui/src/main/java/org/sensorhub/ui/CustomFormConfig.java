@@ -13,27 +13,27 @@ Developer are Copyright (C) 2014 the Initial Developer. All Rights Reserved.
  
 ******************************* END LICENSE BLOCK ***************************/
 
-package org.sensorhub;
-
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
+package org.sensorhub.ui;
 
 
-public class Activator implements BundleActivator
+public class CustomFormConfig
 {
-
-    @Override
-    public void start(BundleContext arg0) throws Exception
+    
+    /**
+     * Type of config class for which a custom form must be generated
+     */
+    public String configClass;
+    
+    
+    /**
+     * Fully qualified name of class implementing IModuleConfigFormBuilder
+     */
+    public String formBuilderClass;
+    
+    
+    public CustomFormConfig(String configClass, String formBuilderClass)
     {
-        // TODO Auto-generated method stub
-        
+        this.configClass = configClass;
+        this.formBuilderClass = formBuilderClass;
     }
-
-    @Override
-    public void stop(BundleContext arg0) throws Exception
-    {
-        // TODO Auto-generated method stub
-        
-    }
-
 }

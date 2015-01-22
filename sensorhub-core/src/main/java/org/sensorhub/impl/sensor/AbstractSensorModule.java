@@ -79,12 +79,31 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
     
     
     /**
+     * Removes all outputs previously added to this sensor
+     */
+    protected void removeAllOutputs()
+    {
+        statusOutputs.clear();
+        obsOutputs.clear();
+    }
+    
+    
+    /**
      * Call this method to add each sensor control input
      * @param controlInterface interface to add as sensor control input
      */
     protected void addControlInput(ISensorControlInterface controlInterface)
     {
         controlInputs.put(controlInterface.getName(), controlInterface);
+    }
+    
+    
+    /**
+     * Removes all control inputs previously added to this sensor
+     */
+    protected void removeAllControlInputs()
+    {
+        controlInputs.clear();
     }
     
     

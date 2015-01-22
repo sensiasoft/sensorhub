@@ -99,7 +99,12 @@ public class SensorWithStorageProviderFactory extends StorageDataProviderFactory
     @Override
     public void updateCapabilities() throws ServiceException
     {
-        if (!sensor.isEnabled())
-            super.updateCapabilities();
+        super.updateCapabilities();
+        
+        if (sensor.isEnabled())
+        {
+            // enable real-time requests
+            caps.getPhenomenonTime().setEndNow(true);        
+        }
     }
 }

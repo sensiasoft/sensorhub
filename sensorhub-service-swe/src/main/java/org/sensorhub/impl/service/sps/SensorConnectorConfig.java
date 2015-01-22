@@ -17,6 +17,7 @@ package org.sensorhub.impl.service.sps;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.sensorhub.api.common.SensorHubException;
 
 
 /**
@@ -41,4 +42,11 @@ public class SensorConnectorConfig extends SPSConnectorConfig
      * Names of sensor command interfaces to hide from SPS
      */
     public List<String> hiddenCommands = new ArrayList<String>();
+
+
+    @Override
+    protected ISPSConnector getConnector() throws SensorHubException
+    {
+        return new DirectSensorConnector(this);
+    }
 }

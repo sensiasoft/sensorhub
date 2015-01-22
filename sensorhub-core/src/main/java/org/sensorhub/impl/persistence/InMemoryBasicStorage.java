@@ -454,7 +454,7 @@ public class InMemoryBasicStorage extends AbstractModule<StorageConfig> implemen
         @Override
         public double[] getDataTimeRange()
         {
-            double[] period = new double[] { Long.MAX_VALUE, Long.MIN_VALUE};
+            double[] period = new double[] { Double.MAX_VALUE, Double.MIN_VALUE};
             
             Iterator<DBRecord> it = recordList.iterator();
             while (it.hasNext())

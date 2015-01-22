@@ -138,8 +138,11 @@ public class SensorStorageHelper extends AbstractModule<SensorStorageHelperConfi
                 {
                     DataKey key = new DataKey(producer, e.getTimeStamp()/1000.);
                     dataStore.store(key, record);
-                    log.debug("Storing record " + key.timeStamp + " in DB");
-                    log.debug("DB size: " + dataStore.getNumRecords());
+                    if (log.isTraceEnabled())
+                    {
+                        log.trace("Storing record " + key.timeStamp + " in DB");
+                        log.trace("DB size: " + dataStore.getNumRecords());
+                    }
                 }
                 
                 storage.commit();

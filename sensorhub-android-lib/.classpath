@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="src" path="gen"/>
+	<classpathentry kind="con" path="com.android.ide.eclipse.adt.ANDROID_FRAMEWORK"/>
+	<classpathentry exported="true" kind="con" path="com.android.ide.eclipse.adt.LIBRARIES"/>
+	<classpathentry exported="true" kind="con" path="com.android.ide.eclipse.adt.DEPENDENCIES"/>
+	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/sensorhub-core"/>
+	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/sensorhub-driver-android"/>
+	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/sensorhub-service-swe"/>
+	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/sensorhub-storage-perst"/>
+	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/ows-framework-bindings"/>
+	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/sensorml-core"/>
+	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/swe-common-core"/>
+	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/swe-common-om"/>
+	<classpathentry kind="output" path="bin/classes"/>
+</classpath>
