@@ -110,12 +110,15 @@ public class SOSVirtualSensorOutput extends AbstractSensorOutput<SOSVirtualSenso
      */
     protected void updateSamplingPeriod(double timeStamp)
     {
+        if (lastRecordTime < 0)
+            return;
+        
         if (avgSampleCount < 100)
         {
             if (avgSampleCount == 0)
                 avgSamplingPeriod = 0.0;
             else
-                avgSamplingPeriod *= avgSampleCount / (avgSampleCount+1);
+                avgSamplingPeriod *= (double)avgSampleCount / (avgSampleCount+1);
             avgSampleCount++;
             avgSamplingPeriod += (timeStamp - lastRecordTime) / avgSampleCount;
         }
