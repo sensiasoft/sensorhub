@@ -394,48 +394,55 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
             
             // choose offering name (here derived from sensor ID)
             String sensorUID = request.getProcedureDescription().getUniqueIdentifier();
-            String offering = sensorUID + "-sos";
-            
-            // automatically add outputs with specified observable properties??
-            
-            
-            // create and register new virtual sensor module as data consumer
-            SOSVirtualSensorConfig sensorConfig = new SOSVirtualSensorConfig();
-            sensorConfig.enabled = false;
-            sensorConfig.sensorUID = sensorUID;
-            sensorConfig.name = request.getProcedureDescription().getName();
-            SOSVirtualSensor virtualSensor = (SOSVirtualSensor)SensorHub.getInstance().getModuleRegistry().loadModule(sensorConfig);            
-            virtualSensor.updateSensorDescription(request.getProcedureDescription(), true);
-            SensorHub.getInstance().getModuleRegistry().enableModule(virtualSensor.getLocalID());
-            dataConsumers.put(offering, virtualSensor);
-            
-            // add to SOS config
-            SOSConsumerConfig consumerConfig = new SOSConsumerConfig();
-            consumerConfig.offering = offering;
-            consumerConfig.sensorID = virtualSensor.getLocalID();
-            config.dataConsumers.add(consumerConfig);
-            
-            // create new sensor provider
-            SensorDataProviderConfig providerConfig = new SensorDataProviderConfig();
-            providerConfig.sensorID = virtualSensor.getLocalID();
-            providerConfig.enabled = true;
-            providerConfig.uri = offering;
-            SensorDataProviderFactory provider = new SensorDataProviderFactory(providerConfig);
-            dataProviders.put(offering, provider);
-            config.dataProviders.add(providerConfig);
-            
-            // create new offering
-            SOSOfferingCapabilities offCaps = provider.generateCapabilities();
-            capabilitiesCache.getLayers().add(offCaps);
-            offeringMap.put(offCaps.getIdentifier(), offCaps);
-            procedureToOfferingMap.put(sensorUID, offering);
-            
-            // setup data storage
-            //StorageConfig storageConfig = new StorageConfig();
-            //SensorHub.getInstance().getModuleRegistry().loadModule(storageConfig);
-            
-            // save config so that registered sensor stays active after restart
-            SensorHub.getInstance().getModuleRegistry().saveConfiguration(this);
+                        
+            // add new offering, provider and virtual sensor if sensor is not already registered
+            String offering = procedureToOfferingMap.get(sensorUID);
+            if (offering == null)
+            {
+                offering = sensorUID + "-sos";
+                
+                // should we automatically add templates generated from sensor outputs ??                
+                
+                // create and register new virtual sensor module as data consumer
+                SOSVirtualSensorConfig sensorConfig = new SOSVirtualSensorConfig();
+                sensorConfig.enabled = false;
+                sensorConfig.sensorUID = sensorUID;
+                sensorConfig.name = request.getProcedureDescription().getName();
+                if (sensorConfig.name == null)
+                    sensorConfig.name = request.getProcedureDescription().getId();
+                SOSVirtualSensor virtualSensor = (SOSVirtualSensor)SensorHub.getInstance().getModuleRegistry().loadModule(sensorConfig);            
+                virtualSensor.updateSensorDescription(request.getProcedureDescription(), true);
+                SensorHub.getInstance().getModuleRegistry().enableModule(virtualSensor.getLocalID());
+                dataConsumers.put(offering, virtualSensor);
+                
+                // add to SOS config
+                SOSConsumerConfig consumerConfig = new SOSConsumerConfig();
+                consumerConfig.offering = offering;
+                consumerConfig.sensorID = virtualSensor.getLocalID();
+                config.dataConsumers.add(consumerConfig);
+                
+                // create new sensor provider
+                SensorDataProviderConfig providerConfig = new SensorDataProviderConfig();
+                providerConfig.sensorID = virtualSensor.getLocalID();
+                providerConfig.enabled = true;
+                providerConfig.uri = offering;
+                SensorDataProviderFactory provider = new SensorDataProviderFactory(providerConfig);
+                dataProviders.put(offering, provider);
+                config.dataProviders.add(providerConfig);
+                
+                // create new offering
+                SOSOfferingCapabilities offCaps = provider.generateCapabilities();
+                capabilitiesCache.getLayers().add(offCaps);
+                offeringMap.put(offCaps.getIdentifier(), offCaps);
+                procedureToOfferingMap.put(sensorUID, offering);
+                
+                // setup data storage
+                //StorageConfig storageConfig = new StorageConfig();
+                //SensorHub.getInstance().getModuleRegistry().loadModule(storageConfig);
+                
+                // save config so that registered sensor stays active after restart
+                SensorHub.getInstance().getModuleRegistry().saveConfiguration(this);
+            }
             
             // build and send response
             InsertSensorResponse resp = new InsertSensorResponse();
@@ -589,6 +596,8 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
         try
         {
             checkTransactionalSupport(request);
+            
+            // TODO check if template was already registered
             
             ISOSDataConsumer consumer = getDataConsumerByOfferingID(request.getOffering());
             String templateID = consumer.newResultTemplate(request.getResultStructure(), request.getResultEncoding());

@@ -15,9 +15,9 @@ Developer are Copyright (C) 2014 the Initial Developer. All Rights Reserved.
 
 package org.sensorhub.impl.service.sos;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Map.Entry;
+import java.util.Set;
 import net.opengis.sensorml.v20.AbstractProcess;
 import net.opengis.swe.v20.DataArray;
 import net.opengis.swe.v20.DataComponent;
@@ -122,7 +122,7 @@ public class StorageDataProviderFactory implements IDataProviderFactory, IEventL
                 caps.setDescription("Data available from storage " + storage.getName());
             
             // observable properties
-            List<String> outputDefs = getObservablePropertiesFromStorage();
+            Set<String> outputDefs = getObservablePropertiesFromStorage();
             caps.getObservableProperties().addAll(outputDefs);
             
             // observed area ??
@@ -140,7 +140,7 @@ public class StorageDataProviderFactory implements IDataProviderFactory, IEventL
             // TODO foi types (when using an obs storage)
             
             // obs types
-            List<String> obsTypes = getObservationTypesFromStorage();
+            Set<String> obsTypes = getObservationTypesFromStorage();
             caps.getObservationTypes().addAll(obsTypes);
             
             return caps;
@@ -197,9 +197,9 @@ public class StorageDataProviderFactory implements IDataProviderFactory, IEventL
     /*
      * Builds list of observable properties by scanning record structure of each data store
      */
-    protected List<String> getObservablePropertiesFromStorage() throws StorageException
+    protected Set<String> getObservablePropertiesFromStorage() throws StorageException
     {
-        List<String> observableUris = new ArrayList<String>();
+        HashSet<String> observableUris = new HashSet<String>();
         
         // process outputs descriptions
         for (Entry<String, ? extends ITimeSeriesDataStore<IDataFilter>> entry: storage.getDataStores().entrySet())
@@ -227,9 +227,9 @@ public class StorageDataProviderFactory implements IDataProviderFactory, IEventL
     /*
      * Build list of observertion types by scanning record structure of each data store
      */
-    protected List<String> getObservationTypesFromStorage() throws StorageException
+    protected Set<String> getObservationTypesFromStorage() throws StorageException
     {
-        List<String> obsTypes = new ArrayList<String>();
+        HashSet<String> obsTypes = new HashSet<String>();
         obsTypes.add(IObservation.OBS_TYPE_GENERIC);
         
         // process outputs descriptions
