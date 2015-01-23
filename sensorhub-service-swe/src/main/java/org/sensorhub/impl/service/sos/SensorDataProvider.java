@@ -94,7 +94,7 @@ public class SensorDataProvider implements ISOSDataProvider, IEventListener
                     if (filter.getObservables().contains(defUri))
                     {
                         // set to time out if no data is received after 10 sampling periods. Is this good?
-                        timeOut = (long)(outputInterface.getAverageSamplingPeriod() * 10);
+                        timeOut = (long)(outputInterface.getAverageSamplingPeriod() * 10. * 1000.);
                         dataSources.add(outputInterface);
                         
                         // break for now since we support only requesting data from one output at a time
@@ -220,7 +220,7 @@ public class SensorDataProvider implements ISOSDataProvider, IEventListener
             // only poll next event from queue once we have returned all records associated to last event
             if (lastDataEvent == null || nextEventRecordIndex >= lastDataEvent.getRecords().length)
             {
-                lastDataEvent = eventQueue.pollFirst(timeOut, TimeUnit.SECONDS);
+                lastDataEvent = eventQueue.pollFirst(timeOut, TimeUnit.MILLISECONDS);
                 if (lastDataEvent == null)
                     return null;
                 
