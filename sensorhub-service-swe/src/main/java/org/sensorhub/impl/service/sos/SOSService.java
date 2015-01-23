@@ -76,6 +76,7 @@ import org.vast.ows.swe.UpdateSensorRequest;
 import org.vast.ows.swe.UpdateSensorResponse;
 import org.vast.sensorML.SMLUtils;
 import org.vast.swe.SWEFactory;
+import org.vast.util.ReaderException;
 import org.vast.util.TimeExtent;
 
 
@@ -394,6 +395,8 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
             
             // choose offering name (here derived from sensor ID)
             String sensorUID = request.getProcedureDescription().getUniqueIdentifier();
+            if (sensorUID == null)
+                throw new SOSException(SOSException.missing_param_code, "identifier", null, "Missing unique identifier in SensorML description");
                         
             // add new offering, provider and virtual sensor if sensor is not already registered
             String offering = procedureToOfferingMap.get(sensorUID);
@@ -441,7 +444,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
                 //SensorHub.getInstance().getModuleRegistry().loadModule(storageConfig);
                 
                 // save config so that registered sensor stays active after restart
-                SensorHub.getInstance().getModuleRegistry().saveConfiguration(this);
+                //SensorHub.getInstance().getModuleRegistry().saveConfiguration(this);
             }
             
             // build and send response
@@ -597,10 +600,11 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
         {
             checkTransactionalSupport(request);
             
-            // TODO check if template was already registered
-            
+            // get template ID
+            // the same template ID is always returned for a given observable
             ISOSDataConsumer consumer = getDataConsumerByOfferingID(request.getOffering());
             String templateID = consumer.newResultTemplate(request.getResultStructure(), request.getResultEncoding());
+            templateToOfferingMap.put(templateID, request.getOffering());
             
             // build and send response
             InsertResultTemplateResponse resp = new InsertResultTemplateResponse();
@@ -619,17 +623,17 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     {
         DataStreamParser parser = null;
         
+        checkTransactionalSupport(request);
+        String templateID = request.getTemplateId();
+        
+        // retrieve consumer based on template id
+        SOSVirtualSensor sensor = (SOSVirtualSensor)getDataConsumerByTemplateID(templateID);
+        ISensorDataInterface output = sensor.getObservationOutputs().get(templateID);
+        DataComponent dataStructure = output.getRecordDescription();
+        DataEncoding encoding = output.getRecommendedEncoding();
+        
         try
         {
-            checkTransactionalSupport(request);
-            String templateID = request.getTemplateId();
-            
-            // retrieve consumer based on template id
-            SOSVirtualSensor sensor = (SOSVirtualSensor)getDataConsumerByTemplateID(templateID);
-            ISensorDataInterface output = sensor.getObservationOutputs().get(templateID);
-            DataComponent dataStructure = output.getRecordDescription();
-            DataEncoding encoding = output.getRecommendedEncoding();
-            
             // prepare parser
             parser = SWEFactory.createDataParser(encoding);
             parser.setDataComponents(dataStructure);
@@ -643,6 +647,10 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
             // build and send response
             InsertResultResponse resp = new InsertResultResponse();
             sendResponse(request, resp);
+        }
+        catch (ReaderException e)
+        {
+            throw new SOSException("Error in encoded data: " + e.getMessage(), e);
         }
         finally
         {
