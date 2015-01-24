@@ -93,8 +93,9 @@ public class SensorDataProvider implements ISOSDataProvider, IEventListener
                     String defUri = (String)it.next().getDefinition();
                     if (filter.getObservables().contains(defUri))
                     {
-                        // set to time out if no data is received after 10 sampling periods. Is this good?
+                        // set to time out if no data is received after 10 sampling periods or min 5s
                         timeOut = (long)(outputInterface.getAverageSamplingPeriod() * 10. * 1000.);
+                        timeOut = Math.max(timeOut, 5000000);
                         dataSources.add(outputInterface);
                         
                         // break for now since we support only requesting data from one output at a time
