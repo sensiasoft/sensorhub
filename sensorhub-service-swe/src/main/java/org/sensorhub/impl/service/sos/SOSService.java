@@ -49,6 +49,7 @@ import org.vast.cdm.common.DataStreamWriter;
 import org.vast.ogc.om.IObservation;
 import org.vast.ows.GetCapabilitiesRequest;
 import org.vast.ows.OWSExceptionReport;
+import org.vast.ows.OWSLayerCapabilities;
 import org.vast.ows.OWSRequest;
 import org.vast.ows.server.SOSDataFilter;
 import org.vast.ows.sos.GetResultRequest;
@@ -354,12 +355,23 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     /////////////////////////////////////////
     
     @Override
-    protected void handleRequest(GetCapabilitiesRequest request) throws Exception
+    public void handleRequest(OWSRequest request) throws Exception
     {
-        // refresh offering capabilities if needed
+        // ask providers to refresh their capabilities if needed.
+        // we do that before any request so that checks on request parameters 
+        // use the most up-to-date info.
+        // we don't do it when changes occur because high frequency changes 
+        // would trigger too many updates (e.g. new measurements changing time periods)
         for (ISOSDataProviderFactory provider: dataProviders.values())
             ((IDataProviderFactory)provider).updateCapabilities();
         
+        super.handleRequest(request);
+    }
+
+
+    @Override
+    protected void handleRequest(GetCapabilitiesRequest request) throws Exception
+    {
         sendResponse(request, capabilitiesCache);
     }
         
@@ -599,17 +611,31 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
         try
         {
             checkTransactionalSupport(request);
+            String offering = request.getOffering();
             
             // get template ID
             // the same template ID is always returned for a given observable
-            ISOSDataConsumer consumer = getDataConsumerByOfferingID(request.getOffering());
+            ISOSDataConsumer consumer = getDataConsumerByOfferingID(offering);
             String templateID = consumer.newResultTemplate(request.getResultStructure(), request.getResultEncoding());
-            templateToOfferingMap.put(templateID, request.getOffering());
+            templateToOfferingMap.put(templateID, offering);
             
             // build and send response
             InsertResultTemplateResponse resp = new InsertResultTemplateResponse();
             resp.setAcceptedTemplateId(templateID);
             sendResponse(request, resp);
+            
+            // re-generate capabilities
+            IDataProviderFactory provider = getDataProviderFactoryByOfferingID(offering);
+            SOSOfferingCapabilities newCaps = provider.generateCapabilities();
+            int oldIndex = 0;
+            for (OWSLayerCapabilities offCaps: capabilitiesCache.getLayers())
+            {
+                if (offCaps.getIdentifier().equals(offering))
+                    break; 
+                oldIndex++;
+            }
+            capabilitiesCache.getLayers().set(oldIndex, newCaps);
+            offeringMap.put(newCaps.getIdentifier(), newCaps);
         }
         finally
         {
@@ -771,13 +797,19 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     }
     
     
-    protected IDataProviderFactory getDataProviderFactoryBySensorID(String sensorID) throws Exception
+    protected IDataProviderFactory getDataProviderFactoryByOfferingID(String offering) throws Exception
     {
-        String offering = procedureToOfferingMap.get(sensorID);
         ISOSDataProviderFactory factory = dataProviders.get(offering);
         if (factory == null)
             throw new IllegalStateException("No valid data provider factory found for offering " + offering);
         return (IDataProviderFactory)factory;
+    }
+    
+    
+    protected IDataProviderFactory getDataProviderFactoryBySensorID(String sensorID) throws Exception
+    {
+        String offering = procedureToOfferingMap.get(sensorID);
+        return getDataProviderFactoryByOfferingID(offering);
     }
     
     

@@ -32,6 +32,8 @@ import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.sensor.SensorEvent;
 import org.sensorhub.api.sensor.SensorException;
 import org.sensorhub.impl.sensor.AbstractSensorModule;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.vast.data.BinaryComponentImpl;
 import org.vast.data.BinaryEncodingImpl;
 import org.vast.data.DataIterator;
@@ -51,6 +53,8 @@ import org.vast.ows.sos.ISOSDataConsumer;
  */
 public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfig> implements ISOSDataConsumer
 {
+    private static final Logger log = LoggerFactory.getLogger(SOSVirtualSensor.class);
+    
     Map<DataStructureHash, String> structureToOutputMap = new HashMap<DataStructureHash, String>();
     
     
@@ -167,8 +171,12 @@ public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfi
     @Override
     public void newResultRecord(String templateID, DataBlock... dataBlocks) throws Exception
     {
+        SOSVirtualSensorOutput output = (SOSVirtualSensorOutput)getObservationOutputs().get(templateID);
+        
         for (DataBlock dataBlock: dataBlocks)
-            ((SOSVirtualSensorOutput)getObservationOutputs().get(templateID)).publishNewRecord(dataBlock);
+            output.publishNewRecord(dataBlock);
+        
+        log.debug("New record received for output " + output.getName());
     }
 
 
@@ -176,10 +184,10 @@ public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfi
     public void start() throws SensorHubException
     {
         // generate output interfaces from description
-        for (AbstractSWEIdentifiable output: getCurrentSensorDescription().getOutputList())
+        /*for (AbstractSWEIdentifiable output: getCurrentSensorDescription().getOutputList())
         {
             DataComponent dataStruct = null;
-            DataEncoding dataEnc = null;            
+            DataEncoding dataEnc = null;
             
             if (output instanceof DataStream)
             {
@@ -201,7 +209,7 @@ public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfi
             }
             
             newResultTemplate(dataStruct, dataEnc);
-        }
+        }*/
     }
 
 
