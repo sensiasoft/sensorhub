@@ -1,0 +1,45 @@
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <CheckBoxPreference
+        android:defaultValue="false"
+        android:key="accel_enabled"
+        android:summary="Enable streaming of accelerometer data"
+        android:title="Accelerometer Data" />
+    
+    <CheckBoxPreference
+        android:defaultValue="false"
+        android:key="gyro_enabled"
+        android:summary="Enable streaming of gyroscope data"
+        android:title="Gyroscope Data" />
+    
+    <CheckBoxPreference
+        android:defaultValue="false"
+        android:key="mag_enabled"
+        android:summary="Enable streaming of magnetometer data"
+        android:title="Magnetometer Data" />
+    
+    <CheckBoxPreference
+        android:defaultValue="true"
+        android:key="orient_enabled"
+        android:summary="Enable streaming of orientation data"
+        android:title="Orientation Data" />
+    
+    <CheckBoxPreference
+        android:defaultValue="true"
+        android:key="gps_enabled"
+        android:summary="Enable streaming of GPS location data"
+        android:title="GPS Location Data" />
+    
+    <CheckBoxPreference
+        android:defaultValue="false"
+        android:key="netloc_enabled"
+        android:summary="Enable streaming of network location data"
+        android:title="Network Location Data" />
+    
+    <CheckBoxPreference
+        android:defaultValue="false"
+        android:key="cam_enabled"
+        android:summary="Enable streaming of video data"
+        android:title="Video Data" />
+    
+</PreferenceScreen>

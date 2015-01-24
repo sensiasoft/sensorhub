@@ -1,0 +1,156 @@
+/***************************** BEGIN LICENSE BLOCK ***************************
+
+ The contents of this file are Copyright (C) 2014 Sensia Software LLC.
+ All Rights Reserved.
+ 
+ Contributor(s): 
+    Alexandre Robin <alex.robin@sensiasoftware.com>
+ 
+******************************* END LICENSE BLOCK ***************************/
+
+package org.sensorhub.android;
+
+import javax.xml.parsers.DocumentBuilderFactory;
+import org.sensorhub.api.module.IModuleConfigRepository;
+import org.sensorhub.api.sensor.ISensorDataInterface;
+import org.sensorhub.impl.SensorHub;
+import org.sensorhub.impl.module.ModuleRegistry;
+import org.sensorhub.impl.sensor.android.AndroidSensorsDriver;
+import org.vast.xml.XMLImplFinder;
+import android.app.Service;
+import android.content.Intent;
+import android.os.Binder;
+import android.os.IBinder;
+import android.os.Looper;
+import android.util.Log;
+
+
+/**
+ * <p>
+ * Android Service wrapping the sensorhub instance
+ * </p>
+ *
+ * <p>Copyright (c) 2014 Sensia Software LLC</p>
+ * @author Alexandre Robin <alex.robin@sensiasoftware.com>
+ * @since Jan 24, 2015
+ */
+public class SensorHubService extends Service
+{
+    final IBinder binder = new LocalBinder();
+    private Thread bgThread;
+    Looper bgLooper;
+    SOSTClient sosClient;
+    
+    
+    public class LocalBinder extends Binder {
+        SensorHubService getService() {
+            return SensorHubService.this;
+        }
+    }
+
+        
+    @Override
+    public void onCreate() {
+        
+        try
+        {
+            // load external dex file containing stax API
+            Dexter.loadFromAssets(this.getApplicationContext(), "stax-api-1.0-2.dex");
+            
+            // set default StAX implementation
+            XMLImplFinder.setStaxInputFactory(com.ctc.wstx.stax.WstxInputFactory.class.newInstance());
+            XMLImplFinder.setStaxOutputFactory(com.ctc.wstx.stax.WstxOutputFactory.class.newInstance());
+            
+            // set default DOM implementation
+            DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+            dbf.setNamespaceAware(true);
+            XMLImplFinder.setDOMImplementation(dbf.newDocumentBuilder().getDOMImplementation());
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }        
+    }
+    
+    
+    public void startSensorHub(final IModuleConfigRepository config)
+    {
+        if (bgThread == null)
+        {
+            bgThread = new Thread() {
+                
+                public void run() 
+                {
+                    // prepare for processing sensor messages
+                    Looper.prepare();
+                    bgLooper = Looper.myLooper();
+                    
+                    // start sensorhub
+                    ModuleRegistry registry = new ModuleRegistry(config);
+                    SensorHub.createInstance(null, registry).start();
+                    Log.i("SensorHub", "SensorHub started...");
+                    
+                    // connect to remote SOS
+                    AndroidSensorsDriver sensor = (AndroidSensorsDriver)registry.getLoadedModules().get(0); 
+                    sosClient = new SOSTClient(sensor.getConfiguration().sosEndpoint);
+                    try
+                    {
+                        // register sensor
+                        sosClient.registerSensor(sensor);
+                        Log.i("SensorHub", "Android device registered with SOS");
+                        
+                        // register all templates and start streaming data
+                        for (ISensorDataInterface o: sensor.getAllOutputs().values())
+                            sosClient.registerDataStream(o);
+                        Log.i("SensorHub", "Result templates registered with SOS");
+                    }
+                    catch (Exception e)
+                    {
+                        String msg = "Error while registering device with remote SOS";
+                        Log.e("SensorHub", msg, e);
+                        return;
+                    }                    
+
+                    Looper.loop();
+                }        
+            };
+            
+            bgThread.start();
+        }
+    }
+    
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId)
+    {        
+        return START_STICKY;
+    }
+    
+
+    @Override
+    public void onDestroy() {
+        SensorHub sensorhub = SensorHub.getInstance();
+        if (sensorhub != null)
+        {
+            sensorhub.stop();
+            Log.i("SensorHub", "SensorHub stopped...");
+        }
+        bgLooper.quit();
+        bgLooper = null;
+        bgThread = null;
+    }
+
+
+    @Override
+    public IBinder onBind(Intent intent)
+    {
+        return binder;
+    }
+
+
+    public SOSTClient getSosClient()
+    {
+        return sosClient;
+    }
+
+}

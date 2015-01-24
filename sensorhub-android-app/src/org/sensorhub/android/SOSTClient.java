@@ -1,16 +1,21 @@
 /***************************** BEGIN LICENSE BLOCK ***************************
 
- The contents of this file are Copyright (C) 2014 Sensia Software LLC.
- All Rights Reserved.
+The contents of this file are subject to the Mozilla Public License, v. 2.0.
+If a copy of the MPL was not distributed with this file, You can obtain one
+at http://mozilla.org/MPL/2.0/.
+
+Software distributed under the License is distributed on an "AS IS" basis,
+WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+for the specific language governing rights and limitations under the License.
  
- Contributor(s): 
-    Alexandre Robin <alex.robin@sensiasoftware.com>
+The Initial Developer is Sensia Software LLC. Portions created by the Initial
+Developer are Copyright (C) 2014 the Initial Developer. All Rights Reserved.
  
 ******************************* END LICENSE BLOCK ***************************/
 
 package org.sensorhub.android;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -23,13 +28,15 @@ import org.sensorhub.api.sensor.SensorDataEvent;
 import org.sensorhub.api.sensor.SensorException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.vast.ogc.om.IObservation;
+import org.vast.ogc.om.ObservationImpl;
 import org.vast.ows.OWSException;
 import org.vast.ows.sos.InsertResultRequest;
 import org.vast.ows.sos.InsertResultTemplateRequest;
 import org.vast.ows.sos.InsertResultTemplateResponse;
 import org.vast.ows.sos.InsertSensorRequest;
-import org.vast.ows.sos.InsertSensorResponse;
 import org.vast.ows.sos.SOSUtils;
+import org.vast.ows.swe.InsertSensorResponse;
 import org.vast.swe.SWEData;
 
 
@@ -42,21 +49,22 @@ public class SOSTClient implements IEventListener
     String endPoint;
     String offering;
     Map<ISensorDataInterface, StreamInfo> dataStreams;
-    int numRecordPerRequest;
     
     
-    class StreamInfo
+    public class StreamInfo
     {
         String templateID;
         SWEData resultData = new SWEData();
         int minRecordsPerRequest = 10;
+        long lastSampleTime = -1;
     }
     
     
-    public SOSTClient(String sosEndpoint)
+    public SOSTClient(String endPoint)
     {
-        threadPool = Executors.newFixedThreadPool(4);
-        dataStreams = new HashMap<ISensorDataInterface, StreamInfo>();
+        this.endPoint = endPoint;
+        this.threadPool = Executors.newFixedThreadPool(4);
+        this.dataStreams = new LinkedHashMap<ISensorDataInterface, StreamInfo>();
     }
     
     
@@ -69,11 +77,15 @@ public class SOSTClient implements IEventListener
     {
         try
         {
-            // register sensor
+            // build insert sensor request
             InsertSensorRequest req = new InsertSensorRequest();
             req.setPostServer(endPoint);
+            req.setVersion("2.0");
             req.setProcedureDescription(sensor.getCurrentSensorDescription());
             req.setProcedureDescriptionFormat(InsertSensorRequest.DEFAULT_PROCEDURE_FORMAT);
+            req.getObservationTypes().add(IObservation.OBS_TYPE_RECORD);
+            req.getFoiTypes().add("gml:Feature");
+            
             InsertSensorResponse resp = (InsertSensorResponse)sosUtils.sendRequest(req, false);
             this.offering = resp.getAssignedOffering();
         }
@@ -94,9 +106,11 @@ public class SOSTClient implements IEventListener
         // send insert result template
         InsertResultTemplateRequest req = new InsertResultTemplateRequest();
         req.setPostServer(endPoint);
+        req.setVersion("2.0");
         req.setOffering(offering);
         req.setResultStructure(sensorOutput.getRecordDescription());
         req.setResultEncoding(sensorOutput.getRecommendedEncoding());
+        req.setObservationTemplate(new ObservationImpl());
         InsertResultTemplateResponse resp = (InsertResultTemplateResponse)sosUtils.sendRequest(req, false);
         
         // add stream info to map
@@ -122,35 +136,58 @@ public class SOSTClient implements IEventListener
             if (streamInfo == null)
                 return;
             
-            // append records to buffer
-            for (DataBlock record: ((SensorDataEvent)e).getRecords())
-                streamInfo.resultData.pushNextDataBlock(record);
+            // record last sample time
+            streamInfo.lastSampleTime = e.getTimeStamp();
             
-            if (streamInfo.resultData.getComponentCount() >= streamInfo.minRecordsPerRequest)
+            // append records to buffer
+            synchronized(streamInfo.resultData)
             {
-                threadPool.execute(new Runnable() {
-                    @Override
-                    public void run()
-                    {
-                        try
+                for (DataBlock record: ((SensorDataEvent)e).getRecords())
+                    streamInfo.resultData.pushNextDataBlock(record);
+                        
+                if (streamInfo.resultData.getNumElements() >= streamInfo.minRecordsPerRequest)
+                {
+                    threadPool.execute(new Runnable() {
+                        @Override
+                        public void run()
                         {
-                            InsertResultRequest req = new InsertResultRequest();
-                            req.setPostServer(endPoint);
-                            req.setTemplateId(streamInfo.templateID);                        
-                            req.setResultData(streamInfo.resultData);
-                            sosUtils.sendRequest(req, false);
-                            
-                            // clear everything that was sent
-                            streamInfo.resultData.clearData();
-                        }
-                        catch (OWSException e1)
-                        {
-                            log.error("Error when sending data to SOS-T: " + ((SensorDataEvent)e).getSource().getName());
-                        }
-                    }            
-                });
+                            try
+                            {
+                                InsertResultRequest req = new InsertResultRequest();
+                                req.setPostServer(endPoint);
+                                req.setVersion("2.0");
+                                req.setTemplateId(streamInfo.templateID);
+                                req.setResultData(streamInfo.resultData);
+                                
+                                synchronized(streamInfo.resultData)
+                                {
+                                    sosUtils.sendRequest(req, false);
+                                    //sosUtils.writeXMLQuery(System.out, req);
+                                    
+                                    // clear everything that was sent
+                                    streamInfo.resultData.clearData();
+                                }
+                            }
+                            catch (OWSException ex)
+                            {
+                                log.error("Error when sending data to SOS-T: " + ((SensorDataEvent)e).getSource().getName(), ex);
+                            }
+                        }            
+                    });
+                }
             }
         }
     }
-
+    
+    
+    public boolean isConnected()
+    {
+        return (offering != null);
+    }
+    
+    
+    public Map<ISensorDataInterface, StreamInfo> getDataStreams()
+    {
+        return dataStreams;
+    }
 }
