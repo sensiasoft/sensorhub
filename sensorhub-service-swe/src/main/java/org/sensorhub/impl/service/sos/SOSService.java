@@ -676,7 +676,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
         }
         catch (ReaderException e)
         {
-            throw new SOSException("Error in encoded data: " + e.getMessage(), e);
+            throw new SOSException("Error in SWE encoded data", e);
         }
         finally
         {
@@ -840,6 +840,9 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     {
         String offering = templateToOfferingMap.get(templateID);
         ISOSDataConsumer consumer = dataConsumers.get(offering);
+        
+        if (consumer == null)
+            throw new SOSException(SOSException.invalid_param_code, "template", templateID, "Invalid template ID");
         
         return consumer;
     }
