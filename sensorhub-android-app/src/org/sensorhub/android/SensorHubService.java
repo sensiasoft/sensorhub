@@ -86,12 +86,11 @@ public class SensorHubService extends Service
                     bgLooper = Looper.myLooper();
                     
                     // start sensorhub
-                    ModuleRegistry registry = new ModuleRegistry(config);
-                    SensorHub.createInstance(null, registry).start();
+                    SensorHub.createInstance(null, new ModuleRegistry(config)).start();
                     Log.i("SensorHub", "SensorHub started...");
                     
                     // connect to remote SOS
-                    AndroidSensorsDriver sensor = (AndroidSensorsDriver)registry.getLoadedModules().get(0); 
+                    AndroidSensorsDriver sensor = (AndroidSensorsDriver)SensorHub.getInstance().getModuleRegistry().getLoadedModules().get(0); 
                     sosClient = new SOSTClient(sensor.getConfiguration().sosEndpoint);
                     try
                     {
@@ -119,6 +118,27 @@ public class SensorHubService extends Service
         }
     }
     
+    
+    public void stopSensorHub()
+    {
+        if (sosClient != null)
+        {
+            sosClient.stop();
+            sosClient = null;
+        }
+        
+        SensorHub sensorhub = SensorHub.getInstance();
+        if (sensorhub != null)
+        {
+            sensorhub.stop();
+            Log.i("SensorHub", "SensorHub stopped...");
+        }
+        
+        bgLooper.quit();
+        bgLooper = null;
+        bgThread = null;
+    }    
+    
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId)
@@ -129,15 +149,7 @@ public class SensorHubService extends Service
 
     @Override
     public void onDestroy() {
-        SensorHub sensorhub = SensorHub.getInstance();
-        if (sensorhub != null)
-        {
-            sensorhub.stop();
-            Log.i("SensorHub", "SensorHub stopped...");
-        }
-        bgLooper.quit();
-        bgLooper = null;
-        bgThread = null;
+        stopSensorHub();
     }
 
 

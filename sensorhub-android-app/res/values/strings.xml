@@ -3,4 +3,5 @@
     <string name="app_name">SensorHubConnect</string>
     <string name="hello_world">Hello SensorHub!</string>
     <string name="action_settings">Settings</string>
+    <string name="action_restart">Restart SensorHub</string>
 </resources>

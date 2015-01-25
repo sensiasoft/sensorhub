@@ -81,8 +81,27 @@ public class MainActivity extends Activity
         editor.commit();
         PreferenceManager.setDefaultValues(this, R.xml.pref_general, true);*/
         
-        // set config
+        // update config from user settings
         sensorhubConfig = new InMemoryConfigDb();
+        updateConfig(prefs);
+        
+        // start SensorHub service
+        Context context = this.getApplicationContext();
+        Intent intent = new Intent(context, SensorHubService.class);
+        //context.startService(intent);
+        context.bindService(intent, sConn, Context.BIND_AUTO_CREATE);
+        
+        displayHandler = new Handler() {
+            public void handleMessage(Message msg) {
+                textArea.setText(Html.fromHtml(displayText.toString()));
+            }
+        };
+    }
+    
+    
+    protected void updateConfig(SharedPreferences prefs)
+    {
+        sensorhubConfig.close();
         AndroidSensorsConfig sensorsConfig = new AndroidSensorsConfig();
         sensorsConfig.id = "ANDROID_SENSORS";
         sensorsConfig.name = "Android Sensors";
@@ -98,18 +117,6 @@ public class MainActivity extends Activity
         sensorsConfig.sosEndpoint = prefs.getString("sos_uri", "");
         AndroidSensorsDriver.androidContext = this.getApplicationContext();
         sensorhubConfig.add(sensorsConfig);
-        
-        // start SensorHub service
-        Context context = this.getApplicationContext();
-        Intent intent = new Intent(context, SensorHubService.class);
-        //context.startService(intent);
-        context.bindService(intent, sConn, Context.BIND_AUTO_CREATE);
-        
-        displayHandler = new Handler() {
-            public void handleMessage(Message msg) {
-                textArea.setText(Html.fromHtml(displayText.toString()));
-            }
-        };
     }
     
     
@@ -137,10 +144,19 @@ public class MainActivity extends Activity
                     for (Entry<ISensorDataInterface, StreamInfo> stream: dataStreams.entrySet())
                     {
                         displayText.append("<p><b>" + stream.getKey().getName() + " : </b>");
+                        
                         if (now - stream.getValue().lastSampleTime > 2000)
                             displayText.append("<font color='red'>NOK</font>");
                         else
-                            displayText.append("<font color='green'>OK</font>");
+                            displayText.append("<font color='green'>OK</font>");                        
+                        
+                        if (stream.getValue().errorCount > 0)
+                        {
+                            displayText.append("<font color='red'> (");
+                            displayText.append(stream.getValue().errorCount);
+                            displayText.append(")</font>");
+                        }
+                        
                         displayText.append("</p>");
                     }
                 }
@@ -179,6 +195,17 @@ public class MainActivity extends Activity
             startActivity(new Intent(this, UserSettingsActivity.class));
             return true;
         }
+        else if (id == R.id.action_restart)
+        {
+            if (boundService != null)
+            {
+                boundService.stopSensorHub();
+                updateConfig(PreferenceManager.getDefaultSharedPreferences(this));
+                boundService.startSensorHub(sensorhubConfig);
+            }
+            return true;
+        }
+        
         return super.onOptionsItemSelected(item);
     }
 

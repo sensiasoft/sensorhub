@@ -57,6 +57,7 @@ public class SOSTClient implements IEventListener
         SWEData resultData = new SWEData();
         int minRecordsPerRequest = 10;
         long lastSampleTime = -1;
+        int errorCount = 0;
     }
     
     
@@ -171,12 +172,21 @@ public class SOSTClient implements IEventListener
                             catch (OWSException ex)
                             {
                                 log.error("Error when sending data to SOS-T: " + ((SensorDataEvent)e).getSource().getName(), ex);
+                                streamInfo.errorCount++;
                             }
                         }            
                     });
                 }
             }
         }
+    }
+    
+    
+    public void stop()
+    {
+        for (ISensorDataInterface output: dataStreams.keySet())
+            output.unregisterListener(this);
+        threadPool.shutdown();
     }
     
     

@@ -81,7 +81,8 @@ public class InMemoryConfigDb implements IModuleConfigRepository
 
     @Override
     public void close()
-    {        
+    {
+        configMap.clear();
     }
 
 }
