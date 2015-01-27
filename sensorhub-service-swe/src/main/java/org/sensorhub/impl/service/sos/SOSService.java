@@ -25,6 +25,7 @@ import net.opengis.sensorml.v20.AbstractProcess;
 import net.opengis.swe.v20.BinaryBlock;
 import net.opengis.swe.v20.BinaryEncoding;
 import net.opengis.swe.v20.BinaryMember;
+import net.opengis.swe.v20.ByteEncoding;
 import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataEncoding;
@@ -357,14 +358,6 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     @Override
     public void handleRequest(OWSRequest request) throws Exception
     {
-        // ask providers to refresh their capabilities if needed.
-        // we do that before any request so that checks on request parameters 
-        // use the most up-to-date info.
-        // we don't do it when changes occur because high frequency changes 
-        // would trigger too many updates (e.g. new measurements changing time periods)
-        for (ISOSDataProviderFactory provider: dataProviders.values())
-            ((IDataProviderFactory)provider).updateCapabilities();
-        
         super.handleRequest(request);
     }
 
@@ -372,6 +365,13 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     @Override
     protected void handleRequest(GetCapabilitiesRequest request) throws Exception
     {
+        // ask providers to refresh their capabilities if needed.
+        // we do that here so capabilities doc contains the most up-to-date info.
+        // we don't always do it when changes occur because high frequency changes 
+        // would trigger too many updates (e.g. new measurements changing time periods)
+        for (ISOSDataProviderFactory provider: dataProviders.values())
+            ((IDataProviderFactory)provider).updateCapabilities();
+        
         sendResponse(request, capabilitiesCache);
     }
         
@@ -660,6 +660,13 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
         
         try
         {
+            // if binary data, ensure encoding is set to base64
+            if (encoding instanceof BinaryEncoding)
+            {
+                encoding = encoding.copy();
+                ((BinaryEncoding) encoding).setByteEncoding(ByteEncoding.BASE_64);
+            }
+            
             // prepare parser
             parser = SWEFactory.createDataParser(encoding);
             parser.setDataComponents(dataStructure);
@@ -735,10 +742,23 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
             log.error("Error while updating capabilities for offering " + offeringID, e);
         }
         
-        // check that request time is within allowed time periods
+        // check that request time is within allowed time period
         TimeExtent allowedPeriod = offering.getPhenomenonTime();
         boolean nowOk = allowedPeriod.isBaseAtNow() || allowedPeriod.isEndNow();
-        if (!((requestTime.isBaseAtNow() && nowOk) || requestTime.intersects(allowedPeriod)))
+        
+        boolean requestOk = false;
+        if (requestTime.isBaseAtNow() && nowOk)
+            requestOk = true;
+        else if (requestTime.isBeginNow() && nowOk)
+        {
+            double now = System.currentTimeMillis() / 1000.0;
+            if (requestTime.getStopTime() >= now)
+                requestOk = true;
+        }
+        else if (requestTime.intersects(allowedPeriod))
+            requestOk = true;
+        
+        if (!requestOk)
             report.add(new SOSException(SOSException.invalid_param_code, "phenomenonTime", requestTime.getIsoString(0), null));            
     }
     

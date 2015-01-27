@@ -64,6 +64,7 @@ public class SensorDataProvider implements ISOSDataProvider, IEventListener
     BlockingDeque<SensorDataEvent> eventQueue;
     List<Timer> pollTimers;
     long timeOut;
+    long stopTime;
     
     SensorDataEvent lastDataEvent;
     int nextEventRecordIndex = 0;
@@ -75,6 +76,9 @@ public class SensorDataProvider implements ISOSDataProvider, IEventListener
         this.dataSources = new ArrayList<ISensorDataInterface>();
         this.eventQueue = new LinkedBlockingDeque<SensorDataEvent>();
         this.pollTimers = new ArrayList<Timer>();
+        
+        // figure out stop time (if any)
+        stopTime = ((long)filter.getTimeRange().getStopTime()) * 1000L;
         
         // get list of desired sensor outputs
         try
@@ -113,8 +117,24 @@ public class SensorDataProvider implements ISOSDataProvider, IEventListener
         // if everything went well listen or poll sensor outputs
         for (final ISensorDataInterface outputInterface: dataSources)
         {
-            // register listener if push is supported
-            if (outputInterface.isPushSupported())
+            // case of time instant = now, just return latest record
+            if (isNowTimeInstant(filter.getTimeRange()))
+            {
+                try
+                {
+                    double lastRecordTime = outputInterface.getLatestRecordTime();
+                    DataBlock data = outputInterface.getLatestRecord();
+                    eventQueue.offerLast(new SensorDataEvent(lastRecordTime, outputInterface, data));
+                    timeOut = 0L;
+                }
+                catch (SensorException e)
+                {
+                   throw new ServiceException("Cannot get latest record from sensor " + sensor.getName(), e);
+                }
+            }
+            
+            // otherwise register listener if push is supported
+            else if (outputInterface.isPushSupported())
                 outputInterface.registerListener(this);
                         
             // otherwise setup timer task to poll regularly
@@ -152,6 +172,15 @@ public class SensorDataProvider implements ISOSDataProvider, IEventListener
                 timer.scheduleAtFixedRate(pollTask, 0, (long)(outputInterface.getAverageSamplingPeriod() * 500.));
             }
         }
+    }
+    
+    
+    protected boolean isNowTimeInstant(TimeExtent timeFilter)
+    {
+        if (timeFilter.isTimeInstant() && timeFilter.isBaseAtNow())
+            return true;
+        
+        return false;
     }
     
     
@@ -223,6 +252,10 @@ public class SensorDataProvider implements ISOSDataProvider, IEventListener
             {
                 lastDataEvent = eventQueue.pollFirst(timeOut, TimeUnit.MILLISECONDS);
                 if (lastDataEvent == null)
+                    return null;
+                
+                // we stop if record is passed the given stop date
+                if (lastDataEvent.getTimeStamp() > stopTime)
                     return null;
                 
                 nextEventRecordIndex = 0;
