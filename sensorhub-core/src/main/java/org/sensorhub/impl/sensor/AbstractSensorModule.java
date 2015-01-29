@@ -172,7 +172,8 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
             lastUpdatedSensorDescription = unixTime / 1000.;
             
             // default IDs
-            if (sensorDescription.getId() == null)
+            String gmlId = sensorDescription.getId();
+            if (gmlId == null || gmlId.length() == 0)
                 sensorDescription.setId(DEFAULT_ID);
             if (!sensorDescription.isSetIdentifier())
                 sensorDescription.setUniqueIdentifier(getLocalID());

@@ -887,4 +887,11 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     {
         // TODO Auto-generated method stub        
     }
+
+
+    @Override
+    protected String getDefaultVersion()
+    {
+        return "2.0";
+    }
 }

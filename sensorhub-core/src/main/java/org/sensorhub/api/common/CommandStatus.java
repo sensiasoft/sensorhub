@@ -35,4 +35,17 @@ public class CommandStatus
 	public String message;
 	public long updateTime;
 	public CommandStatus previousStatus;
+	
+	
+	public CommandStatus()
+	{	    
+	}
+	
+	
+	public CommandStatus(String id, StatusCode status)
+	{
+	    this.id = id;
+	    this.status = status;
+	    this.updateTime = System.currentTimeMillis();
+	}
 }

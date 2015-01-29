@@ -16,49 +16,43 @@ Developer are Copyright (C) 2014 the Initial Developer. All Rights Reserved.
 package org.sensorhub.test.service.sps;
 
 import static org.junit.Assert.*;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.Arrays;
-import org.apache.commons.io.IOUtils;
+import net.opengis.swe.v20.DataBlock;
+import net.opengis.swe.v20.DataComponent;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.sensorhub.api.module.IModule;
-import org.sensorhub.api.persistence.IBasicStorage;
-import org.sensorhub.api.persistence.StorageConfig;
-import org.sensorhub.api.sensor.ISensorModule;
 import org.sensorhub.api.sensor.SensorConfig;
 import org.sensorhub.impl.SensorHub;
 import org.sensorhub.impl.SensorHubConfig;
-import org.sensorhub.impl.persistence.InMemoryBasicStorage;
-import org.sensorhub.impl.persistence.StorageHelper;
 import org.sensorhub.impl.service.HttpServer;
 import org.sensorhub.impl.service.HttpServerConfig;
 import org.sensorhub.impl.service.ogc.OGCServiceConfig.CapabilitiesInfo;
-import org.sensorhub.impl.service.sos.SOSProviderConfig;
-import org.sensorhub.impl.service.sos.SOSService;
-import org.sensorhub.impl.service.sos.SOSServiceConfig;
-import org.sensorhub.impl.service.sos.SensorDataProviderConfig;
+import org.sensorhub.impl.service.sps.SPSConnectorConfig;
+import org.sensorhub.impl.service.sps.SPSService;
+import org.sensorhub.impl.service.sps.SPSServiceConfig;
+import org.sensorhub.impl.service.sps.SensorConnectorConfig;
 import org.sensorhub.test.sensor.FakeSensor;
+import org.sensorhub.test.sensor.FakeSensorControl1;
+import org.sensorhub.test.sensor.FakeSensorControl2;
 import org.sensorhub.test.sensor.FakeSensorData;
 import org.vast.data.DataBlockDouble;
-import org.vast.data.QuantityImpl;
+import org.vast.data.DataBlockMixed;
+import org.vast.data.DataBlockString;
 import org.vast.data.TextEncodingImpl;
-import org.vast.ogc.OGCException;
-import org.vast.ogc.OGCExceptionReader;
 import org.vast.ows.OWSException;
 import org.vast.ows.OWSExceptionReader;
 import org.vast.ows.OWSRequest;
 import org.vast.ows.OWSUtils;
-import org.vast.ows.sos.GetObservationRequest;
-import org.vast.ows.sos.InsertResultRequest;
-import org.vast.ows.sos.SOSOfferingCapabilities;
-import org.vast.ows.sos.SOSServiceCapabilities;
+import org.vast.ows.sps.DescribeTaskingRequest;
+import org.vast.ows.sps.DescribeTaskingResponse;
+import org.vast.ows.sps.SPSUtils;
+import org.vast.ows.sps.SubmitRequest;
+import org.vast.ows.swe.DescribeSensorRequest;
 import org.vast.swe.SWEData;
-import org.vast.util.TimeExtent;
 import org.vast.xml.DOMHelper;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -67,14 +61,14 @@ import org.w3c.dom.NodeList;
 public class TestSPSService
 {
     static String SERVICE_ENDPOINT = "/sps";
-    static String NAME_OUTPUT1 = "weatherOut";
-    static String NAME_OUTPUT2 = "imageOut";
-    static String URI_OFFERING1 = "urn:mysos:sensor1";
-    static String URI_OFFERING2 = "urn:mysos:sensor2";
-    static String NAME_OFFERING1 = "SOS Sensor Provider #1";
-    static String NAME_OFFERING2 = "SOS Sensor Provider #2";
-    static final double SAMPLING_PERIOD = 0.5;
-    static final int NUM_GEN_SAMPLES = 5;
+    static String SERVER_URL = "http://localhost:8080/sensorhub" + SERVICE_ENDPOINT;    
+    static String NAME_INPUT1 = "command";
+    static String URI_OFFERING1 = "urn:mysps:sensor1";
+    static String URI_OFFERING2 = "urn:mysps:sensor2";
+    static String NAME_OFFERING1 = "SPS Sensor Control #1";
+    static String NAME_OFFERING2 = "SPS Sensor Control #2";
+    static String SENSOR_UID_1 = "urn:mysensors:SENSOR001";
+    static String SENSOR_UID_2 = "urn:mysensors:SENSOR002";
     
     File configFile;
     
@@ -94,46 +88,50 @@ public class TestSPSService
     }
     
     
-    protected SOSService deployService(SOSProviderConfig... providerConfigs) throws Exception
+    protected SPSService deployService(SPSConnectorConfig... connectorConfigs) throws Exception
     {   
         // create service config
-        SOSServiceConfig serviceCfg = new SOSServiceConfig();
-        serviceCfg.moduleClass = SOSService.class.getCanonicalName();
+        SPSServiceConfig serviceCfg = new SPSServiceConfig();
+        serviceCfg.moduleClass = SPSService.class.getCanonicalName();
         serviceCfg.endPoint = SERVICE_ENDPOINT;
         serviceCfg.enabled = true;
-        serviceCfg.name = "SOS";
+        serviceCfg.name = "SPS";
+        
         CapabilitiesInfo srvcMetadata = serviceCfg.ogcCapabilitiesInfo;
-        srvcMetadata.title = "My SOS Service";
-        srvcMetadata.description = "An SOS service automatically deployed by SensorHub";
+        srvcMetadata.title = "My SPS Service";
+        srvcMetadata.description = "An SPS service automatically deployed by SensorHub";
         srvcMetadata.serviceProvider.setOrganizationName("Test Provider, Inc.");
         srvcMetadata.serviceProvider.setDeliveryPoint("15 MyStreet");
         srvcMetadata.serviceProvider.setCity("MyCity");
         srvcMetadata.serviceProvider.setCountry("MyCountry");
-        serviceCfg.dataProviders = Arrays.asList(providerConfigs);
         srvcMetadata.fees = "NONE";
         srvcMetadata.accessConstraints = "NONE";
         
+        serviceCfg.connectors = Arrays.asList(connectorConfigs);
+        
         // load module into registry
-        SOSService sos = (SOSService)SensorHub.getInstance().getModuleRegistry().loadModule(serviceCfg);
+        SPSService sps = (SPSService)SensorHub.getInstance().getModuleRegistry().loadModule(serviceCfg);
         SensorHub.getInstance().getModuleRegistry().saveModulesConfiguration();
-        return sos;
+        return sps;
     }
     
     
-    protected SensorDataProviderConfig buildSensorProvider1(boolean pushEnabled) throws Exception
+    protected SensorConnectorConfig buildSensorConnector1() throws Exception
     {
         // create test sensor
         SensorConfig sensorCfg = new SensorConfig();
         sensorCfg.enabled = true;
         sensorCfg.moduleClass = FakeSensor.class.getCanonicalName();
         sensorCfg.name = "Sensor1";
-        IModule<?> sensor = SensorHub.getInstance().getModuleRegistry().loadModule(sensorCfg);
+        FakeSensor sensor = (FakeSensor)SensorHub.getInstance().getModuleRegistry().loadModule(sensorCfg);
+        sensor.setSensorUID(SENSOR_UID_1);
         
         // add custom interfaces
-        ((FakeSensor)sensor).setDataInterfaces(new FakeSensorData((FakeSensor)sensor, NAME_OUTPUT1, pushEnabled, 10, SAMPLING_PERIOD, NUM_GEN_SAMPLES));
+        ((FakeSensor)sensor).setDataInterfaces(new FakeSensorData(sensor, "output1", true, 10, 1.0, 0));
+        ((FakeSensor)sensor).setControlInterfaces(new FakeSensorControl1(sensor));
         
         // create SOS data provider config
-        SensorDataProviderConfig provCfg = new SensorDataProviderConfig();
+        SensorConnectorConfig provCfg = new SensorConnectorConfig();
         provCfg.enabled = true;
         provCfg.name = NAME_OFFERING1;
         provCfg.uri = URI_OFFERING1;
@@ -144,77 +142,48 @@ public class TestSPSService
     }
     
     
-    protected SensorDataProviderConfig buildSensorProvider2() throws Exception
+    protected SensorConnectorConfig buildSensorConnector2() throws Exception
     {
         // create test sensor
         SensorConfig sensorCfg = new SensorConfig();
         sensorCfg.enabled = true;
         sensorCfg.moduleClass = FakeSensor.class.getCanonicalName();
         sensorCfg.name = "Sensor2";
-        IModule<?> sensor = SensorHub.getInstance().getModuleRegistry().loadModule(sensorCfg);
-        ((FakeSensor)sensor).setDataInterfaces(
-                new FakeSensorData((FakeSensor)sensor, NAME_OUTPUT1, false)/*,
-                new FakeSensorData2((FakeSensor)sensor, NAME_OUTPUT2, false)*/);
+        FakeSensor sensor = (FakeSensor)SensorHub.getInstance().getModuleRegistry().loadModule(sensorCfg);
+        sensor.setSensorUID(SENSOR_UID_2);
+        
+        // add custom interfaces
+        ((FakeSensor)sensor).setDataInterfaces(new FakeSensorData(sensor, "output1", true, 10, 1.0, 0));
+        ((FakeSensor)sensor).setControlInterfaces(new FakeSensorControl1(sensor), new FakeSensorControl2(sensor));
         
         // create SOS data provider config
-        SensorDataProviderConfig provCfg = new SensorDataProviderConfig();
+        SensorConnectorConfig provCfg = new SensorConnectorConfig();
         provCfg.enabled = true;
         provCfg.name = NAME_OFFERING2;
         provCfg.uri = URI_OFFERING2;
         provCfg.sensorID = sensor.getLocalID();
-        //provCfg.hiddenOutputs;
+        //provCfg.hiddenOutputs
         
         return provCfg;
-    }
-    
-    
-    protected SensorDataProviderConfig buildSensorProvider1WithStorage(boolean pushEnabled) throws Exception
-    {
-        SensorDataProviderConfig sosProviderConfig = buildSensorProvider1(pushEnabled);
-                       
-        // create in-memory storage
-        StorageConfig storageConfig = new StorageConfig();
-        storageConfig.moduleClass = InMemoryBasicStorage.class.getCanonicalName();
-        storageConfig.name = "Storage";
-        storageConfig.enabled = true;
-        
-        // configure storage for sensor
-        IBasicStorage<?> storage = (IBasicStorage<?>)SensorHub.getInstance().getModuleRegistry().loadModule(storageConfig);
-        ISensorModule<?> sensor = SensorHub.getInstance().getSensorManager().getModuleById(sosProviderConfig.sensorID);
-        StorageHelper.configureStorageForSensor(sensor, storage, true);
-        sosProviderConfig.storageID = storage.getLocalID();
-        
-        return sosProviderConfig;
-    }
-    
-    
-    protected GetObservationRequest generateGetObsNow(String offeringId)
-    {
-        GetObservationRequest getObs = new GetObservationRequest();
-        getObs.setGetServer("http://localhost:8080/sensorhub" + SERVICE_ENDPOINT);
-        getObs.setVersion("2.0");
-        getObs.setOffering(offeringId);
-        getObs.getObservables().add("urn:blabla:temperature");
-        TimeExtent reqTime = new TimeExtent();
-        reqTime.setBaseAtNow(true);
-        getObs.setTime(reqTime);
-        return getObs;
-    }
-    
-    
-    protected GetObservationRequest generateGetObsTimeRange(String offeringId, double beginTime, double endTime)
-    {
-        GetObservationRequest getObs = generateGetObsNow(offeringId);
-        getObs.setTime(new TimeExtent(beginTime, endTime));
-        return getObs;
     }
     
     
     protected DOMHelper sendRequest(OWSRequest request, boolean usePost) throws Exception
     {
         OWSUtils utils = new OWSUtils();
-        System.out.println(utils.buildURLQuery(request));
-        InputStream is = utils.sendGetRequest(request).getInputStream();
+        InputStream is;
+        
+        if (usePost)
+        {
+            is = utils.sendPostRequest(request).getInputStream();
+            utils.writeXMLQuery(System.out, request);
+        }
+        else
+        {
+            is = utils.sendGetRequest(request).getInputStream();
+            System.out.println(utils.buildURLQuery(request));
+        }
+        
         DOMHelper dom = new DOMHelper(is, false);
         dom.serialize(dom.getBaseElement(), System.out, true);
         OWSExceptionReader.checkException(dom, dom.getBaseElement());
@@ -222,23 +191,62 @@ public class TestSPSService
     }
     
     
+    protected DescribeTaskingRequest generateDescribeTasking(String procedureId)
+    {
+        DescribeTaskingRequest dtReq = new DescribeTaskingRequest();
+        dtReq.setGetServer(SERVER_URL);
+        dtReq.setPostServer(SERVER_URL);
+        dtReq.setVersion("2.0");
+        dtReq.setProcedureID(procedureId);
+        return dtReq;
+    }
+    
+    
+    protected DescribeSensorRequest generateDescribeSensor(String procedureId)
+    {
+        DescribeSensorRequest dsReq = new DescribeSensorRequest();
+        dsReq.setService(SPSUtils.SPS);
+        dsReq.setGetServer(SERVER_URL);
+        dsReq.setPostServer(SERVER_URL);
+        dsReq.setVersion("2.0");
+        dsReq.setProcedureID(procedureId);
+        return dsReq;
+    } 
+    
+    
+    protected SubmitRequest generateSubmit(String procedureId, DataComponent components, DataBlock... dataBlks)
+    {
+        SubmitRequest subReq = new SubmitRequest();
+        subReq.setPostServer(SERVER_URL);
+        subReq.setVersion("2.0");
+        subReq.setSensorID(procedureId);
+        SWEData paramData = new SWEData();
+        paramData.setElementType(components);
+        paramData.setEncoding(new TextEncodingImpl());
+        for (DataBlock dataBlock: dataBlks)
+            paramData.addData(dataBlock);
+        subReq.setParameters(paramData);
+        return subReq;
+    } 
+    
+    
     @Test
     public void testSetupService() throws Exception
     {
-        deployService(buildSensorProvider1(false));
+        deployService(buildSensorConnector1());
     }
     
     
     @Test
     public void testGetCapabilitiesOneOffering() throws Exception
     {
-        deployService(buildSensorProvider1(false));
+        deployService(buildSensorConnector1());
         
-        InputStream is = new URL("http://localhost:8080/sensorhub" + SERVICE_ENDPOINT + "?service=SOS&version=2.0&request=GetCapabilities").openStream();
+        InputStream is = new URL(SERVER_URL + "?service=SPS&version=2.0&request=GetCapabilities").openStream();
         DOMHelper dom = new DOMHelper(is, false);
         dom.serialize(dom.getBaseElement(), System.out, true);
         
-        NodeList offeringElts = dom.getElements("contents/Contents/offering/*");
+        NodeList offeringElts = dom.getElements("contents/SPSContents/offering/*");
         assertEquals("Wrong number of offerings", 1, offeringElts.getLength());
         assertEquals("Wrong offering id", URI_OFFERING1, dom.getElementValue((Element)offeringElts.item(0), "identifier"));
         assertEquals("Wrong offering name", NAME_OFFERING1, dom.getElementValue((Element)offeringElts.item(0), "name"));
@@ -248,13 +256,13 @@ public class TestSPSService
     @Test
     public void testGetCapabilitiesTwoOfferings() throws Exception
     {
-        deployService(buildSensorProvider1(false), buildSensorProvider2());
+        deployService(buildSensorConnector1(), buildSensorConnector2());
         
-        InputStream is = new URL("http://localhost:8080/sensorhub" + SERVICE_ENDPOINT + "?service=SOS&version=2.0&request=GetCapabilities").openStream();
+        InputStream is = new URL(SERVER_URL + "?service=SOS&version=2.0&request=GetCapabilities").openStream();
         DOMHelper dom = new DOMHelper(is, false);
         dom.serialize(dom.getBaseElement(), System.out, true);
         
-        NodeList offeringElts = dom.getElements("contents/Contents/offering/*");
+        NodeList offeringElts = dom.getElements("contents/SPSContents/offering/*");
         assertEquals("Wrong number of offerings", 2, offeringElts.getLength());
         
         assertEquals("Wrong offering id", URI_OFFERING1, dom.getElementValue((Element)offeringElts.item(0), "identifier"));
@@ -266,127 +274,85 @@ public class TestSPSService
     
     
     @Test
-    public void testGetResultTwoOfferings() throws Exception
+    public void testDescribeSensorOneOffering() throws Exception
     {
-        deployService(buildSensorProvider1(false), buildSensorProvider2());
-        
-        InputStream is = new URL("http://localhost:8080/sensorhub" + SERVICE_ENDPOINT + "?service=SOS&version=2.0&request=GetResult&offering=urn:mysos:sensor1&observedProperty=urn:blabla:temperature").openStream();
-        IOUtils.copy(is, System.out);
-    }
-    
-    
-    @Test(expected = OGCException.class)
-    public void testGetResultWrongOffering() throws Exception
-    {
-        deployService(buildSensorProvider1(false), buildSensorProvider2());
-        
-        InputStream is = new URL("http://localhost:8080/sensorhub" + SERVICE_ENDPOINT + "?service=SOS&version=2.0&request=GetResult&offering=urn:mysos:wrong&observedProperty=urn:blabla:temperature").openStream();
-        ByteArrayOutputStream os = new ByteArrayOutputStream();
-        IOUtils.copy(is, os);
-        
-        // read back and print
-        ByteArrayInputStream bis = new ByteArrayInputStream(os.toByteArray());
-        IOUtils.copy(bis, System.out);
-        bis.reset();
-        
-        // parse and generate exception
-        OGCExceptionReader.parseException(bis);
+        deployService(buildSensorConnector1());
+        DOMHelper dom = sendRequest(generateDescribeSensor(SENSOR_UID_1), false);
+        assertEquals("Wrong Sensor UID", SENSOR_UID_1, dom.getElementValue("identifier"));
     }
     
     
     @Test
-    public void testGetObsOneOfferingUsingPolling() throws Exception
+    public void testDescribeSensorTwoOfferings() throws Exception
     {
-        deployService(buildSensorProvider1(false));
-        DOMHelper dom = sendRequest(generateGetObsNow(URI_OFFERING1), false);
+        deployService(buildSensorConnector1(), buildSensorConnector2());
+        DOMHelper dom;
         
-        assertEquals("Wrong number of observations returned", NUM_GEN_SAMPLES, dom.getElements("*/OM_Observation").getLength());
+        dom = sendRequest(generateDescribeSensor(SENSOR_UID_1), false);
+        assertEquals("Wrong Sensor UID", SENSOR_UID_1, dom.getElementValue("identifier"));
+        assertEquals("Wrong number of control parameters", 1, dom.getElements("parameters/*/parameter").getLength());
+        
+        dom = sendRequest(generateDescribeSensor(SENSOR_UID_2), true);
+        assertEquals("Wrong Sensor UID", SENSOR_UID_2, dom.getElementValue("identifier"));
+        assertEquals("Wrong number of control parameters", 2, dom.getElements("parameters/*/parameter").getLength());
+    }
+    
+    
+    @Test(expected = OWSException.class)
+    public void testDescribeSensorWrongFormat() throws Exception
+    {
+        deployService(buildSensorConnector1());
+        DescribeSensorRequest req = generateDescribeSensor(SENSOR_UID_1);
+        req.setFormat("InvalidFormat");
+        sendRequest(req, false);
     }
     
     
     @Test
-    public void testGetObsOneOfferingUsingPush() throws Exception
+    public void testDescribeTaskingOneOffering() throws Exception
     {
-        deployService(buildSensorProvider1(true));
-        DOMHelper dom = sendRequest(generateGetObsNow(URI_OFFERING1), false);
+        deployService(buildSensorConnector1());
+        DOMHelper dom = sendRequest(generateDescribeTasking(SENSOR_UID_1), false);
         
-        assertEquals("Wrong number of observations returned", NUM_GEN_SAMPLES, dom.getElements("*/OM_Observation").getLength());
+        NodeList offeringElts = dom.getElements("taskingParameters/*/field");
+        assertEquals("Wrong number of tasking parameters", 2, offeringElts.getLength());
     }
     
     
     @Test
-    public void testGetObsOneOfferingWithTimeRange() throws Exception
+    public void testDescribeTaskingTwoOfferings() throws Exception
     {
-        deployService(buildSensorProvider1WithStorage(true));
+        deployService(buildSensorConnector1(), buildSensorConnector2());
         
-        // wait until data has been produced and archived
-        FakeSensor sensor = (FakeSensor)SensorHub.getInstance().getSensorManager().getLoadedModules().get(0);
-        while (sensor.getAllOutputs().get(NAME_OUTPUT1).isEnabled())
-            Thread.sleep(((long)SAMPLING_PERIOD*500));
+        DOMHelper dom;
+        NodeList offeringElts;
         
-        // first get capabilities to knowavailable time range
-        SOSServiceCapabilities caps = (SOSServiceCapabilities)new OWSUtils().getCapabilities("http://localhost:8080/sensorhub" + SERVICE_ENDPOINT, "SOS", "2.0");
-        TimeExtent timePeriod = ((SOSOfferingCapabilities)caps.getLayer(URI_OFFERING1)).getPhenomenonTime();
-        System.out.println("Available time period is " + timePeriod.getIsoString(0));
+        dom = sendRequest(generateDescribeTasking(SENSOR_UID_1), false);
+        offeringElts = dom.getElements("taskingParameters/*/field");
+        assertEquals("Wrong number of tasking parameters", 2, offeringElts.getLength());
         
-        // then get obs
-        double stopTime = System.currentTimeMillis() / 1000.0;
-        DOMHelper dom = sendRequest(generateGetObsTimeRange(URI_OFFERING1, timePeriod.getStartTime(), stopTime), false);
-        assertEquals("Wrong number of observations returned", NUM_GEN_SAMPLES, dom.getElements("*/OM_Observation").getLength());
+        dom = sendRequest(generateDescribeTasking(SENSOR_UID_2), true);
+        offeringElts = dom.getElements("taskingParameters/*/item");
+        assertEquals("Wrong number of parameter choices", 2, offeringElts.getLength());
     }
     
     
     @Test
-    public void testGetObsTwoOfferingsUsingPolling() throws Exception
+    public void testSubmitOneOffering() throws Exception
     {
-        deployService(buildSensorProvider1(false), buildSensorProvider2());
-        DOMHelper dom = sendRequest(generateGetObsNow(URI_OFFERING1), false);
+        deployService(buildSensorConnector1());
+        SPSUtils spsUtils = new SPSUtils();
         
-        assertEquals("Wrong number of observations returned", NUM_GEN_SAMPLES, dom.getElements("*/OM_Observation").getLength());
-    }
-    
-    
-    @Test(expected = OGCException.class)
-    public void testGetObsWrongFormat() throws Exception
-    {
-        deployService(buildSensorProvider1(false));
+        // first send describeTasking
+        DOMHelper dom = sendRequest(generateDescribeTasking(SENSOR_UID_1), true);
+        DescribeTaskingResponse resp = spsUtils.readDescribeTaskingResponse(dom, dom.getBaseElement());
         
-        InputStream is = new URL("http://localhost:8080/sensorhub" + SERVICE_ENDPOINT + "?service=SOS&version=2.0&request=GetObservation&offering=urn:mysos:sensor1&observedProperty=urn:blabla:temperature&responseFormat=badformat").openStream();
-        ByteArrayOutputStream os = new ByteArrayOutputStream();
-        IOUtils.copy(is, os);
-        
-        // read back and print
-        ByteArrayInputStream bis = new ByteArrayInputStream(os.toByteArray());
-        IOUtils.copy(bis, System.out);
-        bis.reset();
-        
-        // parse and generate exception
-        OGCExceptionReader.parseException(bis);
-    }
-    
-    
-    @Test
-    public void testNoTransactional() throws Exception
-    {
-        deployService(buildSensorProvider1(false));
-        
-        try
-        {
-            InsertResultRequest req = new InsertResultRequest();
-            req.setPostServer("http://localhost:8080/sensorhub" + SERVICE_ENDPOINT);
-            req.setVersion("2.0");
-            req.setTemplateId("template01");
-            SWEData sweData = new SWEData();
-            sweData.setElementType(new QuantityImpl());
-            sweData.setEncoding(new TextEncodingImpl(",", " "));
-            sweData.addData(new DataBlockDouble(1));
-            req.setResultData(sweData);
-            new OWSUtils().sendRequest(req, false);
-        }
-        catch (OWSException e)
-        {
-            assertTrue(e.getLocator().equals("request"));
-        }
+        // then send submit
+        DataBlock dataBlock = new DataBlockMixed(new DataBlockDouble(1), new DataBlockString(1));
+        dataBlock.setDoubleValue(0, 10.0);
+        dataBlock.setStringValue(1, "HIGH");
+        SubmitRequest subReq = generateSubmit(SENSOR_UID_1, resp.getTaskingParameters(), dataBlock);
+        dom = sendRequest(subReq, true);   
     }
 
     

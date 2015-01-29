@@ -44,8 +44,8 @@ public class SOSVirtualSensorOutput extends AbstractSensorOutput<SOSVirtualSenso
         
         // force raw binary encoding (no reason to recommend base64)
         // switching to base64 is automatic when writing or parsing from XML
-        //if (recordEncoding instanceof BinaryEncoding)
-        //    ((BinaryEncoding) recordEncoding).setByteEncoding(ByteEncoding.RAW);
+        if (recordEncoding instanceof BinaryEncoding)
+            ((BinaryEncoding) recordEncoding).setByteEncoding(ByteEncoding.RAW);
     }
 
 

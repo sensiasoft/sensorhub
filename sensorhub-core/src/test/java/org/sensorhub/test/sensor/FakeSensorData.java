@@ -41,7 +41,7 @@ import org.vast.swe.SWEConstants;
 
 /**
  * <p>
- * Fake sensor implementation for testing SOS service
+ * Fake sensor output implementation for testing sensor data API
  * </p>
  *
  * <p>Copyright (c) 2013</p>

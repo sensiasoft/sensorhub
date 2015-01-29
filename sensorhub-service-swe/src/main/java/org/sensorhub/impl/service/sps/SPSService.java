@@ -16,7 +16,9 @@ Developer are Copyright (C) 2014 the Initial Developer. All Rights Reserved.
 package org.sensorhub.impl.service.sps;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -37,11 +39,15 @@ import org.sensorhub.impl.service.ogc.OGCServiceConfig.CapabilitiesInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vast.ows.GetCapabilitiesRequest;
+import org.vast.ows.OWSExceptionReport;
 import org.vast.ows.OWSRequest;
 import org.vast.ows.server.OWSServlet;
+import org.vast.ows.sos.SOSException;
 import org.vast.ows.sps.*;
+import org.vast.ows.sps.StatusReport.TaskStatus;
 import org.vast.ows.swe.DescribeSensorRequest;
 import org.vast.ows.util.PostRequestFilter;
+import org.vast.sensorML.SMLUtils;
 import org.vast.xml.DOMHelper;
 import org.w3c.dom.Element;
 
@@ -349,22 +355,43 @@ public class SPSService extends OWSServlet implements IServiceModule<SPSServiceC
             handleRequest((UpdateRequest)request);
         else if (request instanceof CancelRequest)
             handleRequest((CancelRequest)request);
-        else if (request instanceof CancelRequest)
-            handleRequest((CancelRequest)request);
         else if (request instanceof ReserveRequest)
             handleRequest((ReserveRequest)request);
+        else if (request instanceof ConfirmRequest)
+            handleRequest((ConfirmRequest)request);
         else if (request instanceof DescribeResultAccessRequest)
             handleRequest((DescribeResultAccessRequest)request);
     }
     
     
-    protected DescribeTaskingResponse describeTasking(DescribeTaskingRequest request) throws Exception
+    protected void handleRequest(GetCapabilitiesRequest request) throws Exception
+    {
+        sendResponse(request, capabilitiesCache);
+    }
+    
+    
+    protected void handleRequest(DescribeSensorRequest request) throws Exception
+    {
+        String procedureID = request.getProcedureID();
+        
+        OWSExceptionReport report = new OWSExceptionReport();
+        ISPSConnector connector = getConnectorByProcedureID(procedureID, report);
+        checkQueryProcedureFormat(procedureID, request.getFormat(), report);
+        report.process();
+        
+        // serialize and send SensorML description
+        OutputStream os = new BufferedOutputStream(request.getResponseStream());
+        new SMLUtils().writeProcess(os, connector.generateSensorMLDescription(Double.NaN), true);
+    }
+    
+    
+    protected void handleRequest(DescribeTaskingRequest request) throws Exception
     {
         String procID = request.getProcedureID();
         SPSOfferingCapabilities offering = procedureToOfferingMap.get(procID);
         
         if (offering != null)
-            return offering.getParametersDescription();
+            sendResponse(request, offering.getParametersDescription());
         else
             throw new SPSException(SPSException.invalid_param_code, "procedure", procID);
     }
@@ -381,7 +408,7 @@ public class SPSService extends OWSServlet implements IServiceModule<SPSServiceC
     }
     
     
-    protected GetStatusResponse getStatus(GetStatusRequest request) throws Exception
+    protected void handleRequest(GetStatusRequest request) throws Exception
     {
         ITask task = findTask(request.getTaskID());
         StatusReport status = task.getStatusReport();
@@ -390,11 +417,11 @@ public class SPSService extends OWSServlet implements IServiceModule<SPSServiceC
         gsResponse.setVersion("2.0.0");
         gsResponse.getReportList().add(status);
         
-        return gsResponse;
+        sendResponse(request, gsResponse);
     }
     
     
-    protected GetFeasibilityResponse getFeasibility(GetFeasibilityRequest request) throws Exception
+    protected GetFeasibilityResponse handleRequest(GetFeasibilityRequest request) throws Exception
     {               
         /*GetFeasibilityResponse gfResponse = new GetFeasibilityResponse();
         
@@ -432,7 +459,7 @@ public class SPSService extends OWSServlet implements IServiceModule<SPSServiceC
     }
     
     
-    protected SubmitResponse submit(SubmitRequest request) throws Exception
+    protected void handleRequest(SubmitRequest request) throws Exception
     {
         // validate task parameters
         request.validate();
@@ -447,14 +474,41 @@ public class SPSService extends OWSServlet implements IServiceModule<SPSServiceC
         
         // add report and send response
         SubmitResponse sResponse = new SubmitResponse();
-        sResponse.setVersion("2.0.0");
+        sResponse.setVersion("2.0");
         ITask task = findTask(taskID);
+        task.getStatusReport().setTaskStatus(TaskStatus.Completed);
+        task.getStatusReport().touch();
         sResponse.setReport(task.getStatusReport());
-        return sResponse;
+        
+        sendResponse(request, sResponse);
+    }
+    
+
+    protected void handleRequest(UpdateRequest request) throws Exception
+    {
+        throw new SPSException(SPSException.unsupported_op_code, request.getOperation());
     }
     
     
-    protected DescribeResultAccessResponse describeResultAccess(DescribeResultAccessRequest request) throws Exception
+    protected void handleRequest(CancelRequest request) throws Exception
+    {
+        throw new SPSException(SPSException.unsupported_op_code, request.getOperation());
+    }
+    
+
+    protected void handleRequest(ReserveRequest request) throws Exception
+    {
+        throw new SPSException(SPSException.unsupported_op_code, request.getOperation());
+    }
+    
+    
+    protected void handleRequest(ConfirmRequest request) throws Exception
+    {
+        throw new SPSException(SPSException.unsupported_op_code, request.getOperation());
+    }
+    
+    
+    protected void handleRequest(DescribeResultAccessRequest request) throws Exception
     {
         /*ITask task = findTask(request.getTaskID());
         
@@ -466,29 +520,28 @@ public class SPSService extends OWSServlet implements IServiceModule<SPSServiceC
         return resp;*/
         throw new SPSException(SPSException.unsupported_op_code, request.getOperation());
     }
-
     
-    protected CancelResponse cancel(CancelRequest request) throws Exception
-    {
-        throw new SPSException(SPSException.unsupported_op_code, request.getOperation());
-    }
-
-
-    protected UpdateResponse update(UpdateRequest request) throws Exception
-    {
-        throw new SPSException(SPSException.unsupported_op_code, request.getOperation());
-    }
     
-
-    protected ReserveResponse reserve(ReserveRequest request) throws Exception
+    protected final ISPSConnector getConnectorByProcedureID(String procedureID, OWSExceptionReport report) throws Exception
     {
-        throw new SPSException(SPSException.unsupported_op_code, request.getOperation());
+        ISPSConnector connector = connectors.get(procedureID);
+        
+        if (connector == null)
+            report.add(new SPSException(SPSException.invalid_param_code, "procedure", procedureID));
+        
+        return connector;
     }
     
     
-    protected ConfirmResponse confirm(ConfirmRequest request) throws Exception
+    protected void checkQueryProcedureFormat(String procedureID, String format, OWSExceptionReport report) throws SOSException
     {
-        throw new SPSException(SPSException.unsupported_op_code, request.getOperation());
+        // ok if default format can be used
+        if (format == null)
+            return;
+        
+        SPSOfferingCapabilities offering = this.procedureToOfferingMap.get(procedureID);
+        if (!offering.getProcedureFormats().contains(format))
+            report.add(new SOSException(SOSException.invalid_param_code, "procedureDescriptionFormat", format, "Procedure description format " + format + " is not available for procedure " + procedureID));
     }
 
 
@@ -496,5 +549,12 @@ public class SPSService extends OWSServlet implements IServiceModule<SPSServiceC
     protected String getServiceType()
     {
         return SPSUtils.SPS;
+    }
+
+
+    @Override
+    protected String getDefaultVersion()
+    {
+        return "2.0";
     }
 }
