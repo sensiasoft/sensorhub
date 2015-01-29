@@ -100,7 +100,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     
     SOSServiceConfig config;
     SOSServiceCapabilities capabilitiesCache;
-    Map<String, SOSOfferingCapabilities> offeringMap;
+    Map<String, SOSOfferingCapabilities> offeringCaps;
     Map<String, String> procedureToOfferingMap;
     Map<String, String> templateToOfferingMap;
     Map<String, ISOSDataConsumer> dataConsumers;
@@ -141,7 +141,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
         dataProviders.clear();
         procedureToOfferingMap.clear();
         templateToOfferingMap.clear();
-        offeringMap.clear();
+        offeringCaps.clear();
         
         // get main capabilities info from config
         CapabilitiesInfo serviceInfo = config.ogcCapabilitiesInfo;
@@ -177,7 +177,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
                     // add offering metadata to capabilities
                     SOSOfferingCapabilities offCaps = factory.generateCapabilities();
                     capabilities.getLayers().add(offCaps);
-                    offeringMap.put(offCaps.getIdentifier(), offCaps);
+                    offeringCaps.put(offCaps.getIdentifier(), offCaps);
                     
                     // build procedure-offering map
                     procedureToOfferingMap.put(offCaps.getProcedures().get(0), offCaps.getIdentifier());
@@ -243,7 +243,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
         this.dataConsumers = new LinkedHashMap<String, ISOSDataConsumer>();
         this.procedureToOfferingMap = new HashMap<String, String>();
         this.templateToOfferingMap = new HashMap<String, String>();
-        this.offeringMap = new HashMap<String, SOSOfferingCapabilities>();
+        this.offeringCaps = new HashMap<String, SOSOfferingCapabilities>();
         
         // pre-generate capabilities
         this.capabilitiesCache = generateCapabilities();
@@ -448,7 +448,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
                 // create new offering
                 SOSOfferingCapabilities offCaps = provider.generateCapabilities();
                 capabilitiesCache.getLayers().add(offCaps);
-                offeringMap.put(offCaps.getIdentifier(), offCaps);
+                offeringCaps.put(offCaps.getIdentifier(), offCaps);
                 procedureToOfferingMap.put(sensorUID, offering);
                 
                 // setup data storage
@@ -635,7 +635,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
                 oldIndex++;
             }
             capabilitiesCache.getLayers().set(oldIndex, newCaps);
-            offeringMap.put(newCaps.getIdentifier(), newCaps);
+            offeringCaps.put(newCaps.getIdentifier(), newCaps);
         }
         finally
         {
@@ -784,7 +784,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     
     protected SOSOfferingCapabilities checkAndGetOffering(String offeringID) throws SOSException
     {
-        SOSOfferingCapabilities offCaps = offeringMap.get(offeringID);
+        SOSOfferingCapabilities offCaps = offeringCaps.get(offeringID);
         
         if (offCaps == null)
             throw new SOSException(SOSException.invalid_param_code, "offering", offeringID, null);

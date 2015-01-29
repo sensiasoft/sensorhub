@@ -35,9 +35,7 @@ import org.sensorhub.impl.sensor.AbstractSensorModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vast.data.BinaryComponentImpl;
-import org.vast.data.BinaryEncodingImpl;
 import org.vast.data.DataIterator;
-import org.vast.data.TextEncodingImpl;
 import org.vast.ogc.om.IObservation;
 import org.vast.ows.sos.ISOSDataConsumer;
 
@@ -94,8 +92,9 @@ public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfi
     public String newResultTemplate(DataComponent component, DataEncoding encoding)
     {
         // TODO check if template is compatible with sensor description outputs?        
+        // TODO merge all templates with same structure but different encodings to the same output
         
-        // try to otbain corresponding data interface
+        // try to obtain corresponding data interface
         DataStructureHash hashObj = new DataStructureHash(component, encoding);
         String templateID = structureToOutputMap.get(hashObj);
                 
@@ -184,7 +183,7 @@ public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfi
     public void start() throws SensorHubException
     {
         // generate output interfaces from description
-        /*for (AbstractSWEIdentifiable output: getCurrentSensorDescription().getOutputList())
+        for (AbstractSWEIdentifiable output: getCurrentSensorDescription().getOutputList())
         {
             DataComponent dataStruct = null;
             DataEncoding dataEnc = null;
@@ -193,23 +192,15 @@ public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfi
             {
                 dataStruct = ((DataStream) output).getElementType();
                 dataEnc = ((DataStream) output).getEncoding();
+                newResultTemplate(dataStruct, dataEnc);
             }
             else if (output instanceof DataInterface)
             {
                 dataStruct = ((DataInterface) output).getData().getElementType();
                 dataEnc = ((DataInterface) output).getData().getEncoding();
+                newResultTemplate(dataStruct, dataEnc);
             }
-            else
-            {
-                dataStruct = (DataComponent)output;
-                if (dataStruct.createDataBlock().getAtomCount() > 30)
-                    dataEnc = BinaryEncodingImpl.getDefaultEncoding(dataStruct);
-                else
-                    dataEnc = new TextEncodingImpl(",", "\n");
-            }
-            
-            newResultTemplate(dataStruct, dataEnc);
-        }*/
+        }
     }
 
 
