@@ -140,6 +140,9 @@ public class MainActivity extends Activity
                 else
                 { 
                     Map<ISensorDataInterface, StreamInfo> dataStreams = boundService.getSosClient().getDataStreams();
+                    if (dataStreams.size() > 0)
+                        displayText.append("<p>Registered with SOS-T</p>");
+                    
                     long now = System.currentTimeMillis();
                     for (Entry<ISensorDataInterface, StreamInfo> stream: dataStreams.entrySet())
                     {
