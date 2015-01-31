@@ -47,6 +47,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vast.cdm.common.DataStreamParser;
 import org.vast.cdm.common.DataStreamWriter;
+import org.vast.data.AbstractDataBlock;
+import org.vast.data.DataBlockMixed;
 import org.vast.ogc.om.IObservation;
 import org.vast.ows.GetCapabilitiesRequest;
 import org.vast.ows.OWSExceptionReport;
@@ -481,9 +483,21 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
         if (resultEncoding instanceof BinaryEncoding)
         {
             boolean useMP4 = false;
-            BinaryMember member1 = ((BinaryEncoding)resultEncoding).getMemberList().get(0);
-            if (member1 instanceof BinaryBlock && ((BinaryBlock)member1).getCompression().equals("H264"))
-                useMP4 = true;
+            boolean useMJPEG = false;
+            List<BinaryMember> mbrList = ((BinaryEncoding)resultEncoding).getMemberList();
+            BinaryMember videoFrameSpec = null;
+            
+            if (mbrList.size() == 1) // case of no time tag
+                videoFrameSpec = mbrList.get(0);
+            else if (mbrList.size() == 2) // case of time tag + encoded frame
+                videoFrameSpec = mbrList.get(1);
+            else
+                throw new RuntimeException("Invalid binary encoding specs");
+            
+            if (videoFrameSpec instanceof BinaryBlock && ((BinaryBlock)videoFrameSpec).getCompression().equals("H264"))
+                useMP4 = true;            
+            else if (videoFrameSpec instanceof BinaryBlock && ((BinaryBlock)videoFrameSpec).getCompression().equals("JPEG"))
+                useMJPEG = true;            
             
             if (useMP4)
             {            
@@ -510,6 +524,34 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
                 {
                     writer.write(nextRecord);
                     writer.flush();
+                }       
+                        
+                os.flush();
+                return true;
+            }
+            
+            else if (useMJPEG)
+            {
+                // set MIME type for MP4 format
+                //request.getHttpResponse().setContentType("image/jpeg"); //video/x-motion-jpeg, video/x-jpeg
+                request.getHttpResponse().setContentType("multipart/x-mixed-replace; boundary=--myboundary");
+                request.getHttpResponse().addHeader("Cache-Control", "no-cache");
+                request.getHttpResponse().addHeader("Pragma", "no-cache");
+                byte[] mimeBoundary = new String("--myboundary\r\nContent-Type: image/jpeg\r\nContent-Length: ").getBytes();
+                byte[] endMime = new byte[] {0xD, 0xA, 0xD, 0xA};
+                
+                // write each record in output stream
+                DataBlock nextRecord;
+                while ((nextRecord = dataProvider.getNextResultRecord()) != null)
+                {
+                    DataBlock frameBlk = ((DataBlockMixed)nextRecord).getUnderlyingObject()[1];
+                    byte[] frameData = (byte[])frameBlk.getUnderlyingObject();
+                    
+                    // write MIME boundary
+                    os.write(mimeBoundary);
+                    os.write(Integer.toString(frameData.length).getBytes());
+                    os.write(endMime);
+                    os.write(frameData);
                 }       
                         
                 os.flush();
