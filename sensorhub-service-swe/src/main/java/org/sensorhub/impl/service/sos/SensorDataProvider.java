@@ -44,6 +44,7 @@ import org.vast.ogc.om.ProcedureRef;
 import org.vast.ows.server.SOSDataFilter;
 import org.vast.ows.sos.ISOSDataProvider;
 import org.vast.swe.SWEConstants;
+import org.vast.util.DateTimeFormat;
 import org.vast.util.TimeExtent;
 
 
@@ -74,7 +75,7 @@ public class SensorDataProvider implements ISOSDataProvider, IEventListener
     {
         this.sensor = srcSensor;
         this.dataSources = new ArrayList<ISensorDataInterface>();
-        this.eventQueue = new LinkedBlockingDeque<SensorDataEvent>();
+        this.eventQueue = new LinkedBlockingDeque<SensorDataEvent>(1);
         this.pollTimers = new ArrayList<Timer>();
         
         // figure out stop time (if any)
@@ -261,6 +262,7 @@ public class SensorDataProvider implements ISOSDataProvider, IEventListener
                 nextEventRecordIndex = 0;
             }
             
+            System.out.println("->" + new DateTimeFormat().formatIso(lastDataEvent.getTimeStamp()/1000., 0));
             return lastDataEvent.getRecords()[nextEventRecordIndex++];
             
             // TODO add choice token value if request includes several outputs
@@ -274,11 +276,11 @@ public class SensorDataProvider implements ISOSDataProvider, IEventListener
     
     /*
      * For real-time streams, more data is always available unless
-     * sensor is disabled, disconnected or all sensor outputs are disabled
+     * sensor is disabled or all sensor outputs are disabled
      */
     private boolean hasMoreData()
     {
-        if (!sensor.isEnabled() || !sensor.isConnected())
+        if (!sensor.isEnabled())
             return false;
         
         boolean interfaceActive = false;
