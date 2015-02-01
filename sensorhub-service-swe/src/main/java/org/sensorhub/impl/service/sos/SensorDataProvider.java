@@ -125,6 +125,7 @@ public class SensorDataProvider implements ISOSDataProvider, IEventListener
                     double lastRecordTime = outputInterface.getLatestRecordTime();
                     DataBlock data = outputInterface.getLatestRecord();
                     eventQueue.offerLast(new SensorDataEvent(lastRecordTime, outputInterface, data));
+                    stopTime = Long.MAX_VALUE; // make sure stoptime does not cause us to return null
                     timeOut = 0L;
                 }
                 catch (SensorException e)
