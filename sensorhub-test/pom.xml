@@ -46,6 +46,22 @@
         <artifactId>sensorhub-driver-fakecam</artifactId>
         <version>0.1</version>
      </dependency>
+     <dependency>
+        <groupId>org.sensorhub</groupId>
+        <artifactId>sensorhub-driver-axis</artifactId>
+        <version>0.1</version>
+        <type>bundle</type>
+     </dependency>
+     <dependency>
+        <groupId>org.vast.opengis</groupId>
+        <artifactId>swe-common-video</artifactId>
+        <version>1.0</version>
+     </dependency>
+     <dependency>
+        <groupId>org.jcodec</groupId>
+        <artifactId>jcodec</artifactId>
+        <version>0.1.5</version>
+     </dependency>
   </dependencies>
   <parent>
      <groupId>org.sensorhub</groupId>
