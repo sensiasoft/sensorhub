@@ -551,6 +551,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
                     os.write(Integer.toString(frameData.length).getBytes());
                     os.write(endMime);
                     os.write(frameData);
+                    os.flush();
                 }       
                         
                 os.flush();

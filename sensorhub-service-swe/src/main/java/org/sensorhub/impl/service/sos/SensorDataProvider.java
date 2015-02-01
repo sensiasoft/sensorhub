@@ -44,7 +44,6 @@ import org.vast.ogc.om.ProcedureRef;
 import org.vast.ows.server.SOSDataFilter;
 import org.vast.ows.sos.ISOSDataProvider;
 import org.vast.swe.SWEConstants;
-import org.vast.util.DateTimeFormat;
 import org.vast.util.TimeExtent;
 
 
@@ -262,7 +261,7 @@ public class SensorDataProvider implements ISOSDataProvider, IEventListener
                 nextEventRecordIndex = 0;
             }
             
-            System.out.println("->" + new DateTimeFormat().formatIso(lastDataEvent.getTimeStamp()/1000., 0));
+            //System.out.println("->" + new DateTimeFormat().formatIso(lastDataEvent.getTimeStamp()/1000., 0));
             return lastDataEvent.getRecords()[nextEventRecordIndex++];
             
             // TODO add choice token value if request includes several outputs
