@@ -59,7 +59,7 @@ public class InMemoryTaskDB implements ITaskDB
 		// initial status
 		newTask.getStatusReport().setTaskID(taskID);
 		newTask.getStatusReport().setTitle("Tasking Request Report");
-		newTask.getStatusReport().setSensorID(request.getSensorID());
+		newTask.getStatusReport().setSensorID(request.getProcedureID());
 		newTask.getStatusReport().setRequestStatus(RequestStatus.Pending);
 		
 		// creation time
@@ -81,7 +81,7 @@ public class InMemoryTaskDB implements ITaskDB
 		// initial status
 		newTask.getStatusReport().setTaskID(taskID);
 		newTask.getStatusReport().setTitle("Feasibility Study Report");
-		newTask.getStatusReport().setSensorID(request.getSensorID());
+		newTask.getStatusReport().setSensorID(request.getProcedureID());
 		newTask.getStatusReport().setRequestStatus(RequestStatus.Pending);
 		
 		// creation time

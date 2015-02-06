@@ -219,7 +219,7 @@ public class TestSPSService
         SubmitRequest subReq = new SubmitRequest();
         subReq.setPostServer(SERVER_URL);
         subReq.setVersion("2.0");
-        subReq.setSensorID(procedureId);
+        subReq.setProcedureID(procedureId);
         SWEData paramData = new SWEData();
         paramData.setElementType(components);
         paramData.setEncoding(new TextEncodingImpl());
