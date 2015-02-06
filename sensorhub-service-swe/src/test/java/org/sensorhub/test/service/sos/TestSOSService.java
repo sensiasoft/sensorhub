@@ -195,9 +195,8 @@ public class TestSOSService
         getObs.setVersion("2.0");
         getObs.setOffering(offeringId);
         getObs.getObservables().add("urn:blabla:temperature");
-        TimeExtent reqTime = new TimeExtent();
-        reqTime.setBaseAtNow(true);
-        getObs.setTime(reqTime);
+        double futureTime = System.currentTimeMillis()/1000.0 + 3600.;
+        getObs.setTime(TimeExtent.getNowToFutureDatePeriod(futureTime));
         return getObs;
     }
     
@@ -324,7 +323,7 @@ public class TestSOSService
         while (sensor.getAllOutputs().get(NAME_OUTPUT1).isEnabled())
             Thread.sleep(((long)SAMPLING_PERIOD*500));
         
-        // first get capabilities to knowavailable time range
+        // first get capabilities to know available time range
         SOSServiceCapabilities caps = (SOSServiceCapabilities)new OWSUtils().getCapabilities("http://localhost:8080/sensorhub" + SERVICE_ENDPOINT, "SOS", "2.0");
         TimeExtent timePeriod = ((SOSOfferingCapabilities)caps.getLayer(URI_OFFERING1)).getPhenomenonTime();
         System.out.println("Available time period is " + timePeriod.getIsoString(0));

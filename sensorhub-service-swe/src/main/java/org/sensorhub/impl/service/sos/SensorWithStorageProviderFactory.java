@@ -23,6 +23,7 @@ import org.sensorhub.utils.MsgUtils;
 import org.vast.ows.server.SOSDataFilter;
 import org.vast.ows.sos.ISOSDataProvider;
 import org.vast.ows.sos.SOSOfferingCapabilities;
+import org.vast.util.TimeExtent;
 
 
 /**
@@ -60,7 +61,9 @@ public class SensorWithStorageProviderFactory extends StorageDataProviderFactory
     @Override
     public ISOSDataProvider getNewProvider(SOSDataFilter filter) throws ServiceException
     {
-        if (filter.getTimeRange().isBaseAtNow())
+        TimeExtent timeRange = filter.getTimeRange();
+        
+        if (timeRange.isBaseAtNow() || timeRange.isBeginNow())
         {
             if (!sensor.isEnabled())
                 throw new ServiceException("Sensor " + MsgUtils.moduleString(sensor) + " is disabled");

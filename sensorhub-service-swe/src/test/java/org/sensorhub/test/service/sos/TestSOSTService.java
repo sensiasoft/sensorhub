@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import net.opengis.sensorml.v20.PhysicalSystem;
 import net.opengis.swe.v20.DataRecord;
+import net.opengis.swe.v20.DataStream;
 import net.opengis.swe.v20.Quantity;
 import net.opengis.swe.v20.Time;
 import net.opengis.swe.v20.Vector;
@@ -45,8 +46,10 @@ import org.sensorhub.impl.service.sos.SOSServiceConfig;
 import org.sensorhub.impl.service.sos.SensorDataProviderConfig;
 import org.sensorhub.test.sensor.FakeSensor;
 import org.sensorhub.test.sensor.FakeSensorData;
+import org.vast.data.DataList;
 import org.vast.data.DataRecordImpl;
 import org.vast.data.QuantityImpl;
+import org.vast.data.TextEncodingImpl;
 import org.vast.data.TimeImpl;
 import org.vast.data.VectorImpl;
 import org.vast.ogc.om.IObservation;
@@ -161,24 +164,33 @@ public class TestSOSTService
         procedure.setUniqueIdentifier(SENSOR_UID);
         
         // output 1
-        DataRecord tempOutput = new DataRecordImpl(2);
-        procedure.addOutput("tempOut", tempOutput);
+        DataStream tempOutput = new DataList();
+        procedure .addOutput("tempOut", tempOutput);
+        
+        DataRecord tempRec = new DataRecordImpl(2);
+        tempOutput.setElementType("elt", tempRec);
         
         Time timeTag = new TimeImpl();
         timeTag.setDefinition(SWEConstants.DEF_SAMPLING_TIME);
         timeTag.getUom().setHref(Time.ISO_TIME_UNIT);
-        tempOutput.addComponent("time", timeTag);
+        tempRec.addComponent("time", timeTag);
         
         Quantity tempVal = new QuantityImpl();
         tempVal.setDefinition("http://mmisw.org/ont/cf/parameter/air_temperature");
         tempVal.getUom().setCode("Cel");
-        tempOutput.addComponent("temp", tempVal);
+        tempRec.addComponent("temp", tempVal);
+        
+        tempOutput.setEncoding(new TextEncodingImpl());
+        
         
         // output 2
-        DataRecord posOutput = new DataRecordImpl(2);
+        DataStream posOutput = new DataList();
         procedure.addOutput("posOut", posOutput);
         
-        posOutput.addComponent("time", timeTag.copy());
+        DataRecord posRec = new DataRecordImpl(2);
+        posOutput.setElementType("elt", posRec);
+        
+        posRec.addComponent("time", timeTag.copy());
         
         Vector posVector = new VectorImpl(3);
         posVector.setDefinition(SWEConstants.DEF_SAMPLING_LOC);
@@ -186,7 +198,9 @@ public class TestSOSTService
         posVector.addComponent("lat", new QuantityImpl());
         posVector.addComponent("lon", new QuantityImpl());
         posVector.addComponent("alt", new QuantityImpl());
-        posOutput.addComponent("pos", posVector);
+        posRec.addComponent("pos", posVector);
+        
+        posOutput.setEncoding(new TextEncodingImpl());
         
         
         // build insert sensor request

@@ -25,6 +25,7 @@ import net.opengis.sensorml.v20.AbstractProcess;
 import net.opengis.swe.v20.BinaryBlock;
 import net.opengis.swe.v20.BinaryEncoding;
 import net.opengis.swe.v20.BinaryMember;
+import net.opengis.swe.v20.ByteEncoding;
 import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataEncoding;
@@ -49,6 +50,7 @@ import org.vast.cdm.common.DataStreamWriter;
 import org.vast.ogc.om.IObservation;
 import org.vast.ows.GetCapabilitiesRequest;
 import org.vast.ows.OWSExceptionReport;
+import org.vast.ows.OWSLayerCapabilities;
 import org.vast.ows.OWSRequest;
 import org.vast.ows.server.SOSDataFilter;
 import org.vast.ows.sos.GetResultRequest;
@@ -76,6 +78,7 @@ import org.vast.ows.swe.UpdateSensorRequest;
 import org.vast.ows.swe.UpdateSensorResponse;
 import org.vast.sensorML.SMLUtils;
 import org.vast.swe.SWEFactory;
+import org.vast.util.ReaderException;
 import org.vast.util.TimeExtent;
 
 
@@ -97,7 +100,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     
     SOSServiceConfig config;
     SOSServiceCapabilities capabilitiesCache;
-    Map<String, SOSOfferingCapabilities> offeringMap;
+    Map<String, SOSOfferingCapabilities> offeringCaps;
     Map<String, String> procedureToOfferingMap;
     Map<String, String> templateToOfferingMap;
     Map<String, ISOSDataConsumer> dataConsumers;
@@ -138,7 +141,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
         dataProviders.clear();
         procedureToOfferingMap.clear();
         templateToOfferingMap.clear();
-        offeringMap.clear();
+        offeringCaps.clear();
         
         // get main capabilities info from config
         CapabilitiesInfo serviceInfo = config.ogcCapabilitiesInfo;
@@ -174,7 +177,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
                     // add offering metadata to capabilities
                     SOSOfferingCapabilities offCaps = factory.generateCapabilities();
                     capabilities.getLayers().add(offCaps);
-                    offeringMap.put(offCaps.getIdentifier(), offCaps);
+                    offeringCaps.put(offCaps.getIdentifier(), offCaps);
                     
                     // build procedure-offering map
                     procedureToOfferingMap.put(offCaps.getProcedures().get(0), offCaps.getIdentifier());
@@ -240,7 +243,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
         this.dataConsumers = new LinkedHashMap<String, ISOSDataConsumer>();
         this.procedureToOfferingMap = new HashMap<String, String>();
         this.templateToOfferingMap = new HashMap<String, String>();
-        this.offeringMap = new HashMap<String, SOSOfferingCapabilities>();
+        this.offeringCaps = new HashMap<String, SOSOfferingCapabilities>();
         
         // pre-generate capabilities
         this.capabilitiesCache = generateCapabilities();
@@ -353,9 +356,19 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     /////////////////////////////////////////
     
     @Override
+    public void handleRequest(OWSRequest request) throws Exception
+    {
+        super.handleRequest(request);
+    }
+
+
+    @Override
     protected void handleRequest(GetCapabilitiesRequest request) throws Exception
     {
-        // refresh offering capabilities if needed
+        // ask providers to refresh their capabilities if needed.
+        // we do that here so capabilities doc contains the most up-to-date info.
+        // we don't always do it when changes occur because high frequency changes 
+        // would trigger too many updates (e.g. new measurements changing time periods)
         for (ISOSDataProviderFactory provider: dataProviders.values())
             ((IDataProviderFactory)provider).updateCapabilities();
         
@@ -394,48 +407,57 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
             
             // choose offering name (here derived from sensor ID)
             String sensorUID = request.getProcedureDescription().getUniqueIdentifier();
-            String offering = sensorUID + "-sos";
-            
-            // automatically add outputs with specified observable properties??
-            
-            
-            // create and register new virtual sensor module as data consumer
-            SOSVirtualSensorConfig sensorConfig = new SOSVirtualSensorConfig();
-            sensorConfig.enabled = false;
-            sensorConfig.sensorUID = sensorUID;
-            sensorConfig.name = request.getProcedureDescription().getName();
-            SOSVirtualSensor virtualSensor = (SOSVirtualSensor)SensorHub.getInstance().getModuleRegistry().loadModule(sensorConfig);            
-            virtualSensor.updateSensorDescription(request.getProcedureDescription(), true);
-            SensorHub.getInstance().getModuleRegistry().enableModule(virtualSensor.getLocalID());
-            dataConsumers.put(offering, virtualSensor);
-            
-            // add to SOS config
-            SOSConsumerConfig consumerConfig = new SOSConsumerConfig();
-            consumerConfig.offering = offering;
-            consumerConfig.sensorID = virtualSensor.getLocalID();
-            config.dataConsumers.add(consumerConfig);
-            
-            // create new sensor provider
-            SensorDataProviderConfig providerConfig = new SensorDataProviderConfig();
-            providerConfig.sensorID = virtualSensor.getLocalID();
-            providerConfig.enabled = true;
-            providerConfig.uri = offering;
-            SensorDataProviderFactory provider = new SensorDataProviderFactory(providerConfig);
-            dataProviders.put(offering, provider);
-            config.dataProviders.add(providerConfig);
-            
-            // create new offering
-            SOSOfferingCapabilities offCaps = provider.generateCapabilities();
-            capabilitiesCache.getLayers().add(offCaps);
-            offeringMap.put(offCaps.getIdentifier(), offCaps);
-            procedureToOfferingMap.put(sensorUID, offering);
-            
-            // setup data storage
-            //StorageConfig storageConfig = new StorageConfig();
-            //SensorHub.getInstance().getModuleRegistry().loadModule(storageConfig);
-            
-            // save config so that registered sensor stays active after restart
-            SensorHub.getInstance().getModuleRegistry().saveConfiguration(this);
+            if (sensorUID == null)
+                throw new SOSException(SOSException.missing_param_code, "identifier", null, "Missing unique identifier in SensorML description");
+                        
+            // add new offering, provider and virtual sensor if sensor is not already registered
+            String offering = procedureToOfferingMap.get(sensorUID);
+            if (offering == null)
+            {
+                offering = sensorUID + "-sos";
+                
+                // should we automatically add templates generated from sensor outputs ??                
+                
+                // create and register new virtual sensor module as data consumer
+                SOSVirtualSensorConfig sensorConfig = new SOSVirtualSensorConfig();
+                sensorConfig.enabled = false;
+                sensorConfig.sensorUID = sensorUID;
+                sensorConfig.name = request.getProcedureDescription().getName();
+                if (sensorConfig.name == null)
+                    sensorConfig.name = request.getProcedureDescription().getId();
+                SOSVirtualSensor virtualSensor = (SOSVirtualSensor)SensorHub.getInstance().getModuleRegistry().loadModule(sensorConfig);            
+                virtualSensor.updateSensorDescription(request.getProcedureDescription(), true);
+                SensorHub.getInstance().getModuleRegistry().enableModule(virtualSensor.getLocalID());
+                dataConsumers.put(offering, virtualSensor);
+                
+                // add to SOS config
+                SOSConsumerConfig consumerConfig = new SOSConsumerConfig();
+                consumerConfig.offering = offering;
+                consumerConfig.sensorID = virtualSensor.getLocalID();
+                config.dataConsumers.add(consumerConfig);
+                
+                // create new sensor provider
+                SensorDataProviderConfig providerConfig = new SensorDataProviderConfig();
+                providerConfig.sensorID = virtualSensor.getLocalID();
+                providerConfig.enabled = true;
+                providerConfig.uri = offering;
+                SensorDataProviderFactory provider = new SensorDataProviderFactory(providerConfig);
+                dataProviders.put(offering, provider);
+                config.dataProviders.add(providerConfig);
+                
+                // create new offering
+                SOSOfferingCapabilities offCaps = provider.generateCapabilities();
+                capabilitiesCache.getLayers().add(offCaps);
+                offeringCaps.put(offCaps.getIdentifier(), offCaps);
+                procedureToOfferingMap.put(sensorUID, offering);
+                
+                // setup data storage
+                //StorageConfig storageConfig = new StorageConfig();
+                //SensorHub.getInstance().getModuleRegistry().loadModule(storageConfig);
+                
+                // save config so that registered sensor stays active after restart
+                //SensorHub.getInstance().getModuleRegistry().saveConfiguration(this);
+            }
             
             // build and send response
             InsertSensorResponse resp = new InsertSensorResponse();
@@ -589,14 +611,31 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
         try
         {
             checkTransactionalSupport(request);
+            String offering = request.getOffering();
             
-            ISOSDataConsumer consumer = getDataConsumerByOfferingID(request.getOffering());
+            // get template ID
+            // the same template ID is always returned for a given observable
+            ISOSDataConsumer consumer = getDataConsumerByOfferingID(offering);
             String templateID = consumer.newResultTemplate(request.getResultStructure(), request.getResultEncoding());
+            templateToOfferingMap.put(templateID, offering);
             
             // build and send response
             InsertResultTemplateResponse resp = new InsertResultTemplateResponse();
             resp.setAcceptedTemplateId(templateID);
             sendResponse(request, resp);
+            
+            // re-generate capabilities
+            IDataProviderFactory provider = getDataProviderFactoryByOfferingID(offering);
+            SOSOfferingCapabilities newCaps = provider.generateCapabilities();
+            int oldIndex = 0;
+            for (OWSLayerCapabilities offCaps: capabilitiesCache.getLayers())
+            {
+                if (offCaps.getIdentifier().equals(offering))
+                    break; 
+                oldIndex++;
+            }
+            capabilitiesCache.getLayers().set(oldIndex, newCaps);
+            offeringCaps.put(newCaps.getIdentifier(), newCaps);
         }
         finally
         {
@@ -610,16 +649,23 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     {
         DataStreamParser parser = null;
         
+        checkTransactionalSupport(request);
+        String templateID = request.getTemplateId();
+        
+        // retrieve consumer based on template id
+        SOSVirtualSensor sensor = (SOSVirtualSensor)getDataConsumerByTemplateID(templateID);
+        ISensorDataInterface output = sensor.getObservationOutputs().get(templateID);
+        DataComponent dataStructure = output.getRecordDescription();
+        DataEncoding encoding = output.getRecommendedEncoding();
+        
         try
         {
-            checkTransactionalSupport(request);
-            String templateID = request.getTemplateId();
-            
-            // retrieve consumer based on template id
-            SOSVirtualSensor sensor = (SOSVirtualSensor)getDataConsumerByTemplateID(templateID);
-            ISensorDataInterface output = sensor.getObservationOutputs().get(templateID);
-            DataComponent dataStructure = output.getRecordDescription();
-            DataEncoding encoding = output.getRecommendedEncoding();
+            // if binary data, ensure encoding is set to base64
+            if (encoding instanceof BinaryEncoding)
+            {
+                encoding = encoding.copy();
+                ((BinaryEncoding) encoding).setByteEncoding(ByteEncoding.BASE_64);
+            }
             
             // prepare parser
             parser = SWEFactory.createDataParser(encoding);
@@ -634,6 +680,10 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
             // build and send response
             InsertResultResponse resp = new InsertResultResponse();
             sendResponse(request, resp);
+        }
+        catch (ReaderException e)
+        {
+            throw new SOSException("Error in SWE encoded data", e);
         }
         finally
         {
@@ -692,10 +742,23 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
             log.error("Error while updating capabilities for offering " + offeringID, e);
         }
         
-        // check that request time is within allowed time periods
+        // check that request time is within allowed time period
         TimeExtent allowedPeriod = offering.getPhenomenonTime();
         boolean nowOk = allowedPeriod.isBaseAtNow() || allowedPeriod.isEndNow();
-        if (!((requestTime.isBaseAtNow() && nowOk) || requestTime.intersects(allowedPeriod)))
+        
+        boolean requestOk = false;
+        if (requestTime.isBaseAtNow() && nowOk)
+            requestOk = true;
+        else if (requestTime.isBeginNow() && nowOk)
+        {
+            double now = System.currentTimeMillis() / 1000.0;
+            if (requestTime.getStopTime() >= now)
+                requestOk = true;
+        }
+        else if (requestTime.intersects(allowedPeriod))
+            requestOk = true;
+        
+        if (!requestOk)
             report.add(new SOSException(SOSException.invalid_param_code, "phenomenonTime", requestTime.getIsoString(0), null));            
     }
     
@@ -721,7 +784,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     
     protected SOSOfferingCapabilities checkAndGetOffering(String offeringID) throws SOSException
     {
-        SOSOfferingCapabilities offCaps = offeringMap.get(offeringID);
+        SOSOfferingCapabilities offCaps = offeringCaps.get(offeringID);
         
         if (offCaps == null)
             throw new SOSException(SOSException.invalid_param_code, "offering", offeringID, null);
@@ -754,13 +817,19 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     }
     
     
-    protected IDataProviderFactory getDataProviderFactoryBySensorID(String sensorID) throws Exception
+    protected IDataProviderFactory getDataProviderFactoryByOfferingID(String offering) throws Exception
     {
-        String offering = procedureToOfferingMap.get(sensorID);
         ISOSDataProviderFactory factory = dataProviders.get(offering);
         if (factory == null)
             throw new IllegalStateException("No valid data provider factory found for offering " + offering);
         return (IDataProviderFactory)factory;
+    }
+    
+    
+    protected IDataProviderFactory getDataProviderFactoryBySensorID(String sensorID) throws Exception
+    {
+        String offering = procedureToOfferingMap.get(sensorID);
+        return getDataProviderFactoryByOfferingID(offering);
     }
     
     
@@ -792,6 +861,9 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
         String offering = templateToOfferingMap.get(templateID);
         ISOSDataConsumer consumer = dataConsumers.get(offering);
         
+        if (consumer == null)
+            throw new SOSException(SOSException.invalid_param_code, "template", templateID, "Invalid template ID");
+        
         return consumer;
     }
     
@@ -814,5 +886,12 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     public void unregisterListener(IEventListener listener)
     {
         // TODO Auto-generated method stub        
+    }
+
+
+    @Override
+    protected String getDefaultVersion()
+    {
+        return "2.0";
     }
 }

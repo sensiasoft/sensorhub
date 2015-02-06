@@ -13,7 +13,7 @@ Developer are Copyright (C) 2014 the Initial Developer. All Rights Reserved.
  
 ******************************* END LICENSE BLOCK ***************************/
 
-package org.sensorhub.impl.sensor.sps;
+package org.sensorhub.impl.client.sps;
 
 import java.util.List;
 import net.opengis.swe.v20.DataBlock;

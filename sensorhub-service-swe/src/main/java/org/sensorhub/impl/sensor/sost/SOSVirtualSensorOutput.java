@@ -15,6 +15,8 @@ Developer are Copyright (C) 2014 the Initial Developer. All Rights Reserved.
 
 package org.sensorhub.impl.sensor.sost;
 
+import net.opengis.swe.v20.BinaryEncoding;
+import net.opengis.swe.v20.ByteEncoding;
 import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataEncoding;
@@ -39,6 +41,11 @@ public class SOSVirtualSensorOutput extends AbstractSensorOutput<SOSVirtualSenso
         super(sensor);
         this.recordStructure = recordStructure;
         this.recordEncoding = recordEncoding;
+        
+        // force raw binary encoding (no reason to recommend base64)
+        // switching to base64 is automatic when writing or parsing from XML
+        if (recordEncoding instanceof BinaryEncoding)
+            ((BinaryEncoding) recordEncoding).setByteEncoding(ByteEncoding.RAW);
     }
 
 
@@ -110,12 +117,15 @@ public class SOSVirtualSensorOutput extends AbstractSensorOutput<SOSVirtualSenso
      */
     protected void updateSamplingPeriod(double timeStamp)
     {
+        if (lastRecordTime < 0)
+            return;
+        
         if (avgSampleCount < 100)
         {
             if (avgSampleCount == 0)
                 avgSamplingPeriod = 0.0;
             else
-                avgSamplingPeriod *= avgSampleCount / (avgSampleCount+1);
+                avgSamplingPeriod *= (double)avgSampleCount / (avgSampleCount+1);
             avgSampleCount++;
             avgSamplingPeriod += (timeStamp - lastRecordTime) / avgSampleCount;
         }

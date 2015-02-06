@@ -24,6 +24,7 @@ import org.vast.ows.server.SOSDataFilter;
  * <p>
  * Generates filtered data component description and data depending on what
  * observables are selected in the SOS request.
+ * TODO implement component filtering
  * </p>
  *
  * <p>Copyright (c) 2013</p>

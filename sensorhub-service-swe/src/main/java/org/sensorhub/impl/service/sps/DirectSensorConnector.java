@@ -35,6 +35,7 @@ import org.vast.ows.sps.DescribeTaskingResponse;
 import org.vast.ows.sps.SPSOfferingCapabilities;
 import org.vast.ows.swe.SWESOfferingCapabilities;
 import org.vast.swe.SWEConstants;
+import net.opengis.sensorml.v20.AbstractProcess;
 import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataChoice;
 import net.opengis.swe.v20.DataComponent;
@@ -97,7 +98,7 @@ public class DirectSensorConnector implements ISPSConnector
                 caps.setDescription("Tasking interface for " + sensor.getName());
             
             // use sensor uniqueID as procedure ID
-            caps.setSensorID(sensor.getCurrentSensorDescription().getUniqueIdentifier());
+            caps.getProcedures().add(sensor.getCurrentSensorDescription().getUniqueIdentifier());
             
             // supported formats
             caps.getProcedureFormats().add(SWESOfferingCapabilities.FORMAT_SML2);
@@ -184,6 +185,13 @@ public class DirectSensorConnector implements ISPSConnector
     
     
     @Override
+    public AbstractProcess generateSensorMLDescription(double time) throws Exception
+    {
+        return sensor.getCurrentSensorDescription();
+    }
+
+
+    @Override
     public void sendSubmitData(ITask task, DataBlock data) throws ServiceException
     {
         checkEnabled();
@@ -207,7 +215,7 @@ public class DirectSensorConnector implements ISPSConnector
             }
             
             // actually send command to selected interface
-            cmdInterface.sendCommand(data);
+            cmdInterface.execCommand(data);
         }
         catch (SensorException e)
         {

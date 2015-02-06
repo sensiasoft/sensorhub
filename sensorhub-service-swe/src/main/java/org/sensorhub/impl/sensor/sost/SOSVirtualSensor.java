@@ -32,10 +32,10 @@ import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.sensor.SensorEvent;
 import org.sensorhub.api.sensor.SensorException;
 import org.sensorhub.impl.sensor.AbstractSensorModule;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.vast.data.BinaryComponentImpl;
-import org.vast.data.BinaryEncodingImpl;
 import org.vast.data.DataIterator;
-import org.vast.data.TextEncodingImpl;
 import org.vast.ogc.om.IObservation;
 import org.vast.ows.sos.ISOSDataConsumer;
 
@@ -51,6 +51,8 @@ import org.vast.ows.sos.ISOSDataConsumer;
  */
 public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfig> implements ISOSDataConsumer
 {
+    private static final Logger log = LoggerFactory.getLogger(SOSVirtualSensor.class);
+    
     Map<DataStructureHash, String> structureToOutputMap = new HashMap<DataStructureHash, String>();
     
     
@@ -90,8 +92,9 @@ public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfi
     public String newResultTemplate(DataComponent component, DataEncoding encoding)
     {
         // TODO check if template is compatible with sensor description outputs?        
+        // TODO merge all templates with same structure but different encodings to the same output
         
-        // try to otbain corresponding data interface
+        // try to obtain corresponding data interface
         DataStructureHash hashObj = new DataStructureHash(component, encoding);
         String templateID = structureToOutputMap.get(hashObj);
                 
@@ -167,8 +170,12 @@ public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfi
     @Override
     public void newResultRecord(String templateID, DataBlock... dataBlocks) throws Exception
     {
+        SOSVirtualSensorOutput output = (SOSVirtualSensorOutput)getObservationOutputs().get(templateID);
+        
         for (DataBlock dataBlock: dataBlocks)
-            ((SOSVirtualSensorOutput)getObservationOutputs().get(templateID)).publishNewRecord(dataBlock);
+            output.publishNewRecord(dataBlock);
+        
+        log.debug("New record received for output " + output.getName());
     }
 
 
@@ -179,28 +186,20 @@ public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfi
         for (AbstractSWEIdentifiable output: getCurrentSensorDescription().getOutputList())
         {
             DataComponent dataStruct = null;
-            DataEncoding dataEnc = null;            
+            DataEncoding dataEnc = null;
             
             if (output instanceof DataStream)
             {
                 dataStruct = ((DataStream) output).getElementType();
                 dataEnc = ((DataStream) output).getEncoding();
+                newResultTemplate(dataStruct, dataEnc);
             }
             else if (output instanceof DataInterface)
             {
                 dataStruct = ((DataInterface) output).getData().getElementType();
                 dataEnc = ((DataInterface) output).getData().getEncoding();
+                newResultTemplate(dataStruct, dataEnc);
             }
-            else
-            {
-                dataStruct = (DataComponent)output;
-                if (dataStruct.createDataBlock().getAtomCount() > 30)
-                    dataEnc = BinaryEncodingImpl.getDefaultEncoding(dataStruct);
-                else
-                    dataEnc = new TextEncodingImpl(",", "\n");
-            }
-            
-            newResultTemplate(dataStruct, dataEnc);
         }
     }
 

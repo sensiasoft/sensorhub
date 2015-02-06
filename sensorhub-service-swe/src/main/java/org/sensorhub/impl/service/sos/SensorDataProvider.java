@@ -64,6 +64,7 @@ public class SensorDataProvider implements ISOSDataProvider, IEventListener
     BlockingDeque<SensorDataEvent> eventQueue;
     List<Timer> pollTimers;
     long timeOut;
+    long stopTime;
     
     SensorDataEvent lastDataEvent;
     int nextEventRecordIndex = 0;
@@ -75,6 +76,9 @@ public class SensorDataProvider implements ISOSDataProvider, IEventListener
         this.dataSources = new ArrayList<ISensorDataInterface>();
         this.eventQueue = new LinkedBlockingDeque<SensorDataEvent>();
         this.pollTimers = new ArrayList<Timer>();
+        
+        // figure out stop time (if any)
+        stopTime = ((long)filter.getTimeRange().getStopTime()) * 1000L;
         
         // get list of desired sensor outputs
         try
@@ -93,8 +97,9 @@ public class SensorDataProvider implements ISOSDataProvider, IEventListener
                     String defUri = (String)it.next().getDefinition();
                     if (filter.getObservables().contains(defUri))
                     {
-                        // set to time out if no data is received after 10 sampling periods. Is this good?
-                        timeOut = (long)(outputInterface.getAverageSamplingPeriod() * 10);
+                        // set to time out if no data is received after 10 sampling periods or min 5s
+                        timeOut = (long)(outputInterface.getAverageSamplingPeriod() * 10. * 1000.);
+                        timeOut = Math.max(timeOut, 5000000);
                         dataSources.add(outputInterface);
                         
                         // break for now since we support only requesting data from one output at a time
@@ -112,8 +117,24 @@ public class SensorDataProvider implements ISOSDataProvider, IEventListener
         // if everything went well listen or poll sensor outputs
         for (final ISensorDataInterface outputInterface: dataSources)
         {
-            // register listener if push is supported
-            if (outputInterface.isPushSupported())
+            // case of time instant = now, just return latest record
+            if (isNowTimeInstant(filter.getTimeRange()))
+            {
+                try
+                {
+                    double lastRecordTime = outputInterface.getLatestRecordTime();
+                    DataBlock data = outputInterface.getLatestRecord();
+                    eventQueue.offerLast(new SensorDataEvent(lastRecordTime, outputInterface, data));
+                    timeOut = 0L;
+                }
+                catch (SensorException e)
+                {
+                   throw new ServiceException("Cannot get latest record from sensor " + sensor.getName(), e);
+                }
+            }
+            
+            // otherwise register listener if push is supported
+            else if (outputInterface.isPushSupported())
                 outputInterface.registerListener(this);
                         
             // otherwise setup timer task to poll regularly
@@ -151,6 +172,15 @@ public class SensorDataProvider implements ISOSDataProvider, IEventListener
                 timer.scheduleAtFixedRate(pollTask, 0, (long)(outputInterface.getAverageSamplingPeriod() * 500.));
             }
         }
+    }
+    
+    
+    protected boolean isNowTimeInstant(TimeExtent timeFilter)
+    {
+        if (timeFilter.isTimeInstant() && timeFilter.isBaseAtNow())
+            return true;
+        
+        return false;
     }
     
     
@@ -220,8 +250,12 @@ public class SensorDataProvider implements ISOSDataProvider, IEventListener
             // only poll next event from queue once we have returned all records associated to last event
             if (lastDataEvent == null || nextEventRecordIndex >= lastDataEvent.getRecords().length)
             {
-                lastDataEvent = eventQueue.pollFirst(timeOut, TimeUnit.SECONDS);
+                lastDataEvent = eventQueue.pollFirst(timeOut, TimeUnit.MILLISECONDS);
                 if (lastDataEvent == null)
+                    return null;
+                
+                // we stop if record is passed the given stop date
+                if (lastDataEvent.getTimeStamp() > stopTime)
                     return null;
                 
                 nextEventRecordIndex = 0;

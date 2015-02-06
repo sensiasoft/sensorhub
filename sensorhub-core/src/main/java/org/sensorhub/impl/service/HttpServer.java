@@ -151,7 +151,8 @@ public class HttpServer extends AbstractModule<HttpServerConfig>
     {
         try
         {
-            server.stop();
+            if (server != null)
+                server.stop();
         }
         catch (Exception e)
         {
