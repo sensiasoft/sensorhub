@@ -20,7 +20,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import net.opengis.swe.v20.BinaryEncoding;
@@ -257,58 +256,52 @@ public class SOSTClient extends AbstractModule<SOSTClientConfig> implements IEve
             if (streamInfo == null)
                 return;
             
+            // skip if we cannot handle more requests
+            if (streamInfo.threadPool.getQueue().remainingCapacity() == 0)
+            {
+                String outputName = ((SensorDataEvent)e).getSource().getName();
+                log.debug("Too many requests to SOS-T for '" + outputName + "' of " + MsgUtils.moduleString(sensor) + ". Bandwidth cannot keep up.");
+                return;
+            }
+            
             // record last sample time
             streamInfo.lastSampleTime = e.getTimeStamp();
             
             // append records to buffer
-            synchronized(streamInfo.resultData)
-            {
-                for (DataBlock record: ((SensorDataEvent)e).getRecords())
-                    streamInfo.resultData.pushNextDataBlock(record);
-                        
-                if (streamInfo.resultData.getNumElements() >= streamInfo.minRecordsPerRequest)
-                {
-                    Runnable sendTask = new Runnable() {
-                        @Override
-                        public void run()
-                        {
-                            try
-                            {
-                                InsertResultRequest req = new InsertResultRequest();
-                                req.setPostServer(config.sosEndpointUrl);
-                                req.setVersion("2.0");
-                                req.setTemplateId(streamInfo.templateID);
-                                req.setResultData(streamInfo.resultData);
-                                
-                                synchronized(streamInfo.resultData)
-                                {
-                                    //sosUtils.writeXMLQuery(System.out, req);
-                                    sosUtils.sendRequest(req, false);
-                                    
-                                    // clear everything that was sent
-                                    streamInfo.resultData.clearData();
-                                }
-                            }
-                            catch (OWSException ex)
-                            {
-                                String outputName = ((SensorDataEvent)e).getSource().getName();
-                                log.error("Error when sending '" + outputName + "' data to SOS-T from " + MsgUtils.moduleString(sensor), ex);
-                                streamInfo.errorCount++;
-                            }
-                        }           
-                    };
+            for (DataBlock record: ((SensorDataEvent)e).getRecords())
+                streamInfo.resultData.pushNextDataBlock(record);
                     
-                    try
+            // send request if min record count is reached
+            if (streamInfo.resultData.getNumElements() >= streamInfo.minRecordsPerRequest)
+            {
+                final InsertResultRequest req = new InsertResultRequest();
+                req.setPostServer(config.sosEndpointUrl);
+                req.setVersion("2.0");
+                req.setTemplateId(streamInfo.templateID);
+                req.setResultData(streamInfo.resultData);
+                streamInfo.resultData = streamInfo.resultData.copy();
+                
+                // create send request task
+                Runnable sendTask = new Runnable() {
+                    @Override
+                    public void run()
                     {
-                        streamInfo.threadPool.execute(sendTask);
-                    }
-                    catch (RejectedExecutionException ex)
-                    {
-                        String outputName = ((SensorDataEvent)e).getSource().getName();
-                        log.error("Too many requests to SOS-T for '" + outputName + "' of " + MsgUtils.moduleString(sensor) + ". Bandwidth cannot keep up.");
-                        streamInfo.errorCount++;
-                    }
-                }
+                        try
+                        {
+                            //sosUtils.writeXMLQuery(System.out, req);
+                            sosUtils.sendRequest(req, false);
+                        }
+                        catch (OWSException ex)
+                        {
+                            String outputName = ((SensorDataEvent)e).getSource().getName();
+                            log.error("Error when sending '" + outputName + "' data to SOS-T from " + MsgUtils.moduleString(sensor), ex);
+                            streamInfo.errorCount++;
+                        }
+                    }           
+                };
+                
+                // run task in async thread pool
+                streamInfo.threadPool.execute(sendTask);
             }
         }
     }
