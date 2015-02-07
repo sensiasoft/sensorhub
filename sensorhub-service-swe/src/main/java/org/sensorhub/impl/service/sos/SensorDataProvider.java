@@ -74,7 +74,7 @@ public class SensorDataProvider implements ISOSDataProvider, IEventListener
     {
         this.sensor = srcSensor;
         this.dataSources = new ArrayList<ISensorDataInterface>();
-        this.eventQueue = new LinkedBlockingDeque<SensorDataEvent>();
+        this.eventQueue = new LinkedBlockingDeque<SensorDataEvent>(1);
         this.pollTimers = new ArrayList<Timer>();
         
         // figure out stop time (if any)
@@ -125,6 +125,7 @@ public class SensorDataProvider implements ISOSDataProvider, IEventListener
                     double lastRecordTime = outputInterface.getLatestRecordTime();
                     DataBlock data = outputInterface.getLatestRecord();
                     eventQueue.offerLast(new SensorDataEvent(lastRecordTime, outputInterface, data));
+                    stopTime = Long.MAX_VALUE; // make sure stoptime does not cause us to return null
                     timeOut = 0L;
                 }
                 catch (SensorException e)
@@ -261,6 +262,7 @@ public class SensorDataProvider implements ISOSDataProvider, IEventListener
                 nextEventRecordIndex = 0;
             }
             
+            //System.out.println("->" + new DateTimeFormat().formatIso(lastDataEvent.getTimeStamp()/1000., 0));
             return lastDataEvent.getRecords()[nextEventRecordIndex++];
             
             // TODO add choice token value if request includes several outputs
@@ -274,11 +276,11 @@ public class SensorDataProvider implements ISOSDataProvider, IEventListener
     
     /*
      * For real-time streams, more data is always available unless
-     * sensor is disabled, disconnected or all sensor outputs are disabled
+     * sensor is disabled or all sensor outputs are disabled
      */
     private boolean hasMoreData()
     {
-        if (!sensor.isEnabled() || !sensor.isConnected())
+        if (!sensor.isEnabled())
             return false;
         
         boolean interfaceActive = false;

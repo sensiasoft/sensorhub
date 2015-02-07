@@ -23,6 +23,7 @@ import org.sensorhub.android.SOSTClient.StreamInfo;
 import org.sensorhub.api.module.IModuleConfigRepository;
 import org.sensorhub.api.sensor.ISensorDataInterface;
 import org.sensorhub.impl.module.InMemoryConfigDb;
+import org.sensorhub.impl.sensor.android.AndroidCameraOutput;
 import org.sensorhub.impl.sensor.android.AndroidSensorsConfig;
 import org.sensorhub.impl.sensor.android.AndroidSensorsDriver;
 import android.app.Activity;
@@ -31,6 +32,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
+import android.graphics.SurfaceTexture;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -39,10 +41,11 @@ import android.preference.PreferenceManager;
 import android.text.Html;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.TextureView;
 import android.widget.TextView;
 
 
-public class MainActivity extends Activity
+public class MainActivity extends Activity implements TextureView.SurfaceTextureListener 
 {
     TextView textArea;
     SensorHubService boundService;
@@ -74,6 +77,8 @@ public class MainActivity extends Activity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         textArea = (TextView)findViewById(R.id.text);
+        TextureView camPreview = (TextureView)findViewById(R.id.textureView1);
+        camPreview.setSurfaceTextureListener(this);
         
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         /*SharedPreferences.Editor editor = prefs.edit();
@@ -140,10 +145,13 @@ public class MainActivity extends Activity
                 else
                 { 
                     Map<ISensorDataInterface, StreamInfo> dataStreams = boundService.getSosClient().getDataStreams();
+                    if (dataStreams.size() > 0)
+                        displayText.append("<p>Registered with SOS-T</p><p>");
+                    
                     long now = System.currentTimeMillis();
                     for (Entry<ISensorDataInterface, StreamInfo> stream: dataStreams.entrySet())
                     {
-                        displayText.append("<p><b>" + stream.getKey().getName() + " : </b>");
+                        displayText.append("<b>" + stream.getKey().getName() + " : </b>");
                         
                         if (now - stream.getValue().lastSampleTime > 2000)
                             displayText.append("<font color='red'>NOK</font>");
@@ -157,8 +165,10 @@ public class MainActivity extends Activity
                             displayText.append(")</font>");
                         }
                         
-                        displayText.append("</p>");
+                        displayText.append("<br/>");
                     }
+                    
+                    displayText.append("</p>");
                 }
                
                 displayHandler.obtainMessage(1).sendToTarget();
@@ -232,5 +242,36 @@ public class MainActivity extends Activity
         Context context = this.getApplicationContext();
         context.stopService(new Intent(context, SensorHubService.class));
         super.onDestroy();
+    }
+
+
+    @Override
+    public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height)
+    {
+        AndroidCameraOutput.previewTexture = surface;        
+    }
+
+
+    @Override
+    public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height)
+    {
+        // TODO Auto-generated method stub
+        
+    }
+
+
+    @Override
+    public boolean onSurfaceTextureDestroyed(SurfaceTexture surface)
+    {
+        // TODO Auto-generated method stub
+        return false;
+    }
+
+
+    @Override
+    public void onSurfaceTextureUpdated(SurfaceTexture surface)
+    {
+        // TODO Auto-generated method stub
+        
     }
 }

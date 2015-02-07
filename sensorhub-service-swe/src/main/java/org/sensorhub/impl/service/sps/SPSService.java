@@ -20,9 +20,11 @@ import java.io.BufferedOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
+import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataComponent;
 import org.sensorhub.api.common.Event;
 import org.sensorhub.api.common.IEventHandler;
@@ -38,6 +40,7 @@ import org.sensorhub.impl.service.HttpServer;
 import org.sensorhub.impl.service.ogc.OGCServiceConfig.CapabilitiesInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.vast.data.DataBlockList;
 import org.vast.ows.GetCapabilitiesRequest;
 import org.vast.ows.OWSExceptionReport;
 import org.vast.ows.OWSRequest;
@@ -469,8 +472,11 @@ public class SPSService extends OWSServlet implements IServiceModule<SPSServiceC
         final String taskID = newTask.getID();
         
         // send command through connector
-        ISPSConnector conn = connectors.get(request.getSensorID());
-        conn.sendSubmitData(newTask, request.getParameters().getData());        
+        ISPSConnector conn = connectors.get(request.getProcedureID());
+        DataBlockList dataBlockList = (DataBlockList)request.getParameters().getData();
+        Iterator<DataBlock> it = dataBlockList.blockIterator();
+        while (it.hasNext())
+            conn.sendSubmitData(newTask, it.next());        
         
         // add report and send response
         SubmitResponse sResponse = new SubmitResponse();

@@ -126,7 +126,9 @@ public interface ISensorModule<ConfigType extends SensorConfig> extends IModule<
 
 
     /**
-     * Returns the sensor connection status
+     * Returns the sensor connection status.<br/>
+     * This method must do whatever it can to really detect the presence of the sensor. Consequently,
+     * the method can take a long time to complete and must not be called repeatedly.
      * @return true if sensor is actually connected and can communicate with the driver
      */
     public boolean isConnected();

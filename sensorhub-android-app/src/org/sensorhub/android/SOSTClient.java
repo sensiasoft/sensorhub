@@ -148,7 +148,7 @@ public class SOSTClient implements IEventListener
                         
                 if (streamInfo.resultData.getNumElements() >= streamInfo.minRecordsPerRequest)
                 {
-                    threadPool.execute(new Runnable() {
+                    Runnable sendTask = new Runnable() {
                         @Override
                         public void run()
                         {
@@ -174,8 +174,11 @@ public class SOSTClient implements IEventListener
                                 log.error("Error when sending data to SOS-T: " + ((SensorDataEvent)e).getSource().getName(), ex);
                                 streamInfo.errorCount++;
                             }
-                        }            
-                    });
+                        }           
+                    };
+                    
+                   //threadPool.execute(sendTask);
+                   sendTask.run();
                 }
             }
         }
