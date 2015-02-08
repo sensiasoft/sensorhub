@@ -15,7 +15,9 @@ Developer are Copyright (C) 2014 the Initial Developer. All Rights Reserved.
 
 package org.sensorhub.impl.service.sos;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -25,7 +27,6 @@ import net.opengis.sensorml.v20.AbstractProcess;
 import net.opengis.swe.v20.BinaryBlock;
 import net.opengis.swe.v20.BinaryEncoding;
 import net.opengis.swe.v20.BinaryMember;
-import net.opengis.swe.v20.ByteEncoding;
 import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataEncoding;
@@ -45,6 +46,7 @@ import org.sensorhub.impl.service.HttpServer;
 import org.sensorhub.impl.service.ogc.OGCServiceConfig.CapabilitiesInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.vast.cdm.common.DataSource;
 import org.vast.cdm.common.DataStreamParser;
 import org.vast.cdm.common.DataStreamWriter;
 import org.vast.data.DataBlockMixed;
@@ -78,6 +80,7 @@ import org.vast.ows.swe.SWESOfferingCapabilities;
 import org.vast.ows.swe.UpdateSensorRequest;
 import org.vast.ows.swe.UpdateSensorResponse;
 import org.vast.sensorML.SMLUtils;
+import org.vast.swe.DataSourceDOM;
 import org.vast.swe.SWEFactory;
 import org.vast.util.ReaderException;
 import org.vast.util.TimeExtent;
@@ -702,18 +705,25 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
         
         try
         {
-            // if binary data, ensure encoding is set to base64
-            if (encoding instanceof BinaryEncoding)
+            InputStream resultStream;
+            
+            // select data source (either inline XML or in POST body for KVP)
+            DataSource dataSrc = request.getResultDataSource();
+            if (dataSrc instanceof DataSourceDOM) // inline XML
             {
-                encoding = encoding.copy();
-                ((BinaryEncoding) encoding).setByteEncoding(ByteEncoding.BASE_64);
+                encoding = SWEFactory.ensureXmlCompatible(encoding);
+                resultStream = dataSrc.getDataStream();
+            }
+            else // POST body
+            {
+                resultStream = new BufferedInputStream(request.getHttpRequest().getInputStream());
             }
             
-            // prepare parser
+            // create parser
             parser = SWEFactory.createDataParser(encoding);
             parser.setDataComponents(dataStructure);
-            parser.setInput(request.getResultDataSource().getDataStream());
-            
+            parser.setInput(resultStream);
+                        
             // parse each record and send it to consumer
             DataBlock nextBlock = null;
             while ((nextBlock = parser.parseNextBlock()) != null)

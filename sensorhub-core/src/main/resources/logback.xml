@@ -6,7 +6,7 @@
     </encoder>
   </appender>
   <logger name="org.eclipse.jetty" level="warn"/>
-  <logger name="org.sensorhub" level="debug"/>
+  <logger name="org.sensorhub" level="info"/>
   <root level="INFO">          
     <appender-ref ref="STDOUT" />
   </root>    

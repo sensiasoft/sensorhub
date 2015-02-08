@@ -15,6 +15,10 @@ Developer are Copyright (C) 2014 the Initial Developer. All Rights Reserved.
 
 package org.sensorhub.impl.client.sost;
 
+import java.io.BufferedOutputStream;
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -22,10 +26,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import net.opengis.swe.v20.BinaryEncoding;
-import net.opengis.swe.v20.ByteEncoding;
 import net.opengis.swe.v20.DataBlock;
-import net.opengis.swe.v20.DataEncoding;
 import org.sensorhub.api.common.Event;
 import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.common.SensorHubException;
@@ -40,6 +41,8 @@ import org.sensorhub.impl.module.AbstractModule;
 import org.sensorhub.utils.MsgUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.vast.cdm.common.DataStreamWriter;
+import org.vast.data.DataBlockList;
 import org.vast.ogc.om.IObservation;
 import org.vast.ogc.om.ObservationImpl;
 import org.vast.ows.OWSException;
@@ -77,11 +80,12 @@ public class SOSTClient extends AbstractModule<SOSTClientConfig> implements IEve
     protected class StreamInfo
     {
         String templateID;
-        SWEData resultData = new SWEData();
         int minRecordsPerRequest = 10;
         long lastSampleTime = -1;
         int errorCount = 0;
-        ThreadPoolExecutor threadPool;
+        protected SWEData resultData = new SWEData();
+        protected ThreadPoolExecutor threadPool;
+        protected DataStreamWriter persistentWriter;
     }
     
     
@@ -121,11 +125,28 @@ public class SOSTClient extends AbstractModule<SOSTClientConfig> implements IEve
         if (sensor != null)
             sensor.unregisterListener(this);
         
-        // unregister from output data events and stop all threads
+        // cleanup all streams
         for (Entry<ISensorDataInterface, StreamInfo> entry: dataStreams.entrySet())
+            stopStream(entry.getKey(), entry.getValue());
+    }
+    
+    
+    protected void stopStream(ISensorDataInterface output, StreamInfo streamInfo)
+    {
+        // unregister listeners
+        output.unregisterListener(this);
+        
+        // stop threads
+        streamInfo.threadPool.shutdown();
+        
+        // close open HTTP streams
+        try
         {
-            entry.getKey().unregisterListener(this);
-            entry.getValue().threadPool.shutdown();
+            if (streamInfo.persistentWriter != null)
+                streamInfo.persistentWriter.close();
+        }
+        catch (IOException e)
+        {
         }
     }
     
@@ -204,19 +225,11 @@ public class SOSTClient extends AbstractModule<SOSTClientConfig> implements IEve
         req.setObservationTemplate(new ObservationImpl());
         InsertResultTemplateResponse resp = (InsertResultTemplateResponse)sosUtils.sendRequest(req, false);
         
-        // if binary encoding, enforce base64
-        DataEncoding dataEnc = sensorOutput.getRecommendedEncoding();
-        if (dataEnc instanceof BinaryEncoding)
-        {
-            dataEnc = dataEnc.copy();
-            ((BinaryEncoding) dataEnc).setByteEncoding(ByteEncoding.BASE_64);
-        }
-        
         // add stream info to map
         StreamInfo streamInfo = new StreamInfo();
         streamInfo.templateID = resp.getAcceptedTemplateId();
         streamInfo.resultData.setElementType(sensorOutput.getRecordDescription());
-        streamInfo.resultData.setEncoding(dataEnc);
+        streamInfo.resultData.setEncoding(sensorOutput.getRecommendedEncoding());
         streamInfo.minRecordsPerRequest = 1;//(int)(1.0 / sensorOutput.getAverageSamplingPeriod());
         dataStreams.put(sensorOutput, streamInfo);
         
@@ -252,15 +265,25 @@ public class SOSTClient extends AbstractModule<SOSTClientConfig> implements IEve
         if (e instanceof SensorDataEvent)
         {
             // retrieve stream info
-            final StreamInfo streamInfo = dataStreams.get(e.getSource());
+            StreamInfo streamInfo = dataStreams.get(e.getSource());
             if (streamInfo == null)
                 return;
+            
+            // we stop here if we had too many errors
+            if (streamInfo.errorCount >= config.maxConnectErrors)
+            {
+                String outputName = ((SensorDataEvent)e).getSource().getName();
+                log.error("Too many errors sending '" + outputName + "' data to SOS-T from " + MsgUtils.moduleString(sensor) + ". Stopping Stream.");
+                stopStream((ISensorDataInterface)e.getSource(), streamInfo);
+                return;
+            }
             
             // skip if we cannot handle more requests
             if (streamInfo.threadPool.getQueue().remainingCapacity() == 0)
             {
                 String outputName = ((SensorDataEvent)e).getSource().getName();
-                log.debug("Too many requests to SOS-T for '" + outputName + "' of " + MsgUtils.moduleString(sensor) + ". Bandwidth cannot keep up.");
+                if (log.isDebugEnabled())
+                    log.debug("Too many requests to SOS-T for '" + outputName + "' of " + MsgUtils.moduleString(sensor) + ". Bandwidth cannot keep up.");
                 return;
             }
             
@@ -270,40 +293,119 @@ public class SOSTClient extends AbstractModule<SOSTClientConfig> implements IEve
             // append records to buffer
             for (DataBlock record: ((SensorDataEvent)e).getRecords())
                 streamInfo.resultData.pushNextDataBlock(record);
-                    
-            // send request if min record count is reached
-            if (streamInfo.resultData.getNumElements() >= streamInfo.minRecordsPerRequest)
-            {
-                final InsertResultRequest req = new InsertResultRequest();
-                req.setPostServer(config.sosEndpointUrl);
-                req.setVersion("2.0");
-                req.setTemplateId(streamInfo.templateID);
-                req.setResultData(streamInfo.resultData);
-                streamInfo.resultData = streamInfo.resultData.copy();
-                
-                // create send request task
-                Runnable sendTask = new Runnable() {
-                    @Override
-                    public void run()
-                    {
-                        try
-                        {
-                            //sosUtils.writeXMLQuery(System.out, req);
-                            sosUtils.sendRequest(req, false);
-                        }
-                        catch (OWSException ex)
-                        {
-                            String outputName = ((SensorDataEvent)e).getSource().getName();
-                            log.error("Error when sending '" + outputName + "' data to SOS-T from " + MsgUtils.moduleString(sensor), ex);
-                            streamInfo.errorCount++;
-                        }
-                    }           
-                };
-                
-                // run task in async thread pool
-                streamInfo.threadPool.execute(sendTask);
-            }
+            
+            // send record using one of 2 methods
+            if (config.usePersistentConnection)
+                sendInPersistentRequest((SensorDataEvent)e, streamInfo);
+            else
+                sendAsNewRequest((SensorDataEvent)e, streamInfo);
         }
+    }
+    
+    
+    private void sendAsNewRequest(final SensorDataEvent e, final StreamInfo streamInfo)
+    {
+        // send request if min record count is reached
+        if (streamInfo.resultData.getNumElements() >= streamInfo.minRecordsPerRequest)
+        {
+            final InsertResultRequest req = new InsertResultRequest();
+            req.setPostServer(config.sosEndpointUrl);
+            req.setVersion("2.0");
+            req.setTemplateId(streamInfo.templateID);
+            req.setResultData(streamInfo.resultData);
+            
+            // create new container for future data
+            streamInfo.resultData = streamInfo.resultData.copy();
+            
+            // create send request task
+            Runnable sendTask = new Runnable() {
+                @Override
+                public void run()
+                {
+                    try
+                    {
+                        if (log.isDebugEnabled())
+                        {
+                            String outputName = e.getSource().getName();
+                            log.debug("Sending '" + outputName + "' record(s) to SOS-T");
+                        }
+                        
+                        //sosUtils.writeXMLQuery(System.out, req);
+                        sosUtils.sendRequest(req, false);
+                    }
+                    catch (Exception ex)
+                    {
+                        String outputName = e.getSource().getName();
+                        log.error("Error when sending '" + outputName + "' data to SOS-T from " + MsgUtils.moduleString(sensor), ex);
+                        streamInfo.errorCount++;
+                    }
+                }           
+            };
+            
+            // run task in async thread pool
+            streamInfo.threadPool.execute(sendTask);
+        }
+    }
+    
+    
+    private void sendInPersistentRequest(final SensorDataEvent e, final StreamInfo streamInfo)
+    {
+        // create new container for future data
+        final DataBlockList dataBlockList = (DataBlockList)streamInfo.resultData.getData();
+        streamInfo.resultData.clearData();
+        
+        // create send request task
+        Runnable sendTask = new Runnable() {
+            @Override
+            public void run()
+            {
+                try
+                {
+                    // connect if not already connected
+                    if (streamInfo.persistentWriter == null)
+                    {
+                        final InsertResultRequest req = new InsertResultRequest();
+                        req.setPostServer(config.sosEndpointUrl);
+                        req.setVersion("2.0");
+                        req.setTemplateId(streamInfo.templateID);
+                        
+                        // connect to server                        
+                        HttpURLConnection conn = sosUtils.sendPostRequestWithQuery(req);                        
+                        conn.setRequestProperty("Content-type", "text/plain");
+                        conn.setChunkedStreamingMode(32);
+                        conn.connect();
+                        
+                        // prepare writer
+                        streamInfo.persistentWriter = streamInfo.resultData.getDataWriter();
+                        streamInfo.persistentWriter.setOutput(new BufferedOutputStream(conn.getOutputStream()));
+                    }
+                    
+                    // write record to output stream
+                    Iterator<DataBlock> it = dataBlockList.blockIterator();
+                    while (it.hasNext())
+                    {
+                        if (log.isDebugEnabled())
+                        {
+                            String outputName = e.getSource().getName();
+                            log.debug("Sending '" + outputName + "' record(s) to SOS-T");
+                        }
+                        
+                        streamInfo.persistentWriter.write(it.next());
+                    }
+                    
+                    streamInfo.persistentWriter.flush();
+                }
+                catch (Exception ex)
+                {
+                    String outputName = e.getSource().getName();
+                    log.error("Error when sending '" + outputName + "' data to SOS-T from " + MsgUtils.moduleString(sensor), ex);
+                    streamInfo.errorCount++;
+                }
+            }           
+        };
+        
+        // run task in async thread pool
+        streamInfo.threadPool.execute(sendTask);
     }
     
     

@@ -31,21 +31,27 @@ public class SOSTClientConfig extends ModuleConfig
 {
     private static final long serialVersionUID = 1L;
 
-
+    
     /**
      * SOS endpoint URL where the requests are sent
      */
     public String sosEndpointUrl;
-    
-       
-    /**
-     * set to true to use a persistent Insertresult connection
-     */
-    public boolean usePersistentConnection;
-    
+
     
     /**
      * Local ID of sensor to register with SOS
      */
     public String sensorID;
+
+    
+    /**
+     * set to true to use a persistent Insertresult connection
+     */
+    public boolean usePersistentConnection;
+
+    
+    /**
+     * Maximum number of connection errors before we stop sending data to remote server
+     */
+    public int maxConnectErrors = 10;
 }

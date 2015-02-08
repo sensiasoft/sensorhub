@@ -137,7 +137,7 @@ public class HttpServer extends AbstractModule<HttpServerConfig>
             
             server.setHandler(handlers);
             server.start();
-            log.info("HTTP server started");
+            log.info("HTTP server started on port " + config.httpPort);
         }
         catch (Exception e)
         {

@@ -145,6 +145,7 @@
     "moduleClass": "org.sensorhub.impl.client.sost.SOSTClient",
     "enabled": true,
     "sosEndpointUrl": "http://localhost:8181/sensorhub/sos",
-    "sensorID": "d136b6ea-3951-4691-bf56-c84ec7d89d72"
+    "sensorID": "d136b6ea-3951-4691-bf56-c84ec7d89d72",
+    "usePersistentConnection": true
   }
 ]
