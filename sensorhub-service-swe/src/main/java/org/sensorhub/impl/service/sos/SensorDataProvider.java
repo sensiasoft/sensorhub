@@ -99,7 +99,7 @@ public class SensorDataProvider implements ISOSDataProvider, IEventListener
                     {
                         // set to time out if no data is received after 10 sampling periods or min 5s
                         timeOut = (long)(outputInterface.getAverageSamplingPeriod() * 10. * 1000.);
-                        timeOut = Math.max(timeOut, 5000000);
+                        timeOut = Math.max(timeOut, 5000L);
                         dataSources.add(outputInterface);
                         
                         // break for now since we support only requesting data from one output at a time

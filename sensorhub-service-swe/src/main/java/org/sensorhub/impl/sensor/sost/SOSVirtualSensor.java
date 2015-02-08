@@ -51,7 +51,7 @@ import org.vast.ows.sos.ISOSDataConsumer;
  */
 public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfig> implements ISOSDataConsumer
 {
-    private static final Logger log = LoggerFactory.getLogger(SOSVirtualSensor.class);
+    protected static final Logger log = LoggerFactory.getLogger(SOSVirtualSensor.class);
     
     Map<DataStructureHash, String> structureToOutputMap = new HashMap<DataStructureHash, String>();
     
@@ -171,11 +171,10 @@ public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfi
     public void newResultRecord(String templateID, DataBlock... dataBlocks) throws Exception
     {
         SOSVirtualSensorOutput output = (SOSVirtualSensorOutput)getObservationOutputs().get(templateID);
+        log.debug("New record received for output " + output.getName());
         
         for (DataBlock dataBlock: dataBlocks)
             output.publishNewRecord(dataBlock);
-        
-        log.debug("New record received for output " + output.getName());
     }
 
 

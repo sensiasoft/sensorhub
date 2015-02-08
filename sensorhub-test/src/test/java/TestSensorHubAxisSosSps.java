@@ -28,19 +28,22 @@ import org.vast.swe.SWEData;
 public class TestSensorHubAxisSosSps
 {
     private final static String ENDPOINT = "http://localhost:8080/sensorhub/sps";
+    //private final static String ENDPOINT = "http://bottsgeo.simple-url.com:8080/sensorhub/sps";
+    private final static String PROC_ID = "d136b6ea-3951-4691-bf56-c84ec7d89d72";
     
     
     public static void main(String[] args) throws Exception
     {
         SensorHub.main(new String[] {"src/test/resources/config_axis_sos_sps.json", "storage"});
+        AxisCameraDriver sensor = (AxisCameraDriver)SensorHub.getInstance().getModuleRegistry().getModuleById(PROC_ID);
         
         // get procedure ID
-        String procID = null;
-        for (IModule<?> module: SensorHub.getInstance().getModuleRegistry().getLoadedModules())
+        String procID = PROC_ID;
+        /*for (IModule<?> module: SensorHub.getInstance().getModuleRegistry().getLoadedModules())
         {
             if (module instanceof AxisCameraDriver)
                 procID = module.getLocalID();
-        }
+        }*/
         
         SPSUtils utils = new SPSUtils();
         
@@ -58,12 +61,12 @@ public class TestSensorHubAxisSosSps
         taskParams.setElementType(dtResp.getTaskingParameters());
         taskParams.setEncoding(new TextEncodingImpl());
         DataChoice ptzParams = (DataChoice)dtResp.getTaskingParameters().copy();
-        for (int i=0; i<8; i++)
+        /*for (int i=0; i<8; i++)
         {
             // generate new tasking parameters
             ptzParams.renewDataBlock();
             ptzParams.setSelectedItem("rpan");
-            ptzParams.getComponent("rpan").getData().setDoubleValue(45.0);
+            ptzParams.getComponent("rpan").getData().setDoubleValue(-45.0);
             taskParams.clearData();
             taskParams.addData(ptzParams.getData());
             
@@ -77,7 +80,7 @@ public class TestSensorHubAxisSosSps
             utils.sendRequest(subReq, false);
             
             Thread.sleep(2000L);
-        }
+        }*/
     }
 
 }

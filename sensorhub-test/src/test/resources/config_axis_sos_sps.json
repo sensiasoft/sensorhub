@@ -19,7 +19,7 @@
     "id": "d136b6ea-3950-4691-bf56-c84ec7d89d72",
     "name": "Fake GPS Sensor",
     "moduleClass": "org.sensorhub.impl.sensor.fakegps.FakeGpsSensor",
-    "enabled": true,
+    "enabled": false,
     "sensorML": null,
     "autoActivate": true,
     "enableHistory": false,
@@ -42,15 +42,6 @@
     "ipAddress": "bottsgeo.simple-url.com:80"
   },
   {
-    "objClass": "org.sensorhub.impl.client.sost.SOSTClientConfig",
-    "id": "8ac89c00-ade0-11e4-ab27-0800200c9a66",
-    "name": "SOS-T Client for Axis Cam",
-    "moduleClass": "org.sensorhub.impl.client.sost.SOSTClient",
-    "enabled": false,
-    "sosEndpointUrl": "http://botts-geo.com:8181/sensorhub/sos",
-    "sensorID": "d136b6ea-3951-4691-bf56-c84ec7d89d72"
-  },
-  {
     "objClass": "org.sensorhub.impl.service.sos.SOSServiceConfig",
     "id": "5cb05c9c-9e08-4fa1-8731-ff41e246bdc1",
     "name": "SOS Service",
@@ -60,6 +51,7 @@
     "enableHttpGET": true,
     "enableHttpPOST": true,
     "enableSOAP": true,
+    "enableTransactional": true,
     "dataProviders" : [
        {
            "objClass": "org.sensorhub.impl.service.sos.SensorDataProviderConfig",
@@ -145,5 +137,14 @@
         "contactInstructions": null
       }
     }
+  },
+  {
+    "objClass": "org.sensorhub.impl.client.sost.SOSTClientConfig",
+    "id": "8ac89c00-ade0-11e4-ab27-0800200c9a66",
+    "name": "SOS-T Client for Axis Cam",
+    "moduleClass": "org.sensorhub.impl.client.sost.SOSTClient",
+    "enabled": true,
+    "sosEndpointUrl": "http://localhost:8181/sensorhub/sos",
+    "sensorID": "d136b6ea-3951-4691-bf56-c84ec7d89d72"
   }
 ]
