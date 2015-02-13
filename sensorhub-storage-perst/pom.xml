@@ -27,9 +27,9 @@
       <dependency>
          <groupId>org.garret</groupId>
          <artifactId>perst</artifactId>
-         <version>4.10.0</version>
+         <version>4.36</version>
          <scope>system</scope>
-         <systemPath>${project.basedir}/lib/perst-4.10.jar</systemPath>
+         <systemPath>${project.basedir}/lib/perst-4.36.jar</systemPath>
       </dependency>
    </dependencies>
 </project>

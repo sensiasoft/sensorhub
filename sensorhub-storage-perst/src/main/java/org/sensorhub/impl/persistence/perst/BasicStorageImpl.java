@@ -82,7 +82,8 @@ public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> impleme
             if (db != null && db.isOpened())
                 throw new StorageException("Storage " + getLocalID() + " is already opened");
             
-            db = StorageFactory.getInstance().createStorage();            
+            db = StorageFactory.getInstance().createStorage();    
+            db.setProperty("perst.concurrent.iterator", true);
             db.open(config.storagePath, config.memoryCacheSize*1024);
             dbRoot = (DBRoot)db.getRoot();
             
