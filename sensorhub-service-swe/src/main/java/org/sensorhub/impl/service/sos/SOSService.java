@@ -532,7 +532,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
             
             else if (useMJPEG)
             {
-                // set MIME type for MP4 format
+                // set multi-part MIME so that browser can properly decode it in an img tag
                 //request.getHttpResponse().setContentType("image/jpeg"); //video/x-motion-jpeg, video/x-jpeg
                 request.getHttpResponse().setContentType("multipart/x-mixed-replace; boundary=--myboundary");
                 request.getHttpResponse().addHeader("Cache-Control", "no-cache");

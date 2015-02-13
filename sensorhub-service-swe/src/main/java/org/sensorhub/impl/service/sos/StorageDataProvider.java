@@ -52,12 +52,16 @@ public class StorageDataProvider implements ISOSDataProvider
     IBasicStorage<?> storage;
     List<StorageState> dataStoresStates;
     DataComponentFilter recordFilter;
+    double replaySpeedFactor;
+    double lastRecordTime = Double.NaN;
+    long lastSystemTime; 
+    
     
     class StorageState
     {
         ITimeSeriesDataStore<IDataFilter> dataStore;
         Iterator<? extends IDataRecord<DataKey>> recordIterator;
-        IDataRecord<DataKey> nextRecord;
+        IDataRecord<DataKey> nextRecord;        
     }
     
     
@@ -66,6 +70,7 @@ public class StorageDataProvider implements ISOSDataProvider
         this.storage = storage;
         this.dataStoresStates = new ArrayList<StorageState>();
         this.recordFilter = new DataComponentFilter(filter);
+        this.replaySpeedFactor = filter.getReplaySpeedFactor();
         
         final double[] timePeriod = new double[] {
             filter.getTimeRange().getStartTime(),
@@ -201,7 +206,22 @@ public class StorageDataProvider implements ISOSDataProvider
         if (state.recordIterator.hasNext())
             state.nextRecord = state.recordIterator.next();
         else
-            state.nextRecord = null;        
+            state.nextRecord = null;
+        
+        // wait if replay mode is active
+        if (!Double.isNaN(replaySpeedFactor))
+        {
+            if (!Double.isNaN(lastRecordTime))
+            {
+                long realEllapsedTime = System.currentTimeMillis() - lastSystemTime;
+                long waitTime = (long)((nextStorageTime - lastRecordTime) * 1000. / replaySpeedFactor);
+                try { Thread.sleep(waitTime - realEllapsedTime); }
+                catch (InterruptedException e) { }
+            }
+            
+            lastRecordTime = nextStorageTime;
+            lastSystemTime = System.currentTimeMillis();
+        }        
         
         // return record properly filtered according to selected observables
         return recordFilter.getFilteredRecord(state.dataStore.getRecordDescription(), datablk);
