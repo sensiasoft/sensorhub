@@ -71,8 +71,10 @@ public interface IModule<ConfigType extends ModuleConfig> extends IEventProducer
     
     
     /**
-     * Updates the module's configuration dynamically
-     * The module must honor this new configuration unless an error is detected
+     * Updates the module's configuration dynamically.<br/>
+     * The module must honor this new configuration unless an error is detected.
+     * It is the responsability of the module to initiate a restart if the new
+     * configuration requires it.
      * @param config
      * @throws SensorHubException 
      */
