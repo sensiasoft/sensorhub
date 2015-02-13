@@ -8,8 +8,7 @@ Software distributed under the License is distributed on an "AS IS" basis,
 WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
 for the specific language governing rights and limitations under the License.
  
-The Initial Developer is Sensia Software LLC. Portions created by the Initial
-Developer are Copyright (C) 2014 the Initial Developer. All Rights Reserved.
+Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
  
 ******************************* END LICENSE BLOCK ***************************/
 
@@ -49,8 +48,7 @@ import com.google.gson.stream.JsonReader;
  * persist all modules' configuration.
  * </p>
  *
- * <p>Copyright (c) 2013</p>
- * @author Alexandre Robin
+ * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @since Sep 3, 2013
  */
 public class ModuleConfigJsonFile implements IModuleConfigRepository

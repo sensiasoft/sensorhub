@@ -10,6 +10,11 @@
      </dependency>
      <dependency>
         <groupId>org.sensorhub</groupId>
+        <artifactId>sensorhub-webui-core</artifactId>
+        <version>0.5</version>
+     </dependency>
+     <dependency>
+        <groupId>org.sensorhub</groupId>
         <artifactId>sensorhub-service-swe</artifactId>
         <version>0.5</version>
         <type>bundle</type>
@@ -25,11 +30,6 @@
         <artifactId>sensorhub-driver-v4l</artifactId>
         <version>0.5</version>
         <type>bundle</type>
-     </dependency>
-     <dependency>
-        <groupId>org.sensorhub</groupId>
-        <artifactId>sensorhub-core-webui</artifactId>
-        <version>0.5</version>
      </dependency>
      <dependency>
         <groupId>org.sensorhub</groupId>

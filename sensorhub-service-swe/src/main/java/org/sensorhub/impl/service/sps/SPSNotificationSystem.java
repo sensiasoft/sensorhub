@@ -8,8 +8,7 @@ Software distributed under the License is distributed on an "AS IS" basis,
 WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
 for the specific language governing rights and limitations under the License.
  
-The Initial Developer is Sensia Software LLC. Portions created by the Initial
-Developer are Copyright (C) 2014 the Initial Developer. All Rights Reserved.
+Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
  
 ******************************* END LICENSE BLOCK ***************************/
 
@@ -30,7 +29,7 @@ import org.w3c.dom.Element;
  * Helper class to send notification messages to client
  * subscribed to the given topic channels of SPS 2.0.
  * 
- * @author Alexandre Robin <alexandre.robin@spotimage.fr>
+ * @author Alex Robin <alex.robin@sensiasoftware.com>
  */
 public class SPSNotificationSystem extends NotificationSystem
 {

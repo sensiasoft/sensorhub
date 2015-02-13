@@ -39,8 +39,7 @@ import org.vast.util.TimeExtent;
  * It then tries to decode and display the video in a JFrame.
  * </p>
  *
- * <p>Copyright (c) 2014</p>
- * @author Alexandre Robin <alex.robin@sensiasoftware.com>
+ * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @since Jan 26, 2015
  */
 public class TestShowVideo

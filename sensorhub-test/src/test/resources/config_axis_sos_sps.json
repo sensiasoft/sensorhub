@@ -12,7 +12,14 @@
     "objClass": "org.sensorhub.ui.AdminUIConfig",
     "id": "5cb05c9c-9123-4fa1-8731-ffaa51489678",
     "moduleClass": "org.sensorhub.ui.AdminUIModule",
-    "enabled": true
+    "enabled": true,
+    "customPanels": [
+        {
+            "objClass": "org.sensorhub.ui.CustomPanelConfig",
+            "configClass": "org.sensorhub.api.sensor.SensorConfig",
+            "builderClass": "org.sensorhub.ui.SensorPanelBuilder"
+        }
+    ]
   },
   {
     "objClass": "org.sensorhub.impl.sensor.fakegps.FakeGpsConfig",
