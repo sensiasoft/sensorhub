@@ -57,23 +57,26 @@ public class InMemoryConfigDb implements IModuleConfigRepository
 
 
     @Override
-    public void add(ModuleConfig config)
+    public void add(ModuleConfig... configList)
     {
-        configMap.put(config.id, config);
+        for (ModuleConfig config: configList)
+            configMap.put(config.id, config);
     }
 
 
     @Override
-    public void update(ModuleConfig newConfig)
+    public void update(ModuleConfig... configList)
     {
-        configMap.put(newConfig.id, newConfig);
+        for (ModuleConfig config: configList)
+            configMap.put(config.id, config);
     }
 
 
     @Override
-    public void remove(String moduleID)
+    public void remove(String... moduleIDs)
     {
-        configMap.remove(moduleID);
+        for (String moduleID: moduleIDs)
+            configMap.remove(moduleID);
     }
 
 

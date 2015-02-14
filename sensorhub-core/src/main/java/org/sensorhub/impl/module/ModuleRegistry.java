@@ -117,16 +117,17 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
                         
             // keep track of what modules are loaded
             loadedModules.put(config.id, module);
-            log.debug("Module " + MsgUtils.moduleString(module) +  " loaded");
-            
+                        
             // send event
             eventHandler.publishEvent(new ModuleEvent(module, ModuleEvent.Type.LOADED));
+            log.debug("Module " + MsgUtils.moduleString(module) +  " loaded");
             
             // start it if enabled by default
             if (config.enabled)
             {
                 module.start();
                 eventHandler.publishEvent(new ModuleEvent(module, ModuleEvent.Type.ENABLED));
+                log.debug("Module " + MsgUtils.moduleString(module) +  " started");
             }
             
             return module;
@@ -254,21 +255,28 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
      */
     public synchronized void saveModulesConfiguration()
     {
+        int numModules = loadedModules.size();
+        ModuleConfig[] configList = new ModuleConfig[numModules];
+        
+        int i = 0;
         for (IModule<?> module: loadedModules.values())
-            saveConfiguration(module);
+        {
+            configList[i] = module.getConfiguration();
+            i++;
+        }
+        
+        configRepos.update(configList);
     }
     
     
     /**
-     * Saves the module configuration in the repository
-     * @param module 
+     * Saves the given module configurations in the repository
+     * @param configList 
      */
-    public synchronized void saveConfiguration(IModule<?> module)
+    public synchronized void saveConfiguration(ModuleConfig... configList)
     {
-        if (configRepos.contains(module.getLocalID()))
-            configRepos.update(module.getConfiguration());
-        else
-            configRepos.add(module.getConfiguration());
+        for (ModuleConfig config: configList)
+            configRepos.update(config);
     }
     
     

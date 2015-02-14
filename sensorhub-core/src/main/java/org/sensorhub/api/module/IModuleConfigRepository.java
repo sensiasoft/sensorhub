@@ -53,24 +53,24 @@ public interface IModuleConfigRepository
     /**
      * Adds a module configuration to the repository
      * An exception will be thrown if a module with the same id already exist
-     * @param config
+     * @param configList
      */
-    public void add(ModuleConfig config);
+    public void add(ModuleConfig... configList);
     
     
     /**
      * Updates the module configuration with the given id in the repository
      * If the id does not exist, the configuration entry is added with the add method
-     * @param newConfig
+     * @param configList
      */
-    public void update(ModuleConfig newConfig);
+    public void update(ModuleConfig... configList);
     
     
     /**
      * Removes the module configuration with the given id from the repository
-     * @param moduleID
+     * @param moduleIDs
      */
-    public void remove(String moduleID);
+    public void remove(String... moduleIDs);
     
     
     /**

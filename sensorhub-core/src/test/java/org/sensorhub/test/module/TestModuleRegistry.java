@@ -16,8 +16,6 @@ package org.sensorhub.test.module;
 
 import static org.junit.Assert.assertTrue;
 import java.io.File;
-import java.io.IOException;
-import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -25,23 +23,23 @@ import org.sensorhub.api.module.IModuleProvider;
 import org.sensorhub.api.module.ModuleConfig;
 import org.sensorhub.api.service.IServiceModule;
 import org.sensorhub.impl.module.DummyModule;
-import org.sensorhub.impl.module.ModuleConfigDatabaseJson;
+import org.sensorhub.impl.module.ModuleConfigJsonFile;
 import org.sensorhub.impl.module.ModuleRegistry;
 
 
 public class TestModuleRegistry
 {
-    File configFolder;
-    ModuleConfigDatabaseJson configDb;
+    File configFile;
+    ModuleConfigJsonFile configDb;
     ModuleRegistry registry;
     
     
     @Before
     public void setup()
     {
-        configFolder = new File("junit-test/");
-        configFolder.mkdirs();
-        configDb = new ModuleConfigDatabaseJson(configFolder.getAbsolutePath());        
+        configFile = new File("test-conf.json");
+        configFile.deleteOnExit();
+        configDb = new ModuleConfigJsonFile(configFile.getAbsolutePath());        
         registry = new ModuleRegistry(configDb);
         registry.loadAllModules();
     }
@@ -125,12 +123,6 @@ public class TestModuleRegistry
     @After
     public void cleanup()
     {
-        try
-        {
-            FileUtils.deleteDirectory(configFolder);
-        }
-        catch (IOException e)
-        {
-        }
+        configFile.delete();
     }
 }

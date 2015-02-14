@@ -64,4 +64,18 @@ public class ModuleConfig implements Serializable, Cloneable
         buf.append(')');
         return buf.toString();
     }
+
+
+    @Override
+    public ModuleConfig clone()
+    {
+        try
+        {
+            return (ModuleConfig)super.clone();
+        }
+        catch (CloneNotSupportedException e)
+        {
+            throw new RuntimeException(e);
+        }
+    }
 }
