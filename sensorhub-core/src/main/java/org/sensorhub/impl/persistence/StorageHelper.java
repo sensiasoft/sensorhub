@@ -17,6 +17,7 @@ package org.sensorhub.impl.persistence;
 import java.util.Map.Entry;
 import net.opengis.sensorml.v20.AbstractProcess;
 import org.sensorhub.api.common.SensorHubException;
+import org.sensorhub.api.module.IModule;
 import org.sensorhub.api.persistence.IBasicStorage;
 import org.sensorhub.api.sensor.ISensorDataInterface;
 import org.sensorhub.api.sensor.ISensorModule;
@@ -28,7 +29,7 @@ public class StorageHelper
 {
     
     
-    public static void configureStorageForSensor(ISensorModule<?> sensor, IBasicStorage<?> storage, boolean createListener) throws SensorHubException
+    public static SensorStorageHelper configureStorageForSensor(ISensorModule<?> sensor, IBasicStorage<?> storage, boolean createListener) throws SensorHubException
     {
         if (storage.getDataStores().size() > 0)
             throw new RuntimeException("Storage " + MsgUtils.moduleString(storage) + " is already in use");
@@ -60,7 +61,10 @@ public class StorageHelper
             helperConfig.enabled = true;
             helperConfig.sensorID = sensor.getLocalID();
             helperConfig.storageID = storage.getLocalID();
-            SensorHub.getInstance().getModuleRegistry().loadModule(helperConfig);
+            IModule<?> m = SensorHub.getInstance().getModuleRegistry().loadModule(helperConfig);
+            return (SensorStorageHelper)m;
         }
+        
+        return null;
     }
 }
