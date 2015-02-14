@@ -293,7 +293,7 @@ class TimeSeriesImpl extends Persistent implements ITimeSeriesDataStore<IDataFil
         IterableIterator<Entry<Object, DataBlock>> it;
         it = recordIndex.entryIterator(BasicStorageImpl.KEY_DATA_START_ALL_TIME, BasicStorageImpl.KEY_DATA_END_ALL_TIME, Index.ASCENT_ORDER);
         if (!it.hasNext())
-            return new double[] { 0.0, 0.0 };
+            return new double[] { Double.NaN, Double.NaN };
         Entry<Object, DataBlock> first = it.next();
 
         it = recordIndex.entryIterator(BasicStorageImpl.KEY_DATA_START_ALL_TIME, BasicStorageImpl.KEY_DATA_END_ALL_TIME, Index.DESCENT_ORDER);

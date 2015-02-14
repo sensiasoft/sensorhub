@@ -28,8 +28,8 @@ public interface ITimeSeriesDataStore<FilterType extends IDataFilter> extends IR
 {
 
     /**
-     * Get time range of all data contained in this storage
-     * @return array of length 2 in the form [minTime maxTime]
+     * Get time range of all data contained in this storage.
+     * @return array of length 2 in the form [minTime maxTime] or [NaN NaN] is data store is empty
      */
     public double[] getDataTimeRange();
     
