@@ -57,6 +57,14 @@ public class SensorDataProviderConfig extends SOSProviderConfig
      * interface of the service
      */
     public boolean activateNotifications;
+    
+    
+    /**
+     * Time-out after which real-time requests are disabled if no more
+     * measurements are received. Real-time is reactivated as soon as
+     * new records start being received again.
+     */
+    public double liveDataTimeout = 10.0;
 
 
     @Override

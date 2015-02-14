@@ -851,9 +851,12 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
         if (format == null)
             return;
         
-        SWESOfferingCapabilities offering = checkAndGetOffering(offeringID);
-        if (!offering.getProcedureFormats().contains(format))
-            report.add(new SOSException(SOSException.invalid_param_code, "procedureDescriptionFormat", format, "Procedure description format " + format + " is not available for offering " + offeringID));
+        SWESOfferingCapabilities offering = offeringCaps.get(offeringID);
+        if (offering != null)
+        {
+            if (!offering.getProcedureFormats().contains(format))
+                report.add(new SOSException(SOSException.invalid_param_code, "procedureDescriptionFormat", format, "Procedure description format " + format + " is not available for offering " + offeringID));
+        }
     }
     
     

@@ -122,17 +122,22 @@ public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfi
     {
         StringBuilder buf = new StringBuilder();
         
+        boolean root = true;
         DataIterator it = new DataIterator(comp);
         while (it.hasNext())
         {
             comp = it.next();
             
-            buf.append(comp.getName());
-            buf.append('|');
-            
+            // skip root name because it's not always set
+            if (!root)
+            {
+                buf.append(comp.getName());
+                buf.append('|');
+            }
+            root = false;
+                        
             buf.append(comp.getClass().getSimpleName());
-            buf.append('|');
-            
+                        
             String defUri = comp.getDefinition();
             if (defUri != null)
             {
@@ -150,6 +155,7 @@ public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfi
             {
                 for (BinaryMember opts: ((BinaryEncoding) enc).getMemberList())
                 {
+                    buf.append('|');
                     buf.append(opts.getRef());
                     buf.append('|');
                     if (opts instanceof BinaryComponent)

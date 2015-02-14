@@ -19,6 +19,7 @@ import net.opengis.swe.v20.DataEncoding;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.module.IModule;
 import org.sensorhub.api.persistence.IBasicStorage;
+import org.sensorhub.api.persistence.ITimeSeriesDataStore;
 import org.sensorhub.impl.SensorHub;
 import org.sensorhub.impl.module.ModuleRegistry;
 import org.sensorhub.impl.persistence.SensorStorageHelper;
@@ -46,6 +47,10 @@ public class SensorWithStorageConsumer extends SensorDataConsumer implements ISO
         
         // reassign current sensor description
         this.sensor.setSensorDescription(storage.getLatestDataSourceDescription());
+        
+        // reassign existing templates
+        for (ITimeSeriesDataStore<?> dataStore: storage.getDataStores().values())
+            sensor.newResultTemplate(dataStore.getRecordDescription(), dataStore.getRecommendedEncoding());
     }
 
 
