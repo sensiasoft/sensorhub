@@ -112,6 +112,7 @@ public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> impleme
     public void stop() throws SensorHubException
     {
         db.close();
+        db = null;
     }
 
 

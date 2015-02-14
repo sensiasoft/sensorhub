@@ -44,9 +44,10 @@ public class TestPerstBasicStorage extends AbstractTestBasicStorage<BasicStorage
     
 
     @Override
-    protected void forceReadBackFromStorage()
+    protected void forceReadBackFromStorage() throws Exception
     {
-        
+        storage.stop();
+        storage.start();
     }
     
     
