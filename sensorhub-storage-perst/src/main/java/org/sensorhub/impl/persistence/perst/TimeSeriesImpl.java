@@ -14,8 +14,10 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.impl.persistence.perst;
 
+import java.nio.ByteOrder;
 import java.util.Iterator;
 import java.util.Map.Entry;
+import net.opengis.swe.v20.BinaryEncoding;
 import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataEncoding;
@@ -123,6 +125,22 @@ class TimeSeriesImpl extends Persistent implements ITimeSeriesDataStore<IDataFil
     @Override
     public DataEncoding getRecommendedEncoding()
     {
+        // HACK to fix broken ByteOrder enum
+        // java.nio.ByteOrder is a class with static singletons instead of an enum
+        // This causes instances deserialized from storage to be unequal with the constant
+        // that we compare with everywhere
+        if (recommendedEncoding instanceof BinaryEncoding)
+        {
+            ByteOrder byteOrder = ((BinaryEncoding) recommendedEncoding).getByteOrder();
+            if (byteOrder != null && byteOrder != ByteOrder.BIG_ENDIAN && byteOrder != ByteOrder.LITTLE_ENDIAN)
+            {
+                if (byteOrder.toString().equals(ByteOrder.LITTLE_ENDIAN.toString()))
+                    byteOrder = ByteOrder.LITTLE_ENDIAN;
+                else
+                    byteOrder = ByteOrder.BIG_ENDIAN;
+            }
+        }
+        
         return recommendedEncoding;
     }
 
