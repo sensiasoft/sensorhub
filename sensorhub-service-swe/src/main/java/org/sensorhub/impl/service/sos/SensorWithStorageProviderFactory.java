@@ -15,7 +15,9 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 package org.sensorhub.impl.service.sos;
 
 import org.sensorhub.api.common.SensorHubException;
+import org.sensorhub.api.sensor.ISensorDataInterface;
 import org.sensorhub.api.sensor.ISensorModule;
+import org.sensorhub.api.sensor.SensorException;
 import org.sensorhub.api.service.ServiceException;
 import org.sensorhub.impl.SensorHub;
 import org.sensorhub.utils.MsgUtils;
@@ -45,6 +47,7 @@ import org.vast.util.TimeExtent;
 public class SensorWithStorageProviderFactory extends StorageDataProviderFactory
 {
     final ISensorModule<?> sensor;
+    double liveDataTimeOut;
     
     
     public SensorWithStorageProviderFactory(SensorDataProviderConfig config) throws SensorHubException
@@ -53,6 +56,7 @@ public class SensorWithStorageProviderFactory extends StorageDataProviderFactory
         
         // get handle to sensor instance using sensor manager
         this.sensor = SensorHub.getInstance().getSensorManager().getModuleById(config.sensorID);
+        this.liveDataTimeOut = config.liveDataTimeout;
     }
 
 
@@ -109,7 +113,30 @@ public class SensorWithStorageProviderFactory extends StorageDataProviderFactory
         // enable real-time requests if sensor is enabled
         if (sensor.isEnabled())
         {
-            caps.getPhenomenonTime().setEndNow(true);        
+            try
+            {
+                // check latest record time
+                double lastRecordTime = Double.NEGATIVE_INFINITY;
+                for (ISensorDataInterface output: sensor.getAllOutputs().values())
+                {
+                    // skip hidden outputs
+                    if (config.hiddenOutputs != null && config.hiddenOutputs.contains(output.getName()))
+                        continue;
+                    
+                    double recTime = output.getLatestRecordTime();
+                    if (!Double.isNaN(recTime) && recTime > lastRecordTime)
+                        lastRecordTime = recTime;
+                }
+                
+                // if latest record is not too old, enable real-time
+                double now =  System.currentTimeMillis() / 1000.; 
+                if (now - lastRecordTime < liveDataTimeOut)
+                    caps.getPhenomenonTime().setEndNow(true);
+            }
+            catch (SensorException e)
+            {
+                throw new ServiceException("Error while updating capabilities", e);
+            }        
         }
     }
 }
