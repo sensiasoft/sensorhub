@@ -214,9 +214,13 @@ public class StorageDataProvider implements ISOSDataProvider
             if (!Double.isNaN(lastRecordTime))
             {
                 long realEllapsedTime = System.currentTimeMillis() - lastSystemTime;
-                long waitTime = (long)((nextStorageTime - lastRecordTime) * 1000. / replaySpeedFactor);
-                try { Thread.sleep(waitTime - realEllapsedTime); }
-                catch (InterruptedException e) { }
+                long waitTime = (long)((nextStorageTime - lastRecordTime) * 1000. / replaySpeedFactor) - realEllapsedTime;
+                
+                if (waitTime > 0)
+                {
+                    try { Thread.sleep(waitTime ); }
+                    catch (InterruptedException e) { }
+                }
             }
             
             lastRecordTime = nextStorageTime;
