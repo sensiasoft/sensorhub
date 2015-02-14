@@ -87,10 +87,14 @@ public class SensorWithStorageProviderFactory extends StorageDataProviderFactory
     {
         SOSOfferingCapabilities capabilities = super.generateCapabilities();
         
+        // enable real-time requests if sensor is enabled
         if (sensor.isEnabled())
         {
-            // enable real-time requests
-            capabilities.getPhenomenonTime().setEndNow(true);        
+            TimeExtent storageTimeExtent = caps.getPhenomenonTime();
+            if (storageTimeExtent.isNull())
+                caps.getPhenomenonTime().setBaseAtNow(true);
+            else            
+                caps.getPhenomenonTime().setEndNow(true);        
         }
         
         return capabilities;
@@ -102,9 +106,9 @@ public class SensorWithStorageProviderFactory extends StorageDataProviderFactory
     {
         super.updateCapabilities();
         
+        // enable real-time requests if sensor is enabled
         if (sensor.isEnabled())
         {
-            // enable real-time requests
             caps.getPhenomenonTime().setEndNow(true);        
         }
     }

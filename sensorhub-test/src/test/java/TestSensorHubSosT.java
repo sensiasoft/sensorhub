@@ -7,7 +7,7 @@ public class TestSensorHubSosT
 
     public static void main(String[] args) throws Exception
     {
-        SensorHub.main(new String[] {"src/test/resources/config_empty_sost.json", "storage"});
+        SensorHub.main(new String[] {"src/test/resources/config_empty_sost_with_storage.json", "storage"});
     }
 
 }

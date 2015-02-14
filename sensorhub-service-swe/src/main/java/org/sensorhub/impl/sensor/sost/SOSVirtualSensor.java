@@ -36,7 +36,6 @@ import org.slf4j.LoggerFactory;
 import org.vast.data.BinaryComponentImpl;
 import org.vast.data.DataIterator;
 import org.vast.ogc.om.IObservation;
-import org.vast.ows.sos.ISOSDataConsumer;
 
 
 /**
@@ -47,7 +46,7 @@ import org.vast.ows.sos.ISOSDataConsumer;
  * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @since Mar 2, 2014
  */
-public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfig> implements ISOSDataConsumer
+public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfig>
 {
     protected static final Logger log = LoggerFactory.getLogger(SOSVirtualSensor.class);
     
@@ -57,7 +56,7 @@ public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfi
     // utility class to compute data component hashcode
     class DataStructureHash
     {
-        int hashcode;
+        private int hashcode;
         
         public DataStructureHash(DataComponent comp, DataEncoding enc)
         {
@@ -68,7 +67,15 @@ public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfi
         public int hashCode()
         {
             return hashcode;
-        }        
+        }
+        
+        @Override
+        public boolean equals(Object obj)
+        {
+            if (hashcode == ((DataStructureHash)obj).hashcode)
+                return true;
+            return false;
+        }
     }
     
     
@@ -77,7 +84,6 @@ public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfi
     }
 
 
-    @Override
     public void newObservation(IObservation... observations) throws Exception
     {
         // TODO Auto-generated method stub
@@ -86,7 +92,6 @@ public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfi
     }
 
 
-    @Override
     public String newResultTemplate(DataComponent component, DataEncoding encoding)
     {
         // TODO check if template is compatible with sensor description outputs?        
@@ -165,7 +170,6 @@ public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfi
     }
 
 
-    @Override
     public void newResultRecord(String templateID, DataBlock... dataBlocks) throws Exception
     {
         SOSVirtualSensorOutput output = (SOSVirtualSensorOutput)getObservationOutputs().get(templateID);
@@ -230,6 +234,17 @@ public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfi
         lastUpdatedSensorDescription = unixTime / 1000.;
         eventHandler.publishEvent(new SensorEvent(unixTime, getLocalID(), SensorEvent.Type.SENSOR_CHANGED));
     }
+    
+    
+    /*
+     * Set sensor description when reviving from storage (w/o sending event)
+     */
+    public void setSensorDescription(AbstractProcess systemDesc)
+    {
+        sensorDescription = systemDesc;
+        long unixTime = System.currentTimeMillis();
+        lastUpdatedSensorDescription = unixTime / 1000.;
+    }
 
 
     @Override
@@ -237,12 +252,4 @@ public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfi
     {
         return true;
     }
-
-
-    @Override
-    public void updateSensor(AbstractProcess newSensorDescription) throws Exception
-    {
-        updateSensorDescription(newSensorDescription, false);        
-    }
-
 }

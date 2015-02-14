@@ -35,10 +35,14 @@ import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.module.IModuleStateLoader;
 import org.sensorhub.api.module.IModuleStateSaver;
 import org.sensorhub.api.module.ModuleEvent;
-import org.sensorhub.api.sensor.ISensorDataInterface;
+import org.sensorhub.api.persistence.IBasicStorage;
+import org.sensorhub.api.persistence.StorageConfig;
 import org.sensorhub.api.service.IServiceModule;
 import org.sensorhub.api.service.ServiceException;
 import org.sensorhub.impl.SensorHub;
+import org.sensorhub.impl.module.ModuleRegistry;
+import org.sensorhub.impl.persistence.SensorStorageHelper;
+import org.sensorhub.impl.persistence.StorageHelper;
 import org.sensorhub.impl.sensor.sost.SOSVirtualSensorConfig;
 import org.sensorhub.impl.sensor.sost.SOSVirtualSensor;
 import org.sensorhub.impl.service.HttpServer;
@@ -57,6 +61,7 @@ import org.vast.ows.OWSRequest;
 import org.vast.ows.server.SOSDataFilter;
 import org.vast.ows.sos.GetResultRequest;
 import org.vast.ows.sos.ISOSDataConsumer;
+import org.vast.ows.sos.ISOSDataConsumer.Template;
 import org.vast.ows.sos.ISOSDataProvider;
 import org.vast.ows.sos.ISOSDataProviderFactory;
 import org.vast.ows.sos.InsertObservationRequest;
@@ -106,7 +111,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     Map<String, String> procedureToOfferingMap;
     Map<String, String> templateToOfferingMap;
     Map<String, ISOSDataConsumer> dataConsumers;
-    
+        
     boolean needCapabilitiesTimeUpdate = false;
 
     
@@ -120,12 +125,12 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     @Override
     public void init(SOSServiceConfig config) throws SensorHubException
     {        
-        this.config = config;        
+        this.config = config;
     }
     
     
     @Override
-    public synchronized void updateConfig(SOSServiceConfig config) throws SensorHubException
+    public void updateConfig(SOSServiceConfig config) throws SensorHubException
     {
         // cleanup all previously instantiated providers        
         
@@ -170,14 +175,14 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
                 try
                 {
                     // instantiate provider factories and map them to offering URIs
-                    IDataProviderFactory factory = providerConf.getFactory();
-                    if (!factory.isEnabled())
+                    IDataProviderFactory provider = providerConf.getFactory();
+                    if (!provider.isEnabled())
                         continue;
                                     
-                    dataProviders.put(providerConf.uri, factory);
+                    dataProviders.put(providerConf.uri, provider);
          
                     // add offering metadata to capabilities
-                    SOSOfferingCapabilities offCaps = factory.generateCapabilities();
+                    SOSOfferingCapabilities offCaps = provider.generateCapabilities();
                     capabilities.getLayers().add(offCaps);
                     offeringCaps.put(offCaps.getIdentifier(), offCaps);
                     
@@ -202,12 +207,12 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
                 try
                 {
                     // for now we support only virtual sensors as consumers
-                    SOSVirtualSensor virtualSensor = (SOSVirtualSensor)SensorHub.getInstance().getSensorManager().getModuleById(consumerConf.sensorID);
-                    dataConsumers.put(consumerConf.offering, virtualSensor);
+                    ISOSDataConsumer consumer = consumerConf.getConsumerInstance();
+                    dataConsumers.put(consumerConf.offering, consumer);
                 }
                 catch (SensorHubException e)
                 {
-                    log.error("Error while initializing virtual sensor " + consumerConf.sensorID, e);
+                    log.error("Error while initializing consumer " + consumerConf.offering, e);
                 }
             }
         }
@@ -295,9 +300,9 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     @Override
     public void cleanup() throws SensorHubException
     {
-        // destroy all virtual sensors
-        for (SOSConsumerConfig consumerConf: config.dataConsumers)
-            SensorHub.getInstance().getModuleRegistry().destroyModule(consumerConf.sensorID);
+        // TODO destroy all virtual sensors
+        //for (SOSConsumerConfig consumerConf: config.dataConsumers)
+        //    SensorHub.getInstance().getModuleRegistry().destroyModule(consumerConf.sensorID);
     }
     
     
@@ -319,7 +324,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     
     
     @Override
-    public synchronized SOSServiceConfig getConfiguration()
+    public SOSServiceConfig getConfiguration()
     {
         return config;
     }
@@ -417,8 +422,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
             if (offering == null)
             {
                 offering = sensorUID + "-sos";
-                
-                // should we automatically add templates generated from sensor outputs ??                
+                ModuleRegistry moduleReg = SensorHub.getInstance().getModuleRegistry();           
                 
                 // create and register new virtual sensor module as data consumer
                 SOSVirtualSensorConfig sensorConfig = new SOSVirtualSensorConfig();
@@ -427,38 +431,54 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
                 sensorConfig.name = request.getProcedureDescription().getName();
                 if (sensorConfig.name == null)
                     sensorConfig.name = request.getProcedureDescription().getId();
-                SOSVirtualSensor virtualSensor = (SOSVirtualSensor)SensorHub.getInstance().getModuleRegistry().loadModule(sensorConfig);            
+                SOSVirtualSensor virtualSensor = (SOSVirtualSensor)moduleReg.loadModule(sensorConfig);            
                 virtualSensor.updateSensorDescription(request.getProcedureDescription(), true);
                 SensorHub.getInstance().getModuleRegistry().enableModule(virtualSensor.getLocalID());
-                dataConsumers.put(offering, virtualSensor);
+                                
+                // generate new provider and consumer config
+                SensorDataProviderConfig providerConfig = new SensorDataProviderConfig();
+                providerConfig.enabled = true;
+                providerConfig.sensorID = virtualSensor.getLocalID();
+                providerConfig.uri = offering;
+                config.dataProviders.add(providerConfig);
                 
-                // add to SOS config
-                SOSConsumerConfig consumerConfig = new SOSConsumerConfig();
+                SensorConsumerConfig consumerConfig = new SensorConsumerConfig();
+                consumerConfig.enabled = true;
                 consumerConfig.offering = offering;
                 consumerConfig.sensorID = virtualSensor.getLocalID();
                 config.dataConsumers.add(consumerConfig);
                 
-                // create new sensor provider
-                SensorDataProviderConfig providerConfig = new SensorDataProviderConfig();
-                providerConfig.sensorID = virtualSensor.getLocalID();
-                providerConfig.enabled = true;
-                providerConfig.uri = offering;
-                SensorDataProviderFactory provider = new SensorDataProviderFactory(providerConfig);
+                if (config.newStorageConfig != null)
+                {
+                    // create new data storage
+                    StorageConfig newStorageConfig = (StorageConfig)config.newStorageConfig.clone();
+                    newStorageConfig.id = null;
+                    newStorageConfig.name = virtualSensor.getName() + " Storage";
+                    newStorageConfig.storagePath = sensorUID + ".dat";
+                    IBasicStorage<?> storage = (IBasicStorage<?>)moduleReg.loadModule(newStorageConfig);
+                    SensorStorageHelper dataListener = StorageHelper.configureStorageForSensor(virtualSensor, storage, true);
+                                        
+                    // associate storage to config                    
+                    providerConfig.storageID = storage.getLocalID();
+                    consumerConfig.storageID = storage.getLocalID();
+                    
+                    // save config so that registered sensor stays active after restart
+                    moduleReg.saveConfiguration(this.config, sensorConfig, newStorageConfig, dataListener.getConfiguration());
+                }
+                
+                // instantiate provider and consumer instances
+                IDataProviderFactory provider = providerConfig.getFactory();
+                ISOSDataConsumer consumer = consumerConfig.getConsumerInstance();
+                
+                // register provider and consumer
                 dataProviders.put(offering, provider);
-                config.dataProviders.add(providerConfig);
+                dataConsumers.put(offering, consumer);
                 
                 // create new offering
                 SOSOfferingCapabilities offCaps = provider.generateCapabilities();
                 capabilitiesCache.getLayers().add(offCaps);
                 offeringCaps.put(offCaps.getIdentifier(), offCaps);
                 procedureToOfferingMap.put(sensorUID, offering);
-                
-                // setup data storage
-                //StorageConfig storageConfig = new StorageConfig();
-                //SensorHub.getInstance().getModuleRegistry().loadModule(storageConfig);
-                
-                // save config so that registered sensor stays active after restart
-                //SensorHub.getInstance().getModuleRegistry().saveConfiguration(this);
             }
             
             // build and send response
@@ -660,25 +680,30 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
             // the same template ID is always returned for a given observable
             ISOSDataConsumer consumer = getDataConsumerByOfferingID(offering);
             String templateID = consumer.newResultTemplate(request.getResultStructure(), request.getResultEncoding());
-            templateToOfferingMap.put(templateID, offering);
+            
+            // only continue of template was not already registered
+            if (!templateToOfferingMap.containsKey(templateID))
+            {
+                templateToOfferingMap.put(templateID, offering);
+                
+                // re-generate capabilities
+                IDataProviderFactory provider = getDataProviderFactoryByOfferingID(offering);
+                SOSOfferingCapabilities newCaps = provider.generateCapabilities();
+                int oldIndex = 0;
+                for (OWSLayerCapabilities offCaps: capabilitiesCache.getLayers())
+                {
+                    if (offCaps.getIdentifier().equals(offering))
+                        break; 
+                    oldIndex++;
+                }
+                capabilitiesCache.getLayers().set(oldIndex, newCaps);
+                offeringCaps.put(newCaps.getIdentifier(), newCaps);
+            }
             
             // build and send response
             InsertResultTemplateResponse resp = new InsertResultTemplateResponse();
             resp.setAcceptedTemplateId(templateID);
             sendResponse(request, resp);
-            
-            // re-generate capabilities
-            IDataProviderFactory provider = getDataProviderFactoryByOfferingID(offering);
-            SOSOfferingCapabilities newCaps = provider.generateCapabilities();
-            int oldIndex = 0;
-            for (OWSLayerCapabilities offCaps: capabilitiesCache.getLayers())
-            {
-                if (offCaps.getIdentifier().equals(offering))
-                    break; 
-                oldIndex++;
-            }
-            capabilitiesCache.getLayers().set(oldIndex, newCaps);
-            offeringCaps.put(newCaps.getIdentifier(), newCaps);
         }
         finally
         {
@@ -696,10 +721,10 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
         String templateID = request.getTemplateId();
         
         // retrieve consumer based on template id
-        SOSVirtualSensor sensor = (SOSVirtualSensor)getDataConsumerByTemplateID(templateID);
-        ISensorDataInterface output = sensor.getObservationOutputs().get(templateID);
-        DataComponent dataStructure = output.getRecordDescription();
-        DataEncoding encoding = output.getRecommendedEncoding();
+        ISOSDataConsumer consumer = (ISOSDataConsumer)getDataConsumerByTemplateID(templateID);
+        Template template = consumer.getTemplate(templateID);
+        DataComponent dataStructure = template.component;
+        DataEncoding encoding = template.encoding;
         
         try
         {
@@ -725,7 +750,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
             // parse each record and send it to consumer
             DataBlock nextBlock = null;
             while ((nextBlock = parser.parseNextBlock()) != null)
-                sensor.newResultRecord(templateID, nextBlock);
+                consumer.newResultRecord(templateID, nextBlock);
             
             // build and send response
             InsertResultResponse resp = new InsertResultResponse();

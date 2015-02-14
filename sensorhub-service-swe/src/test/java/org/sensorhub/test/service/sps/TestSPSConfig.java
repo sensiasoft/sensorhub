@@ -18,8 +18,9 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.util.UUID;
+import org.apache.commons.io.IOUtils;
 import org.junit.Test;
-import org.sensorhub.impl.module.ModuleConfigDatabaseJson;
+import org.sensorhub.impl.module.ModuleConfigJsonFile;
 import org.sensorhub.impl.service.sps.SPSServiceConfig;
 import org.sensorhub.impl.service.sps.SPSService;
 
@@ -30,9 +31,8 @@ public class TestSPSConfig
     @Test
     public void testAddToJsonDatabase() throws Exception
     {
-        File configFolder = new File("junittest/");
-        configFolder.mkdirs();        
-        ModuleConfigDatabaseJson db = new ModuleConfigDatabaseJson(configFolder.getAbsolutePath());
+        File configFile = new File("junittest.json");
+        ModuleConfigJsonFile db = new ModuleConfigJsonFile(configFile.getAbsolutePath());
         
         SPSServiceConfig config = new SPSServiceConfig();
         config.id = UUID.randomUUID().toString();
@@ -47,18 +47,9 @@ public class TestSPSConfig
         db.add(config);
         
         // display stored file
-        for (File f: configFolder.listFiles())
-        {
-            // print out file
-            BufferedReader reader = new BufferedReader(new FileReader(f));
-            String line;
-            while ((line = reader.readLine()) != null)
-                System.out.println(line);
-                        
-            // delete file
-            f.delete();
-        }
+        BufferedReader reader = new BufferedReader(new FileReader(configFile));
+        IOUtils.copy(reader, System.out);
         
-        configFolder.delete();
+        configFile.delete();
     }
 }

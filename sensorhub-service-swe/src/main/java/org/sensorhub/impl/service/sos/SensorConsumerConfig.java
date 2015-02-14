@@ -18,23 +18,39 @@ import org.sensorhub.api.common.SensorHubException;
 import org.vast.ows.sos.ISOSDataConsumer;
 
 
-public abstract class SOSConsumerConfig
+/**
+ * <p>
+ * Configuration class for SOS data consumers using the sensor API.
+ * A storage can also be associated so that it can be properly configured
+ * when receiving InsertResultTemplate requests.
+ * </p>
+ *
+ * @author Alex Robin <alex.robin@sensiasoftware.com>
+ * @since Sep 7, 2013
+ */
+public class SensorConsumerConfig extends SOSConsumerConfig
 {
+    
+    /**
+     * Local ID of sensor to use as data sink
+     */
+    public String sensorID;
+    
+    
+    /**
+     * Local ID of storage containing the sensor data
+     * to use as data source for archive requests
+     */
+    public String storageID;
 
-    /**
-     * Flag set if consumer is enabled, unset if disabled
-     */
-    public boolean enabled;
-    
-    
-    /**
-     * Offering URI
-     */
-    public String offering;
-    
-    
-    /**
-     * @return an instance of data consumer corresponding to this config
-     */
-    protected abstract ISOSDataConsumer getConsumerInstance() throws SensorHubException;
+
+    @Override
+    protected ISOSDataConsumer getConsumerInstance() throws SensorHubException
+    {
+        if (storageID != null)
+            return new SensorWithStorageConsumer(this);
+        else
+            return new SensorDataConsumer(this);
+    }
+
 }

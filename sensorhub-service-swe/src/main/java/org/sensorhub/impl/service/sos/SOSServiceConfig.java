@@ -16,6 +16,7 @@ package org.sensorhub.impl.service.sos;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.sensorhub.api.persistence.StorageConfig;
 import org.sensorhub.impl.service.ogc.OGCServiceConfig;
 
 
@@ -33,9 +34,15 @@ public class SOSServiceConfig extends OGCServiceConfig
 
     
     /**
-     * set to true to enable transactional operation support
+     * Set to true to enable transactional operation support
      */
     public boolean enableTransactional = false;
+    
+    
+    /**
+     * Storage configuration to use for newly registered sensors
+     */
+    public StorageConfig newStorageConfig;
     
     
     /**
