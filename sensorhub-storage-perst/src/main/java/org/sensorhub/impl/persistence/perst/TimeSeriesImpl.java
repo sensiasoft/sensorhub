@@ -254,10 +254,14 @@ class TimeSeriesImpl extends Persistent implements ITimeSeriesDataStore<IDataFil
     @Override
     public DataKey store(DataKey key, DataBlock data)
     {
-        recordIndex.put(generatePerstKey(key), data);
-        if (parentStorage.autoCommit)
-            getStorage().commit();
-        eventHandler.publishEvent(new StorageDataEvent(System.currentTimeMillis(), this, data));
+        synchronized (parentStorage) // to avoid concurrent commits
+        {
+            recordIndex.put(generatePerstKey(key), data);            
+            if (parentStorage.autoCommit)
+                getStorage().commit();
+        }
+        
+        eventHandler.publishEvent(new StorageDataEvent(System.currentTimeMillis(), this, data));        
         return key;
     }
 
@@ -265,10 +269,14 @@ class TimeSeriesImpl extends Persistent implements ITimeSeriesDataStore<IDataFil
     @Override
     public void update(DataKey key, DataBlock data)
     {
-        DataBlock oldData = recordIndex.set(generatePerstKey(key), data);
-        getStorage().deallocate(oldData);
-        if (parentStorage.autoCommit)
-            getStorage().commit();
+        synchronized (parentStorage) // to avoid concurrent commits
+        {
+            DataBlock oldData = recordIndex.set(generatePerstKey(key), data);
+            getStorage().deallocate(oldData);
+            if (parentStorage.autoCommit)
+                getStorage().commit();
+        }
+        
         eventHandler.publishEvent(new StorageEvent(System.currentTimeMillis(), parentStorage.getLocalID(), StorageEvent.Type.UPDATE));
     }
 
@@ -276,10 +284,13 @@ class TimeSeriesImpl extends Persistent implements ITimeSeriesDataStore<IDataFil
     @Override
     public void remove(DataKey key)
     {
-        DataBlock oldData = recordIndex.remove(generatePerstKey(key));
-        getStorage().deallocate(oldData);
-        if (parentStorage.autoCommit)
-            getStorage().commit();
+        synchronized (parentStorage) // to avoid concurrent commits
+        {
+            DataBlock oldData = recordIndex.remove(generatePerstKey(key));
+            getStorage().deallocate(oldData);
+            if (parentStorage.autoCommit)
+                getStorage().commit();
+        }
         eventHandler.publishEvent(new StorageEvent(System.currentTimeMillis(), parentStorage.getLocalID(), StorageEvent.Type.DELETE));
     }
 
@@ -287,19 +298,23 @@ class TimeSeriesImpl extends Persistent implements ITimeSeriesDataStore<IDataFil
     @Override
     public int remove(IDataFilter filter)
     {
-        Key[] keyRange = generateKeys(filter);
-        Iterator<DataBlock> it = recordIndex.iterator(keyRange[0], keyRange[1], Index.ASCENT_ORDER);
-
         int count = 0;
-        while (it.hasNext())
+        
+        synchronized (parentStorage) // to avoid concurrent commits
         {
-            DataBlock oldData = it.next();
-            getStorage().deallocate(oldData);
-            it.remove();
+            Key[] keyRange = generateKeys(filter);
+            Iterator<DataBlock> it = recordIndex.iterator(keyRange[0], keyRange[1], Index.ASCENT_ORDER);
+                
+            while (it.hasNext())
+            {
+                DataBlock oldData = it.next();
+                getStorage().deallocate(oldData);
+                it.remove();
+            }
+    
+            if (parentStorage.autoCommit)
+                getStorage().commit();
         }
-
-        if (parentStorage.autoCommit)
-            getStorage().commit();
 
         return count;
     }
