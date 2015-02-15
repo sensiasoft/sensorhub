@@ -89,17 +89,24 @@ public class BasicEventHandler implements IEventHandler
         }
         else
         {        
-            inPublish = true;
-            for (Iterator<WeakReference<IEventListener>> it = listeners.iterator(); it.hasNext(); )
+            try
             {
-                IEventListener listener = it.next().get();
-                if (listener != null)
-                    listener.handleEvent(e);
-                else
-                    it.remove(); // purge cleared references
+                inPublish = true;
+                for (Iterator<WeakReference<IEventListener>> it = listeners.iterator(); it.hasNext(); )
+                {
+                    IEventListener listener = it.next().get();
+                    if (listener != null)
+                        listener.handleEvent(e);
+                    else
+                        it.remove(); // purge cleared references
+                }
             }
-            inPublish = false;
-            commitChanges();
+            finally
+            {
+                // make sure we end our publish session even in case of uncaught error
+                inPublish = false;
+                commitChanges();
+            }
         }
     }
     
