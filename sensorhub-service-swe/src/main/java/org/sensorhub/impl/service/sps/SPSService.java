@@ -23,6 +23,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataComponent;
 import org.sensorhub.api.common.Event;
@@ -297,7 +298,7 @@ public class SPSService extends OWSServlet implements IServiceModule<SPSServiceC
     /////////////////////////////////////////////
     
     @Override
-    protected OWSRequest parseRequest(HttpServletRequest req, boolean post) throws Exception
+    protected OWSRequest parseRequest(HttpServletRequest req, HttpServletResponse resp, boolean post) throws Exception
     {
         if (post)
         {
@@ -328,11 +329,11 @@ public class SPSService extends OWSServlet implements IServiceModule<SPSServiceC
             
             // case of normal request
             else
-                return super.parseRequest(req, post);
+                return super.parseRequest(req, resp, post);
         }
         else
         {
-            return super.parseRequest(req, post);
+            return super.parseRequest(req, resp, post);
         }
     }
     

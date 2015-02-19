@@ -16,12 +16,16 @@ package org.sensorhub.impl.service.sos;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import net.opengis.sensorml.v20.AbstractProcess;
 import net.opengis.swe.v20.BinaryBlock;
 import net.opengis.swe.v20.BinaryEncoding;
@@ -29,6 +33,8 @@ import net.opengis.swe.v20.BinaryMember;
 import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataEncoding;
+import org.eclipse.jetty.websocket.server.WebSocketServerFactory;
+import org.eclipse.jetty.websocket.servlet.WebSocketServletFactory;
 import org.sensorhub.api.common.Event;
 import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.common.SensorHubException;
@@ -361,7 +367,39 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     /////////////////////////////////////////
     /// methods overriden from SOSServlet ///
     /////////////////////////////////////////
+    private WebSocketServletFactory factory = new WebSocketServerFactory();
     
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException
+    {
+        // check if we have an upgrade request for websockets
+        if (factory.isUpgradeRequest(req, resp))
+        {
+            // parse request
+            OWSRequest owsReq = null;
+            try { owsReq = this.parseRequest(req, resp, false); }
+            catch (Exception e) { }
+            
+            // if parsing worked, create websocket instance
+            // and start accepting incoming requests
+            if (owsReq != null)
+            {
+                SOSWebSocket socketCreator = new SOSWebSocket(this, owsReq);                
+                if (factory.acceptWebSocket(socketCreator, req, resp))
+                {
+                    // We have a socket instance created
+                    return;
+                }
+            }
+
+            return;
+        }
+        
+        // otherwise process as classical HTTP request
+        super.service(req, resp);
+    }
+
+
     @Override
     public void handleRequest(OWSRequest request) throws Exception
     {
@@ -522,7 +560,8 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
             if (useMP4)
             {            
                 // set MIME type for MP4 format
-                request.getHttpResponse().setContentType("video/mp4");
+                if (request.getHttpResponse() != null)
+                    request.getHttpResponse().setContentType("video/mp4");
                 
                 //os = new FileOutputStream("/home/alex/testsos.mp4");
                 
@@ -552,11 +591,16 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
             
             else if (useMJPEG)
             {
-                // set multi-part MIME so that browser can properly decode it in an img tag
-                //request.getHttpResponse().setContentType("image/jpeg"); //video/x-motion-jpeg, video/x-jpeg
-                request.getHttpResponse().setContentType("multipart/x-mixed-replace; boundary=--myboundary");
-                request.getHttpResponse().addHeader("Cache-Control", "no-cache");
-                request.getHttpResponse().addHeader("Pragma", "no-cache");
+                if (request.getHttpResponse() != null)
+                {
+                    request.getHttpResponse().addHeader("Cache-Control", "no-cache");
+                    request.getHttpResponse().addHeader("Pragma", "no-cache");
+                    
+                    // set multi-part MIME so that browser can properly decode it in an img tag
+                    //request.getHttpResponse().setContentType("image/jpeg"); //video/x-motion-jpeg, video/x-jpeg
+                    request.getHttpResponse().setContentType("multipart/x-mixed-replace; boundary=--myboundary");
+                }
+                
                 byte[] mimeBoundary = new String("--myboundary\r\nContent-Type: image/jpeg\r\nContent-Length: ").getBytes();
                 byte[] endMime = new byte[] {0xD, 0xA, 0xD, 0xA};
                 
