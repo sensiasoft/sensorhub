@@ -346,6 +346,7 @@ public class TestSOSTService
         try
         {
             configFile.delete();
+            SensorHub.getInstance().stop();
             HttpServer.getInstance().cleanup();
         }
         catch (Exception e)
