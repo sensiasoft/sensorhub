@@ -27,9 +27,7 @@ import org.sensorhub.api.module.ModuleConfig;
  */
 public class StorageConfig extends ModuleConfig
 {
-    private static final long serialVersionUID = -7764098131948260556L;
-	
-	
+    
 	/**
 	 * Path to storage on storage device (file, folder, URL, etc...)
 	 */

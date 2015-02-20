@@ -27,9 +27,7 @@ import org.sensorhub.api.module.ModuleConfig;
  */
 public class SOSTClientConfig extends ModuleConfig
 {
-    private static final long serialVersionUID = 1L;
-
-    
+        
     /**
      * SOS endpoint URL where the requests are sent
      */

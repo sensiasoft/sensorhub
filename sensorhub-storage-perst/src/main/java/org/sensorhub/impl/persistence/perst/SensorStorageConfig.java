@@ -27,7 +27,5 @@ import org.sensorhub.api.persistence.StorageConfig;
  */
 public class SensorStorageConfig extends StorageConfig
 {
-    private static final long serialVersionUID = 4870211873021136312L;
-    
 
 }

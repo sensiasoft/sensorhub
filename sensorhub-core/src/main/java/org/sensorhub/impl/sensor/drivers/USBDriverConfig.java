@@ -27,9 +27,7 @@ import org.sensorhub.api.sensor.SensorDriverConfig;
  */
 public class USBDriverConfig extends SensorDriverConfig
 {
-	private static final long serialVersionUID = -5168999795369453594L;
 	
-
     public int deviceID;
 	
 	public int deviceClass;

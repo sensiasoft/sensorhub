@@ -27,9 +27,7 @@ import org.sensorhub.api.sensor.SensorConfig;
  */
 public class SOSVirtualSensorConfig extends SensorConfig
 {
-    private static final long serialVersionUID = -4090502671550227514L;
-    
-    
+        
     public String sensorUID;
     
     

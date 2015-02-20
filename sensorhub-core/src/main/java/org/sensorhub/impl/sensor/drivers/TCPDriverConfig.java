@@ -28,9 +28,7 @@ import org.sensorhub.api.sensor.SensorDriverConfig;
  */
 public class TCPDriverConfig extends SensorDriverConfig
 {
-	private static final long serialVersionUID = 9140070588893081102L;
 	
-
     public InetAddress networkAddress;
 	
 	public int port;

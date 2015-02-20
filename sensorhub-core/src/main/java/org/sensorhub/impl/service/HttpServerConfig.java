@@ -27,9 +27,7 @@ import org.sensorhub.api.module.ModuleConfig;
  */
 public class HttpServerConfig extends ModuleConfig
 {
-    private static final long serialVersionUID = -3737530047358507543L;
-
-    
+     
     /**
      * TCP port where HTTP server will listen
      */

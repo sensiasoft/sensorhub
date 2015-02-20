@@ -19,9 +19,7 @@ import org.sensorhub.api.module.ModuleConfig;
 
 public class SensorStorageHelperConfig extends ModuleConfig
 {
-    private static final long serialVersionUID = -7523211661433806575L;
-
-    
+     
     /**
      * Local ID of storage to store the data into
      */

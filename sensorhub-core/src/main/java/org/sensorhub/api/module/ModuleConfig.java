@@ -14,7 +14,7 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.api.module;
 
-import java.io.Serializable;
+import com.rits.cloning.Cloner;
 
 
 /**
@@ -25,10 +25,8 @@ import java.io.Serializable;
  * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @since Nov 16, 2010
  */
-public class ModuleConfig implements Serializable, Cloneable
-{
-    private static final long serialVersionUID = 2267529983474592096L;
-    
+public class ModuleConfig implements Cloneable
+{   
     
     /**
      * Unique ID of the module. It must be unique within the SensorHub instance
@@ -69,13 +67,6 @@ public class ModuleConfig implements Serializable, Cloneable
     @Override
     public ModuleConfig clone()
     {
-        try
-        {
-            return (ModuleConfig)super.clone();
-        }
-        catch (CloneNotSupportedException e)
-        {
-            throw new RuntimeException(e);
-        }
+        return new Cloner().deepClone(this);
     }
 }

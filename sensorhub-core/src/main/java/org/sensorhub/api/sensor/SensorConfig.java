@@ -28,9 +28,7 @@ import org.sensorhub.api.module.ModuleConfig;
  */
 public class SensorConfig extends ModuleConfig
 {
-    private static final long serialVersionUID = 2834895717702955136L;
-
-
+    
     /**
      * URL of SensorML description of the sensor
      */

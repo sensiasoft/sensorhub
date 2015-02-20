@@ -29,7 +29,8 @@ public interface ICommManager extends IModuleManager<ICommInterface>
 {
     /**
      * Installs a communication driver package (jar file) from the specified URL
-     * @param driverPackageuURL URL of jar containing implementation of new driver
+     * @param driverPackageURL URL of jar containing implementation of new driver
+     * @param replace 
      * @return automatically assigned driver ID
      */
     public String installDriver(String driverPackageURL, boolean replace);

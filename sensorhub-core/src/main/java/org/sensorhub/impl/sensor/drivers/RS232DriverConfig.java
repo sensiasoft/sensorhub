@@ -27,9 +27,7 @@ import org.sensorhub.api.sensor.SensorDriverConfig;
  */
 public class RS232DriverConfig extends SensorDriverConfig
 {
-	private static final long serialVersionUID = 7284981188037101005L;
 	
-
     /**
 	 * Try to detect newly connected device by polling
 	 */

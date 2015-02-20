@@ -30,8 +30,6 @@ import org.sensorhub.impl.service.ogc.OGCServiceConfig;
  */
 public class SOSServiceConfig extends OGCServiceConfig
 {
-    private static final long serialVersionUID = -957079629610700869L;
-
     
     /**
      * Set to true to enable transactional operation support

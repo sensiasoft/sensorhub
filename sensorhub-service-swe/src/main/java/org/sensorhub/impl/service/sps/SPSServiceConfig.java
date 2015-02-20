@@ -29,9 +29,7 @@ import org.sensorhub.impl.service.ogc.OGCServiceConfig;
  */
 public class SPSServiceConfig extends OGCServiceConfig
 {
-    private static final long serialVersionUID = 7925901527120268160L;
-    
-    
+        
     /**
      * Consumers configurations 
      */
