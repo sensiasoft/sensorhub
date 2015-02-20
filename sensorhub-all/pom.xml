@@ -26,14 +26,14 @@
       </developer>
    </developers>
    <scm>
-      <url>http://code.google.com/p/sensorhub/source/browse/</url>
-      <connection>scm:svn:http://sensorhub.googlecode.com/svn/</connection>
-      <developerConnection>scm:svn:https://sensorhub.googlecode.com/svn/</developerConnection>
+      <url>https://github.com/sensiasoft/sensorhub/tree/master/sensorhub</url>
+      <connection>scm:git:https://github.com/sensiasoft/sensorhub.git</connection>
+      <developerConnection>scm:git:https://github.com/sensiasoft/sensorhub.git</developerConnection>
       <tag>HEAD</tag>
    </scm>
    <issueManagement>
-      <url>http://code.google.com/p/sensorhub/issues/list</url>
-      <system>Google Code</system>
+      <url>https://github.com/sensiasoft/sensorhub/issues</url>
+      <system>GitHub</system>
    </issueManagement>
    <modules>
       <module>../sensorhub-core</module>
