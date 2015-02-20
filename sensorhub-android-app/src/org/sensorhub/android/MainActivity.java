@@ -18,13 +18,17 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Timer;
 import java.util.TimerTask;
-import org.sensorhub.android.SOSTClient.StreamInfo;
+import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.module.IModuleConfigRepository;
 import org.sensorhub.api.sensor.ISensorDataInterface;
+import org.sensorhub.impl.client.sost.SOSTClient;
+import org.sensorhub.impl.client.sost.SOSTClient.StreamInfo;
+import org.sensorhub.impl.client.sost.SOSTClientConfig;
 import org.sensorhub.impl.module.InMemoryConfigDb;
 import org.sensorhub.impl.sensor.android.AndroidCameraOutput;
 import org.sensorhub.impl.sensor.android.AndroidSensorsConfig;
 import org.sensorhub.impl.sensor.android.AndroidSensorsDriver;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
@@ -70,6 +74,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
     };
 
     
+    @SuppressLint("HandlerLeak")
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
@@ -109,18 +114,42 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         AndroidSensorsConfig sensorsConfig = new AndroidSensorsConfig();
         sensorsConfig.id = "ANDROID_SENSORS";
         sensorsConfig.name = "Android Sensors";
-        sensorsConfig.enabled = true;
-        sensorsConfig.moduleClass = AndroidSensorsDriver.class.getCanonicalName();
+        sensorsConfig.enabled = true;        
         sensorsConfig.activateAccelerometer = prefs.getBoolean("accel_enabled", false);
         sensorsConfig.activateGyrometer = prefs.getBoolean("gyro_enabled", false);
         sensorsConfig.activateMagnetometer = prefs.getBoolean("mag_enabled", false);
-        sensorsConfig.activateOrientation = prefs.getBoolean("orient_enabled", false);
+        sensorsConfig.activateOrientationQuat = prefs.getBoolean("orient_quat_enabled", false);
+        sensorsConfig.activateOrientationEuler = prefs.getBoolean("orient_euler_enabled", false);
         sensorsConfig.activateGpsLocation = prefs.getBoolean("gps_enabled", false);
         sensorsConfig.activateNetworkLocation = prefs.getBoolean("netloc_enabled", false);
         sensorsConfig.activateBackCamera = prefs.getBoolean("cam_enabled", false);
-        sensorsConfig.sosEndpoint = prefs.getString("sos_uri", "");
         AndroidSensorsDriver.androidContext = this.getApplicationContext();
         sensorhubConfig.add(sensorsConfig);
+        
+        SOSTClientConfig sosConfig = new SOSTClientConfig();
+        sosConfig.id = "SOST_CLIENT";
+        sosConfig.name = "SOS-T Client";
+        sosConfig.enabled = true;
+        sosConfig.sensorID = sensorsConfig.id;
+        sosConfig.sosEndpointUrl = prefs.getString("sos_uri", "");
+        sosConfig.usePersistentConnection = true;
+        sensorhubConfig.add(sosConfig);
+    }
+    
+    
+    protected SOSTClient getSosClient()
+    {
+        if (boundService.getSensorHub() == null)
+            return null;
+        
+        try
+        {
+            return (SOSTClient)boundService.getSensorHub().getModuleRegistry().getModuleById("SOST_CLIENT");
+        }
+        catch (SensorHubException e)
+        {
+            return null;
+        }
     }
     
     
@@ -132,18 +161,18 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             {
                 displayText.setLength(0);
                 
-                if (boundService == null || boundService.getSosClient() == null)
+                if (boundService == null || boundService.getSensorHub() == null)
                 {
                     displayText.append("Waiting for SensorHub service to start...");
                 }
-                else if (!boundService.getSosClient().isConnected())
+                else if (getSosClient() == null || !getSosClient().isConnected())
                 {
                     displayText.append("<font color='red'><b>Cannot connect to SOS-T</b></font><br/>");
                     displayText.append("Please check your settings...");
                 }
                 else
                 { 
-                    Map<ISensorDataInterface, StreamInfo> dataStreams = boundService.getSosClient().getDataStreams();
+                    Map<ISensorDataInterface, StreamInfo> dataStreams = getSosClient().getDataStreams();
                     if (dataStreams.size() > 0)
                         displayText.append("<p>Registered with SOS-T</p><p>");
                     

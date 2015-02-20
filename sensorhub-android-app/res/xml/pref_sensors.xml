@@ -19,10 +19,16 @@
         android:title="Magnetometer Data" />
     
     <CheckBoxPreference
-        android:defaultValue="true"
-        android:key="orient_enabled"
+        android:defaultValue="false"
+        android:key="orient_quat_enabled"
         android:summary="Enable streaming of orientation data"
-        android:title="Orientation Data" />
+        android:title="Orientation Data (Quaternions)" />
+    
+    <CheckBoxPreference
+        android:defaultValue="true"
+        android:key="orient_euler_enabled"
+        android:summary="Enable streaming of orientation data"
+        android:title="Orientation Data (Euler Angles)" />
     
     <CheckBoxPreference
         android:defaultValue="true"

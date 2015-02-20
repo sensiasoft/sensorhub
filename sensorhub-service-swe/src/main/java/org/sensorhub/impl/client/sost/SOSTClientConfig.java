@@ -52,4 +52,10 @@ public class SOSTClientConfig extends ModuleConfig
      * Maximum number of connection errors before we stop sending data to remote server
      */
     public int maxConnectErrors = 10;
+    
+    
+    public SOSTClientConfig()
+    {
+        this.moduleClass = SOSTClient.class.getCanonicalName();
+    }
 }

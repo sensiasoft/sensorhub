@@ -16,10 +16,8 @@ package org.sensorhub.android;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 import org.sensorhub.api.module.IModuleConfigRepository;
-import org.sensorhub.api.sensor.ISensorDataInterface;
 import org.sensorhub.impl.SensorHub;
 import org.sensorhub.impl.module.ModuleRegistry;
-import org.sensorhub.impl.sensor.android.AndroidSensorsDriver;
 import org.vast.xml.XMLImplFinder;
 import android.app.Service;
 import android.content.Intent;
@@ -42,7 +40,7 @@ public class SensorHubService extends Service
     final IBinder binder = new LocalBinder();
     private Thread bgThread;
     Looper bgLooper;
-    SOSTClient sosClient;
+    SensorHub sensorhub;
     
     
     public class LocalBinder extends Binder {
@@ -90,29 +88,9 @@ public class SensorHubService extends Service
                     
                     // start sensorhub
                     SensorHub.createInstance(null, new ModuleRegistry(config)).start();
-                    Log.i("SensorHub", "SensorHub started...");
+                    Log.i("SensorHub", "SensorHub started...");     
+                    sensorhub = SensorHub.getInstance();
                     
-                    // connect to remote SOS
-                    AndroidSensorsDriver sensor = (AndroidSensorsDriver)SensorHub.getInstance().getModuleRegistry().getLoadedModules().get(0); 
-                    sosClient = new SOSTClient(sensor.getConfiguration().sosEndpoint);
-                    try
-                    {
-                        // register sensor
-                        sosClient.registerSensor(sensor);
-                        Log.i("SensorHub", "Android device registered with SOS");
-                        
-                        // register all templates and start streaming data
-                        for (ISensorDataInterface o: sensor.getAllOutputs().values())
-                            sosClient.registerDataStream(o);
-                        Log.i("SensorHub", "Result templates registered with SOS");
-                    }
-                    catch (Exception e)
-                    {
-                        String msg = "Error while registering device with remote SOS";
-                        Log.e("SensorHub", msg, e);
-                        return;
-                    }                    
-
                     Looper.loop();
                 }        
             };
@@ -124,13 +102,6 @@ public class SensorHubService extends Service
     
     public void stopSensorHub()
     {
-        if (sosClient != null)
-        {
-            sosClient.stop();
-            sosClient = null;
-        }
-        
-        SensorHub sensorhub = SensorHub.getInstance();
         if (sensorhub != null)
         {
             sensorhub.stop();
@@ -163,9 +134,9 @@ public class SensorHubService extends Service
     }
 
 
-    public SOSTClient getSosClient()
+    public SensorHub getSensorHub()
     {
-        return sosClient;
+        return sensorhub;
     }
-
+    
 }

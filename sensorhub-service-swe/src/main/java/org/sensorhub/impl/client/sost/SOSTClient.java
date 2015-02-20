@@ -75,15 +75,15 @@ public class SOSTClient extends AbstractModule<SOSTClientConfig> implements IEve
     Map<ISensorDataInterface, StreamInfo> dataStreams;
     
     
-    protected class StreamInfo
+    public class StreamInfo
     {
         String templateID;
-        int minRecordsPerRequest = 10;
-        long lastSampleTime = -1;
-        int errorCount = 0;
-        protected SWEData resultData = new SWEData();
-        protected ThreadPoolExecutor threadPool;
-        protected DataStreamWriter persistentWriter;
+        public long lastSampleTime = -1;
+        public int errorCount = 0;
+        private int minRecordsPerRequest = 10;
+        private SWEData resultData = new SWEData();
+        private ThreadPoolExecutor threadPool;
+        private DataStreamWriter persistentWriter;
     }
     
     
@@ -361,7 +361,10 @@ public class SOSTClient extends AbstractModule<SOSTClientConfig> implements IEve
                 {
                     // connect if not already connected
                     if (streamInfo.persistentWriter == null)
-                    {
+                    {                        
+                        if (log.isDebugEnabled())
+                            log.debug("Connecting to " + config.sosEndpointUrl + "...");
+                        
                         final InsertResultRequest req = new InsertResultRequest();
                         req.setPostServer(config.sosEndpointUrl);
                         req.setVersion("2.0");
@@ -398,6 +401,22 @@ public class SOSTClient extends AbstractModule<SOSTClientConfig> implements IEve
                     String outputName = e.getSource().getName();
                     log.error("Error when sending '" + outputName + "' data to SOS-T from " + MsgUtils.moduleString(sensor), ex);
                     streamInfo.errorCount++;
+                    
+                    try
+                    {
+                        if (streamInfo.persistentWriter != null)
+                            streamInfo.persistentWriter.close();
+                    }
+                    catch (IOException e1)
+                    {
+                    }
+                    
+                    streamInfo.persistentWriter = null;
+                    
+                    // wait a little before trying to reconnect
+                    log.debug("Waiting to reconnect...");
+                    try { Thread.sleep(1000L); }
+                    catch (InterruptedException e1) { }
                 }
             }           
         };
