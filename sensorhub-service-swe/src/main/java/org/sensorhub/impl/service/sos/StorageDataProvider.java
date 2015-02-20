@@ -49,6 +49,8 @@ import org.vast.util.TimeExtent;
  */
 public class StorageDataProvider implements ISOSDataProvider
 {
+    private static final long MAX_WAIT_TIME = 5000L;
+    
     IBasicStorage<?> storage;
     List<StorageState> dataStoresStates;
     DataComponentFilter recordFilter;
@@ -215,9 +217,10 @@ public class StorageDataProvider implements ISOSDataProvider
             {
                 long realEllapsedTime = System.currentTimeMillis() - lastSystemTime;
                 long waitTime = (long)((nextStorageTime - lastRecordTime) * 1000. / replaySpeedFactor) - realEllapsedTime;
-                
                 if (waitTime > 0)
                 {
+                    if (waitTime > MAX_WAIT_TIME)
+                        waitTime = MAX_WAIT_TIME;
                     try { Thread.sleep(waitTime ); }
                     catch (InterruptedException e) { }
                 }

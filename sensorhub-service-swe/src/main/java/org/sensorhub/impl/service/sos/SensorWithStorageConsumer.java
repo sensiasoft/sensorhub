@@ -59,6 +59,7 @@ public class SensorWithStorageConsumer extends SensorDataConsumer implements ISO
     {
         String templateID = sensor.newResultTemplate(component, encoding);
         
+        // add additional datastore if not already there
         if (!storage.getDataStores().containsKey(templateID))
         {
             storage.addNewDataStore(templateID, component, encoding);

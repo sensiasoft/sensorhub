@@ -110,6 +110,7 @@ import org.vast.util.TimeExtent;
 public class SOSService extends SOSServlet implements IServiceModule<SOSServiceConfig>, IEventListener
 {
     private static final Logger log = LoggerFactory.getLogger(SOSService.class);
+    protected static final String invalidWSRequestMsg = "Invalid WebSocket request: ";
     
     SOSServiceConfig config;
     SOSServiceCapabilities capabilitiesCache;
@@ -377,11 +378,28 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
         {
             // parse request
             OWSRequest owsReq = null;
-            try { owsReq = this.parseRequest(req, resp, false); }
-            catch (Exception e) { }
+            try
+            {
+                owsReq = this.parseRequest(req, resp, false);
+                
+                if (owsReq != null)
+                {
+                    // send error if request is not supported via websockets
+                    if (!(owsReq instanceof GetResultRequest))
+                    {
+                        String errorMsg = invalidWSRequestMsg + owsReq.getOperation() + " is not supported via this protocol.";
+                        resp.sendError(400, errorMsg);
+                        log.trace(errorMsg);
+                        owsReq = null;
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+            }
             
-            // if parsing worked, create websocket instance
-            // and start accepting incoming requests
+            // if SOS request was accepted, create websocket instance
+            // and start streaming / accepting incoming stream
             if (owsReq != null)
             {
                 SOSWebSocket socketCreator = new SOSWebSocket(this, owsReq);                

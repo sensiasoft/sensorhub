@@ -15,6 +15,7 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 package org.sensorhub.impl.service.sos;
 
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Map.Entry;
 import java.util.Set;
 import net.opengis.sensorml.v20.AbstractProcess;
@@ -189,7 +190,7 @@ public class StorageDataProviderFactory implements IDataProviderFactory
      */
     protected Set<String> getObservablePropertiesFromStorage() throws StorageException
     {
-        HashSet<String> observableUris = new HashSet<String>();
+        HashSet<String> observableUris = new LinkedHashSet<String>();
         
         // process outputs descriptions
         for (Entry<String, ? extends ITimeSeriesDataStore<IDataFilter>> entry: storage.getDataStores().entrySet())

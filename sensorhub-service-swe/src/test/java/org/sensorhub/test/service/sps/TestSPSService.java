@@ -351,7 +351,9 @@ public class TestSPSService
         dataBlock.setDoubleValue(0, 10.0);
         dataBlock.setStringValue(1, "HIGH");
         SubmitRequest subReq = generateSubmit(SENSOR_UID_1, resp.getTaskingParameters(), dataBlock);
-        dom = sendRequest(subReq, true);   
+        dom = sendRequest(subReq, true);
+        
+        OWSExceptionReader.checkException(dom, dom.getBaseElement());
     }
 
     
