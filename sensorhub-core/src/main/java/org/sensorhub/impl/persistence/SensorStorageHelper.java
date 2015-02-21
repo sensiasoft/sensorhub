@@ -79,7 +79,7 @@ public class SensorStorageHelper extends AbstractModule<SensorStorageHelperConfi
         
         // if storage is empty, initialize it
         if (storage.getLatestDataSourceDescription() == null)
-            StorageHelper.configureStorageForSensor(sensor, storage, false);
+            StorageHelper.configureStorageForDataSource(sensor, storage, false);
         
         // get the latest sensor description in case we were down during the last update
         storage.storeDataSourceDescription(sensor.getCurrentDescription());

@@ -512,7 +512,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
                     newStorageConfig.name = virtualSensor.getName() + " Storage";
                     newStorageConfig.storagePath = sensorUID + ".dat";
                     IBasicStorage<?> storage = (IBasicStorage<?>)moduleReg.loadModule(newStorageConfig);
-                    SensorStorageHelper dataListener = StorageHelper.configureStorageForSensor(virtualSensor, storage, true);
+                    SensorStorageHelper dataListener = StorageHelper.configureStorageForDataSource(virtualSensor, storage, true);
                                         
                     // associate storage to config                    
                     providerConfig.storageID = storage.getLocalID();

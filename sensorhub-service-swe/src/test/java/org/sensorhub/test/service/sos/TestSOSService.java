@@ -180,7 +180,7 @@ public class TestSOSService
         // configure storage for sensor
         IBasicStorage<?> storage = (IBasicStorage<?>)SensorHub.getInstance().getModuleRegistry().loadModule(storageConfig);
         ISensorModule<?> sensor = SensorHub.getInstance().getSensorManager().getModuleById(sosProviderConfig.sensorID);
-        StorageHelper.configureStorageForSensor(sensor, storage, true);
+        StorageHelper.configureStorageForDataSource(sensor, storage, true);
         sosProviderConfig.storageID = storage.getLocalID();
         
         return sosProviderConfig;

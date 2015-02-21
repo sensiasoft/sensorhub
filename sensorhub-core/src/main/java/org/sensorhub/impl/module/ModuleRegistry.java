@@ -14,6 +14,7 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.impl.module;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -310,6 +311,13 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
         }
         
         return loadedModules.get(moduleID);
+    }
+    
+    
+    public WeakReference<? extends IModule<?>> getModuleRef(String moduleID) throws SensorHubException
+    {
+        IModule<?> module = getModuleById(moduleID);
+        return new WeakReference<IModule<?>>(module);
     }
     
     
