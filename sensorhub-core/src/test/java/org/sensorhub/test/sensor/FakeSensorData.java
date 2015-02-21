@@ -49,7 +49,6 @@ import org.vast.swe.SWEConstants;
 public class FakeSensorData extends AbstractSensorOutput<FakeSensor> implements IFakeSensorOutput
 {
     String name;
-    boolean pushEnabled;
     int maxSampleCount;
     int sampleCount;
     int bufferSize;
@@ -58,24 +57,21 @@ public class FakeSensorData extends AbstractSensorOutput<FakeSensor> implements 
     Timer timer;
     
     
-    public FakeSensorData(FakeSensor sensor, String name, boolean pushEnabledFlag)
+    public FakeSensorData(FakeSensor sensor, String name)
     {
-        this(sensor, name, pushEnabledFlag, 1, 1.0, 5);
+        this(sensor, name, 1, 1.0, 5);
     }
     
     
-    public FakeSensorData(FakeSensor sensor, final String name, final boolean pushEnabled, final int bufferSize, final double samplingPeriod, final int maxSampleCount)
+    public FakeSensorData(FakeSensor sensor, final String name, final int bufferSize, final double samplingPeriod, final int maxSampleCount)
     {
         super(sensor);
         this.name = name;
-        this.pushEnabled = pushEnabled;
         this.bufferSize = bufferSize;
         this.samplingPeriod = samplingPeriod;
         this.dataQueue = new LinkedBlockingDeque<DataBlock>(bufferSize);
         this.maxSampleCount = maxSampleCount;
-        
-        if (pushEnabled)
-            this.eventHandler = new BasicEventHandler();
+        this.eventHandler = new BasicEventHandler();
         
         init();
     }
@@ -130,8 +126,7 @@ public class FakeSensorData extends AbstractSensorOutput<FakeSensor> implements 
                         dataQueue.remove();
                     dataQueue.offer(data);
                     
-                    if (pushEnabled)
-                        eventHandler.publishEvent(new SensorDataEvent(time, FakeSensorData.this, data));
+                    eventHandler.publishEvent(new SensorDataEvent(time, FakeSensorData.this, data));
                 }                        
             }                
         };
@@ -157,13 +152,6 @@ public class FakeSensorData extends AbstractSensorOutput<FakeSensor> implements 
         else
             return true;
     }    
-
-
-    @Override
-    public boolean isPushSupported()
-    {
-        return pushEnabled;
-    }
     
     
     @Override
@@ -219,7 +207,7 @@ public class FakeSensorData extends AbstractSensorOutput<FakeSensor> implements 
 
 
     @Override
-    public DataBlock getLatestRecord() throws SensorException
+    public DataBlock getLatestRecord()
     {
         synchronized (dataQueue)
         {

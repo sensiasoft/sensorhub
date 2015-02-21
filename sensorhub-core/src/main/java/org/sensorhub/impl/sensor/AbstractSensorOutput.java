@@ -74,13 +74,6 @@ public abstract class AbstractSensorOutput<SensorType extends ISensorModule<?>> 
 
 
     @Override
-    public boolean isPushSupported()
-    {
-        return true;
-    }
-
-
-    @Override
     public boolean isStorageSupported()
     {
         return false;

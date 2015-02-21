@@ -129,7 +129,7 @@ public class TestSOSService
         IModule<?> sensor = SensorHub.getInstance().getModuleRegistry().loadModule(sensorCfg);
         
         // add custom interfaces
-        ((FakeSensor)sensor).setDataInterfaces(new FakeSensorData((FakeSensor)sensor, NAME_OUTPUT1, pushEnabled, 10, SAMPLING_PERIOD, NUM_GEN_SAMPLES));
+        ((FakeSensor)sensor).setDataInterfaces(new FakeSensorData((FakeSensor)sensor, NAME_OUTPUT1, 10, SAMPLING_PERIOD, NUM_GEN_SAMPLES));
         
         // create SOS data provider config
         SensorDataProviderConfig provCfg = new SensorDataProviderConfig();
@@ -152,8 +152,8 @@ public class TestSOSService
         sensorCfg.name = "Sensor2";
         IModule<?> sensor = SensorHub.getInstance().getModuleRegistry().loadModule(sensorCfg);
         ((FakeSensor)sensor).setDataInterfaces(
-                new FakeSensorData((FakeSensor)sensor, NAME_OUTPUT1, false),
-                new FakeSensorData2((FakeSensor)sensor, NAME_OUTPUT2, false));
+                new FakeSensorData((FakeSensor)sensor, NAME_OUTPUT1),
+                new FakeSensorData2((FakeSensor)sensor, NAME_OUTPUT2));
         
         // create SOS data provider config
         SensorDataProviderConfig provCfg = new SensorDataProviderConfig();

@@ -84,7 +84,7 @@ public class SOSVirtualSensorOutput extends AbstractSensorOutput<SOSVirtualSenso
 
 
     @Override
-    public DataBlock getLatestRecord() throws SensorException
+    public DataBlock getLatestRecord()
     {
         return latestRecord;
     }

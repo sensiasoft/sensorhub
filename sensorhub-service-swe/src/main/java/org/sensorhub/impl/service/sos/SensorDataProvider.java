@@ -17,7 +17,6 @@ package org.sensorhub.impl.service.sos;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
@@ -118,58 +117,16 @@ public class SensorDataProvider implements ISOSDataProvider, IEventListener
             // case of time instant = now, just return latest record
             if (isNowTimeInstant(filter.getTimeRange()))
             {
-                try
-                {
-                    double lastRecordTime = outputInterface.getLatestRecordTime();
-                    DataBlock data = outputInterface.getLatestRecord();
-                    eventQueue.offerLast(new SensorDataEvent(lastRecordTime, outputInterface, data));
-                    stopTime = Long.MAX_VALUE; // make sure stoptime does not cause us to return null
-                    timeOut = 0L;
-                }
-                catch (SensorException e)
-                {
-                   throw new ServiceException("Cannot get latest record from sensor " + sensor.getName(), e);
-                }
+                double lastRecordTime = outputInterface.getLatestRecordTime();
+                DataBlock data = outputInterface.getLatestRecord();
+                eventQueue.offerLast(new SensorDataEvent(lastRecordTime, outputInterface, data));
+                stopTime = Long.MAX_VALUE; // make sure stoptime does not cause us to return null
+                timeOut = 0L;
             }
             
-            // otherwise register listener if push is supported
-            else if (outputInterface.isPushSupported())
-                outputInterface.registerListener(this);
-                        
-            // otherwise setup timer task to poll regularly
+            // otherwise register listener
             else
-            {
-                TimerTask pollTask = new TimerTask()
-                {
-                    double lastRecordTime = Double.NEGATIVE_INFINITY;
-                    
-                    @Override
-                    public void run()
-                    {
-                        double time = outputInterface.getLatestRecordTime();
-                        
-                        // wait until a new record is available
-                        if (!Double.isNaN(time) && time > lastRecordTime)
-                        {
-                            try
-                            {
-                                // add event to queue to simulate push case
-                                DataBlock data = outputInterface.getLatestRecord();                            
-                                eventQueue.offerLast(new SensorDataEvent(time, outputInterface, data));
-                                lastRecordTime = time;
-                            }
-                            catch (SensorException e)
-                            {
-                                e.printStackTrace();
-                            } 
-                        }
-                    }                
-                };
-                
-                // poll at twice the sampling rate
-                Timer timer = new Timer(sensor.getName() + " Polling", true);
-                timer.scheduleAtFixedRate(pollTask, 0, (long)(outputInterface.getAverageSamplingPeriod() * 500.));
-            }
+                outputInterface.registerListener(this);
         }
     }
     
@@ -338,10 +295,7 @@ public class SensorDataProvider implements ISOSDataProvider, IEventListener
     public void close()
     {
         for (ISensorDataInterface outputInterface: dataSources)
-        {
-            if (outputInterface.isPushSupported())
-                outputInterface.unregisterListener(this);
-        }
+            outputInterface.unregisterListener(this);
         
         eventQueue.clear();
     }

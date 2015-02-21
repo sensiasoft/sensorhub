@@ -23,7 +23,6 @@ import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataEncoding;
 import net.opengis.swe.v20.DataType;
-import org.sensorhub.api.sensor.SensorException;
 import org.sensorhub.impl.sensor.AbstractSensorOutput;
 import org.sensorhub.test.sensor.FakeSensor;
 import org.sensorhub.test.sensor.IFakeSensorOutput;
@@ -49,15 +48,13 @@ public class FakeSensorData2 extends AbstractSensorOutput<FakeSensor> implements
     static int ARRAY_SIZE = 12000;
     
     String name;
-    boolean pushEnabled;
     int count;
     
     
-    public FakeSensorData2(FakeSensor sensor, String name, boolean pushEnabled)
+    public FakeSensorData2(FakeSensor sensor, String name)
     {
         super(sensor);
         this.name = name;
-        this.pushEnabled = pushEnabled;
     }
     
     
@@ -76,13 +73,6 @@ public class FakeSensorData2 extends AbstractSensorOutput<FakeSensor> implements
         else
             return true;
     }    
-
-
-    @Override
-    public boolean isPushSupported()
-    {
-        return pushEnabled;
-    }
 
 
     @Override
@@ -124,7 +114,7 @@ public class FakeSensorData2 extends AbstractSensorOutput<FakeSensor> implements
 
 
     @Override
-    public DataBlock getLatestRecord() throws SensorException
+    public DataBlock getLatestRecord()
     {
         if (Math.random() > 0.3)
             return null;
