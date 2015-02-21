@@ -128,7 +128,7 @@ public class SOSVirtualSensorOutput extends AbstractSensorOutput<SOSVirtualSenso
             avgSampleCount++;
             avgSamplingPeriod += (timeStamp - lastRecordTime) / avgSampleCount;
             
-            SOSVirtualSensor.log.debug("Computed sampling period is " + avgSamplingPeriod + "s");
+            SOSVirtualSensor.log.trace("Sampling period = " + avgSamplingPeriod + "s");
         }
     }
     

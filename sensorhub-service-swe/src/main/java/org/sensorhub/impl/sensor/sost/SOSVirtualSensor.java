@@ -179,7 +179,7 @@ public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfi
     public void newResultRecord(String templateID, DataBlock... dataBlocks) throws Exception
     {
         SOSVirtualSensorOutput output = (SOSVirtualSensorOutput)getObservationOutputs().get(templateID);
-        log.debug("New record received for output " + output.getName());
+        log.trace("New record received for output " + output.getName());
         
         for (DataBlock dataBlock: dataBlocks)
             output.publishNewRecord(dataBlock);

@@ -14,8 +14,11 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.impl.service.sos;
 
-import java.io.IOException;
+import java.io.EOFException;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import org.eclipse.jetty.websocket.api.Session;
+import org.eclipse.jetty.websocket.api.StatusCode;
 import org.eclipse.jetty.websocket.api.WebSocketListener;
 import org.eclipse.jetty.websocket.servlet.ServletUpgradeRequest;
 import org.eclipse.jetty.websocket.servlet.ServletUpgradeResponse;
@@ -34,19 +37,22 @@ import org.vast.ows.sos.GetResultRequest;
  * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @since Feb 19, 2015
  */
-public class SOSWebSocket implements WebSocketCreator, WebSocketListener
+public class SOSWebSocket implements WebSocketCreator, WebSocketListener, Runnable
 {
     private static final Logger log = LoggerFactory.getLogger(SOSWebSocket.class);
     
+    Session session;
     SOSService parentService;
     OWSRequest request;
     WebSocketOutputStream respOutputStream;
+    Executor threadPool;
     
     
-    public SOSWebSocket(SOSService parentService, OWSRequest request)
+    public SOSWebSocket(SOSService parentService, OWSRequest request)//, Executor threadPool)
     {
         this.parentService = parentService;
         this.request = request;
+        this.threadPool = Executors.newSingleThreadExecutor();
         
         // enforce no XML wrapper to GetResult response
         if (request instanceof GetResultRequest)
@@ -68,22 +74,13 @@ public class SOSWebSocket implements WebSocketCreator, WebSocketListener
     @Override
     public void onWebSocketConnect(Session session)
     {
-        try
-        {
-            respOutputStream = new WebSocketOutputStream(session, 1024);
-            request.setResponseStream(respOutputStream);
-            parentService.handleRequest(request);
-        }
-        catch (Exception e)
-        {
-            try
-            {
-                session.disconnect();
-            }
-            catch (IOException e1)
-            {
-            }
-        }
+        this.session = session;
+        
+        respOutputStream = new WebSocketOutputStream(session, 1024);
+        request.setResponseStream(respOutputStream);
+        
+        // launch processing in separate thread
+        threadPool.execute(this);
     }
     
     
@@ -96,8 +93,9 @@ public class SOSWebSocket implements WebSocketCreator, WebSocketListener
     @Override
     public void onWebSocketClose(int statusCode, String reason)
     {
+        session = null;
         respOutputStream.close();
-        log.debug("Session closed by client");
+        log.debug("Session closed");
     }
     
     
@@ -110,5 +108,32 @@ public class SOSWebSocket implements WebSocketCreator, WebSocketListener
     @Override
     public void onWebSocketText(String msg)
     {        
+    }
+
+
+    @Override
+    public void run()
+    {
+        try
+        {
+            parentService.handleRequest(request);
+            
+            log.debug("Data provider done");
+            if (session != null)
+                session.close(StatusCode.NORMAL, null);
+        }
+        catch (EOFException e)
+        {
+            // if connection was closed by client during processing, we end on
+            // an EOFException when writing next record to respOutputStream.
+            // this is a normal state so we have nothing special to do
+            log.debug("Data provider exited on client abort");
+        }
+        catch (Exception e)
+        {
+            log.debug("Data provider exited on error", e);
+            if (session != null)
+                session.close(StatusCode.PROTOCOL, e.getMessage());
+        }
     }
 }
