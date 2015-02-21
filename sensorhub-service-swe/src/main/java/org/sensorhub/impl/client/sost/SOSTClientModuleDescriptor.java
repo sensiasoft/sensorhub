@@ -12,7 +12,7 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
  
 ******************************* END LICENSE BLOCK ***************************/
 
-package org.sensorhub.impl.sensor.android;
+package org.sensorhub.impl.client.sost;
 
 import org.sensorhub.api.module.IModule;
 import org.sensorhub.api.module.IModuleProvider;
@@ -21,27 +21,27 @@ import org.sensorhub.api.module.ModuleConfig;
 
 /**
  * <p>
- * Descriptor of Android sensors driver module for automatic discovery
- * by the ModuleRegistry
+ * Descriptor of SOS-T client module, needed for automatic discovery by
+ * the ModuleRegistry.
  * </p>
  *
  * @author Alex Robin <alex.robin@sensiasoftware.com>
- * @since Sep 7, 2013
+ * @since Feb 21, 2015
  */
-public class AndroidSensorsModuleDescriptor implements IModuleProvider
+public class SOSTClientModuleDescriptor implements IModuleProvider
 {
 
     @Override
     public String getModuleName()
     {
-        return "Android Sensors Driver";
+        return "SOS-T Client";
     }
 
 
     @Override
     public String getModuleDescription()
     {
-        return "Driver supporting many sensors discoverable through Android APIs";
+        return "Generic implementation of OGC Sensor Observation Service 2.0 Transactional Client";
     }
 
 
@@ -62,14 +62,14 @@ public class AndroidSensorsModuleDescriptor implements IModuleProvider
     @Override
     public Class<? extends IModule<?>> getModuleClass()
     {
-        return AndroidSensorsDriver.class;
+        return SOSTClient.class;
     }
 
 
     @Override
     public Class<? extends ModuleConfig> getModuleConfigClass()
     {
-        return AndroidSensorsConfig.class;
+        return SOSTClientConfig.class;
     }
 
 }
