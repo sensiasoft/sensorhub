@@ -14,7 +14,7 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.impl.service.ogc;
 
-import org.sensorhub.api.config.Annotations.DisplayInfo;
+import org.sensorhub.api.config.DisplayInfo;
 import org.sensorhub.api.service.ServiceConfig;
 import org.vast.util.ResponsibleParty;
 
@@ -27,7 +27,6 @@ import org.vast.util.ResponsibleParty;
  * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @since Sep 6, 2013
  */
-@SuppressWarnings("serial")
 public abstract class OGCServiceConfig extends ServiceConfig
 {
     public class CapabilitiesInfo
