@@ -8,8 +8,7 @@ Software distributed under the License is distributed on an "AS IS" basis,
 WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
 for the specific language governing rights and limitations under the License.
  
-The Initial Developer is Sensia Software LLC. Portions created by the Initial
-Developer are Copyright (C) 2014 the Initial Developer. All Rights Reserved.
+Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
  
 ******************************* END LICENSE BLOCK ***************************/
 
@@ -32,12 +31,11 @@ import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.sensor.SensorEvent;
 import org.sensorhub.api.sensor.SensorException;
 import org.sensorhub.impl.sensor.AbstractSensorModule;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.vast.data.BinaryComponentImpl;
-import org.vast.data.BinaryEncodingImpl;
 import org.vast.data.DataIterator;
-import org.vast.data.TextEncodingImpl;
 import org.vast.ogc.om.IObservation;
-import org.vast.ows.sos.ISOSDataConsumer;
 
 
 /**
@@ -45,19 +43,20 @@ import org.vast.ows.sos.ISOSDataConsumer;
  * Virtual sensor interface created by SOS InsertSensor
  * </p>
  *
- * <p>Copyright (c) 2013</p>
- * @author Alexandre Robin <alex.robin@sensiasoftware.com>
+ * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @since Mar 2, 2014
  */
-public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfig> implements ISOSDataConsumer
+public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfig>
 {
+    protected static final Logger log = LoggerFactory.getLogger(SOSVirtualSensor.class);
+    
     Map<DataStructureHash, String> structureToOutputMap = new HashMap<DataStructureHash, String>();
     
     
     // utility class to compute data component hashcode
     class DataStructureHash
     {
-        int hashcode;
+        private int hashcode;
         
         public DataStructureHash(DataComponent comp, DataEncoding enc)
         {
@@ -68,7 +67,15 @@ public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfi
         public int hashCode()
         {
             return hashcode;
-        }        
+        }
+        
+        @Override
+        public boolean equals(Object obj)
+        {
+            if (hashcode == ((DataStructureHash)obj).hashcode)
+                return true;
+            return false;
+        }
     }
     
     
@@ -77,7 +84,6 @@ public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfi
     }
 
 
-    @Override
     public void newObservation(IObservation... observations) throws Exception
     {
         // TODO Auto-generated method stub
@@ -86,12 +92,12 @@ public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfi
     }
 
 
-    @Override
     public String newResultTemplate(DataComponent component, DataEncoding encoding)
     {
         // TODO check if template is compatible with sensor description outputs?        
+        // TODO merge all templates with same structure but different encodings to the same output
         
-        // try to otbain corresponding data interface
+        // try to obtain corresponding data interface
         DataStructureHash hashObj = new DataStructureHash(component, encoding);
         String templateID = structureToOutputMap.get(hashObj);
                 
@@ -116,17 +122,22 @@ public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfi
     {
         StringBuilder buf = new StringBuilder();
         
+        boolean root = true;
         DataIterator it = new DataIterator(comp);
         while (it.hasNext())
         {
             comp = it.next();
             
-            buf.append(comp.getName());
-            buf.append('|');
-            
+            // skip root name because it's not always set
+            if (!root)
+            {
+                buf.append(comp.getName());
+                buf.append('|');
+            }
+            root = false;
+                        
             buf.append(comp.getClass().getSimpleName());
-            buf.append('|');
-            
+                        
             String defUri = comp.getDefinition();
             if (defUri != null)
             {
@@ -144,6 +155,7 @@ public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfi
             {
                 for (BinaryMember opts: ((BinaryEncoding) enc).getMemberList())
                 {
+                    buf.append('|');
                     buf.append(opts.getRef());
                     buf.append('|');
                     if (opts instanceof BinaryComponent)
@@ -164,11 +176,13 @@ public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfi
     }
 
 
-    @Override
     public void newResultRecord(String templateID, DataBlock... dataBlocks) throws Exception
     {
+        SOSVirtualSensorOutput output = (SOSVirtualSensorOutput)getObservationOutputs().get(templateID);
+        log.trace("New record received for output " + output.getName());
+        
         for (DataBlock dataBlock: dataBlocks)
-            ((SOSVirtualSensorOutput)getObservationOutputs().get(templateID)).publishNewRecord(dataBlock);
+            output.publishNewRecord(dataBlock);
     }
 
 
@@ -179,28 +193,20 @@ public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfi
         for (AbstractSWEIdentifiable output: getCurrentSensorDescription().getOutputList())
         {
             DataComponent dataStruct = null;
-            DataEncoding dataEnc = null;            
+            DataEncoding dataEnc = null;
             
             if (output instanceof DataStream)
             {
                 dataStruct = ((DataStream) output).getElementType();
                 dataEnc = ((DataStream) output).getEncoding();
+                newResultTemplate(dataStruct, dataEnc);
             }
             else if (output instanceof DataInterface)
             {
                 dataStruct = ((DataInterface) output).getData().getElementType();
                 dataEnc = ((DataInterface) output).getData().getEncoding();
+                newResultTemplate(dataStruct, dataEnc);
             }
-            else
-            {
-                dataStruct = (DataComponent)output;
-                if (dataStruct.createDataBlock().getAtomCount() > 30)
-                    dataEnc = BinaryEncodingImpl.getDefaultEncoding(dataStruct);
-                else
-                    dataEnc = new TextEncodingImpl(",", "\n");
-            }
-            
-            newResultTemplate(dataStruct, dataEnc);
         }
     }
 
@@ -234,6 +240,17 @@ public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfi
         lastUpdatedSensorDescription = unixTime / 1000.;
         eventHandler.publishEvent(new SensorEvent(unixTime, getLocalID(), SensorEvent.Type.SENSOR_CHANGED));
     }
+    
+    
+    /*
+     * Set sensor description when reviving from storage (w/o sending event)
+     */
+    public void setSensorDescription(AbstractProcess systemDesc)
+    {
+        sensorDescription = systemDesc;
+        long unixTime = System.currentTimeMillis();
+        lastUpdatedSensorDescription = unixTime / 1000.;
+    }
 
 
     @Override
@@ -241,12 +258,4 @@ public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfi
     {
         return true;
     }
-
-
-    @Override
-    public void updateSensor(AbstractProcess newSensorDescription) throws Exception
-    {
-        updateSensorDescription(newSensorDescription, false);        
-    }
-
 }

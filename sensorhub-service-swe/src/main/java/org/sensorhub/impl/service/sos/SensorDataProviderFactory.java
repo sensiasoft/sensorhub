@@ -8,16 +8,16 @@ Software distributed under the License is distributed on an "AS IS" basis,
 WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
 for the specific language governing rights and limitations under the License.
  
-The Initial Developer is Sensia Software LLC. Portions created by the Initial
-Developer are Copyright (C) 2014 the Initial Developer. All Rights Reserved.
+Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
  
 ******************************* END LICENSE BLOCK ***************************/
 
 package org.sensorhub.impl.service.sos;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Map.Entry;
+import java.util.Set;
 import net.opengis.sensorml.v20.AbstractProcess;
 import net.opengis.swe.v20.DataArray;
 import net.opengis.swe.v20.DataComponent;
@@ -56,8 +56,7 @@ import org.vast.util.TimeExtent;
  * threadsafe. 
  * </p>
  *
- * <p>Copyright (c) 2013</p>
- * @author Alexandre Robin <alex.robin@sensiasoftware.com>
+ * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @since Sep 15, 2013
  */
 public class SensorDataProviderFactory implements IDataProviderFactory, IEventListener
@@ -106,7 +105,7 @@ public class SensorDataProviderFactory implements IDataProviderFactory, IEventLi
                 caps.setDescription("Data produced by " + sensor.getName());
             
             // observable properties
-            List<String> sensorOutputDefs = getObservablePropertiesFromSensor();
+            Set<String> sensorOutputDefs = getObservablePropertiesFromSensor();
             caps.getObservableProperties().addAll(sensorOutputDefs);
             
             // observed area ??
@@ -127,7 +126,7 @@ public class SensorDataProviderFactory implements IDataProviderFactory, IEventLi
             // TODO foi types
             
             // obs types
-            List<String> obsTypes = getObservationTypesFromSensor();
+            Set<String> obsTypes = getObservationTypesFromSensor();
             caps.getObservationTypes().addAll(obsTypes);
             
             return caps;
@@ -146,9 +145,9 @@ public class SensorDataProviderFactory implements IDataProviderFactory, IEventLi
     }
 
 
-    protected List<String> getObservablePropertiesFromSensor() throws SensorException
+    protected Set<String> getObservablePropertiesFromSensor() throws SensorException
     {
-        List<String> observableUris = new ArrayList<String>();
+        HashSet<String> observableUris = new LinkedHashSet<String>();
         
         // process outputs descriptions
         for (Entry<String, ? extends ISensorDataInterface> entry: sensor.getAllOutputs().entrySet())
@@ -173,9 +172,9 @@ public class SensorDataProviderFactory implements IDataProviderFactory, IEventLi
     }
     
     
-    protected List<String> getObservationTypesFromSensor() throws SensorException
+    protected Set<String> getObservationTypesFromSensor() throws SensorException
     {
-        List<String> obsTypes = new ArrayList<String>();
+        HashSet<String> obsTypes = new HashSet<String>();
         obsTypes.add(IObservation.OBS_TYPE_GENERIC);
         
         // process outputs descriptions

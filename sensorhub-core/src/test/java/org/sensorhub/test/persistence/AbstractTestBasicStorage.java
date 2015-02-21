@@ -8,8 +8,7 @@ Software distributed under the License is distributed on an "AS IS" basis,
 WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
 for the specific language governing rights and limitations under the License.
  
-The Initial Developer is Sensia Software LLC. Portions created by the Initial
-Developer are Copyright (C) 2014 the Initial Developer. All Rights Reserved.
+Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
  
 ******************************* END LICENSE BLOCK ***************************/
 
@@ -53,8 +52,7 @@ import org.vast.util.DateTimeFormat;
  * tagged with '@Before'.
  * </p>
  *
- * <p>Copyright (c) 2013</p>
- * @author Alexandre Robin <alex.robin@sensiasoftware.com>
+ * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @param <StorageType> type of storage under test
  * @since Nov 29, 2014
  */
@@ -63,7 +61,7 @@ public abstract class AbstractTestBasicStorage<StorageType extends IBasicStorage
     protected StorageType storage;
     
     
-    protected abstract void forceReadBackFromStorage();
+    protected abstract void forceReadBackFromStorage() throws Exception;
     
     
     protected DataComponent createDs1() throws Exception
@@ -114,6 +112,7 @@ public abstract class AbstractTestBasicStorage<StorageType extends IBasicStorage
         assertEquals(2, dataStores.size());  
         
         forceReadBackFromStorage();
+        dataStores = storage.getDataStores();
         dataStoreName = "ds1";
         TestUtils.assertEquals(recordDs1, dataStores.get(dataStoreName).getRecordDescription());
         assertEquals(TextEncodingImpl.class, dataStores.get(dataStoreName).getRecommendedEncoding().getClass());
@@ -206,7 +205,6 @@ public abstract class AbstractTestBasicStorage<StorageType extends IBasicStorage
     @Test
     public void testStoreAndGetRecordsByKey() throws Exception
     {
-        Map<String, ? extends ITimeSeriesDataStore<?>> dataStores;
         String dataStoreName;
         DataBlock data;
         DataKey key;
@@ -216,11 +214,10 @@ public abstract class AbstractTestBasicStorage<StorageType extends IBasicStorage
         dataStoreName = "ds1";
         data = createDs1().createDataBlock();
         data.setDoubleValue(0.95);
-        dataStores = storage.getDataStores();
         key = new DataKey("proc1", 12.0);
-        dataStores.get(dataStoreName).store(key, data);
+        storage.getDataStores().get(dataStoreName).store(key, data);
         forceReadBackFromStorage();
-        dbRec = dataStores.get(dataStoreName).getRecord(key);
+        dbRec = storage.getDataStores().get(dataStoreName).getRecord(key);
         TestUtils.assertEquals(data, dbRec.getData());
         
         // test data store #2
@@ -230,11 +227,10 @@ public abstract class AbstractTestBasicStorage<StorageType extends IBasicStorage
         data.setDoubleValue(0, 1.0);
         data.setIntValue(1, 2);
         data.setStringValue(2, "test");
-        dataStores = storage.getDataStores();
         key = new DataKey("proc2", 123.0);
-        dataStores.get(dataStoreName).store(key, data);
+        storage.getDataStores().get(dataStoreName).store(key, data);
         forceReadBackFromStorage();
-        dbRec = dataStores.get(dataStoreName).getRecord(key);
+        dbRec = storage.getDataStores().get(dataStoreName).getRecord(key);
         TestUtils.assertEquals(data, dbRec.getData());
         
         // test data store #3
@@ -249,11 +245,10 @@ public abstract class AbstractTestBasicStorage<StorageType extends IBasicStorage
             data.setIntValue(offset++, 2*i);
             data.setStringValue(offset++, "test" + i);
         }
-        dataStores = storage.getDataStores();
         key = new DataKey("proc2", 10.);
-        dataStores.get(dataStoreName).store(key, data);
+        storage.getDataStores().get(dataStoreName).store(key, data);
         forceReadBackFromStorage();
-        dbRec = dataStores.get(dataStoreName).getRecord(key);
+        dbRec = storage.getDataStores().get(dataStoreName).getRecord(key);
         TestUtils.assertEquals(data, dbRec.getData());
     }
     
@@ -290,6 +285,7 @@ public abstract class AbstractTestBasicStorage<StorageType extends IBasicStorage
         forceReadBackFromStorage();
         
         // retrieve them and check their values
+        dataStores = storage.getDataStores();
         for (int i=0; i<numRecords; i++)
         {
             key = new DataKey(null, i*timeStep);
@@ -332,6 +328,7 @@ public abstract class AbstractTestBasicStorage<StorageType extends IBasicStorage
         forceReadBackFromStorage();
         
         // retrieve them and check their values
+        dataStores = storage.getDataStores();
         double[] timeRange = dataStores.get(dataStoreName).getDataTimeRange();
         assertEquals("Invalid begin time", 0., timeRange[0], 0.0);
         assertEquals("Invalid end time", timeStamp, timeRange[1], 0.0);

@@ -8,29 +8,26 @@ Software distributed under the License is distributed on an "AS IS" basis,
 WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
 for the specific language governing rights and limitations under the License.
  
-The Initial Developer is Sensia Software LLC. Portions created by the Initial
-Developer are Copyright (C) 2014 the Initial Developer. All Rights Reserved.
+Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
  
 ******************************* END LICENSE BLOCK ***************************/
 
 package org.sensorhub.impl.service.sos;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Map.Entry;
+import java.util.Set;
 import net.opengis.sensorml.v20.AbstractProcess;
 import net.opengis.swe.v20.DataArray;
 import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataRecord;
 import net.opengis.swe.v20.SimpleComponent;
-import org.sensorhub.api.common.Event;
-import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.module.IModule;
 import org.sensorhub.api.persistence.IBasicStorage;
 import org.sensorhub.api.persistence.IDataFilter;
 import org.sensorhub.api.persistence.ITimeSeriesDataStore;
-import org.sensorhub.api.persistence.StorageDataEvent;
 import org.sensorhub.api.persistence.StorageException;
 import org.sensorhub.api.sensor.SensorException;
 import org.sensorhub.api.service.ServiceException;
@@ -60,16 +57,14 @@ import org.vast.util.TimeExtent;
  * to be threadsafe. 
  * </p>
  *
- * <p>Copyright (c) 2013</p>
- * @author Alexandre Robin <alex.robin@sensiasoftware.com>
+ * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @since Sep 15, 2013
  */
-public class StorageDataProviderFactory implements IDataProviderFactory, IEventListener
+public class StorageDataProviderFactory implements IDataProviderFactory
 {
     final StorageDataProviderConfig config;
     final IBasicStorage<?> storage;
     SOSOfferingCapabilities caps;
-    boolean needOfferingTimeUpdate = false;
     
     
     protected StorageDataProviderFactory(StorageDataProviderConfig config) throws SensorHubException
@@ -87,10 +82,6 @@ public class StorageDataProviderFactory implements IDataProviderFactory, IEventL
         {
             throw new ServiceException("Storage " + MsgUtils.moduleString(storageModule) + " is not a supported data storage", e);
         }
-        
-        // register to data stores events
-        for (ITimeSeriesDataStore<?> dataStore: storage.getDataStores().values())
-            dataStore.registerListener(this);
     }
     
     
@@ -122,7 +113,7 @@ public class StorageDataProviderFactory implements IDataProviderFactory, IEventL
                 caps.setDescription("Data available from storage " + storage.getName());
             
             // observable properties
-            List<String> outputDefs = getObservablePropertiesFromStorage();
+            Set<String> outputDefs = getObservablePropertiesFromStorage();
             caps.getObservableProperties().addAll(outputDefs);
             
             // observed area ??
@@ -140,7 +131,7 @@ public class StorageDataProviderFactory implements IDataProviderFactory, IEventL
             // TODO foi types (when using an obs storage)
             
             // obs types
-            List<String> obsTypes = getObservationTypesFromStorage();
+            Set<String> obsTypes = getObservationTypesFromStorage();
             caps.getObservationTypes().addAll(obsTypes);
             
             return caps;
@@ -157,12 +148,8 @@ public class StorageDataProviderFactory implements IDataProviderFactory, IEventL
     {
         try
         {
-            if (needOfferingTimeUpdate)
-            {
-                needOfferingTimeUpdate = false;
-                TimeExtent newTimeExtent = getTimeExtentFromStorage();
-                caps.setPhenomenonTime(newTimeExtent);
-            }
+            TimeExtent newTimeExtent = getTimeExtentFromStorage();
+            caps.setPhenomenonTime(newTimeExtent);
         }
         catch (StorageException e)
         {
@@ -186,8 +173,12 @@ public class StorageDataProviderFactory implements IDataProviderFactory, IEventL
                 continue;
             
             double[] storedPeriod = entry.getValue().getDataTimeRange();
-            timeExtent.resizeToContain(storedPeriod[0]);
-            timeExtent.resizeToContain(storedPeriod[1]);
+            
+            if (!Double.isNaN(storedPeriod[0]))
+            {
+                timeExtent.resizeToContain(storedPeriod[0]);
+                timeExtent.resizeToContain(storedPeriod[1]);
+            }
         }
         
         return timeExtent;
@@ -197,9 +188,9 @@ public class StorageDataProviderFactory implements IDataProviderFactory, IEventL
     /*
      * Builds list of observable properties by scanning record structure of each data store
      */
-    protected List<String> getObservablePropertiesFromStorage() throws StorageException
+    protected Set<String> getObservablePropertiesFromStorage() throws StorageException
     {
-        List<String> observableUris = new ArrayList<String>();
+        HashSet<String> observableUris = new LinkedHashSet<String>();
         
         // process outputs descriptions
         for (Entry<String, ? extends ITimeSeriesDataStore<IDataFilter>> entry: storage.getDataStores().entrySet())
@@ -227,9 +218,9 @@ public class StorageDataProviderFactory implements IDataProviderFactory, IEventL
     /*
      * Build list of observertion types by scanning record structure of each data store
      */
-    protected List<String> getObservationTypesFromStorage() throws StorageException
+    protected Set<String> getObservationTypesFromStorage() throws StorageException
     {
-        List<String> obsTypes = new ArrayList<String>();
+        HashSet<String> obsTypes = new HashSet<String>();
         obsTypes.add(IObservation.OBS_TYPE_GENERIC);
         
         // process outputs descriptions
@@ -294,24 +285,12 @@ public class StorageDataProviderFactory implements IDataProviderFactory, IEventL
     {
         return (config.enabled && storage.isEnabled());
     }
-    
-    
-    @Override
-    public void handleEvent(Event e)
-    {
-        if (e instanceof StorageDataEvent)
-            needOfferingTimeUpdate = true;     
-    }
 
 
     @Override
     public void cleanup()
     {
-        if (storage != null)
-        {
-            for (ITimeSeriesDataStore<?> dataStore: storage.getDataStores().values())
-                dataStore.unregisterListener(this);
-        }
+
     }
 
 }

@@ -8,8 +8,7 @@ Software distributed under the License is distributed on an "AS IS" basis,
 WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
 for the specific language governing rights and limitations under the License.
  
-The Initial Developer is Sensia Software LLC. Portions created by the Initial
-Developer are Copyright (C) 2014 the Initial Developer. All Rights Reserved.
+Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
  
 ******************************* END LICENSE BLOCK ***************************/
 
@@ -47,8 +46,7 @@ import org.slf4j.LoggerFactory;
  * TODO implement global event manager for all modules ? 
  * TODO return weak references to modules ?
  *
- * <p>Copyright (c) 2013</p>
- * @author Alexandre Robin
+ * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @since Sep 2, 2013
  */
 public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProducer
@@ -119,16 +117,17 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
                         
             // keep track of what modules are loaded
             loadedModules.put(config.id, module);
-            log.debug("Module " + MsgUtils.moduleString(module) +  " loaded");
-            
+                        
             // send event
             eventHandler.publishEvent(new ModuleEvent(module, ModuleEvent.Type.LOADED));
+            log.debug("Module " + MsgUtils.moduleString(module) +  " loaded");
             
             // start it if enabled by default
             if (config.enabled)
             {
                 module.start();
                 eventHandler.publishEvent(new ModuleEvent(module, ModuleEvent.Type.ENABLED));
+                log.debug("Module " + MsgUtils.moduleString(module) +  " started");
             }
             
             return module;
@@ -256,21 +255,28 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
      */
     public synchronized void saveModulesConfiguration()
     {
+        int numModules = loadedModules.size();
+        ModuleConfig[] configList = new ModuleConfig[numModules];
+        
+        int i = 0;
         for (IModule<?> module: loadedModules.values())
-            saveConfiguration(module);
+        {
+            configList[i] = module.getConfiguration();
+            i++;
+        }
+        
+        configRepos.update(configList);
     }
     
     
     /**
-     * Saves the module configuration in the repository
-     * @param module 
+     * Saves the given module configurations in the repository
+     * @param configList 
      */
-    public synchronized void saveConfiguration(IModule<?> module)
+    public synchronized void saveConfiguration(ModuleConfig... configList)
     {
-        if (configRepos.contains(module.getLocalID()))
-            configRepos.update(module.getConfiguration());
-        else
-            configRepos.add(module.getConfiguration());
+        for (ModuleConfig config: configList)
+            configRepos.update(config);
     }
     
     

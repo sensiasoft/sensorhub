@@ -8,8 +8,7 @@ Software distributed under the License is distributed on an "AS IS" basis,
 WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
 for the specific language governing rights and limitations under the License.
  
-The Initial Developer is Sensia Software LLC. Portions created by the Initial
-Developer are Copyright (C) 2014 the Initial Developer. All Rights Reserved.
+Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
  
 ******************************* END LICENSE BLOCK ***************************/
 
@@ -27,8 +26,7 @@ import org.sensorhub.api.module.IModule;
  * Interface to be implemented by all sensor drivers connected to the system
  * </p>
  *
- * <p>Copyright (c) 2010</p>
- * @author Alexandre Robin
+ * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @param <ConfigType> 
  * @since Nov 5, 2010
  */
@@ -126,7 +124,9 @@ public interface ISensorModule<ConfigType extends SensorConfig> extends IModule<
 
 
     /**
-     * Returns the sensor connection status
+     * Returns the sensor connection status.<br/>
+     * This method must do whatever it can to really detect the presence of the sensor. Consequently,
+     * the method can take a long time to complete and must not be called repeatedly.
      * @return true if sensor is actually connected and can communicate with the driver
      */
     public boolean isConnected();

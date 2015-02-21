@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="org.sensorhub.android"
+    android:hardwareAccelerated="true"
     android:versionCode="1"
     android:versionName="1.0" >
-    
+
     <uses-feature android:name="android.hardware.location" />
     <uses-feature android:name="android.hardware.sensor.compass" />
     <uses-feature android:name="android.hardware.camera" />
-        
+
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.CAMERA" />
-    <uses-permission android:name="android.permission.CAPTURE_VIDEO_OUTPUT" />
     <uses-permission android:name="android.permission.INTERNET" />
-    
+
     <uses-sdk
         android:minSdkVersion="19"
         android:targetSdkVersion="21" />
@@ -24,6 +24,8 @@
         android:theme="@style/AppTheme" >
         <activity
             android:name=".MainActivity"
+            android:configChanges="orientation|screenSize"
+            android:screenOrientation="portrait"
             android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -31,6 +33,14 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".UserSettingsActivity"
+            android:label="@string/title_activity_user_settings" >
+        </activity>
+        <service
+            android:enabled="true"
+            android:name=".SensorHubService">            
+        </service>
     </application>
 
 </manifest>

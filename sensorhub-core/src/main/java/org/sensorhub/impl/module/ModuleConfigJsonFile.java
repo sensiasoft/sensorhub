@@ -8,8 +8,7 @@ Software distributed under the License is distributed on an "AS IS" basis,
 WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
 for the specific language governing rights and limitations under the License.
  
-The Initial Developer is Sensia Software LLC. Portions created by the Initial
-Developer are Copyright (C) 2014 the Initial Developer. All Rights Reserved.
+Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
  
 ******************************* END LICENSE BLOCK ***************************/
 
@@ -19,28 +18,25 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import org.sensorhub.api.module.IModuleConfigRepository;
 import org.sensorhub.api.module.ModuleConfig;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonDeserializationContext;
-import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
 import com.google.gson.JsonPrimitive;
-import com.google.gson.JsonSerializationContext;
-import com.google.gson.JsonSerializer;
+import com.google.gson.TypeAdapter;
+import com.google.gson.TypeAdapterFactory;
+import com.google.gson.internal.Streams;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonWriter;
 
 
 /**
@@ -49,8 +45,7 @@ import com.google.gson.stream.JsonReader;
  * persist all modules' configuration.
  * </p>
  *
- * <p>Copyright (c) 2013</p>
- * @author Alexandre Robin
+ * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @since Sep 3, 2013
  */
 public class ModuleConfigJsonFile implements IModuleConfigRepository
@@ -62,6 +57,90 @@ public class ModuleConfigJsonFile implements IModuleConfigRepository
     File configFile;
     
     
+    /* GSON type adapter factory for parsing JSON object to a custom subclass.
+     * The desired class is indicated by an additional field, whose name is
+     * configured by typeFieldName. */
+    public final class RuntimeTypeAdapterFactory<T> implements TypeAdapterFactory
+    {
+        private final Class<?> baseType;
+        private final String typeFieldName;
+
+
+        public RuntimeTypeAdapterFactory(Class<?> baseType, String typeFieldName)
+        {
+            if (typeFieldName == null || baseType == null)
+                throw new NullPointerException();
+            
+            this.baseType = baseType;
+            this.typeFieldName = typeFieldName;
+        }
+
+
+        public <R> TypeAdapter<R> create(final Gson gson, final TypeToken<R> type)
+        {
+            if (baseType != Object.class && !type.getRawType().isInstance(baseType))
+                return null;
+            
+            return new TypeAdapter<R>()
+            {
+                @Override
+                public R read(JsonReader in) throws IOException
+                {
+                    JsonElement jsonElement = Streams.parse(in);                
+                    TypeAdapter<R> delegate = gson.getDelegateAdapter(RuntimeTypeAdapterFactory.this, type);
+                    
+                    if (jsonElement.isJsonObject())
+                    {
+                        JsonElement typeField = jsonElement.getAsJsonObject().remove(typeFieldName);
+                                            
+                        if (typeField != null)
+                        {
+                            String type = typeField.getAsString();
+                            
+                            try
+                            {
+                                Class<R> runtimeClass = (Class<R>)Class.forName(type);
+                                delegate = gson.getDelegateAdapter(RuntimeTypeAdapterFactory.this, TypeToken.get(runtimeClass));                        
+                            }
+                            catch (ClassNotFoundException e)
+                            {
+                                throw new RuntimeException("Runtime class specified in JSON is invalid: " + type, e);
+                            }
+                        }
+                    }
+                    
+                    return delegate.fromJsonTree(jsonElement);
+                }
+
+
+                @Override
+                public void write(JsonWriter out, R value) throws IOException
+                {
+                    Class<R> runtimeClass = (Class<R>)value.getClass();
+                    String typeName = runtimeClass.getName();
+                    TypeAdapter<R> delegate = gson.getDelegateAdapter(RuntimeTypeAdapterFactory.this, TypeToken.get(runtimeClass));
+                    JsonElement jsonElt = delegate.toJsonTree(value);
+                    
+                    if (jsonElt.isJsonObject())
+                    {
+                        JsonObject jsonObject = jsonElt.getAsJsonObject();
+                        JsonObject clone = new JsonObject();
+                        
+                        // insert class name as first attribute
+                        clone.add(typeFieldName, new JsonPrimitive(typeName));
+                        for (Map.Entry<String, JsonElement> e : jsonObject.entrySet())
+                            clone.add(e.getKey(), e.getValue());
+                        
+                        jsonElt = clone;
+                    }
+                    
+                    Streams.write(jsonElt, out);
+                }
+            }.nullSafe();
+        }
+    }
+        
+    
     public ModuleConfigJsonFile(String moduleConfigPath)
     {
         configFile = new File(moduleConfigPath);
@@ -71,72 +150,7 @@ public class ModuleConfigJsonFile implements IModuleConfigRepository
         final GsonBuilder builder = new GsonBuilder();
         builder.setPrettyPrinting();
         builder.disableHtmlEscaping();
-        builder.serializeNulls();
-        
-        builder.registerTypeAdapter(List.class, new JsonSerializer<List<?>>() {
-            @Override
-            public JsonElement serialize(List<?> src, Type typeOfSrc, JsonSerializationContext context)
-            {
-                JsonArray array = new JsonArray();
-                for (Object obj: src)
-                {
-                    JsonElement elt = context.serialize(obj);
-                    if (elt.isJsonObject())
-                    {
-                        JsonObject jsonObj = new JsonObject();
-                        JsonPrimitive s = new JsonPrimitive(obj.getClass().getCanonicalName());
-                        jsonObj.add(OBJ_CLASS_FIELD, s);
-                        
-                        // copy existing properties
-                        for (Entry<String, JsonElement> property: ((JsonObject)elt).entrySet())
-                            jsonObj.add(property.getKey(), property.getValue());
-                        
-                        elt = jsonObj;
-                    }
-                    array.add(elt);
-                }
-                return array;
-            }            
-        });
-        
-        builder.registerTypeAdapter(List.class, new JsonDeserializer<List<?>>() {
-            @Override
-            public List<?> deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException
-            {
-                JsonArray array = (JsonArray)json;
-                List<Object> list = new ArrayList<Object>(array.size());                
-                for (JsonElement elt: array)
-                {
-                    if (elt.isJsonObject())
-                    {
-                        Object newObj;
-                        JsonElement objClassField = ((JsonObject)elt).get(OBJ_CLASS_FIELD);
-                        
-                        if (objClassField != null)
-                        {
-                            Class<?> fieldClass;
-                            try
-                            {
-                                fieldClass = Class.forName(objClassField.getAsString());
-                                newObj = context.deserialize(elt, fieldClass);
-                                ((JsonObject)elt).remove(OBJ_CLASS_FIELD);
-                            }
-                            catch (ClassNotFoundException e)
-                            {
-                                throw new RuntimeException(e);
-                            }
-                        }
-                        else
-                        {
-                            newObj = context.deserialize(elt, ((ParameterizedType)typeOfT).getActualTypeArguments()[0]);
-                        }
-                        
-                        list.add(newObj);
-                    }
-                }
-                return list;
-            }                    
-        });
+        builder.registerTypeAdapterFactory(new RuntimeTypeAdapterFactory<Object>(Object.class, OBJ_CLASS_FIELD));
         
         gson = builder.create();
         readJSON();
@@ -170,29 +184,49 @@ public class ModuleConfigJsonFile implements IModuleConfigRepository
 
 
     @Override
-    public synchronized void add(ModuleConfig config)
+    public synchronized void add(ModuleConfig... configList)
     {
-        ModuleConfig conf = configMap.get(config.id);
-        if (conf != null)
-            throw new RuntimeException("Config file " + configFile.getAbsolutePath() + " for module " + config.name + " already exists");
-        configMap.put(config.id, config);
+        // need to read again to get last saved version
+        readJSON();
+        
+        for (ModuleConfig config: configList)
+        {        
+            ModuleConfig conf = configMap.get(config.id);
+            if (conf != null)
+                throw new RuntimeException("Module " + config.name + " already exists");            
+            
+            configMap.put(config.id, config);
+        }
+        
         writeJSON();
     }
     
     
     @Override
-    public synchronized void update(ModuleConfig config)
+    public synchronized void update(ModuleConfig... configList)
     {
-        get(config.id);
-        configMap.put(config.id, config);
+        // need to read again to get last saved version
+        readJSON();
+        
+        for (ModuleConfig config: configList)
+            configMap.put(config.id, config); 
+                
         writeJSON();
     }
     
     
     @Override
-    public synchronized void remove(String moduleID)
+    public synchronized void remove(String... moduleIDs)
     {
-        configMap.remove(moduleID);
+        // need to read again to get last saved version
+        readJSON();
+        
+        for (String moduleID: moduleIDs)
+        {
+            get(moduleID); // check if module exists
+            configMap.remove(moduleID);
+        }
+            
         writeJSON();
     }
     
@@ -215,8 +249,7 @@ public class ModuleConfigJsonFile implements IModuleConfigRepository
         
         try
         {
-            reader = new FileReader(configFile);
-            
+            reader = new FileReader(configFile);            
             Type collectionType = new TypeToken<List<ModuleConfig>>(){}.getType();
             JsonReader jsonReader = new JsonReader(reader);
             List<ModuleConfig> configList = gson.fromJson(jsonReader, collectionType);
@@ -247,16 +280,7 @@ public class ModuleConfigJsonFile implements IModuleConfigRepository
         
         try
         {
-            List<ModuleConfig> configList = getAllModulesConfigurations();
-            Object[] jsonData = new Object[configList.size()*2];
-            for (int i=0; i<configList.size(); i++)
-            {
-                ModuleConfig config = configList.get(i); 
-                jsonData[i*2] = config.getClass().getCanonicalName();
-                jsonData[i*2+1] = config;
-            }
-            
-            // create new JSON file
+            Collection<ModuleConfig> configList = configMap.values();
             writer = new FileWriter(configFile);
             Type collectionType = new TypeToken<List<ModuleConfig>>(){}.getType();
             writer.append(gson.toJson(configList, collectionType));

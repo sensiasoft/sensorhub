@@ -14,25 +14,21 @@ Software distributed under the License is distributed on an "AS IS" basis,&#13;
 WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License&#13;
 for the specific language governing rights and limitations under the License.&#13;
  &#13;
-The Initial Developer is Sensia Software LLC. Portions created by the Initial&#13;
-Developer are Copyright (C) 2014 the Initial Developer. All Rights Reserved.&#13;
+Copyright (C) 2012-${year} Sensia Software LLC. All Rights Reserved.&#13;
  &#13;
 ******************************* END LICENSE BLOCK ***************************/</template><template autoinsert="false" context="typecomment_context" deleted="false" description="Comment for created types" enabled="true" id="org.eclipse.jdt.ui.text.codetemplates.typecomment" name="typecomment">/**
  * &lt;p&gt;
  * TODO ${type_name} type description
  * &lt;/p&gt;
  *
- * &lt;p&gt;Copyright (c) 2014&lt;/p&gt;
- * @author Alexandre Robin &lt;alex.robin@sensiasoftware.com&gt;
+ * @author Alex Robin &lt;alex.robin@sensiasoftware.com&gt;
  * @since ${date}
  */</template><template autoinsert="true" context="fieldcomment_context" deleted="false" description="Comment for fields" enabled="true" id="org.eclipse.jdt.ui.text.codetemplates.fieldcomment" name="fieldcomment">/**
  * 
  */</template><template autoinsert="false" context="methodcomment_context" deleted="false" description="Comment for non-overriding methods" enabled="true" id="org.eclipse.jdt.ui.text.codetemplates.methodcomment" name="methodcomment">/**
  * TODO ${enclosing_method} method description
  * ${tags}
- */</template><template autoinsert="true" context="overridecomment_context" deleted="false" description="Comment for overriding methods" enabled="true" id="org.eclipse.jdt.ui.text.codetemplates.overridecomment" name="overridecomment">/* (non-Javadoc)
- * ${see_to_overridden}
- */</template><template autoinsert="true" context="delegatecomment_context" deleted="false" description="Comment for delegate methods" enabled="true" id="org.eclipse.jdt.ui.text.codetemplates.delegatecomment" name="delegatecomment">/**
+ */</template><template autoinsert="false" context="overridecomment_context" deleted="false" description="Comment for overriding methods" enabled="true" id="org.eclipse.jdt.ui.text.codetemplates.overridecomment" name="overridecomment"/><template autoinsert="true" context="delegatecomment_context" deleted="false" description="Comment for delegate methods" enabled="true" id="org.eclipse.jdt.ui.text.codetemplates.delegatecomment" name="delegatecomment">/**
  * ${tags}
  * ${see_to_target}
  */</template><template autoinsert="false" context="newtype_context" deleted="false" description="Newly created files" enabled="true" id="org.eclipse.jdt.ui.text.codetemplates.newtype" name="newtype">/***************************** BEGIN LICENSE BLOCK ***************************
@@ -45,8 +41,7 @@ Software distributed under the License is distributed on an "AS IS" basis,
 WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
 for the specific language governing rights and limitations under the License.
  
-The Initial Developer is Sensia Software LLC. Portions created by the Initial
-Developer are Copyright (C) 2014 the Initial Developer. All Rights Reserved.
+Copyright (C) 2012-${year} Sensia Software LLC. All Rights Reserved.
  
 ******************************* END LICENSE BLOCK ***************************/
 

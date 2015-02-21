@@ -8,8 +8,7 @@ Software distributed under the License is distributed on an "AS IS" basis,
 WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
 for the specific language governing rights and limitations under the License.
  
-The Initial Developer is Sensia Software LLC. Portions created by the Initial
-Developer are Copyright (C) 2014 the Initial Developer. All Rights Reserved.
+Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
  
 ******************************* END LICENSE BLOCK ***************************/
 
@@ -28,9 +27,18 @@ import org.sensorhub.impl.sensor.AbstractSensorModule;
 
 public class FakeSensor extends AbstractSensorModule<SensorConfig>
 {
-        
+    String sensorUID;
+    
+    
     public FakeSensor()
-    {        
+    {
+        this.sensorUID = "urn:sensors:mysensor:001";
+    }
+    
+    
+    public void setSensorUID(String sensorUID)
+    {
+        this.sensorUID = sensorUID;
     }
     
     
@@ -76,7 +84,7 @@ public class FakeSensor extends AbstractSensorModule<SensorConfig>
         synchronized (sensorDescription)
         {
             super.updateSensorDescription();
-            sensorDescription.setUniqueIdentifier("urn:sensors:mysensor:001");
+            sensorDescription.setUniqueIdentifier(sensorUID);
             Point pos = new PointImpl();
             pos.setId("P01");
             pos.setSrsName("http://www.opengis.net/def/crs/EPSG/0/4979");

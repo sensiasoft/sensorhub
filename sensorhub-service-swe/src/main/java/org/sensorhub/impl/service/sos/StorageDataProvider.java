@@ -8,8 +8,7 @@ Software distributed under the License is distributed on an "AS IS" basis,
 WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
 for the specific language governing rights and limitations under the License.
  
-The Initial Developer is Sensia Software LLC. Portions created by the Initial
-Developer are Copyright (C) 2014 the Initial Developer. All Rights Reserved.
+Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
  
 ******************************* END LICENSE BLOCK ***************************/
 
@@ -45,21 +44,26 @@ import org.vast.util.TimeExtent;
  * SensorHub's persistence API (ITimeSeriesStorage and derived classes)
  * </p>
  *
- * <p>Copyright (c) 2013</p>
- * @author Alexandre Robin <alex.robin@sensiasoftware.com>
+ * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @since Sep 7, 2013
  */
 public class StorageDataProvider implements ISOSDataProvider
 {
+    private static final long MAX_WAIT_TIME = 5000L;
+    
     IBasicStorage<?> storage;
     List<StorageState> dataStoresStates;
     DataComponentFilter recordFilter;
+    double replaySpeedFactor;
+    double lastRecordTime = Double.NaN;
+    long lastSystemTime; 
+    
     
     class StorageState
     {
         ITimeSeriesDataStore<IDataFilter> dataStore;
         Iterator<? extends IDataRecord<DataKey>> recordIterator;
-        IDataRecord<DataKey> nextRecord;
+        IDataRecord<DataKey> nextRecord;        
     }
     
     
@@ -68,6 +72,7 @@ public class StorageDataProvider implements ISOSDataProvider
         this.storage = storage;
         this.dataStoresStates = new ArrayList<StorageState>();
         this.recordFilter = new DataComponentFilter(filter);
+        this.replaySpeedFactor = filter.getReplaySpeedFactor();
         
         final double[] timePeriod = new double[] {
             filter.getTimeRange().getStartTime(),
@@ -203,7 +208,27 @@ public class StorageDataProvider implements ISOSDataProvider
         if (state.recordIterator.hasNext())
             state.nextRecord = state.recordIterator.next();
         else
-            state.nextRecord = null;        
+            state.nextRecord = null;
+        
+        // wait if replay mode is active
+        if (!Double.isNaN(replaySpeedFactor))
+        {
+            if (!Double.isNaN(lastRecordTime))
+            {
+                long realEllapsedTime = System.currentTimeMillis() - lastSystemTime;
+                long waitTime = (long)((nextStorageTime - lastRecordTime) * 1000. / replaySpeedFactor) - realEllapsedTime;
+                if (waitTime > 0)
+                {
+                    if (waitTime > MAX_WAIT_TIME)
+                        waitTime = MAX_WAIT_TIME;
+                    try { Thread.sleep(waitTime ); }
+                    catch (InterruptedException e) { }
+                }
+            }
+            
+            lastRecordTime = nextStorageTime;
+            lastSystemTime = System.currentTimeMillis();
+        }        
         
         // return record properly filtered according to selected observables
         return recordFilter.getFilteredRecord(state.dataStore.getRecordDescription(), datablk);

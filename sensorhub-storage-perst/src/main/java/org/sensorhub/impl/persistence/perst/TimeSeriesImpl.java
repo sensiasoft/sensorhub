@@ -8,15 +8,16 @@ Software distributed under the License is distributed on an "AS IS" basis,
 WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
 for the specific language governing rights and limitations under the License.
  
-The Initial Developer is Sensia Software LLC. Portions created by the Initial
-Developer are Copyright (C) 2014 the Initial Developer. All Rights Reserved.
+Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
  
 ******************************* END LICENSE BLOCK ***************************/
 
 package org.sensorhub.impl.persistence.perst;
 
+import java.nio.ByteOrder;
 import java.util.Iterator;
 import java.util.Map.Entry;
+import net.opengis.swe.v20.BinaryEncoding;
 import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataEncoding;
@@ -40,8 +41,7 @@ import org.sensorhub.impl.common.BasicEventHandler;
  * PERST implementation of an individual time series data store
  * </p>
  *
- * <p>Copyright (c) 2014</p>
- * @author Alexandre Robin <alex.robin@sensiasoftware.com>
+ * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @since Jan 7, 2015
  */
 class TimeSeriesImpl extends Persistent implements ITimeSeriesDataStore<IDataFilter>
@@ -125,6 +125,22 @@ class TimeSeriesImpl extends Persistent implements ITimeSeriesDataStore<IDataFil
     @Override
     public DataEncoding getRecommendedEncoding()
     {
+        // HACK to fix broken ByteOrder enum
+        // java.nio.ByteOrder is a class with static singletons instead of an enum
+        // This causes instances deserialized from storage to be unequal with the constant
+        // that we compare with everywhere
+        if (recommendedEncoding instanceof BinaryEncoding)
+        {
+            ByteOrder byteOrder = ((BinaryEncoding) recommendedEncoding).getByteOrder();
+            if (byteOrder != null && byteOrder != ByteOrder.BIG_ENDIAN && byteOrder != ByteOrder.LITTLE_ENDIAN)
+            {
+                if (byteOrder.toString().equals(ByteOrder.LITTLE_ENDIAN.toString()))
+                    byteOrder = ByteOrder.LITTLE_ENDIAN;
+                else
+                    byteOrder = ByteOrder.BIG_ENDIAN;
+            }
+        }
+        
         return recommendedEncoding;
     }
 
@@ -238,10 +254,14 @@ class TimeSeriesImpl extends Persistent implements ITimeSeriesDataStore<IDataFil
     @Override
     public DataKey store(DataKey key, DataBlock data)
     {
-        recordIndex.put(generatePerstKey(key), data);
-        if (parentStorage.autoCommit)
-            getStorage().commit();
-        eventHandler.publishEvent(new StorageDataEvent(System.currentTimeMillis(), this, data));
+        synchronized (parentStorage) // to avoid concurrent commits
+        {
+            recordIndex.put(generatePerstKey(key), data);            
+            if (parentStorage.autoCommit)
+                getStorage().commit();
+        }
+        
+        eventHandler.publishEvent(new StorageDataEvent(System.currentTimeMillis(), this, data));        
         return key;
     }
 
@@ -249,10 +269,14 @@ class TimeSeriesImpl extends Persistent implements ITimeSeriesDataStore<IDataFil
     @Override
     public void update(DataKey key, DataBlock data)
     {
-        DataBlock oldData = recordIndex.set(generatePerstKey(key), data);
-        getStorage().deallocate(oldData);
-        if (parentStorage.autoCommit)
-            getStorage().commit();
+        synchronized (parentStorage) // to avoid concurrent commits
+        {
+            DataBlock oldData = recordIndex.set(generatePerstKey(key), data);
+            getStorage().deallocate(oldData);
+            if (parentStorage.autoCommit)
+                getStorage().commit();
+        }
+        
         eventHandler.publishEvent(new StorageEvent(System.currentTimeMillis(), parentStorage.getLocalID(), StorageEvent.Type.UPDATE));
     }
 
@@ -260,10 +284,13 @@ class TimeSeriesImpl extends Persistent implements ITimeSeriesDataStore<IDataFil
     @Override
     public void remove(DataKey key)
     {
-        DataBlock oldData = recordIndex.remove(generatePerstKey(key));
-        getStorage().deallocate(oldData);
-        if (parentStorage.autoCommit)
-            getStorage().commit();
+        synchronized (parentStorage) // to avoid concurrent commits
+        {
+            DataBlock oldData = recordIndex.remove(generatePerstKey(key));
+            getStorage().deallocate(oldData);
+            if (parentStorage.autoCommit)
+                getStorage().commit();
+        }
         eventHandler.publishEvent(new StorageEvent(System.currentTimeMillis(), parentStorage.getLocalID(), StorageEvent.Type.DELETE));
     }
 
@@ -271,19 +298,23 @@ class TimeSeriesImpl extends Persistent implements ITimeSeriesDataStore<IDataFil
     @Override
     public int remove(IDataFilter filter)
     {
-        Key[] keyRange = generateKeys(filter);
-        Iterator<DataBlock> it = recordIndex.iterator(keyRange[0], keyRange[1], Index.ASCENT_ORDER);
-
         int count = 0;
-        while (it.hasNext())
+        
+        synchronized (parentStorage) // to avoid concurrent commits
         {
-            DataBlock oldData = it.next();
-            getStorage().deallocate(oldData);
-            it.remove();
+            Key[] keyRange = generateKeys(filter);
+            Iterator<DataBlock> it = recordIndex.iterator(keyRange[0], keyRange[1], Index.ASCENT_ORDER);
+                
+            while (it.hasNext())
+            {
+                DataBlock oldData = it.next();
+                getStorage().deallocate(oldData);
+                it.remove();
+            }
+    
+            if (parentStorage.autoCommit)
+                getStorage().commit();
         }
-
-        if (parentStorage.autoCommit)
-            getStorage().commit();
 
         return count;
     }
@@ -295,7 +326,7 @@ class TimeSeriesImpl extends Persistent implements ITimeSeriesDataStore<IDataFil
         IterableIterator<Entry<Object, DataBlock>> it;
         it = recordIndex.entryIterator(BasicStorageImpl.KEY_DATA_START_ALL_TIME, BasicStorageImpl.KEY_DATA_END_ALL_TIME, Index.ASCENT_ORDER);
         if (!it.hasNext())
-            return new double[] { 0.0, 0.0 };
+            return new double[] { Double.NaN, Double.NaN };
         Entry<Object, DataBlock> first = it.next();
 
         it = recordIndex.entryIterator(BasicStorageImpl.KEY_DATA_START_ALL_TIME, BasicStorageImpl.KEY_DATA_END_ALL_TIME, Index.DESCENT_ORDER);

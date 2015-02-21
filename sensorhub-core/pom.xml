@@ -28,21 +28,6 @@
          <version>3.0.1</version>
       </dependency>
       <dependency>
-         <groupId>org.eclipse.jetty</groupId>
-         <artifactId>jetty-servlet</artifactId>
-         <version>8.1.16.v20140903</version>
-      </dependency>
-      <dependency>
-         <groupId>org.eclipse.jetty</groupId>
-         <artifactId>jetty-rewrite</artifactId>
-         <version>8.1.16.v20140903</version>
-      </dependency>
-      <dependency>
-         <groupId>org.eclipse.jetty</groupId>
-         <artifactId>jetty-websocket</artifactId>
-         <version>8.1.16.v20140903</version>
-      </dependency>
-      <dependency>
          <groupId>org.vast.opengis</groupId>
          <artifactId>swe-common-core</artifactId>
          <version>1.0</version>
@@ -61,6 +46,16 @@
         <groupId>ch.qos.logback</groupId>
         <artifactId>logback-classic</artifactId>
         <version>1.1.2</version>
+     </dependency>
+     <dependency>
+        <groupId>org.eclipse.jetty</groupId>
+        <artifactId>jetty-servlet</artifactId>
+        <version>9.2.7.v20150116</version>
+     </dependency>
+     <dependency>
+        <groupId>org.eclipse.jetty</groupId>
+        <artifactId>jetty-rewrite</artifactId>
+        <version>9.2.7.v20150116</version>
      </dependency>
    </dependencies>
    <build>

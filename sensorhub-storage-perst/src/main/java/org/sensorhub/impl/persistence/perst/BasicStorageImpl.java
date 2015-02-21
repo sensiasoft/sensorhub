@@ -8,8 +8,7 @@ Software distributed under the License is distributed on an "AS IS" basis,
 WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
 for the specific language governing rights and limitations under the License.
  
-The Initial Developer is Sensia Software LLC. Portions created by the Initial
-Developer are Copyright (C) 2014 the Initial Developer. All Rights Reserved.
+Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
  
 ******************************* END LICENSE BLOCK ***************************/
 
@@ -49,8 +48,7 @@ import org.sensorhub.impl.module.AbstractModule;
  * This class must be listed in the META-INF services folder to be available via the persistence manager.
  * </p>
  *
- * <p>Copyright (c) 2014</p>
- * @author Alexandre Robin
+ * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @since Nov 15, 2014
  */
 public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> implements IBasicStorage<BasicStorageConfig>
@@ -84,7 +82,9 @@ public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> impleme
             if (db != null && db.isOpened())
                 throw new StorageException("Storage " + getLocalID() + " is already opened");
             
-            db = StorageFactory.getInstance().createStorage();            
+            db = StorageFactory.getInstance().createStorage();    
+            db.setProperty("perst.concurrent.iterator", true);
+            //db.setProperty("perst.alternative.btree", true);
             db.open(config.storagePath, config.memoryCacheSize*1024);
             dbRoot = (DBRoot)db.getRoot();
             
@@ -113,6 +113,7 @@ public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> impleme
     public void stop() throws SensorHubException
     {
         db.close();
+        db = null;
     }
 
 
@@ -132,8 +133,7 @@ public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> impleme
 
     @Override
     public void restore(InputStream is) throws IOException
-    {
-        
+    {        
         
     }
 
@@ -153,14 +153,14 @@ public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> impleme
 
 
     @Override
-    public final void commit()
+    public synchronized void commit()
     {
         db.commit();
     }
 
 
     @Override
-    public void rollback()
+    public synchronized void rollback()
     {
         db.rollback();        
     }
@@ -202,7 +202,7 @@ public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> impleme
 
 
     @Override
-    public void storeDataSourceDescription(AbstractProcess process) throws StorageException
+    public synchronized void storeDataSourceDescription(AbstractProcess process) throws StorageException
     {
         // we add the description in index for each validity period/instant
         for (AbstractTimeGeometricPrimitive validTime: process.getValidTimeList())
@@ -231,7 +231,7 @@ public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> impleme
 
 
     @Override
-    public void updateDataSourceDescription(AbstractProcess process) throws StorageException
+    public synchronized void updateDataSourceDescription(AbstractProcess process) throws StorageException
     {
         // TODO Auto-generated method stub
         
@@ -242,7 +242,7 @@ public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> impleme
 
 
     @Override
-    public void removeDataSourceDescription(double time)
+    public synchronized void removeDataSourceDescription(double time)
     {
         Iterator<AbstractProcess> it = dbRoot.descriptionTimeIndex.iterator(KEY_SML_START_ALL_TIME, new Key(time), Index.DESCENT_ORDER);
         if (it.hasNext())
@@ -258,7 +258,7 @@ public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> impleme
 
 
     @Override
-    public void removeDataSourceDescriptionHistory()
+    public synchronized void removeDataSourceDescriptionHistory()
     {
         Iterator<AbstractProcess> it = dbRoot.descriptionTimeIndex.iterator(KEY_SML_START_ALL_TIME, KEY_SML_END_ALL_TIME, Index.ASCENT_ORDER);
         while (it.hasNext())
@@ -281,7 +281,7 @@ public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> impleme
 
 
     @Override
-    public ITimeSeriesDataStore<IDataFilter> addNewDataStore(String name, DataComponent recordStructure, DataEncoding recommendedEncoding) throws StorageException
+    public synchronized ITimeSeriesDataStore<IDataFilter> addNewDataStore(String name, DataComponent recordStructure, DataEncoding recommendedEncoding) throws StorageException
     {
         TimeSeriesImpl newTimeSeries = new TimeSeriesImpl(this, recordStructure, recommendedEncoding);
         dbRoot.dataStores.put(name, newTimeSeries);

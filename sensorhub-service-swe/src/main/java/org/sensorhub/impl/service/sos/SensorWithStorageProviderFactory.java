@@ -8,21 +8,23 @@ Software distributed under the License is distributed on an "AS IS" basis,
 WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
 for the specific language governing rights and limitations under the License.
  
-The Initial Developer is Sensia Software LLC. Portions created by the Initial
-Developer are Copyright (C) 2014 the Initial Developer. All Rights Reserved.
+Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
  
 ******************************* END LICENSE BLOCK ***************************/
 
 package org.sensorhub.impl.service.sos;
 
 import org.sensorhub.api.common.SensorHubException;
+import org.sensorhub.api.sensor.ISensorDataInterface;
 import org.sensorhub.api.sensor.ISensorModule;
+import org.sensorhub.api.sensor.SensorException;
 import org.sensorhub.api.service.ServiceException;
 import org.sensorhub.impl.SensorHub;
 import org.sensorhub.utils.MsgUtils;
 import org.vast.ows.server.SOSDataFilter;
 import org.vast.ows.sos.ISOSDataProvider;
 import org.vast.ows.sos.SOSOfferingCapabilities;
+import org.vast.util.TimeExtent;
 
 
 /**
@@ -39,13 +41,13 @@ import org.vast.ows.sos.SOSOfferingCapabilities;
  * to be threadsafe. 
  * </p>
  *
- * <p>Copyright (c) 2014</p>
- * @author Alexandre Robin <alex.robin@sensiasoftware.com>
+ * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @since Nov 15, 2014
  */
 public class SensorWithStorageProviderFactory extends StorageDataProviderFactory
 {
     final ISensorModule<?> sensor;
+    double liveDataTimeOut;
     
     
     public SensorWithStorageProviderFactory(SensorDataProviderConfig config) throws SensorHubException
@@ -54,13 +56,16 @@ public class SensorWithStorageProviderFactory extends StorageDataProviderFactory
         
         // get handle to sensor instance using sensor manager
         this.sensor = SensorHub.getInstance().getSensorManager().getModuleById(config.sensorID);
+        this.liveDataTimeOut = config.liveDataTimeout;
     }
 
 
     @Override
     public ISOSDataProvider getNewProvider(SOSDataFilter filter) throws ServiceException
     {
-        if (filter.getTimeRange().isBaseAtNow())
+        TimeExtent timeRange = filter.getTimeRange();
+        
+        if (timeRange.isBaseAtNow() || timeRange.isBeginNow())
         {
             if (!sensor.isEnabled())
                 throw new ServiceException("Sensor " + MsgUtils.moduleString(sensor) + " is disabled");
@@ -86,10 +91,14 @@ public class SensorWithStorageProviderFactory extends StorageDataProviderFactory
     {
         SOSOfferingCapabilities capabilities = super.generateCapabilities();
         
+        // enable real-time requests if sensor is enabled
         if (sensor.isEnabled())
         {
-            // enable real-time requests
-            capabilities.getPhenomenonTime().setEndNow(true);        
+            TimeExtent storageTimeExtent = caps.getPhenomenonTime();
+            if (storageTimeExtent.isNull())
+                caps.getPhenomenonTime().setBaseAtNow(true);
+            else            
+                caps.getPhenomenonTime().setEndNow(true);        
         }
         
         return capabilities;
@@ -101,10 +110,33 @@ public class SensorWithStorageProviderFactory extends StorageDataProviderFactory
     {
         super.updateCapabilities();
         
+        // enable real-time requests if sensor is enabled
         if (sensor.isEnabled())
         {
-            // enable real-time requests
-            caps.getPhenomenonTime().setEndNow(true);        
+            try
+            {
+                // check latest record time
+                double lastRecordTime = Double.NEGATIVE_INFINITY;
+                for (ISensorDataInterface output: sensor.getAllOutputs().values())
+                {
+                    // skip hidden outputs
+                    if (config.hiddenOutputs != null && config.hiddenOutputs.contains(output.getName()))
+                        continue;
+                    
+                    double recTime = output.getLatestRecordTime();
+                    if (!Double.isNaN(recTime) && recTime > lastRecordTime)
+                        lastRecordTime = recTime;
+                }
+                
+                // if latest record is not too old, enable real-time
+                double now =  System.currentTimeMillis() / 1000.; 
+                if (now - lastRecordTime < liveDataTimeOut)
+                    caps.getPhenomenonTime().setEndNow(true);
+            }
+            catch (SensorException e)
+            {
+                throw new ServiceException("Error while updating capabilities", e);
+            }        
         }
     }
 }

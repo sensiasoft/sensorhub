@@ -8,14 +8,13 @@ Software distributed under the License is distributed on an "AS IS" basis,
 WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
 for the specific language governing rights and limitations under the License.
  
-The Initial Developer is Sensia Software LLC. Portions created by the Initial
-Developer are Copyright (C) 2014 the Initial Developer. All Rights Reserved.
+Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
  
 ******************************* END LICENSE BLOCK ***************************/
 
 package org.sensorhub.api.module;
 
-import java.io.Serializable;
+import com.rits.cloning.Cloner;
 
 
 /**
@@ -23,14 +22,11 @@ import java.io.Serializable;
  * Base class to hold modules' configuration options
  * </p>
  *
- * <p>Copyright (c) 2010</p>
- * @author Alexandre Robin
+ * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @since Nov 16, 2010
  */
-public class ModuleConfig implements Serializable, Cloneable
-{
-    private static final long serialVersionUID = 2267529983474592096L;
-    
+public class ModuleConfig implements Cloneable
+{   
     
     /**
      * Unique ID of the module. It must be unique within the SensorHub instance
@@ -65,5 +61,12 @@ public class ModuleConfig implements Serializable, Cloneable
         buf.append(id);
         buf.append(')');
         return buf.toString();
+    }
+
+
+    @Override
+    public ModuleConfig clone()
+    {
+        return new Cloner().deepClone(this);
     }
 }

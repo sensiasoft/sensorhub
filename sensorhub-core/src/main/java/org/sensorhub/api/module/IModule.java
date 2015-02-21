@@ -8,8 +8,7 @@ Software distributed under the License is distributed on an "AS IS" basis,
 WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
 for the specific language governing rights and limitations under the License.
  
-The Initial Developer is Sensia Software LLC. Portions created by the Initial
-Developer are Copyright (C) 2014 the Initial Developer. All Rights Reserved.
+Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
  
 ******************************* END LICENSE BLOCK ***************************/
 
@@ -25,8 +24,7 @@ import org.sensorhub.api.common.SensorHubException;
  * Generic interface for all modules in the system.
  * </p>
  *
- * <p>Copyright (c) 2010</p>
- * @author Alexandre Robin
+ * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @param <ConfigType> 
  * @since Nov 12, 2010
  */
@@ -71,8 +69,10 @@ public interface IModule<ConfigType extends ModuleConfig> extends IEventProducer
     
     
     /**
-     * Updates the module's configuration dynamically
-     * The module must honor this new configuration unless an error is detected
+     * Updates the module's configuration dynamically.<br/>
+     * The module must honor this new configuration unless an error is detected.
+     * It is the responsability of the module to initiate a restart if the new
+     * configuration requires it.
      * @param config
      * @throws SensorHubException 
      */

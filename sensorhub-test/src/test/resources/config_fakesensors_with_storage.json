@@ -58,6 +58,7 @@
     "name": "GPS Data Storage",
     "moduleClass": "org.sensorhub.impl.persistence.perst.BasicStorageImpl",
     "enabled": true,
+    "memoryCacheSize": 1024,
     "storagePath": "gps_obs.dat"
   },
   {
@@ -75,6 +76,7 @@
     "name": "Weather Data Storage",
     "moduleClass": "org.sensorhub.impl.persistence.perst.BasicStorageImpl",
     "enabled": true,
+    "memoryCacheSize": 1024,
     "storagePath": "weather_obs.dat"
   },
   {

@@ -1,0 +1,5 @@
+Needed to compile dex file manually for stax-api (because things are in javax package)
+Command used is:
+ ./dx --dex --output=stax-api-1.0-2.dex --core-library ./stax-api-1.0-2.jar
+ 
+Put it in the app "assets" folder then load it dynamically with Dexter

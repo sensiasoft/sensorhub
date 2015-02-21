@@ -8,8 +8,7 @@ Software distributed under the License is distributed on an "AS IS" basis,
 WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
 for the specific language governing rights and limitations under the License.
  
-The Initial Developer is Sensia Software LLC. Portions created by the Initial
-Developer are Copyright (C) 2014 the Initial Developer. All Rights Reserved.
+Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
  
 ******************************* END LICENSE BLOCK ***************************/
 
@@ -35,6 +34,7 @@ import org.vast.ows.sps.DescribeTaskingResponse;
 import org.vast.ows.sps.SPSOfferingCapabilities;
 import org.vast.ows.swe.SWESOfferingCapabilities;
 import org.vast.swe.SWEConstants;
+import net.opengis.sensorml.v20.AbstractProcess;
 import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataChoice;
 import net.opengis.swe.v20.DataComponent;
@@ -46,8 +46,7 @@ import net.opengis.swe.v20.DataComponent;
  * This connector doesn't support scheduling or persistent task management
  * </p>
  *
- * <p>Copyright (c) 2014</p>
- * @author Alexandre Robin <alex.robin@sensiasoftware.com>
+ * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @since Dec 13, 2014
  */
 public class DirectSensorConnector implements ISPSConnector
@@ -97,7 +96,7 @@ public class DirectSensorConnector implements ISPSConnector
                 caps.setDescription("Tasking interface for " + sensor.getName());
             
             // use sensor uniqueID as procedure ID
-            caps.setSensorID(sensor.getCurrentSensorDescription().getUniqueIdentifier());
+            caps.getProcedures().add(sensor.getCurrentSensorDescription().getUniqueIdentifier());
             
             // supported formats
             caps.getProcedureFormats().add(SWESOfferingCapabilities.FORMAT_SML2);
@@ -184,6 +183,13 @@ public class DirectSensorConnector implements ISPSConnector
     
     
     @Override
+    public AbstractProcess generateSensorMLDescription(double time) throws Exception
+    {
+        return sensor.getCurrentSensorDescription();
+    }
+
+
+    @Override
     public void sendSubmitData(ITask task, DataBlock data) throws ServiceException
     {
         checkEnabled();
@@ -207,7 +213,7 @@ public class DirectSensorConnector implements ISPSConnector
             }
             
             // actually send command to selected interface
-            cmdInterface.sendCommand(data);
+            cmdInterface.execCommand(data);
         }
         catch (SensorException e)
         {

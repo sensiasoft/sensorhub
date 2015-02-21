@@ -8,19 +8,24 @@ Software distributed under the License is distributed on an "AS IS" basis,
 WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
 for the specific language governing rights and limitations under the License.
  
-The Initial Developer is Sensia Software LLC. Portions created by the Initial
-Developer are Copyright (C) 2014 the Initial Developer. All Rights Reserved.
+Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
  
 ******************************* END LICENSE BLOCK ***************************/
 
 package org.sensorhub.impl.service.sos;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import net.opengis.sensorml.v20.AbstractProcess;
 import net.opengis.swe.v20.BinaryBlock;
 import net.opengis.swe.v20.BinaryEncoding;
@@ -28,31 +33,41 @@ import net.opengis.swe.v20.BinaryMember;
 import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataEncoding;
+import org.eclipse.jetty.websocket.server.WebSocketServerFactory;
+import org.eclipse.jetty.websocket.servlet.WebSocketServletFactory;
 import org.sensorhub.api.common.Event;
 import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.module.IModuleStateLoader;
 import org.sensorhub.api.module.IModuleStateSaver;
 import org.sensorhub.api.module.ModuleEvent;
-import org.sensorhub.api.sensor.ISensorDataInterface;
+import org.sensorhub.api.persistence.IBasicStorage;
+import org.sensorhub.api.persistence.StorageConfig;
 import org.sensorhub.api.service.IServiceModule;
 import org.sensorhub.api.service.ServiceException;
 import org.sensorhub.impl.SensorHub;
+import org.sensorhub.impl.module.ModuleRegistry;
+import org.sensorhub.impl.persistence.SensorStorageHelper;
+import org.sensorhub.impl.persistence.StorageHelper;
 import org.sensorhub.impl.sensor.sost.SOSVirtualSensorConfig;
 import org.sensorhub.impl.sensor.sost.SOSVirtualSensor;
 import org.sensorhub.impl.service.HttpServer;
 import org.sensorhub.impl.service.ogc.OGCServiceConfig.CapabilitiesInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.vast.cdm.common.DataSource;
 import org.vast.cdm.common.DataStreamParser;
 import org.vast.cdm.common.DataStreamWriter;
+import org.vast.data.DataBlockMixed;
 import org.vast.ogc.om.IObservation;
 import org.vast.ows.GetCapabilitiesRequest;
 import org.vast.ows.OWSExceptionReport;
+import org.vast.ows.OWSLayerCapabilities;
 import org.vast.ows.OWSRequest;
 import org.vast.ows.server.SOSDataFilter;
 import org.vast.ows.sos.GetResultRequest;
 import org.vast.ows.sos.ISOSDataConsumer;
+import org.vast.ows.sos.ISOSDataConsumer.Template;
 import org.vast.ows.sos.ISOSDataProvider;
 import org.vast.ows.sos.ISOSDataProviderFactory;
 import org.vast.ows.sos.InsertObservationRequest;
@@ -75,7 +90,9 @@ import org.vast.ows.swe.SWESOfferingCapabilities;
 import org.vast.ows.swe.UpdateSensorRequest;
 import org.vast.ows.swe.UpdateSensorResponse;
 import org.vast.sensorML.SMLUtils;
+import org.vast.swe.DataSourceDOM;
 import org.vast.swe.SWEFactory;
+import org.vast.util.ReaderException;
 import org.vast.util.TimeExtent;
 
 
@@ -86,22 +103,22 @@ import org.vast.util.TimeExtent;
  * from the selected data sources (sensors, storages, processes, etc).
  * </p>
  *
- * <p>Copyright (c) 2013</p>
- * @author Alexandre Robin <alex.robin@sensiasoftware.com>
+ * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @since Sep 7, 2013
  */
 @SuppressWarnings("serial")
 public class SOSService extends SOSServlet implements IServiceModule<SOSServiceConfig>, IEventListener
 {
     private static final Logger log = LoggerFactory.getLogger(SOSService.class);
+    protected static final String invalidWSRequestMsg = "Invalid WebSocket request: ";
     
     SOSServiceConfig config;
     SOSServiceCapabilities capabilitiesCache;
-    Map<String, SOSOfferingCapabilities> offeringMap;
+    Map<String, SOSOfferingCapabilities> offeringCaps;
     Map<String, String> procedureToOfferingMap;
     Map<String, String> templateToOfferingMap;
     Map<String, ISOSDataConsumer> dataConsumers;
-    
+        
     boolean needCapabilitiesTimeUpdate = false;
 
     
@@ -115,12 +132,12 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     @Override
     public void init(SOSServiceConfig config) throws SensorHubException
     {        
-        this.config = config;        
+        this.config = config;
     }
     
     
     @Override
-    public synchronized void updateConfig(SOSServiceConfig config) throws SensorHubException
+    public void updateConfig(SOSServiceConfig config) throws SensorHubException
     {
         // cleanup all previously instantiated providers        
         
@@ -138,7 +155,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
         dataProviders.clear();
         procedureToOfferingMap.clear();
         templateToOfferingMap.clear();
-        offeringMap.clear();
+        offeringCaps.clear();
         
         // get main capabilities info from config
         CapabilitiesInfo serviceInfo = config.ogcCapabilitiesInfo;
@@ -165,16 +182,16 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
                 try
                 {
                     // instantiate provider factories and map them to offering URIs
-                    IDataProviderFactory factory = providerConf.getFactory();
-                    if (!factory.isEnabled())
+                    IDataProviderFactory provider = providerConf.getFactory();
+                    if (!provider.isEnabled())
                         continue;
                                     
-                    dataProviders.put(providerConf.uri, factory);
+                    dataProviders.put(providerConf.uri, provider);
          
                     // add offering metadata to capabilities
-                    SOSOfferingCapabilities offCaps = factory.generateCapabilities();
+                    SOSOfferingCapabilities offCaps = provider.generateCapabilities();
                     capabilities.getLayers().add(offCaps);
-                    offeringMap.put(offCaps.getIdentifier(), offCaps);
+                    offeringCaps.put(offCaps.getIdentifier(), offCaps);
                     
                     // build procedure-offering map
                     procedureToOfferingMap.put(offCaps.getProcedures().get(0), offCaps.getIdentifier());
@@ -197,12 +214,12 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
                 try
                 {
                     // for now we support only virtual sensors as consumers
-                    SOSVirtualSensor virtualSensor = (SOSVirtualSensor)SensorHub.getInstance().getSensorManager().getModuleById(consumerConf.sensorID);
-                    dataConsumers.put(consumerConf.offering, virtualSensor);
+                    ISOSDataConsumer consumer = consumerConf.getConsumerInstance();
+                    dataConsumers.put(consumerConf.offering, consumer);
                 }
                 catch (SensorHubException e)
                 {
-                    log.error("Error while initializing virtual sensor " + consumerConf.sensorID, e);
+                    log.error("Error while initializing consumer " + consumerConf.offering, e);
                 }
             }
         }
@@ -240,7 +257,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
         this.dataConsumers = new LinkedHashMap<String, ISOSDataConsumer>();
         this.procedureToOfferingMap = new HashMap<String, String>();
         this.templateToOfferingMap = new HashMap<String, String>();
-        this.offeringMap = new HashMap<String, SOSOfferingCapabilities>();
+        this.offeringCaps = new HashMap<String, SOSOfferingCapabilities>();
         
         // pre-generate capabilities
         this.capabilitiesCache = generateCapabilities();
@@ -290,9 +307,9 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     @Override
     public void cleanup() throws SensorHubException
     {
-        // destroy all virtual sensors
-        for (SOSConsumerConfig consumerConf: config.dataConsumers)
-            SensorHub.getInstance().getModuleRegistry().destroyModule(consumerConf.sensorID);
+        // TODO destroy all virtual sensors
+        //for (SOSConsumerConfig consumerConf: config.dataConsumers)
+        //    SensorHub.getInstance().getModuleRegistry().destroyModule(consumerConf.sensorID);
     }
     
     
@@ -314,7 +331,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     
     
     @Override
-    public synchronized SOSServiceConfig getConfiguration()
+    public SOSServiceConfig getConfiguration()
     {
         return config;
     }
@@ -351,11 +368,70 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     /////////////////////////////////////////
     /// methods overriden from SOSServlet ///
     /////////////////////////////////////////
+    private WebSocketServletFactory factory = new WebSocketServerFactory();
     
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException
+    {
+        // check if we have an upgrade request for websockets
+        if (factory.isUpgradeRequest(req, resp))
+        {
+            // parse request
+            OWSRequest owsReq = null;
+            try
+            {
+                owsReq = this.parseRequest(req, resp, false);
+                
+                if (owsReq != null)
+                {
+                    // send error if request is not supported via websockets
+                    if (!(owsReq instanceof GetResultRequest))
+                    {
+                        String errorMsg = invalidWSRequestMsg + owsReq.getOperation() + " is not supported via this protocol.";
+                        resp.sendError(400, errorMsg);
+                        log.trace(errorMsg);
+                        owsReq = null;
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+            }
+            
+            // if SOS request was accepted, create websocket instance
+            // and start streaming / accepting incoming stream
+            if (owsReq != null)
+            {
+                SOSWebSocket socketCreator = new SOSWebSocket(this, owsReq);                
+                if (factory.acceptWebSocket(socketCreator, req, resp))
+                {
+                    // We have a socket instance created
+                    return;
+                }
+            }
+
+            return;
+        }
+        
+        // otherwise process as classical HTTP request
+        super.service(req, resp);
+    }
+
+
+    @Override
+    public void handleRequest(OWSRequest request) throws Exception
+    {
+        super.handleRequest(request);
+    }
+
+
     @Override
     protected void handleRequest(GetCapabilitiesRequest request) throws Exception
     {
-        // refresh offering capabilities if needed
+        // ask providers to refresh their capabilities if needed.
+        // we do that here so capabilities doc contains the most up-to-date info.
+        // we don't always do it when changes occur because high frequency changes 
+        // would trigger too many updates (e.g. new measurements changing time periods)
         for (ISOSDataProviderFactory provider: dataProviders.values())
             ((IDataProviderFactory)provider).updateCapabilities();
         
@@ -394,48 +470,72 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
             
             // choose offering name (here derived from sensor ID)
             String sensorUID = request.getProcedureDescription().getUniqueIdentifier();
-            String offering = sensorUID + "-sos";
-            
-            // automatically add outputs with specified observable properties??
-            
-            
-            // create and register new virtual sensor module as data consumer
-            SOSVirtualSensorConfig sensorConfig = new SOSVirtualSensorConfig();
-            sensorConfig.enabled = false;
-            sensorConfig.sensorUID = sensorUID;
-            sensorConfig.name = request.getProcedureDescription().getName();
-            SOSVirtualSensor virtualSensor = (SOSVirtualSensor)SensorHub.getInstance().getModuleRegistry().loadModule(sensorConfig);            
-            virtualSensor.updateSensorDescription(request.getProcedureDescription(), true);
-            SensorHub.getInstance().getModuleRegistry().enableModule(virtualSensor.getLocalID());
-            dataConsumers.put(offering, virtualSensor);
-            
-            // add to SOS config
-            SOSConsumerConfig consumerConfig = new SOSConsumerConfig();
-            consumerConfig.offering = offering;
-            consumerConfig.sensorID = virtualSensor.getLocalID();
-            config.dataConsumers.add(consumerConfig);
-            
-            // create new sensor provider
-            SensorDataProviderConfig providerConfig = new SensorDataProviderConfig();
-            providerConfig.sensorID = virtualSensor.getLocalID();
-            providerConfig.enabled = true;
-            providerConfig.uri = offering;
-            SensorDataProviderFactory provider = new SensorDataProviderFactory(providerConfig);
-            dataProviders.put(offering, provider);
-            config.dataProviders.add(providerConfig);
-            
-            // create new offering
-            SOSOfferingCapabilities offCaps = provider.generateCapabilities();
-            capabilitiesCache.getLayers().add(offCaps);
-            offeringMap.put(offCaps.getIdentifier(), offCaps);
-            procedureToOfferingMap.put(sensorUID, offering);
-            
-            // setup data storage
-            //StorageConfig storageConfig = new StorageConfig();
-            //SensorHub.getInstance().getModuleRegistry().loadModule(storageConfig);
-            
-            // save config so that registered sensor stays active after restart
-            SensorHub.getInstance().getModuleRegistry().saveConfiguration(this);
+            if (sensorUID == null)
+                throw new SOSException(SOSException.missing_param_code, "identifier", null, "Missing unique identifier in SensorML description");
+                        
+            // add new offering, provider and virtual sensor if sensor is not already registered
+            String offering = procedureToOfferingMap.get(sensorUID);
+            if (offering == null)
+            {
+                offering = sensorUID + "-sos";
+                ModuleRegistry moduleReg = SensorHub.getInstance().getModuleRegistry();           
+                
+                // create and register new virtual sensor module as data consumer
+                SOSVirtualSensorConfig sensorConfig = new SOSVirtualSensorConfig();
+                sensorConfig.enabled = false;
+                sensorConfig.sensorUID = sensorUID;
+                sensorConfig.name = request.getProcedureDescription().getName();
+                if (sensorConfig.name == null)
+                    sensorConfig.name = request.getProcedureDescription().getId();
+                SOSVirtualSensor virtualSensor = (SOSVirtualSensor)moduleReg.loadModule(sensorConfig);            
+                virtualSensor.updateSensorDescription(request.getProcedureDescription(), true);
+                SensorHub.getInstance().getModuleRegistry().enableModule(virtualSensor.getLocalID());
+                                
+                // generate new provider and consumer config
+                SensorDataProviderConfig providerConfig = new SensorDataProviderConfig();
+                providerConfig.enabled = true;
+                providerConfig.sensorID = virtualSensor.getLocalID();
+                providerConfig.uri = offering;
+                config.dataProviders.add(providerConfig);
+                
+                SensorConsumerConfig consumerConfig = new SensorConsumerConfig();
+                consumerConfig.enabled = true;
+                consumerConfig.offering = offering;
+                consumerConfig.sensorID = virtualSensor.getLocalID();
+                config.dataConsumers.add(consumerConfig);
+                
+                if (config.newStorageConfig != null)
+                {
+                    // create new data storage
+                    StorageConfig newStorageConfig = (StorageConfig)config.newStorageConfig.clone();
+                    newStorageConfig.id = null;
+                    newStorageConfig.name = virtualSensor.getName() + " Storage";
+                    newStorageConfig.storagePath = sensorUID + ".dat";
+                    IBasicStorage<?> storage = (IBasicStorage<?>)moduleReg.loadModule(newStorageConfig);
+                    SensorStorageHelper dataListener = StorageHelper.configureStorageForSensor(virtualSensor, storage, true);
+                                        
+                    // associate storage to config                    
+                    providerConfig.storageID = storage.getLocalID();
+                    consumerConfig.storageID = storage.getLocalID();
+                    
+                    // save config so that registered sensor stays active after restart
+                    moduleReg.saveConfiguration(this.config, sensorConfig, newStorageConfig, dataListener.getConfiguration());
+                }
+                
+                // instantiate provider and consumer instances
+                IDataProviderFactory provider = providerConfig.getFactory();
+                ISOSDataConsumer consumer = consumerConfig.getConsumerInstance();
+                
+                // register provider and consumer
+                dataProviders.put(offering, provider);
+                dataConsumers.put(offering, consumer);
+                
+                // create new offering
+                SOSOfferingCapabilities offCaps = provider.generateCapabilities();
+                capabilitiesCache.getLayers().add(offCaps);
+                offeringCaps.put(offCaps.getIdentifier(), offCaps);
+                procedureToOfferingMap.put(sensorUID, offering);
+            }
             
             // build and send response
             InsertSensorResponse resp = new InsertSensorResponse();
@@ -459,14 +559,27 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
         if (resultEncoding instanceof BinaryEncoding)
         {
             boolean useMP4 = false;
-            BinaryMember member1 = ((BinaryEncoding)resultEncoding).getMemberList().get(0);
-            if (member1 instanceof BinaryBlock && ((BinaryBlock)member1).getCompression().equals("H264"))
-                useMP4 = true;
+            boolean useMJPEG = false;
+            List<BinaryMember> mbrList = ((BinaryEncoding)resultEncoding).getMemberList();
+            BinaryMember videoFrameSpec = null;
+            
+            if (mbrList.size() == 1) // case of no time tag
+                videoFrameSpec = mbrList.get(0);
+            else if (mbrList.size() == 2) // case of time tag + encoded frame
+                videoFrameSpec = mbrList.get(1);
+            else
+                throw new RuntimeException("Invalid binary encoding specs");
+            
+            if (videoFrameSpec instanceof BinaryBlock && ((BinaryBlock)videoFrameSpec).getCompression().equals("H264"))
+                useMP4 = true;            
+            else if (videoFrameSpec instanceof BinaryBlock && ((BinaryBlock)videoFrameSpec).getCompression().equals("JPEG"))
+                useMJPEG = true;            
             
             if (useMP4)
             {            
                 // set MIME type for MP4 format
-                request.getHttpResponse().setContentType("video/mp4");
+                if (request.getHttpResponse() != null)
+                    request.getHttpResponse().setContentType("video/mp4");
                 
                 //os = new FileOutputStream("/home/alex/testsos.mp4");
                 
@@ -488,6 +601,40 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
                 {
                     writer.write(nextRecord);
                     writer.flush();
+                }       
+                        
+                os.flush();
+                return true;
+            }
+            
+            else if (useMJPEG)
+            {
+                if (request.getHttpResponse() != null)
+                {
+                    request.getHttpResponse().addHeader("Cache-Control", "no-cache");
+                    request.getHttpResponse().addHeader("Pragma", "no-cache");
+                    
+                    // set multi-part MIME so that browser can properly decode it in an img tag
+                    //request.getHttpResponse().setContentType("image/jpeg"); //video/x-motion-jpeg, video/x-jpeg
+                    request.getHttpResponse().setContentType("multipart/x-mixed-replace; boundary=--myboundary");
+                }
+                
+                byte[] mimeBoundary = new String("--myboundary\r\nContent-Type: image/jpeg\r\nContent-Length: ").getBytes();
+                byte[] endMime = new byte[] {0xD, 0xA, 0xD, 0xA};
+                
+                // write each record in output stream
+                DataBlock nextRecord;
+                while ((nextRecord = dataProvider.getNextResultRecord()) != null)
+                {
+                    DataBlock frameBlk = ((DataBlockMixed)nextRecord).getUnderlyingObject()[1];
+                    byte[] frameData = (byte[])frameBlk.getUnderlyingObject();
+                    
+                    // write MIME boundary
+                    os.write(mimeBoundary);
+                    os.write(Integer.toString(frameData.length).getBytes());
+                    os.write(endMime);
+                    os.write(frameData);
+                    os.flush();
                 }       
                         
                 os.flush();
@@ -589,9 +736,31 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
         try
         {
             checkTransactionalSupport(request);
+            String offering = request.getOffering();
             
-            ISOSDataConsumer consumer = getDataConsumerByOfferingID(request.getOffering());
+            // get template ID
+            // the same template ID is always returned for a given observable
+            ISOSDataConsumer consumer = getDataConsumerByOfferingID(offering);
             String templateID = consumer.newResultTemplate(request.getResultStructure(), request.getResultEncoding());
+            
+            // only continue of template was not already registered
+            if (!templateToOfferingMap.containsKey(templateID))
+            {
+                templateToOfferingMap.put(templateID, offering);
+                
+                // re-generate capabilities
+                IDataProviderFactory provider = getDataProviderFactoryByOfferingID(offering);
+                SOSOfferingCapabilities newCaps = provider.generateCapabilities();
+                int oldIndex = 0;
+                for (OWSLayerCapabilities offCaps: capabilitiesCache.getLayers())
+                {
+                    if (offCaps.getIdentifier().equals(offering))
+                        break; 
+                    oldIndex++;
+                }
+                capabilitiesCache.getLayers().set(oldIndex, newCaps);
+                offeringCaps.put(newCaps.getIdentifier(), newCaps);
+            }
             
             // build and send response
             InsertResultTemplateResponse resp = new InsertResultTemplateResponse();
@@ -610,30 +779,48 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     {
         DataStreamParser parser = null;
         
+        checkTransactionalSupport(request);
+        String templateID = request.getTemplateId();
+        
+        // retrieve consumer based on template id
+        ISOSDataConsumer consumer = (ISOSDataConsumer)getDataConsumerByTemplateID(templateID);
+        Template template = consumer.getTemplate(templateID);
+        DataComponent dataStructure = template.component;
+        DataEncoding encoding = template.encoding;
+        
         try
         {
-            checkTransactionalSupport(request);
-            String templateID = request.getTemplateId();
+            InputStream resultStream;
             
-            // retrieve consumer based on template id
-            SOSVirtualSensor sensor = (SOSVirtualSensor)getDataConsumerByTemplateID(templateID);
-            ISensorDataInterface output = sensor.getObservationOutputs().get(templateID);
-            DataComponent dataStructure = output.getRecordDescription();
-            DataEncoding encoding = output.getRecommendedEncoding();
+            // select data source (either inline XML or in POST body for KVP)
+            DataSource dataSrc = request.getResultDataSource();
+            if (dataSrc instanceof DataSourceDOM) // inline XML
+            {
+                encoding = SWEFactory.ensureXmlCompatible(encoding);
+                resultStream = dataSrc.getDataStream();
+            }
+            else // POST body
+            {
+                resultStream = new BufferedInputStream(request.getHttpRequest().getInputStream());
+            }
             
-            // prepare parser
+            // create parser
             parser = SWEFactory.createDataParser(encoding);
             parser.setDataComponents(dataStructure);
-            parser.setInput(request.getResultDataSource().getDataStream());
-            
+            parser.setInput(resultStream);
+                        
             // parse each record and send it to consumer
             DataBlock nextBlock = null;
             while ((nextBlock = parser.parseNextBlock()) != null)
-                sensor.newResultRecord(templateID, nextBlock);
+                consumer.newResultRecord(templateID, nextBlock);
             
             // build and send response
             InsertResultResponse resp = new InsertResultResponse();
             sendResponse(request, resp);
+        }
+        catch (ReaderException e)
+        {
+            throw new SOSException("Error in SWE encoded data", e);
         }
         finally
         {
@@ -692,10 +879,23 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
             log.error("Error while updating capabilities for offering " + offeringID, e);
         }
         
-        // check that request time is within allowed time periods
+        // check that request time is within allowed time period
         TimeExtent allowedPeriod = offering.getPhenomenonTime();
         boolean nowOk = allowedPeriod.isBaseAtNow() || allowedPeriod.isEndNow();
-        if (!((requestTime.isBaseAtNow() && nowOk) || requestTime.intersects(allowedPeriod)))
+        
+        boolean requestOk = false;
+        if (requestTime.isBaseAtNow() && nowOk)
+            requestOk = true;
+        else if (requestTime.isBeginNow() && nowOk)
+        {
+            double now = System.currentTimeMillis() / 1000.0;
+            if (requestTime.getStopTime() >= now)
+                requestOk = true;
+        }
+        else if (requestTime.intersects(allowedPeriod))
+            requestOk = true;
+        
+        if (!requestOk)
             report.add(new SOSException(SOSException.invalid_param_code, "phenomenonTime", requestTime.getIsoString(0), null));            
     }
     
@@ -713,15 +913,18 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
         if (format == null)
             return;
         
-        SWESOfferingCapabilities offering = checkAndGetOffering(offeringID);
-        if (!offering.getProcedureFormats().contains(format))
-            report.add(new SOSException(SOSException.invalid_param_code, "procedureDescriptionFormat", format, "Procedure description format " + format + " is not available for offering " + offeringID));
+        SWESOfferingCapabilities offering = offeringCaps.get(offeringID);
+        if (offering != null)
+        {
+            if (!offering.getProcedureFormats().contains(format))
+                report.add(new SOSException(SOSException.invalid_param_code, "procedureDescriptionFormat", format, "Procedure description format " + format + " is not available for offering " + offeringID));
+        }
     }
     
     
     protected SOSOfferingCapabilities checkAndGetOffering(String offeringID) throws SOSException
     {
-        SOSOfferingCapabilities offCaps = offeringMap.get(offeringID);
+        SOSOfferingCapabilities offCaps = offeringCaps.get(offeringID);
         
         if (offCaps == null)
             throw new SOSException(SOSException.invalid_param_code, "offering", offeringID, null);
@@ -754,13 +957,19 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     }
     
     
-    protected IDataProviderFactory getDataProviderFactoryBySensorID(String sensorID) throws Exception
+    protected IDataProviderFactory getDataProviderFactoryByOfferingID(String offering) throws Exception
     {
-        String offering = procedureToOfferingMap.get(sensorID);
         ISOSDataProviderFactory factory = dataProviders.get(offering);
         if (factory == null)
             throw new IllegalStateException("No valid data provider factory found for offering " + offering);
         return (IDataProviderFactory)factory;
+    }
+    
+    
+    protected IDataProviderFactory getDataProviderFactoryBySensorID(String sensorID) throws Exception
+    {
+        String offering = procedureToOfferingMap.get(sensorID);
+        return getDataProviderFactoryByOfferingID(offering);
     }
     
     
@@ -792,6 +1001,9 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
         String offering = templateToOfferingMap.get(templateID);
         ISOSDataConsumer consumer = dataConsumers.get(offering);
         
+        if (consumer == null)
+            throw new SOSException(SOSException.invalid_param_code, "template", templateID, "Invalid template ID");
+        
         return consumer;
     }
     
@@ -814,5 +1026,12 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     public void unregisterListener(IEventListener listener)
     {
         // TODO Auto-generated method stub        
+    }
+
+
+    @Override
+    protected String getDefaultVersion()
+    {
+        return "2.0";
     }
 }

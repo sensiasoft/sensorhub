@@ -8,8 +8,7 @@ Software distributed under the License is distributed on an "AS IS" basis,
 WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
 for the specific language governing rights and limitations under the License.
  
-The Initial Developer is Sensia Software LLC. Portions created by the Initial
-Developer are Copyright (C) 2014 the Initial Developer. All Rights Reserved.
+Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
  
 ******************************* END LICENSE BLOCK ***************************/
 
@@ -19,7 +18,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -46,8 +45,7 @@ import org.vast.sensorML.SMLUtils;
  * By default, sensor description history and updates are reported as unsupported.
  * </p>
  *
- * <p>Copyright (c) 2014</p>
- * @author Alexandre Robin <alex.robin@sensiasoftware.com>
+ * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @param <ConfigType> 
  * @since Oct 30, 2014
  */
@@ -57,9 +55,9 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
     protected final static String ERROR_NO_UPDATE = "Sensor Description update is not supported by driver ";
     protected final static String ERROR_NO_HISTORY = "History of sensor description is not supported by driver ";
     
-    private Map<String, ISensorDataInterface> obsOutputs = new HashMap<String, ISensorDataInterface>();  
-    private Map<String, ISensorDataInterface> statusOutputs = new HashMap<String, ISensorDataInterface>();  
-    private Map<String, ISensorControlInterface> controlInputs = new HashMap<String, ISensorControlInterface>();  
+    private Map<String, ISensorDataInterface> obsOutputs = new LinkedHashMap<String, ISensorDataInterface>();  
+    private Map<String, ISensorDataInterface> statusOutputs = new LinkedHashMap<String, ISensorDataInterface>();  
+    private Map<String, ISensorControlInterface> controlInputs = new LinkedHashMap<String, ISensorControlInterface>();  
     protected AbstractProcess sensorDescription = new PhysicalSystemImpl();
     protected double lastUpdatedSensorDescription = Double.NEGATIVE_INFINITY;
     
@@ -172,8 +170,9 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
             lastUpdatedSensorDescription = unixTime / 1000.;
             
             // default IDs
-            if (sensorDescription.getId() == null)
-                sensorDescription.setId(DEFAULT_ID);            
+            String gmlId = sensorDescription.getId();
+            if (gmlId == null || gmlId.length() == 0)
+                sensorDescription.setId(DEFAULT_ID);
             if (!sensorDescription.isSetIdentifier())
                 sensorDescription.setUniqueIdentifier(getLocalID());
             
@@ -251,7 +250,7 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
     @Override
     public Map<String, ? extends ISensorDataInterface> getAllOutputs() throws SensorException
     {
-        Map<String, ISensorDataInterface> allOutputs = new HashMap<String, ISensorDataInterface>();  
+        Map<String, ISensorDataInterface> allOutputs = new LinkedHashMap<String, ISensorDataInterface>();  
         allOutputs.putAll(obsOutputs);
         allOutputs.putAll(statusOutputs);
         return Collections.unmodifiableMap(allOutputs);

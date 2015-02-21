@@ -8,13 +8,14 @@ Software distributed under the License is distributed on an "AS IS" basis,
 WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
 for the specific language governing rights and limitations under the License.
  
-The Initial Developer is Sensia Software LLC. Portions created by the Initial
-Developer are Copyright (C) 2014 the Initial Developer. All Rights Reserved.
+Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
  
 ******************************* END LICENSE BLOCK ***************************/
 
 package org.sensorhub.impl.sensor.sost;
 
+import net.opengis.swe.v20.BinaryEncoding;
+import net.opengis.swe.v20.ByteEncoding;
 import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataEncoding;
@@ -39,6 +40,11 @@ public class SOSVirtualSensorOutput extends AbstractSensorOutput<SOSVirtualSenso
         super(sensor);
         this.recordStructure = recordStructure;
         this.recordEncoding = recordEncoding;
+        
+        // force raw binary encoding (no reason to recommend base64)
+        // switching to base64 is automatic when writing or parsing from XML
+        if (recordEncoding instanceof BinaryEncoding)
+            ((BinaryEncoding) recordEncoding).setByteEncoding(ByteEncoding.RAW);
     }
 
 
@@ -110,14 +116,19 @@ public class SOSVirtualSensorOutput extends AbstractSensorOutput<SOSVirtualSenso
      */
     protected void updateSamplingPeriod(double timeStamp)
     {
+        if (lastRecordTime < 0)
+            return;
+        
         if (avgSampleCount < 100)
         {
             if (avgSampleCount == 0)
                 avgSamplingPeriod = 0.0;
             else
-                avgSamplingPeriod *= avgSampleCount / (avgSampleCount+1);
+                avgSamplingPeriod *= (double)avgSampleCount / (avgSampleCount+1);
             avgSampleCount++;
             avgSamplingPeriod += (timeStamp - lastRecordTime) / avgSampleCount;
+            
+            SOSVirtualSensor.log.trace("Sampling period = " + avgSamplingPeriod + "s");
         }
     }
     
