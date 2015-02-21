@@ -415,7 +415,7 @@ public class SOSTClient extends AbstractModule<SOSTClientConfig> implements IEve
                     
                     // wait a little before trying to reconnect
                     log.debug("Waiting to reconnect...");
-                    try { Thread.sleep(1000L); }
+                    try { Thread.sleep(3000L); }
                     catch (InterruptedException e1) { }
                 }
             }           
