@@ -1,0 +1,173 @@
+[
+  {
+    "objClass": "org.sensorhub.impl.service.HttpServerConfig",
+    "id": "5cb05c9c-9e08-4fa1-8731-ffaa5846bdc1",
+    "name": "HTTP Server",
+    "moduleClass": "org.sensorhub.impl.service.HttpServer",
+    "httpPort": 8080,
+    "servletsRootUrl": "/sensorhub",
+    "staticDocRootUrl": "web"
+  },
+  {
+    "objClass": "org.sensorhub.ui.AdminUIConfig",
+    "id": "5cb05c9c-9123-4fa1-8731-ffaa51489678",
+    "moduleClass": "org.sensorhub.ui.AdminUIModule",
+    "enabled": true
+  },
+  {
+    "objClass": "org.sensorhub.impl.sensor.fakegps.FakeGpsConfig",
+    "id": "d136b6ea-3950-4691-bf56-c84ec7d89d72",
+    "name": "Fake GPS Sensor",
+    "moduleClass": "org.sensorhub.impl.sensor.fakegps.FakeGpsSensor",
+    "enabled": true,
+    "sensorML": null,
+    "autoActivate": true,
+    "enableHistory": false,
+    "hiddenIO": null,
+    "centerLatitude": 34.7300,
+    "centerLongitude": -86.5850,
+    "areaSize": 0.1,
+    "vehicleSpeed": 200
+  },
+  {
+    "objClass": "org.sensorhub.impl.sensor.fakeweather.FakeWeatherConfig",
+    "id": "d136b6ea-3950-4691-bf56-c84ec7d89d73",
+    "name": "Fake Weather Sensor",
+    "enabled": true,
+    "moduleClass": "org.sensorhub.impl.sensor.fakeweather.FakeWeatherSensor",
+    "sensorML": null,
+    "autoActivate": true,
+    "enableHistory": false,
+    "hiddenIO": null
+  },
+  {
+    "objClass": "org.sensorhub.impl.sensor.station.StationConfig",
+    "sensorML": null,
+    "autoActivate": true,
+    "enableHistory": true,
+    "hiddenIO": null,
+    "id": "d136b6ea-3950-4691-bf56-c84ec7d89d75",
+    "name": "Weather Station",
+    "moduleClass": "org.sensorhub.impl.sensor.station.metar.MetarSensor",
+    "enabled": true,
+    "lat": 34.7300,
+    "lon": -86.5850,
+    "elevation": 100
+  },
+  {
+    "objClass": "org.sensorhub.impl.sensor.fakecam.FakeCamConfig",
+    "id": "d136b6ea-3950-4691-bf56-c84ec7d89d74",
+    "name": "Fake Camera Sensor",
+    "enabled": true,
+    "moduleClass": "org.sensorhub.impl.sensor.fakecam.FakeCamSensor",
+    "sensorML": null,
+    "autoActivate": true,
+    "enableHistory": false,
+    "hiddenIO": null,
+    "videoFilePath": "/home/alex/Videos/output.mp4"
+  },    
+  {
+    "objClass": "org.sensorhub.impl.persistence.perst.BasicStorageConfig",
+    "id": "5cb05c9c-9e08-4fa1-8731-ff4ff948bdc1",
+    "name": "GPS Data Storage",
+    "moduleClass": "org.sensorhub.impl.persistence.perst.BasicStorageImpl",
+    "enabled": true,
+    "storagePath": "gps_obs.dat"
+  },
+  {
+    "objClass": "org.sensorhub.impl.persistence.SensorStorageHelperConfig",
+    "id": "5cb05c9c-9e08-4cca-5691-ff4ff948bdc1",
+    "name": "GPS Sensor Storage Helper",
+    "moduleClass": "org.sensorhub.impl.persistence.SensorStorageHelper",
+    "enabled": true,
+    "storageID": "5cb05c9c-9e08-4fa1-8731-ff4ff948bdc1",
+    "sensorID": "d136b6ea-3950-4691-bf56-c84ec7d89d72"
+  },  
+  {
+    "objClass": "org.sensorhub.impl.persistence.perst.BasicStorageConfig",
+    "id": "5cb05c9c-9e08-4fa1-8731-ff4ff948bdc2",
+    "name": "Weather Data Storage",
+    "moduleClass": "org.sensorhub.impl.persistence.perst.BasicStorageImpl",
+    "enabled": true,
+    "storagePath": "weather_obs.dat"
+  },
+  {
+    "objClass": "org.sensorhub.impl.persistence.SensorStorageHelperConfig",
+    "id": "5cb05c9c-9e08-4cca-5691-ff4ff948bdc2",
+    "name": "Weather Sensor Storage Helper",
+    "moduleClass": "org.sensorhub.impl.persistence.SensorStorageHelper",
+    "enabled": true,
+    "storageID": "5cb05c9c-9e08-4fa1-8731-ff4ff948bdc2",
+    "sensorID": "d136b6ea-3950-4691-bf56-c84ec7d89d73"
+  },
+  {
+    "objClass": "org.sensorhub.impl.service.sos.SOSServiceConfig",
+    "id": "5cb05c9c-9e08-4fa1-8731-ff41e246bdc1",
+    "name": "SOS Service",
+    "moduleClass": "org.sensorhub.impl.service.sos.SOSService",
+    "enabled": true,
+    "endPoint": "/sos",
+    "enableHttpGET": true,
+    "enableHttpPOST": true,
+    "enableSOAP": true,
+    "dataProviders" : [
+       {
+           "objClass": "org.sensorhub.impl.service.sos.SensorDataProviderConfig",
+           "enabled": true,
+           "name": "Fake GPS",
+           "description": "Fake GPS sensor",
+           "uri": "urn:mysos:offering02",
+           "sensorID": "d136b6ea-3950-4691-bf56-c84ec7d89d72",
+           "storageID": "5cb05c9c-9e08-4fa1-8731-ff4ff948bdc1"
+       },
+       {
+           "objClass": "org.sensorhub.impl.service.sos.SensorDataProviderConfig",
+           "enabled": true,
+           "name": "Fake Weather",
+           "description": "Fake Weather sensor",
+           "uri": "urn:mysos:offering03",
+           "sensorID": "d136b6ea-3950-4691-bf56-c84ec7d89d73",           
+           "storageID": "5cb05c9c-9e08-4fa1-8731-ff4ff948bdc2"
+       },
+       {
+           "objClass": "org.sensorhub.impl.service.sos.SensorDataProviderConfig",
+           "enabled": true,
+           "name": "Fake Camera",
+           "description": "Fake Camera sensor",
+           "uri": "urn:mysos:offering04",
+           "sensorID": "d136b6ea-3950-4691-bf56-c84ec7d89d74"
+       },
+       {
+           "objClass": "org.sensorhub.impl.service.sos.SensorDataProviderConfig",
+           "enabled": true,
+           "name": "Weather Station",
+           "description": "Metar Weather Station",
+           "uri": "urn:mysos:offering05",
+           "sensorID": "d136b6ea-3950-4691-bf56-c84ec7d89d75"
+       }
+    ],
+    "ogcCapabilitiesInfo": {
+      "title": "Test SOS Service",
+      "description": "An SOS service automatically deployed by SensorHub",
+      "keywords": ["SensorHub", "Video"],
+      "fees": "NONE",
+      "accessConstraints": "NONE",
+      "serviceProvider": {
+        "individualName": "Alex Robin",
+        "organizationName": "Sensia Software LLC",
+        "positionName": "Engineer",
+        "voiceNumber": "+33 5 23 56 89 78",
+        "faxNumber": "+33 5 23 56 89 77",
+        "deliveryPoint": "12 rue Voltaire",
+        "city": "Toulouse",
+        "administrativeArea": null,
+        "postalCode": "30000",
+        "country": "France",
+        "email": "admin@sensiasoft.com",
+        "website": null,
+        "hoursOfService": null,
+        "contactInstructions": null
+      }
+    }
+  }
+]

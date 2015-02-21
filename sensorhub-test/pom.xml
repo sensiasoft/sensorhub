@@ -11,7 +11,7 @@
 		</dependency>
 		<dependency>
 			<groupId>org.sensorhub</groupId>
-			<artifactId>sensorhub-webui-core</artifactId>
+			<artifactId>sensorhub-core-webui</artifactId>
 			<version>0.5</version>
 		</dependency>
 		<dependency>
@@ -49,14 +49,14 @@
 		</dependency>
 		<dependency>
 			<groupId>org.sensorhub</groupId>
-			<artifactId>sensorhub-driver-weatherStation</artifactId>
-			<version>0.1</version>
-		</dependency>
-		<dependency>
-			<groupId>org.sensorhub</groupId>
 			<artifactId>sensorhub-driver-axis</artifactId>
 			<version>0.1</version>
 			<type>bundle</type>
+		</dependency>
+		<dependency>
+			<groupId>org.sensorhub</groupId>
+			<artifactId>sensorhub-driver-weatherStation</artifactId>
+			<version>0.1</version>
 		</dependency>
 		<dependency>
 			<groupId>org.vast.opengis</groupId>

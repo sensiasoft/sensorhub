@@ -83,11 +83,12 @@
     "hiddenIO": null,
     "id": "d136b6ea-3950-4691-bf56-c84ec7d89d75",
     "name": "Weather Station",
-    "moduleClass": "org.sensorhub.impl.sensor.station.StationSensor",
+    "moduleClass": "org.sensorhub.impl.sensor.station.metar.MetarSensor",
     "enabled": true,
     "lat": 34.7300,
     "lon": -86.5850,
-    "elevation": 100
+    "elevation": 100,
+    "stationDataPoller": "org.sensorhub.impl.sensor.station.metar.MetarDataPoller" 
   },
   {
     "objClass": "org.sensorhub.api.persistence.StorageConfig",
