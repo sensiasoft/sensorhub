@@ -217,7 +217,7 @@ public class SensorDataProvider implements ISOSDataProvider, IEventListener
         IObservation obs = new ObservationImpl();
         obs.setFeatureOfInterest(new FeatureRef("http://TODO"));
         obs.setObservedProperty(new DefinitionRef("http://TODO"));
-        obs.setProcedure(new ProcedureRef(sensor.getCurrentSensorDescription().getUniqueIdentifier()));
+        obs.setProcedure(new ProcedureRef(sensor.getCurrentDescription().getUniqueIdentifier()));
         obs.setPhenomenonTime(phenTime);
         obs.setResultTime(resultTime);
         obs.setResult(result);

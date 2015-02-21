@@ -16,7 +16,7 @@ package org.sensorhub.api.sensor;
 
 import java.util.List;
 import net.opengis.swe.v20.DataBlock;
-import org.sensorhub.api.data.IStreamingDataProducer;
+import org.sensorhub.api.data.IStreamingDataInterface;
 
 
 /**
@@ -35,7 +35,7 @@ import org.sensorhub.api.data.IStreamingDataProducer;
  * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @since Nov 5, 2010
  */
-public interface ISensorDataInterface extends IStreamingDataProducer
+public interface ISensorDataInterface extends IStreamingDataInterface
 {
 
     /**

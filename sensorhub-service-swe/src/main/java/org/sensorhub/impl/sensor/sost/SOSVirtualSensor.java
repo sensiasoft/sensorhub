@@ -190,7 +190,7 @@ public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfi
     public void start() throws SensorHubException
     {
         // generate output interfaces from description
-        for (AbstractSWEIdentifiable output: getCurrentSensorDescription().getOutputList())
+        for (AbstractSWEIdentifiable output: getCurrentDescription().getOutputList())
         {
             DataComponent dataStruct = null;
             DataEncoding dataEnc = null;
@@ -238,7 +238,7 @@ public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfi
         sensorDescription = systemDesc;
         long unixTime = System.currentTimeMillis();
         lastUpdatedSensorDescription = unixTime / 1000.;
-        eventHandler.publishEvent(new SensorEvent(unixTime, getLocalID(), SensorEvent.Type.SENSOR_CHANGED));
+        eventHandler.publishEvent(new SensorEvent(unixTime, this, SensorEvent.Type.SENSOR_CHANGED));
     }
     
     

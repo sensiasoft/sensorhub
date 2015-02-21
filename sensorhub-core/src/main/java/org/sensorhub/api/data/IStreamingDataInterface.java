@@ -29,7 +29,7 @@ import org.sensorhub.api.module.IModule;
  * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @since Feb 21, 2015
  */
-public interface IStreamingDataProducer extends IEventProducer
+public interface IStreamingDataInterface extends IEventProducer
 {
 
     /**

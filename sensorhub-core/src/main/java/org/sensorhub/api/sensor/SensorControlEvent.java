@@ -42,7 +42,7 @@ public class SensorControlEvent extends SensorEvent
      */
 	public SensorControlEvent(long time, ISensorControlInterface controlInterface, CommandStatus status)
 	{
-	    super(time, controlInterface.getParentSensor().getLocalID(), Type.COMMAND_STATUS);
+	    super(time, controlInterface.getParentSensor(), Type.COMMAND_STATUS);
 		this.source = controlInterface;
 		this.status = status;
 	}

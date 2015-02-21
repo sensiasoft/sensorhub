@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Map;
 import net.opengis.sensorml.v20.AbstractProcess;
 import org.sensorhub.api.common.IEventProducer;
-import org.sensorhub.api.module.IModule;
+import org.sensorhub.api.data.IDataProducerModule;
 
 
 /**
@@ -30,7 +30,7 @@ import org.sensorhub.api.module.IModule;
  * @param <ConfigType> 
  * @since Nov 5, 2010
  */
-public interface ISensorModule<ConfigType extends SensorConfig> extends IModule<ConfigType>, IEventProducer
+public interface ISensorModule<ConfigType extends SensorConfig> extends IDataProducerModule<ConfigType>, IEventProducer
 {
     /**
      * Checks sensor description update capability
@@ -50,18 +50,16 @@ public interface ISensorModule<ConfigType extends SensorConfig> extends IModule<
 
     /**
      * Retrieves most current sensor description
-     * @return SMLSytem object containing all metadata about the sensor
-     * @throws SensorException 
      */
-    public AbstractProcess getCurrentSensorDescription() throws SensorException;
+    @Override
+    public AbstractProcess getCurrentDescription() throws SensorException;
 
 
     /**
      * Used to check when sensor description was last updated.
-     * This is useful to avoid requesting the object when it hasn't changed.
-     * @return date/time of last sensor description update as julian time (1970)
      */
-    public double getLastSensorDescriptionUpdate();
+    @Override
+    public double getLastDescriptionUpdate();
 
 
     /**
@@ -93,9 +91,9 @@ public interface ISensorModule<ConfigType extends SensorConfig> extends IModule<
 
     /**
      * Retrieves the list of interfaces to all sensor data outputs
-     * @return map of output names -> data interface objects
      * @throws SensorException 
      */
+    @Override
     public Map<String, ? extends ISensorDataInterface> getAllOutputs() throws SensorException;
 
 

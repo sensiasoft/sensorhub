@@ -163,7 +163,7 @@ public class SOSTClient extends AbstractModule<SOSTClientConfig> implements IEve
             InsertSensorRequest req = new InsertSensorRequest();
             req.setPostServer(config.sosEndpointUrl);
             req.setVersion("2.0");
-            req.setProcedureDescription(sensor.getCurrentSensorDescription());
+            req.setProcedureDescription(sensor.getCurrentDescription());
             req.setProcedureDescriptionFormat(InsertSensorRequest.DEFAULT_PROCEDURE_FORMAT);
             req.getObservationTypes().add(IObservation.OBS_TYPE_RECORD);
             req.getFoiTypes().add("gml:Feature");
@@ -194,8 +194,8 @@ public class SOSTClient extends AbstractModule<SOSTClientConfig> implements IEve
             UpdateSensorRequest req = new UpdateSensorRequest(SOSUtils.SOS);
             req.setPostServer(config.sosEndpointUrl);
             req.setVersion("2.0");
-            req.setProcedureId(sensor.getCurrentSensorDescription().getUniqueIdentifier());
-            req.setProcedureDescription(sensor.getCurrentSensorDescription());
+            req.setProcedureId(sensor.getCurrentDescription().getUniqueIdentifier());
+            req.setProcedureDescription(sensor.getCurrentDescription());
             req.setProcedureDescriptionFormat(InsertSensorRequest.DEFAULT_PROCEDURE_FORMAT);
             
             sosUtils.sendRequest(req, false);

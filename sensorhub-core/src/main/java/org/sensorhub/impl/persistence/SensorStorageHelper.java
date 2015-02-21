@@ -82,7 +82,7 @@ public class SensorStorageHelper extends AbstractModule<SensorStorageHelperConfi
             StorageHelper.configureStorageForSensor(sensor, storage, false);
         
         // get the latest sensor description in case we were down during the last update
-        storage.storeDataSourceDescription(sensor.getCurrentSensorDescription());
+        storage.storeDataSourceDescription(sensor.getCurrentDescription());
     }
     
     
@@ -161,7 +161,7 @@ public class SensorStorageHelper extends AbstractModule<SensorStorageHelperConfi
                         // only useful between restarts since it will be resetted to current time at startup...
                         
                         // TODO to manage this issue, first check that no other description is valid at the same time
-                        storage.storeDataSourceDescription(sensor.getCurrentSensorDescription());
+                        storage.storeDataSourceDescription(sensor.getCurrentDescription());
                     }
                     catch (StorageException | SensorException ex)
                     {

@@ -42,7 +42,7 @@ public class StorageHelper
         }
         else
         {
-            storage.storeDataSourceDescription(sensor.getCurrentSensorDescription());
+            storage.storeDataSourceDescription(sensor.getCurrentDescription());
         }
         
         // create one data store for each sensor output
