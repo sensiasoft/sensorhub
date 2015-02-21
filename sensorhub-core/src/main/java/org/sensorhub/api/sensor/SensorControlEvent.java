@@ -27,8 +27,6 @@ import org.sensorhub.api.common.CommandStatus;
  */
 public class SensorControlEvent extends SensorEvent
 {
-	private static final long serialVersionUID = -1682605821666177558L;
-	
 	
 	/**
 	 * Status of the command that triggered this event

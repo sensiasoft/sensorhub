@@ -14,38 +14,21 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.api.sensor;
 
+import org.sensorhub.api.data.DataEvent;
 import net.opengis.swe.v20.DataBlock;
-import net.opengis.swe.v20.DataComponent;
 
 
 /**
  * <p>
- * Type of event generated when new data is avaible from sensors.
+ * Type of event generated when new data is available from sensors.
  * It is immutable and carries sensor data by reference
  * </p>
  *
  * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @since Nov 5, 2010
  */
-public class SensorDataEvent extends SensorEvent
-{
-	private static final long serialVersionUID = 2124599187504793797L;
-    
-	
-	/**
-	 * Description of data records contained in this event (by reference) 
-	 */
-	protected DataComponent recordDescription;
-	
-	
-	/**
-	 * New data that triggered this event.
-	 * Multiple records can be associated to a single event because for performance
-	 * reasonsn with high rate sensors, it is often not practical to generate an
-	 * event for every single record of measurements.
-	 */
-	protected DataBlock[] records;
-	
+public class SensorDataEvent extends DataEvent
+{    
 	
 	/**
 	 * Constructor from list of records with their descriptor
@@ -55,28 +38,19 @@ public class SensorDataEvent extends SensorEvent
 	 */
 	public SensorDataEvent(double timeStamp, ISensorDataInterface dataInterface, DataBlock ... records)
 	{
-		super((long)(timeStamp*1000), dataInterface.getParentSensor().getLocalID(), Type.NEW_DATA_AVAILABLE);
-		this.source = dataInterface;
-		this.recordDescription = dataInterface.getRecordDescription();
-		this.records = records;
+		super((long)(timeStamp*1000), dataInterface, records);
 	}
-
-
-    public DataComponent getRecordDescription()
-    {
-        return recordDescription;
-    }
-
-
-    public DataBlock[] getRecords()
-    {
-        return records;
-    }
 
 
     @Override
     public ISensorDataInterface getSource()
     {
         return (ISensorDataInterface)this.source;
+    }
+    
+    
+    public String getSensorID()
+    {
+        return getSource().getParentModule().getLocalID();
     }
 }

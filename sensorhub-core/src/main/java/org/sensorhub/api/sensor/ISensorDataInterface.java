@@ -15,10 +15,8 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 package org.sensorhub.api.sensor;
 
 import java.util.List;
-import net.opengis.swe.v20.DataComponent;
-import net.opengis.swe.v20.DataEncoding;
 import net.opengis.swe.v20.DataBlock;
-import org.sensorhub.api.common.IEventProducer;
+import org.sensorhub.api.data.IStreamingDataProducer;
 
 
 /**
@@ -37,30 +35,31 @@ import org.sensorhub.api.common.IEventProducer;
  * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @since Nov 5, 2010
  */
-public interface ISensorDataInterface extends IEventProducer
+public interface ISensorDataInterface extends IStreamingDataProducer
 {
 
     /**
      * Allows by-reference access to parent sensor module
-     * @return parent sensor
      */
-    public ISensorModule<?> getParentSensor();
+    @Override
+    public ISensorModule<?> getParentModule();
     
     
     /**
-     * Gets the interface name.
-     * <p><i>It should be the name reported in the map by getXXXOutputs methods
+     * Gets this output interface name.
+     * <p><i>It MUST be the name reported in the map by getXXXOutputs methods
      * of {@link org.sensorhub.api.sensor.ISensorModule}</i></p>
      * @see org.sensorhub.api.sensor.ISensorModule#getAllOutputs()
      * @return name of this output interface
      */
+    @Override
     public String getName();
 
 
     /**
      * Checks if this interface is enabled
-     * @return true if interface is enabled, false otherwise
      */
+    @Override
     public boolean isEnabled();
 
 
@@ -87,26 +86,6 @@ public interface ISensorDataInterface extends IEventProducer
      * @return sampling period in seconds
      */
     public double getAverageSamplingPeriod(); // used to know how often to poll
-
-
-    /**
-     * Retrieves the record definition for this output
-     * <p><i>Note that this is usually sent by reference and MUST not be modified
-     * by the caller. If you really need to modify it, first get an independent
-     * copy using {@link net.opengis.swe.v20.DataComponent#copy()}</i></p>
-     * @return a DataComponent object defining the structure of the output
-     */
-    public DataComponent getRecordDescription();
-
-
-    /**
-     * Provides the recommended encoding for this sensor data
-     * <p><i>Note that this is usually sent by reference and MUST not be modified
-     * by the caller. If you really need to modify it, first get an independent
-     * copy using {@link net.opengis.swe.v20.DataEncoding#copy()}</i></p>
-     * @return recommended encoding description
-     */
-    public DataEncoding getRecommendedEncoding();
 
 
     //	/**

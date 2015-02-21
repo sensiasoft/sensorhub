@@ -27,8 +27,6 @@ import org.sensorhub.api.common.Event;
  */
 public class StorageEvent extends Event
 {
-    private static final long serialVersionUID = 4070048416493934591L;
-
     
     /**
      * Possible event types for a StorageEvent
@@ -54,10 +52,20 @@ public class StorageEvent extends Event
     protected Type type;  
 
 
-    public StorageEvent(long timeStamp, String storageId, Type type)
+    public StorageEvent(long timeStamp, IStorageModule<?> source, Type type)
     {
         this.timeStamp = timeStamp;
-        this.storageId = storageId;
+        this.source = source;
+        this.storageId = source.getLocalID();
+        this.type = type;
+    }
+    
+    
+    public StorageEvent(long timeStamp, IRecordDataStore<?,?> source, Type type)
+    {
+        this.timeStamp = timeStamp;
+        this.source = source;
+        this.storageId = source.getParentStorage().getLocalID();
         this.type = type;
     }
     

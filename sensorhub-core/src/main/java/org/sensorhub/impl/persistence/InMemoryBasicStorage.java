@@ -40,7 +40,8 @@ import org.sensorhub.api.persistence.IDataRecord;
 import org.sensorhub.api.persistence.IStorageModule;
 import org.sensorhub.api.persistence.ITimeSeriesDataStore;
 import org.sensorhub.api.persistence.StorageConfig;
-import org.sensorhub.api.persistence.StorageDataEvent;
+import org.sensorhub.api.persistence.StorageEvent;
+import org.sensorhub.api.persistence.StorageEvent.Type;
 import org.sensorhub.api.persistence.StorageException;
 import org.sensorhub.impl.common.BasicEventHandler;
 import org.sensorhub.impl.module.AbstractModule;
@@ -403,7 +404,7 @@ public class InMemoryBasicStorage extends AbstractModule<StorageConfig> implemen
         public DataKey store(DataKey key, DataBlock data)
         {
             recordList.add(new DBRecord(key, data));
-            eventHandler.publishEvent(new StorageDataEvent(System.currentTimeMillis(), this, data));
+            eventHandler.publishEvent(new StorageEvent(System.currentTimeMillis(), this, Type.STORE));
             return key;
         }
 

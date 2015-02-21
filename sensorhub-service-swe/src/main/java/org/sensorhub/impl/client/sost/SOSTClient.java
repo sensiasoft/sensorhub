@@ -29,6 +29,7 @@ import net.opengis.swe.v20.DataBlock;
 import org.sensorhub.api.common.Event;
 import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.common.SensorHubException;
+import org.sensorhub.api.data.DataEvent;
 import org.sensorhub.api.sensor.ISensorDataInterface;
 import org.sensorhub.api.sensor.ISensorModule;
 import org.sensorhub.api.sensor.SensorDataEvent;
@@ -259,8 +260,8 @@ public class SOSTClient extends AbstractModule<SOSTClientConfig> implements IEve
             }
         }
         
-        // sensor data received
-        if (e instanceof SensorDataEvent)
+        // data received
+        else if (e instanceof DataEvent)
         {
             // retrieve stream info
             StreamInfo streamInfo = dataStreams.get(e.getSource());

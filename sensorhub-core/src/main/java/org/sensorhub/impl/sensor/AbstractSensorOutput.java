@@ -60,7 +60,7 @@ public abstract class AbstractSensorOutput<SensorType extends ISensorModule<?>> 
     
     
     @Override
-    public SensorType getParentSensor()
+    public SensorType getParentModule()
     {
         return parentSensor;
     }

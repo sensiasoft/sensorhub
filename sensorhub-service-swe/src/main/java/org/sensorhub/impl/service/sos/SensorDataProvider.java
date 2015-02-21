@@ -26,11 +26,11 @@ import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataEncoding;
 import org.sensorhub.api.common.Event;
 import org.sensorhub.api.common.IEventListener;
+import org.sensorhub.api.data.DataEvent;
 import org.sensorhub.api.sensor.ISensorDataInterface;
 import org.sensorhub.api.sensor.ISensorModule;
 import org.sensorhub.api.sensor.SensorDataEvent;
 import org.sensorhub.api.sensor.SensorEvent;
-import org.sensorhub.api.sensor.SensorEvent.Type;
 import org.sensorhub.api.sensor.SensorException;
 import org.sensorhub.api.service.ServiceException;
 import org.sensorhub.utils.MsgUtils;
@@ -315,7 +315,14 @@ public class SensorDataProvider implements ISOSDataProvider, IEventListener
     {
         if (e instanceof SensorEvent)
         {
-            if (((SensorEvent) e).getType() == Type.NEW_DATA_AVAILABLE)
+            if (((SensorEvent) e).getType() == SensorEvent.Type.DISCONNECTED)
+            {
+                
+            }
+        }
+        else if (e instanceof DataEvent)
+        {
+            if (((DataEvent) e).getType() == DataEvent.Type.NEW_DATA_AVAILABLE)
             {
                 // TODO there is no guarantee that records are processed in chronological order
                 // this is because events may not be received in chronological order in the 1st place
@@ -323,11 +330,7 @@ public class SensorDataProvider implements ISOSDataProvider, IEventListener
                 // we could use the average sampling period to decide how much to wait to confirm the order
                 eventQueue.offer((SensorDataEvent)e);
             }
-            else if (((SensorEvent) e).getType() == Type.DISCONNECTED)
-            {
-                
-            }
-        }        
+        }
     }
     
     

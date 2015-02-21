@@ -12,26 +12,39 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
  
 ******************************* END LICENSE BLOCK ***************************/
 
-package org.sensorhub.api.persistence;
+package org.sensorhub.api.data;
 
+import org.sensorhub.api.common.Event;
 import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataComponent;
 
 
 /**
  * <p>
- * Type of event generated when new data is available from storage.
- * It is immutable and carries data records by reference
+ * Type of event generated when new data is available from a data producer.
+ * It is immutable and carries data by reference.
  * </p>
  *
  * @author Alex Robin <alex.robin@sensiasoftware.com>
- * @since Dec 5, 2014
+ * @since Feb 20, 2015
  */
-public class StorageDataEvent extends StorageEvent
+public class DataEvent extends Event
 {
-	private static final long serialVersionUID = 2124599187504793797L;
+	/**
+     * Possible event types for a DataEvent
+     */
+    public enum Type
+    {
+        NEW_DATA_AVAILABLE
+    };
     
-	
+    
+    /**
+     * Type of data event
+     */
+    protected Type type;
+    
+    
 	/**
 	 * Description of data records contained in this event (by reference) 
 	 */
@@ -40,26 +53,40 @@ public class StorageDataEvent extends StorageEvent
 	
 	/**
 	 * New data that triggered this event.
-	 * Multiple records can be associated to a single event because for performance
-	 * reasonsn with high rate sensors, it is often not practical to generate an
-	 * event for every single record of measurements.
+	 * Multiple records can be associated to a single event because with high
+	 * rate producers, it is often not practical to generate an event for
+	 * every single record of measurements.
 	 */
 	protected DataBlock[] records;
 	
 	
 	/**
 	 * Constructor from list of records with their descriptor
-	 * @param timeStamp unix time of event generation
-     * @param dataStore data store that received the associated data
+	 * @param timeStamp time of event generation (julian time, base 1970)
+     * @param source stream producer that generated the associated data
 	 * @param records arrays of records that triggered this notification
 	 */
-	public StorageDataEvent(long timeStamp, IRecordDataStore<?,?> dataStore, DataBlock ... records)
+	public DataEvent(long timeStamp, IStreamingDataProducer source, DataBlock ... records)
 	{
-		super(timeStamp, dataStore.getParentStorage().getLocalID(), Type.STORE);
-		this.source = dataStore;
-		this.recordDescription = dataStore.getRecordDescription();
+	    this.type = Type.NEW_DATA_AVAILABLE;
+	    this.timeStamp = timeStamp;
+		this.source = source;
+		this.recordDescription = source.getRecordDescription();
 		this.records = records;
 	}
+	
+	
+	@Override
+    public IStreamingDataProducer getSource()
+    {
+        return (IStreamingDataProducer)this.source;
+    }
+	
+	
+    public Type getType()
+    {
+        return type;
+    }
 
 
     public DataComponent getRecordDescription()
@@ -71,12 +98,5 @@ public class StorageDataEvent extends StorageEvent
     public DataBlock[] getRecords()
     {
         return records;
-    }
-
-
-    @Override
-    public IRecordDataStore<?,?> getSource()
-    {
-        return (IRecordDataStore<?,?>)this.source;
     }
 }

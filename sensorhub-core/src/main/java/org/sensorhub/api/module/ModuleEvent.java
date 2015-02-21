@@ -27,16 +27,13 @@ import org.sensorhub.api.common.Event;
  */
 public class ModuleEvent extends Event
 {
-    private static final long serialVersionUID = -6428469756344649559L;
-
-    
     public enum Type 
     {
         LOADED,
         DELETED,
         DISABLED,
         ENABLED,
-        CONFIG_CHANGE
+        CONFIG_CHANGED
     }
     
     
@@ -54,7 +51,7 @@ public class ModuleEvent extends Event
     public ModuleEvent(IModule<?> moduleInstance, ModuleConfig newConfig)
     {
         this.source = moduleInstance;
-        this.type = Type.CONFIG_CHANGE;
+        this.type = Type.CONFIG_CHANGED;
         this.newConfig = newConfig;
     } 
 }

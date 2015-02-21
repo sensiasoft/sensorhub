@@ -27,19 +27,13 @@ import org.sensorhub.api.common.Event;
  */
 public class SensorEvent extends Event
 {
-	private static final long serialVersionUID = -1273002175078885567L;
-
-	
 	/**
 	 * Possible event types for a SensorEvent
 	 */
     public enum Type
 	{
-		ACTIVATED,
-		DEACTIVATED,
 		CONNECTED,
 		DISCONNECTED,
-		NEW_DATA_AVAILABLE,
 		COMMAND_STATUS,
 		SENSOR_CHANGED
 	};
