@@ -37,7 +37,6 @@
    </issueManagement>
    <modules>
       <module>../sensorhub-core</module>
-      <module>../sensorhub-core-webui</module>
       <module>../sensorhub-storage-perst</module>
       <module>../sensorhub-service-swe</module>
       <module>../sensorhub-driver-v4l</module>      
