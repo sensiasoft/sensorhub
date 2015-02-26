@@ -56,17 +56,6 @@ public class ModuleConfig implements Cloneable
      */
     @DisplayInfo(label="Enable", desc="Module state (enabled or disabled)")
     public boolean enabled = false;
-    
-    
-    public String getModuleIdString()
-    {
-        StringBuilder buf = new StringBuilder();
-        buf.append(name);
-        buf.append(" (");
-        buf.append(id);
-        buf.append(')');
-        return buf.toString();
-    }
 
 
     @Override
