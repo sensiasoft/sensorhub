@@ -92,7 +92,7 @@ import org.vast.ows.swe.UpdateSensorRequest;
 import org.vast.ows.swe.UpdateSensorResponse;
 import org.vast.sensorML.SMLUtils;
 import org.vast.swe.DataSourceDOM;
-import org.vast.swe.SWEFactory;
+import org.vast.swe.SWEHelper;
 import org.vast.util.ReaderException;
 import org.vast.util.TimeExtent;
 
@@ -613,7 +613,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
                 }
                 
                 // prepare record writer for selected encoding
-                DataStreamWriter writer = SWEFactory.createDataWriter(resultEncoding);
+                DataStreamWriter writer = SWEHelper.createDataWriter(resultEncoding);
                 writer.setDataComponents(resultStructure);
                 writer.setOutput(os);
                 
@@ -818,7 +818,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
             DataSource dataSrc = request.getResultDataSource();
             if (dataSrc instanceof DataSourceDOM) // inline XML
             {
-                encoding = SWEFactory.ensureXmlCompatible(encoding);
+                encoding = SWEHelper.ensureXmlCompatible(encoding);
                 resultStream = dataSrc.getDataStream();
             }
             else // POST body
@@ -827,7 +827,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
             }
             
             // create parser
-            parser = SWEFactory.createDataParser(encoding);
+            parser = SWEHelper.createDataParser(encoding);
             parser.setDataComponents(dataStructure);
             parser.setInput(resultStream);
                         
