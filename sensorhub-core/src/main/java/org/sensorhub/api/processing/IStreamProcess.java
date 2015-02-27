@@ -16,6 +16,7 @@ package org.sensorhub.api.processing;
 
 import java.util.Map;
 import net.opengis.swe.v20.DataComponent;
+import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.data.IDataProducerModule;
 
 
@@ -33,7 +34,7 @@ import org.sensorhub.api.data.IDataProducerModule;
  * @param <ConfigType> Type of configuration class
  * @since Feb 20, 2015
  */
-public interface IStreamProcess<ConfigType extends StreamProcessConfig> extends IProcessModule<ConfigType>, IDataProducerModule<ConfigType>
+public interface IStreamProcess<ConfigType extends StreamProcessConfig> extends IProcessModule<ConfigType>, IDataProducerModule<ConfigType>, IEventListener
 {   
     
     /**
@@ -45,7 +46,7 @@ public interface IStreamProcess<ConfigType extends StreamProcessConfig> extends 
      * either silently ignored or can result in a processing exception.
      * @return map of parameter descriptors
      */
-    public Map<String, ? extends DataComponent> getParameters();
+    public Map<String, DataComponent> getParameters();
     
     
     /**

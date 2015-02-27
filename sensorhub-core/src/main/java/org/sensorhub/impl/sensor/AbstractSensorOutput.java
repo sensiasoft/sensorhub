@@ -28,8 +28,7 @@ import org.sensorhub.utils.MsgUtils;
 /**
  * <p>
  * Class providing default implementation of common sensor data interface
- * API methods. By default, push is reported as supported and storage
- * is reported as unsupported.
+ * API methods. By default, storage is unsupported.
  * </p>
  *
  * @author Alex Robin <alex.robin@sensiasoftware.com>

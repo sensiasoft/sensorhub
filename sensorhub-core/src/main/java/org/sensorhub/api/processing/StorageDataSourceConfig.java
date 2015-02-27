@@ -30,8 +30,5 @@ public class StorageDataSourceConfig extends DataSourceConfig
 
     @DisplayInfo(label="Storage ID", desc="Local ID of storage to use as data source")
     public String storageID;
-    
-    
-    @DisplayInfo(label="DataStore", desc="Name of data store to use as data source")
-    public String dataStoreName;
+
 }

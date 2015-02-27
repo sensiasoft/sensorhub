@@ -14,14 +14,39 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.api.processing;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.sensorhub.api.config.DisplayInfo;
 
 
+/**
+ * <p>
+ * Config class for specifying a data source for a processing module
+ * </p>
+ *
+ * @author Alex Robin <alex.robin@sensiasoftware.com>
+ * @since Feb 26, 2015
+ */
 public abstract class DataSourceConfig
 {
+    public static final String AUTO_CREATE = "AUTO_CREATE";
     
-    @DisplayInfo(label="Input", desc="Name of process input to connect the data source to")
-    public String inputName;
     
+    /*
+     * for wiring data source outputs to process inputs at the component level
+     */
+    public static class InputLinkConfig
+    {        
+        @DisplayInfo(label="Source", desc="'/' separated path of source component in data source outputs (starting with name of output/datastore)")
+        public String source;
+        
+        
+        @DisplayInfo(label="Destination", desc="'/' separated path of destination component in process inputs (starting with name of process input)")
+        public String destination;
+    }
+    
+    
+    @DisplayInfo(label="Input Connections", desc="Specification of connections between source outputs and process inputs")
+    public List<InputLinkConfig> inputConnections = new ArrayList<InputLinkConfig>();
     
 }

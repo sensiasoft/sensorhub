@@ -38,7 +38,13 @@ public interface IProcessModule<ConfigType extends ProcessConfig> extends IModul
      * {@link #isCompatibleDataSource(DataSourceConfig)}
      * @return map of descriptors of needed inputs
      */
-    public Map<String, ? extends DataComponent> getNeededInputs();
+    public Map<String, DataComponent> getInputDescriptors();
+    
+    
+    /**
+     * @return map of output descriptors
+     */
+    public Map<String, DataComponent> getOutputDescriptors();
     
     
     /**
@@ -47,11 +53,5 @@ public interface IProcessModule<ConfigType extends ProcessConfig> extends IModul
      * @return true if data source is acceptable for this process
      */
     public boolean isCompatibleDataSource(DataSourceConfig dataSource);
-
-
-    /**
-     * @return map of output descriptors
-     */
-    public Map<String, ? extends DataComponent> getOutputDescriptors();
 
 }

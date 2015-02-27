@@ -12,26 +12,27 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
  
 ******************************* END LICENSE BLOCK ***************************/
 
-package org.sensorhub.api.processing;
+package org.sensorhub.impl.processing;
 
 import org.sensorhub.api.config.DisplayInfo;
+import org.sensorhub.api.processing.StreamProcessConfig;
 
 
 /**
  * <p>
- * Data source configuration to get process input from a stream of data events
+ * Configuration class for SensorML based processors.
  * </p>
  *
  * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @since Feb 20, 2015
  */
-public class StreamingDataSourceConfig extends DataSourceConfig
+public class SMLStreamProcessConfig extends StreamProcessConfig
 {
 
-    @DisplayInfo(label="Source ID", desc="Local ID of data stream producer module to use as the data source")
-    public String producerID;
+    @DisplayInfo(label="SensorML URL", desc="URL of SensorML description of the process")
+    public String sensorML;
     
     
-    @DisplayInfo(label="Decimation", desc="Event decimation factor")
-    public int decimFactor;
+    @DisplayInfo(label="Num threads", desc="Number of threads to use to execute the process")
+    public int numThreads = 1;
 }

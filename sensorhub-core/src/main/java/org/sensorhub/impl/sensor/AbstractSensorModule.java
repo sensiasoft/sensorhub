@@ -42,7 +42,8 @@ import org.vast.sensorML.SMLUtils;
 /**
  * <p>
  * Class providing default implementation of common sensor API methods.
- * By default, sensor description history and updates are reported as unsupported.
+ * By default, sensor description history and updates are reported as unsupported.<br/>
+ * This can be used as the base for most sensor driver implementations.
  * </p>
  *
  * @author Alex Robin <alex.robin@sensiasoftware.com>
@@ -251,7 +252,7 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
 
 
     @Override
-    public Map<String, ? extends ISensorDataInterface> getAllOutputs() throws SensorException
+    public Map<String, ISensorDataInterface> getAllOutputs() throws SensorException
     {
         Map<String, ISensorDataInterface> allOutputs = new LinkedHashMap<String, ISensorDataInterface>();  
         allOutputs.putAll(obsOutputs);
@@ -261,21 +262,21 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
 
 
     @Override
-    public Map<String, ? extends ISensorDataInterface> getStatusOutputs() throws SensorException
+    public Map<String, ISensorDataInterface> getStatusOutputs() throws SensorException
     {
         return Collections.unmodifiableMap(statusOutputs);
     }
 
 
     @Override
-    public Map<String, ? extends ISensorDataInterface> getObservationOutputs() throws SensorException
+    public Map<String, ISensorDataInterface> getObservationOutputs() throws SensorException
     {
         return Collections.unmodifiableMap(obsOutputs);
     }
 
 
     @Override
-    public Map<String, ? extends ISensorControlInterface> getCommandInputs() throws SensorException
+    public Map<String, ISensorControlInterface> getCommandInputs() throws SensorException
     {
         return Collections.unmodifiableMap(controlInputs);
     }
