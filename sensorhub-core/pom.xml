@@ -57,6 +57,11 @@
         <artifactId>jetty-rewrite</artifactId>
         <version>9.2.7.v20150116</version>
      </dependency>
+     <dependency>
+     	<groupId>uk.com.robust-it</groupId>
+     	<artifactId>cloning</artifactId>
+     	<version>1.7.4</version>
+     </dependency>
    </dependencies>
    <build>
       <plugins>
