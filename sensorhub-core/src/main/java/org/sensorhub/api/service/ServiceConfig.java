@@ -27,8 +27,6 @@ import org.sensorhub.api.module.ModuleConfig;
  */
 public class ServiceConfig extends ModuleConfig
 {
-    private static final long serialVersionUID = 4242373168411772594L;
-
     
     /**
      * Name of endpoint.

@@ -103,7 +103,7 @@ public class SensorManagerImpl implements ISensorManager
         {
             try
             {
-                if (uid.equals(sensor.getCurrentSensorDescription().getIdentifier()))
+                if (uid.equals(sensor.getCurrentDescription().getIdentifier()))
                     return sensor;
             }
             catch (SensorException e)

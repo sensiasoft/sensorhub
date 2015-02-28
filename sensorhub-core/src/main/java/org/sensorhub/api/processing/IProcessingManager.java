@@ -28,7 +28,7 @@ import org.sensorhub.api.module.IModuleManager;
  * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @since Nov 5, 2010
  */
-public interface IProcessingManager extends IModuleManager<IProcess>
+public interface IProcessingManager extends IModuleManager<IProcessModule<?>>
 {
 	/**
 	 * @return the list of all process code configured on the system

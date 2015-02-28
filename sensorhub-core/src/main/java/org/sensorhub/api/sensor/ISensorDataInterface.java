@@ -15,10 +15,8 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 package org.sensorhub.api.sensor;
 
 import java.util.List;
-import net.opengis.swe.v20.DataComponent;
-import net.opengis.swe.v20.DataEncoding;
 import net.opengis.swe.v20.DataBlock;
-import org.sensorhub.api.common.IEventProducer;
+import org.sensorhub.api.data.IStreamingDataInterface;
 
 
 /**
@@ -27,41 +25,36 @@ import org.sensorhub.api.common.IEventProducer;
  * <p>Data provided by this interface can be actual measurements but also status
  * information. Each sensor output is mapped to a separate instance of this
  * interface, allowing them to have completely independent sampling rates.</p>
- * <p>Implementations must at least be capable of retaining the latest record
- * received from sensor and make it available with {@link #getLatestRecord()}</p>
- * <p>If push is supported, implementation MUST produce events of type
- * {@link org.sensorhub.api.sensor.SensorDataEvent} when new data is received
- * or polled from sensor.
+ * <p>Even when storage is not supported, implementations MUST at least be
+ * capable of retaining the latest record received from sensor and make it
+ * available with {@link #getLatestRecord()}.</p>
+ * <p>Implementation MUST send events of type 
+ * {@link org.sensorhub.api.sensor.SensorDataEvent} when new data is produced
+ * by sensor.
  * </p>
  * 
  * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @since Nov 5, 2010
  */
-public interface ISensorDataInterface extends IEventProducer
+public interface ISensorDataInterface extends IStreamingDataInterface
 {
 
     /**
      * Allows by-reference access to parent sensor module
-     * @return parent sensor
      */
-    public ISensorModule<?> getParentSensor();
+    @Override
+    public ISensorModule<?> getParentModule();
     
     
     /**
-     * Gets the interface name.
-     * <p><i>It should be the name reported in the map by getXXXOutputs methods
+     * Gets this output interface name.
+     * <p><i>It MUST be the name reported in the map by getXXXOutputs methods
      * of {@link org.sensorhub.api.sensor.ISensorModule}</i></p>
      * @see org.sensorhub.api.sensor.ISensorModule#getAllOutputs()
      * @return name of this output interface
      */
+    @Override
     public String getName();
-
-
-    /**
-     * Checks if this interface is enabled
-     * @return true if interface is enabled, false otherwise
-     */
-    public boolean isEnabled();
 
 
     /**
@@ -71,42 +64,6 @@ public interface ISensorDataInterface extends IEventProducer
      * @return true if record storage is supported internally, false otherwise
      */
     public boolean isStorageSupported();
-
-
-    /**
-     * Checks push capability
-     * <p><i>Note that 'push' can generally be simulated by the driver even if
-     * the sensor doesn't support it natively.</i></p>
-     * @return true if notifications are sent when new data is available, false otherwise
-     */
-    public boolean isPushSupported();
-
-
-    /**
-     * Gets the average rate at which this interface produces data
-     * @return sampling period in seconds
-     */
-    public double getAverageSamplingPeriod(); // used to know how often to poll
-
-
-    /**
-     * Retrieves the record definition for this output
-     * <p><i>Note that this is usually sent by reference and MUST not be modified
-     * by the caller. If you really need to modify it, first get an independent
-     * copy using {@link net.opengis.swe.v20.DataComponent#copy()}</i></p>
-     * @return a DataComponent object defining the structure of the output
-     */
-    public DataComponent getRecordDescription();
-
-
-    /**
-     * Provides the recommended encoding for this sensor data
-     * <p><i>Note that this is usually sent by reference and MUST not be modified
-     * by the caller. If you really need to modify it, first get an independent
-     * copy using {@link net.opengis.swe.v20.DataEncoding#copy()}</i></p>
-     * @return recommended encoding description
-     */
-    public DataEncoding getRecommendedEncoding();
 
 
     //	/**
@@ -127,9 +84,9 @@ public interface ISensorDataInterface extends IEventProducer
      * <p><i>Note that this does not trigger a new measurement but simply retrieves the
      * result of the last measurement made.</i></p>
      * @return the last measurement record or null if no data is available
-     * @throws SensorException if there is a problem retrieving latest measurement from sensor
      */
-    public DataBlock getLatestRecord() throws SensorException;
+    @Override
+    public DataBlock getLatestRecord();
     
     
     /**
@@ -138,6 +95,7 @@ public interface ISensorDataInterface extends IEventProducer
      * last call to {@link #getLatestRecord}.</i></p>
      * @return time of last measurement as julian time (1970) or NaN if no measurement was made yet
      */
+    @Override
     public double getLatestRecordTime();
 
 

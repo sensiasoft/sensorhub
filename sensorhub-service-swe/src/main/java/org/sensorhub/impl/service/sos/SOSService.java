@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -91,7 +92,7 @@ import org.vast.ows.swe.UpdateSensorRequest;
 import org.vast.ows.swe.UpdateSensorResponse;
 import org.vast.sensorML.SMLUtils;
 import org.vast.swe.DataSourceDOM;
-import org.vast.swe.SWEFactory;
+import org.vast.swe.SWEHelper;
 import org.vast.util.ReaderException;
 import org.vast.util.TimeExtent;
 
@@ -112,6 +113,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     private static final Logger log = LoggerFactory.getLogger(SOSService.class);
     protected static final String invalidWSRequestMsg = "Invalid WebSocket request: ";
     
+    String endpointUrl;
     SOSServiceConfig config;
     SOSServiceCapabilities capabilitiesCache;
     Map<String, SOSOfferingCapabilities> offeringCaps;
@@ -166,12 +168,22 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
         capabilities.setAccessConstraints(serviceInfo.accessConstraints);
         capabilities.setServiceProvider(serviceInfo.serviceProvider);
         
-        // generate profile list
+        // supported operations and extensions
         capabilities.getProfiles().add(SOSServiceCapabilities.PROFILE_RESULT_RETRIEVAL);
+        capabilities.getGetServers().put("GetCapabilities", config.endPoint);
+        capabilities.getGetServers().put("DescribeSensor", config.endPoint);
+        capabilities.getGetServers().put("GetObservation", config.endPoint);
+        capabilities.getGetServers().put("GetResult", config.endPoint);
+        capabilities.getGetServers().put("GetResultTemplate", config.endPoint);
+        capabilities.getPostServers().putAll(capabilities.getGetServers());        
+        
         if (config.enableTransactional)
         {
             capabilities.getProfiles().add(SOSServiceCapabilities.PROFILE_RESULT_INSERTION);
             capabilities.getProfiles().add(SOSServiceCapabilities.PROFILE_OBS_INSERTION);
+            capabilities.getPostServers().put("InsertSensor", config.endPoint);
+            capabilities.getPostServers().put("InsertObservation", config.endPoint);
+            capabilities.getPostServers().put("InsertResult", config.endPoint);
         }
         
         // process each provider config
@@ -428,6 +440,16 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     @Override
     protected void handleRequest(GetCapabilitiesRequest request) throws Exception
     {
+        // update operation URLs
+        if (endpointUrl == null)
+        {
+            endpointUrl = request.getHttpRequest().getRequestURL().toString();
+            for (Entry<String, String> op: capabilitiesCache.getGetServers().entrySet())
+                capabilitiesCache.getGetServers().put(op.getKey(), endpointUrl);
+            for (Entry<String, String> op: capabilitiesCache.getPostServers().entrySet())
+                capabilitiesCache.getPostServers().put(op.getKey(), endpointUrl);
+        }
+        
         // ask providers to refresh their capabilities if needed.
         // we do that here so capabilities doc contains the most up-to-date info.
         // we don't always do it when changes occur because high frequency changes 
@@ -512,7 +534,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
                     newStorageConfig.name = virtualSensor.getName() + " Storage";
                     newStorageConfig.storagePath = sensorUID + ".dat";
                     IBasicStorage<?> storage = (IBasicStorage<?>)moduleReg.loadModule(newStorageConfig);
-                    SensorStorageHelper dataListener = StorageHelper.configureStorageForSensor(virtualSensor, storage, true);
+                    SensorStorageHelper dataListener = StorageHelper.configureStorageForDataSource(virtualSensor, storage, true);
                                         
                     // associate storage to config                    
                     providerConfig.storageID = storage.getLocalID();
@@ -591,7 +613,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
                 }
                 
                 // prepare record writer for selected encoding
-                DataStreamWriter writer = SWEFactory.createDataWriter(resultEncoding);
+                DataStreamWriter writer = SWEHelper.createDataWriter(resultEncoding);
                 writer.setDataComponents(resultStructure);
                 writer.setOutput(os);
                 
@@ -796,7 +818,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
             DataSource dataSrc = request.getResultDataSource();
             if (dataSrc instanceof DataSourceDOM) // inline XML
             {
-                encoding = SWEFactory.ensureXmlCompatible(encoding);
+                encoding = SWEHelper.ensureXmlCompatible(encoding);
                 resultStream = dataSrc.getDataStream();
             }
             else // POST body
@@ -805,7 +827,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
             }
             
             // create parser
-            parser = SWEFactory.createDataParser(encoding);
+            parser = SWEHelper.createDataParser(encoding);
             parser.setDataComponents(dataStructure);
             parser.setInput(resultStream);
                         

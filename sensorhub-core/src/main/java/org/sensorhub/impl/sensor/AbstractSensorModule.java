@@ -42,7 +42,8 @@ import org.vast.sensorML.SMLUtils;
 /**
  * <p>
  * Class providing default implementation of common sensor API methods.
- * By default, sensor description history and updates are reported as unsupported.
+ * By default, sensor description history and updates are reported as unsupported.<br/>
+ * This can be used as the base for most sensor driver implementations.
  * </p>
  *
  * @author Alex Robin <alex.robin@sensiasoftware.com>
@@ -120,7 +121,7 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
 
 
     @Override
-    public AbstractProcess getCurrentSensorDescription() throws SensorException
+    public AbstractProcess getCurrentDescription() throws SensorException
     {
         synchronized (sensorDescription)
         {
@@ -133,10 +134,11 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
     
     
     /**
-     * This method should be called whenever the sensor description needs to be regenerated.
+     * This method should be called whenever the sensor description needs to be regenerated.<br/>
      * This default implementation reads the base description from the SensorML file if provided
-     * and then appends the unique sensor identifier as well as the description of all registered
-     * outputs and control inputs. This will also update the lastUpdatedSensorDescription time stamp.
+     * and then appends the unique sensor identifier, time validity and the description of all
+     * registered outputs and control inputs. This will also update the lastUpdatedSensorDescription
+     * time stamp and send a SENSOR_CHANGED event when 
      * @throws SensorException
      */
     protected void updateSensorDescription() throws SensorException
@@ -167,7 +169,7 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
             // add stuffs if not already defined in static SensorML doc //
             //////////////////////////////////////////////////////////////
             long unixTime = System.currentTimeMillis();
-            lastUpdatedSensorDescription = unixTime / 1000.;
+            double newValidityTime = unixTime / 1000.;
             
             // default IDs
             String gmlId = sensorDescription.getId();
@@ -180,7 +182,7 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
             if (sensorDescription.getNumValidTimes() == 0)
             {
                 GMLFactory fac = new GMLFactory();
-                TimePosition begin = fac.newTimePosition(lastUpdatedSensorDescription);
+                TimePosition begin = fac.newTimePosition(newValidityTime);
                 TimePosition end = fac.newTimePosition();
                 end.setIndeterminatePosition(TimeIndeterminateValue.NOW);
                 sensorDescription.addValidTimeAsTimePeriod(fac.newTimePeriod(begin, end));
@@ -214,13 +216,15 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
             }
             
             // send event
-            eventHandler.publishEvent(new SensorEvent(unixTime, getLocalID(), SensorEvent.Type.SENSOR_CHANGED));
+            if (lastUpdatedSensorDescription != Double.NEGATIVE_INFINITY)
+                eventHandler.publishEvent(new SensorEvent(unixTime, this, SensorEvent.Type.SENSOR_CHANGED));
+            lastUpdatedSensorDescription = newValidityTime;
         }
     }
 
 
     @Override
-    public double getLastSensorDescriptionUpdate()
+    public double getLastDescriptionUpdate()
     {
         return lastUpdatedSensorDescription;
     }
@@ -248,7 +252,7 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
 
 
     @Override
-    public Map<String, ? extends ISensorDataInterface> getAllOutputs() throws SensorException
+    public Map<String, ISensorDataInterface> getAllOutputs() throws SensorException
     {
         Map<String, ISensorDataInterface> allOutputs = new LinkedHashMap<String, ISensorDataInterface>();  
         allOutputs.putAll(obsOutputs);
@@ -258,21 +262,21 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
 
 
     @Override
-    public Map<String, ? extends ISensorDataInterface> getStatusOutputs() throws SensorException
+    public Map<String, ISensorDataInterface> getStatusOutputs() throws SensorException
     {
         return Collections.unmodifiableMap(statusOutputs);
     }
 
 
     @Override
-    public Map<String, ? extends ISensorDataInterface> getObservationOutputs() throws SensorException
+    public Map<String, ISensorDataInterface> getObservationOutputs() throws SensorException
     {
         return Collections.unmodifiableMap(obsOutputs);
     }
 
 
     @Override
-    public Map<String, ? extends ISensorControlInterface> getCommandInputs() throws SensorException
+    public Map<String, ISensorControlInterface> getCommandInputs() throws SensorException
     {
         return Collections.unmodifiableMap(controlInputs);
     }

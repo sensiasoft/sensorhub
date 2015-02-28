@@ -14,8 +14,6 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.api.common;
 
-import java.io.Serializable;
-
 
 /**
  * <p>
@@ -26,10 +24,8 @@ import java.io.Serializable;
  * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @since Nov 5, 2010
  */
-public class Event implements Serializable
+public class Event
 {
-    private static final long serialVersionUID = 9176636296502966036L;
-    
     protected Object source;
     protected long timeStamp;
     protected int code;

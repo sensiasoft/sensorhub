@@ -30,6 +30,7 @@ import org.sensorhub.api.persistence.IStorageModule;
 import org.sensorhub.api.persistence.StorageConfig;
 import org.sensorhub.api.persistence.StorageEvent;
 import org.sensorhub.api.persistence.StorageException;
+import org.sensorhub.api.persistence.StorageEvent.Type;
 import org.sensorhub.impl.module.AbstractModule;
 
 
@@ -85,7 +86,7 @@ public class InMemorySensorStorage extends AbstractModule<StorageConfig> impleme
             smlTable.put(process.getIdentifier().getValue(), processList);
         }
         
-        eventHandler.publishEvent(new StorageEvent(System.currentTimeMillis(), getLocalID(), StorageEvent.Type.STORE));
+        eventHandler.publishEvent(new StorageEvent(System.currentTimeMillis(), this, Type.STORE));
         processList.add(process);
     }
 
@@ -97,7 +98,7 @@ public class InMemorySensorStorage extends AbstractModule<StorageConfig> impleme
         if (processList == null)
             processList = new ArrayList<AbstractProcess>();
         
-        eventHandler.publishEvent(new StorageEvent(System.currentTimeMillis(), getLocalID(), StorageEvent.Type.UPDATE));
+        eventHandler.publishEvent(new StorageEvent(System.currentTimeMillis(), this, Type.UPDATE));
         processList.add(process);
     }
 
@@ -116,7 +117,7 @@ public class InMemorySensorStorage extends AbstractModule<StorageConfig> impleme
             }
         }
         
-        eventHandler.publishEvent(new StorageEvent(System.currentTimeMillis(), getLocalID(), StorageEvent.Type.DELETE));
+        eventHandler.publishEvent(new StorageEvent(System.currentTimeMillis(), this, Type.DELETE));
     }
     
     

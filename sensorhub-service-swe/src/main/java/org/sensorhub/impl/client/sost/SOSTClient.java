@@ -29,6 +29,7 @@ import net.opengis.swe.v20.DataBlock;
 import org.sensorhub.api.common.Event;
 import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.common.SensorHubException;
+import org.sensorhub.api.data.DataEvent;
 import org.sensorhub.api.sensor.ISensorDataInterface;
 import org.sensorhub.api.sensor.ISensorModule;
 import org.sensorhub.api.sensor.SensorDataEvent;
@@ -162,7 +163,7 @@ public class SOSTClient extends AbstractModule<SOSTClientConfig> implements IEve
             InsertSensorRequest req = new InsertSensorRequest();
             req.setPostServer(config.sosEndpointUrl);
             req.setVersion("2.0");
-            req.setProcedureDescription(sensor.getCurrentSensorDescription());
+            req.setProcedureDescription(sensor.getCurrentDescription());
             req.setProcedureDescriptionFormat(InsertSensorRequest.DEFAULT_PROCEDURE_FORMAT);
             req.getObservationTypes().add(IObservation.OBS_TYPE_RECORD);
             req.getFoiTypes().add("gml:Feature");
@@ -193,8 +194,8 @@ public class SOSTClient extends AbstractModule<SOSTClientConfig> implements IEve
             UpdateSensorRequest req = new UpdateSensorRequest(SOSUtils.SOS);
             req.setPostServer(config.sosEndpointUrl);
             req.setVersion("2.0");
-            req.setProcedureId(sensor.getCurrentSensorDescription().getUniqueIdentifier());
-            req.setProcedureDescription(sensor.getCurrentSensorDescription());
+            req.setProcedureId(sensor.getCurrentDescription().getUniqueIdentifier());
+            req.setProcedureDescription(sensor.getCurrentDescription());
             req.setProcedureDescriptionFormat(InsertSensorRequest.DEFAULT_PROCEDURE_FORMAT);
             
             sosUtils.sendRequest(req, false);
@@ -259,8 +260,8 @@ public class SOSTClient extends AbstractModule<SOSTClientConfig> implements IEve
             }
         }
         
-        // sensor data received
-        if (e instanceof SensorDataEvent)
+        // data received
+        else if (e instanceof DataEvent)
         {
             // retrieve stream info
             StreamInfo streamInfo = dataStreams.get(e.getSource());

@@ -18,6 +18,7 @@ import net.opengis.swe.v20.DataBlock;
 import org.sensorhub.api.common.Event;
 import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.common.SensorHubException;
+import org.sensorhub.api.data.DataEvent;
 import org.sensorhub.api.persistence.DataKey;
 import org.sensorhub.api.persistence.IBasicStorage;
 import org.sensorhub.api.persistence.ITimeSeriesDataStore;
@@ -78,10 +79,10 @@ public class SensorStorageHelper extends AbstractModule<SensorStorageHelperConfi
         
         // if storage is empty, initialize it
         if (storage.getLatestDataSourceDescription() == null)
-            StorageHelper.configureStorageForSensor(sensor, storage, false);
+            StorageHelper.configureStorageForDataSource(sensor, storage, false);
         
         // get the latest sensor description in case we were down during the last update
-        storage.storeDataSourceDescription(sensor.getCurrentSensorDescription());
+        storage.storeDataSourceDescription(sensor.getCurrentDescription());
     }
     
     
@@ -121,7 +122,7 @@ public class SensorStorageHelper extends AbstractModule<SensorStorageHelperConfi
         if (isEnabled())
         {
             // new data events
-            if (e instanceof SensorDataEvent)
+            if (e instanceof DataEvent)
             {
                 boolean saveAutoCommitState = storage.isAutoCommit();
                 storage.setAutoCommit(false);
@@ -130,7 +131,7 @@ public class SensorStorageHelper extends AbstractModule<SensorStorageHelperConfi
                 String outputName = ((SensorDataEvent) e).getSource().getName();
                 ITimeSeriesDataStore<?> dataStore = storage.getDataStores().get(outputName);
                 
-                String producer = ((SensorDataEvent) e).getSensorId();
+                String producer = ((DataEvent) e).getSource().getParentModule().getLocalID();
                 
                 for (DataBlock record: ((SensorDataEvent) e).getRecords())
                 {
@@ -160,7 +161,7 @@ public class SensorStorageHelper extends AbstractModule<SensorStorageHelperConfi
                         // only useful between restarts since it will be resetted to current time at startup...
                         
                         // TODO to manage this issue, first check that no other description is valid at the same time
-                        storage.storeDataSourceDescription(sensor.getCurrentSensorDescription());
+                        storage.storeDataSourceDescription(sensor.getCurrentDescription());
                     }
                     catch (StorageException | SensorException ex)
                     {

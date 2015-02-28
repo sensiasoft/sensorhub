@@ -27,8 +27,6 @@ import org.sensorhub.api.common.CommandStatus;
  */
 public class SensorControlEvent extends SensorEvent
 {
-	private static final long serialVersionUID = -1682605821666177558L;
-	
 	
 	/**
 	 * Status of the command that triggered this event
@@ -44,7 +42,7 @@ public class SensorControlEvent extends SensorEvent
      */
 	public SensorControlEvent(long time, ISensorControlInterface controlInterface, CommandStatus status)
 	{
-	    super(time, controlInterface.getParentSensor().getLocalID(), Type.COMMAND_STATUS);
+	    super(time, controlInterface.getParentSensor(), Type.COMMAND_STATUS);
 		this.source = controlInterface;
 		this.status = status;
 	}

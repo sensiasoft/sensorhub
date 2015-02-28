@@ -14,6 +14,7 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.impl.module;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -139,6 +140,23 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
     }
     
     
+    /**
+     * Unloads a module instance.<br/>
+     * This causes the module to be removed from registry but its last saved configuration
+     * is kept as-is. Call {@link #saveConfiguration(ModuleConfig...)} first if you want to
+     * keep the current config. 
+     * @param moduleID
+     * @throws SensorHubException
+     */
+    public synchronized void unloadModule(String moduleID) throws SensorHubException
+    {
+        disableModule(moduleID);        
+        IModule<?> module = loadedModules.remove(moduleID);
+        eventHandler.publishEvent(new ModuleEvent(module, ModuleEvent.Type.UNLOADED));        
+        log.debug("Module " + MsgUtils.moduleString(module) +  " unloaded");
+    }
+    
+    
     /*
      * Infers module dependencies by scanning all String properties
      * for a UUID existing in the module database
@@ -221,10 +239,8 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
             {
                 throw new SensorHubException("Error while stopping module " + MsgUtils.moduleString(module), e);
             }
-            finally
-            {
-                eventHandler.publishEvent(new ModuleEvent(module, ModuleEvent.Type.DISABLED));
-            }
+            
+            eventHandler.publishEvent(new ModuleEvent(module, ModuleEvent.Type.DISABLED));
         }
     }
     
@@ -241,7 +257,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
         IModule<?> module = loadedModules.remove(moduleID);
         if (module != null)
         {
-            module.stop();            
+            module.stop();
             module.cleanup();
         }
         
@@ -310,6 +326,13 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
         }
         
         return loadedModules.get(moduleID);
+    }
+    
+    
+    public WeakReference<? extends IModule<?>> getModuleRef(String moduleID) throws SensorHubException
+    {
+        IModule<?> module = getModuleById(moduleID);
+        return new WeakReference<IModule<?>>(module);
     }
     
     

@@ -96,7 +96,7 @@ public class DirectSensorConnector implements ISPSConnector
                 caps.setDescription("Tasking interface for " + sensor.getName());
             
             // use sensor uniqueID as procedure ID
-            caps.getProcedures().add(sensor.getCurrentSensorDescription().getUniqueIdentifier());
+            caps.getProcedures().add(sensor.getCurrentDescription().getUniqueIdentifier());
             
             // supported formats
             caps.getProcedureFormats().add(SWESOfferingCapabilities.FORMAT_SML2);
@@ -185,7 +185,7 @@ public class DirectSensorConnector implements ISPSConnector
     @Override
     public AbstractProcess generateSensorMLDescription(double time) throws Exception
     {
-        return sensor.getCurrentSensorDescription();
+        return sensor.getCurrentDescription();
     }
 
 

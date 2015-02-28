@@ -17,7 +17,6 @@ package org.sensorhub.impl.service.sos;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
@@ -26,11 +25,11 @@ import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataEncoding;
 import org.sensorhub.api.common.Event;
 import org.sensorhub.api.common.IEventListener;
+import org.sensorhub.api.data.DataEvent;
 import org.sensorhub.api.sensor.ISensorDataInterface;
 import org.sensorhub.api.sensor.ISensorModule;
 import org.sensorhub.api.sensor.SensorDataEvent;
 import org.sensorhub.api.sensor.SensorEvent;
-import org.sensorhub.api.sensor.SensorEvent.Type;
 import org.sensorhub.api.sensor.SensorException;
 import org.sensorhub.api.service.ServiceException;
 import org.sensorhub.utils.MsgUtils;
@@ -118,58 +117,16 @@ public class SensorDataProvider implements ISOSDataProvider, IEventListener
             // case of time instant = now, just return latest record
             if (isNowTimeInstant(filter.getTimeRange()))
             {
-                try
-                {
-                    double lastRecordTime = outputInterface.getLatestRecordTime();
-                    DataBlock data = outputInterface.getLatestRecord();
-                    eventQueue.offerLast(new SensorDataEvent(lastRecordTime, outputInterface, data));
-                    stopTime = Long.MAX_VALUE; // make sure stoptime does not cause us to return null
-                    timeOut = 0L;
-                }
-                catch (SensorException e)
-                {
-                   throw new ServiceException("Cannot get latest record from sensor " + sensor.getName(), e);
-                }
+                double lastRecordTime = outputInterface.getLatestRecordTime();
+                DataBlock data = outputInterface.getLatestRecord();
+                eventQueue.offerLast(new SensorDataEvent(lastRecordTime, outputInterface, data));
+                stopTime = Long.MAX_VALUE; // make sure stoptime does not cause us to return null
+                timeOut = 0L;
             }
             
-            // otherwise register listener if push is supported
-            else if (outputInterface.isPushSupported())
-                outputInterface.registerListener(this);
-                        
-            // otherwise setup timer task to poll regularly
+            // otherwise register listener
             else
-            {
-                TimerTask pollTask = new TimerTask()
-                {
-                    double lastRecordTime = Double.NEGATIVE_INFINITY;
-                    
-                    @Override
-                    public void run()
-                    {
-                        double time = outputInterface.getLatestRecordTime();
-                        
-                        // wait until a new record is available
-                        if (!Double.isNaN(time) && time > lastRecordTime)
-                        {
-                            try
-                            {
-                                // add event to queue to simulate push case
-                                DataBlock data = outputInterface.getLatestRecord();                            
-                                eventQueue.offerLast(new SensorDataEvent(time, outputInterface, data));
-                                lastRecordTime = time;
-                            }
-                            catch (SensorException e)
-                            {
-                                e.printStackTrace();
-                            } 
-                        }
-                    }                
-                };
-                
-                // poll at twice the sampling rate
-                Timer timer = new Timer(sensor.getName() + " Polling", true);
-                timer.scheduleAtFixedRate(pollTask, 0, (long)(outputInterface.getAverageSamplingPeriod() * 500.));
-            }
+                outputInterface.registerListener(this);
         }
     }
     
@@ -217,7 +174,7 @@ public class SensorDataProvider implements ISOSDataProvider, IEventListener
         IObservation obs = new ObservationImpl();
         obs.setFeatureOfInterest(new FeatureRef("http://TODO"));
         obs.setObservedProperty(new DefinitionRef("http://TODO"));
-        obs.setProcedure(new ProcedureRef(sensor.getCurrentSensorDescription().getUniqueIdentifier()));
+        obs.setProcedure(new ProcedureRef(sensor.getCurrentDescription().getUniqueIdentifier()));
         obs.setPhenomenonTime(phenTime);
         obs.setResultTime(resultTime);
         obs.setResult(result);
@@ -315,7 +272,14 @@ public class SensorDataProvider implements ISOSDataProvider, IEventListener
     {
         if (e instanceof SensorEvent)
         {
-            if (((SensorEvent) e).getType() == Type.NEW_DATA_AVAILABLE)
+            if (((SensorEvent) e).getType() == SensorEvent.Type.DISCONNECTED)
+            {
+                
+            }
+        }
+        else if (e instanceof DataEvent)
+        {
+            if (((DataEvent) e).getType() == DataEvent.Type.NEW_DATA_AVAILABLE)
             {
                 // TODO there is no guarantee that records are processed in chronological order
                 // this is because events may not be received in chronological order in the 1st place
@@ -323,11 +287,7 @@ public class SensorDataProvider implements ISOSDataProvider, IEventListener
                 // we could use the average sampling period to decide how much to wait to confirm the order
                 eventQueue.offer((SensorDataEvent)e);
             }
-            else if (((SensorEvent) e).getType() == Type.DISCONNECTED)
-            {
-                
-            }
-        }        
+        }
     }
     
     
@@ -335,10 +295,7 @@ public class SensorDataProvider implements ISOSDataProvider, IEventListener
     public void close()
     {
         for (ISensorDataInterface outputInterface: dataSources)
-        {
-            if (outputInterface.isPushSupported())
-                outputInterface.unregisterListener(this);
-        }
+            outputInterface.unregisterListener(this);
         
         eventQueue.clear();
     }

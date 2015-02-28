@@ -18,7 +18,6 @@ import org.sensorhub.api.module.ModuleConfig;
 
 public class MyConfig1 extends ModuleConfig
 {
-    private static final long serialVersionUID = -9066755089606399084L;
     public String param1;
     public int param2;
 }

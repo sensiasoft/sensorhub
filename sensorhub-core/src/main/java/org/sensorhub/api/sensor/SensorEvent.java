@@ -27,19 +27,13 @@ import org.sensorhub.api.common.Event;
  */
 public class SensorEvent extends Event
 {
-	private static final long serialVersionUID = -1273002175078885567L;
-
-	
 	/**
 	 * Possible event types for a SensorEvent
 	 */
     public enum Type
 	{
-		ACTIVATED,
-		DEACTIVATED,
 		CONNECTED,
 		DISCONNECTED,
-		NEW_DATA_AVAILABLE,
 		COMMAND_STATUS,
 		SENSOR_CHANGED
 	};
@@ -59,16 +53,24 @@ public class SensorEvent extends Event
 	
 	/**
 	 * Sole constructor
-	 * @param sensorId ID of originating sensor
 	 * @param timeStamp unix time of event generation
+	 * @param source sensor module that generated the event
 	 * @param type type of event
 	 */
-	public SensorEvent(long timeStamp, String sensorId, Type type)
+	public SensorEvent(long timeStamp, ISensorModule<?> source, Type type)
 	{
-	    this.sensorId = sensorId;
 	    this.timeStamp = timeStamp;
-	    this.type = type;
+	    this.source = source;
+	    this.sensorId = source.getLocalID();
+        this.type = type;
 	}
+	
+	
+	@Override
+    public ISensorModule<?>  getSource()
+    {
+        return (ISensorModule<?>)this.source;
+    }
 
 
     public String getSensorId()

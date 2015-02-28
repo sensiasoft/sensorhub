@@ -16,11 +16,16 @@ package org.sensorhub.test.module;
 
 import static org.junit.Assert.assertTrue;
 import java.io.File;
+import java.util.Arrays;
+import java.util.UUID;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.sensorhub.api.module.IModuleProvider;
 import org.sensorhub.api.module.ModuleConfig;
+import org.sensorhub.api.persistence.StorageConfig;
+import org.sensorhub.api.processing.ProcessConfig;
+import org.sensorhub.api.sensor.SensorConfig;
 import org.sensorhub.api.service.IServiceModule;
 import org.sensorhub.impl.module.DummyModule;
 import org.sensorhub.impl.module.ModuleConfigJsonFile;
@@ -42,6 +47,49 @@ public class TestModuleRegistry
         configDb = new ModuleConfigJsonFile(configFile.getAbsolutePath());        
         registry = new ModuleRegistry(configDb);
         registry.loadAllModules();
+    }
+    
+    
+    @Test
+    public void testCloneConfig() throws Exception
+    {
+        ProcessConfig config1 = new ProcessConfig();
+        config1.id = UUID.randomUUID().toString();
+        config1.name = "Process1";
+        config1.moduleClass = "org.sensorhub.process.ProcessModel";
+        
+        ProcessConfig clone1 = (ProcessConfig)config1.clone();
+        assertTrue(clone1.id.equals(config1.id));
+        assertTrue(clone1.name.equals(config1.name));
+        assertTrue(clone1.moduleClass.equals(config1.moduleClass));
+                
+        SensorConfig config2 = new SensorConfig();
+        config2.id = UUID.randomUUID().toString();
+        config2.name = "sensor1";
+        config2.moduleClass = "org.sensorhub.sensor.SensorDriver";
+        config2.enabled = true;
+        config2.autoActivate = true;
+        config2.hiddenIO = new String[] {"input1", "input3"};
+        
+        SensorConfig clone2 = (SensorConfig)config2.clone();
+        assertTrue(clone2.id.equals(config2.id));
+        assertTrue(clone2.name.equals(config2.name));
+        assertTrue(clone2.moduleClass.equals(config2.moduleClass));
+        assertTrue(clone2.enabled = config2.enabled);
+        assertTrue(Arrays.deepEquals(clone2.hiddenIO, config2.hiddenIO));
+        
+        StorageConfig config4 = new StorageConfig();
+        config4.id = UUID.randomUUID().toString();
+        config4.name = "DB1";
+        config4.moduleClass = "org.sensorhub.persistence.FeatureStorage";
+        config4.enabled = true;
+        config4.storagePath = "path/to/db";
+        
+        StorageConfig clone4 = (StorageConfig)config4.clone();
+        assertTrue(clone4.id.equals(config4.id));
+        assertTrue(clone4.name.equals(config4.name));
+        assertTrue(clone4.moduleClass.equals(config4.moduleClass));
+        assertTrue(clone4.enabled = config4.enabled);
     }
     
     

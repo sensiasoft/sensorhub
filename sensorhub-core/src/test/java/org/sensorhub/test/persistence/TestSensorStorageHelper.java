@@ -55,7 +55,7 @@ public class TestSensorStorageHelper
         sensorCfg.moduleClass = FakeSensor.class.getCanonicalName();
         sensorCfg.name = "Sensor1";
         ISensorModule<?> sensor = (ISensorModule<?>)registry.loadModule(sensorCfg);
-        fakeSensorData = new FakeSensorData((FakeSensor)sensor, "out1", true, 10, 0.1, 10);
+        fakeSensorData = new FakeSensorData((FakeSensor)sensor, "out1", 10, 0.1, 10);
         ((FakeSensor)sensor).setDataInterfaces(fakeSensorData);
         
         // create test storage
@@ -65,7 +65,7 @@ public class TestSensorStorageHelper
         storageConfig.name = "SensorStorageTest";
         storageConfig.storagePath = new File(configFile.getParent(), "sensordb.dbs").getAbsolutePath();
         storage = (InMemoryBasicStorage)registry.loadModule(storageConfig);
-        StorageHelper.configureStorageForSensor(sensor, storage, false);
+        StorageHelper.configureStorageForDataSource(sensor, storage, false);
     }
     
     

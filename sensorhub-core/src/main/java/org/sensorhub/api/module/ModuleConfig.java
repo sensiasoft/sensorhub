@@ -14,6 +14,7 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.api.module;
 
+import org.sensorhub.api.config.DisplayInfo;
 import com.rits.cloning.Cloner;
 
 
@@ -32,36 +33,29 @@ public class ModuleConfig implements Cloneable
      * Unique ID of the module. It must be unique within the SensorHub instance
      * and remain the same during the whole life-time of the module
      */
+    @DisplayInfo(label="Module ID", desc="Unique local ID of the module")
     public String id;
     
     
     /**
-     * Name of module that this configuration is for
+     * User chosen name for the module
      */
+    @DisplayInfo(label="Module Name")
     public String name;
     
     
     /**
-     * Class implementing the module (to be instantiated)
+     * Class implementing the module (will be instantiated when module is loaded)
      */
+    @DisplayInfo(label="Module Class", desc="Module implementation class")
     public String moduleClass;
     
     
     /**
-     * Used to enable/disable the module
+     * Reflects state of the module (enable/disable)
      */
+    @DisplayInfo(label="Enable", desc="Module state (enabled or disabled)")
     public boolean enabled = false;
-    
-    
-    public String getModuleIdString()
-    {
-        StringBuilder buf = new StringBuilder();
-        buf.append(name);
-        buf.append(" (");
-        buf.append(id);
-        buf.append(')');
-        return buf.toString();
-    }
 
 
     @Override

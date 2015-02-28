@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import net.opengis.swe.v20.DataBlock;
@@ -71,6 +72,7 @@ public class SPSService extends OWSServlet implements IServiceModule<SPSServiceC
 {
     private static final Logger log = LoggerFactory.getLogger(SPSService.class);
     
+    String endpointUrl;
     SPSServiceConfig config;
     SPSServiceCapabilities capabilitiesCache;
     Map<String, SPSOfferingCapabilities> procedureToOfferingMap;
@@ -118,6 +120,12 @@ public class SPSService extends OWSServlet implements IServiceModule<SPSServiceC
         capabilities.setFees(serviceInfo.fees);
         capabilities.setAccessConstraints(serviceInfo.accessConstraints);
         capabilities.setServiceProvider(serviceInfo.serviceProvider);
+        
+        // supported operations
+        capabilities.getGetServers().put("GetCapabilities", config.endPoint);
+        capabilities.getGetServers().put("DescribeSensor", config.endPoint);
+        capabilities.getPostServers().putAll(capabilities.getGetServers());
+        capabilities.getPostServers().put("Submit", config.endPoint);
         
         // generate profile list
         /*capabilities.getProfiles().add(SOSServiceCapabilities.PROFILE_RESULT_RETRIEVAL);
@@ -368,6 +376,16 @@ public class SPSService extends OWSServlet implements IServiceModule<SPSServiceC
     
     protected void handleRequest(GetCapabilitiesRequest request) throws Exception
     {
+        // update operation URLs
+        if (endpointUrl == null)
+        {
+            endpointUrl = request.getHttpRequest().getRequestURL().toString();
+            for (Entry<String, String> op: capabilitiesCache.getGetServers().entrySet())
+                capabilitiesCache.getGetServers().put(op.getKey(), endpointUrl);
+            for (Entry<String, String> op: capabilitiesCache.getPostServers().entrySet())
+                capabilitiesCache.getPostServers().put(op.getKey(), endpointUrl);
+        }
+        
         sendResponse(request, capabilitiesCache);
     }
     

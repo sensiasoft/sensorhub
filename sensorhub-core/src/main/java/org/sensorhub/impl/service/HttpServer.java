@@ -59,7 +59,7 @@ public class HttpServer extends AbstractModule<HttpServerConfig>
         instance = this;
         
         // create servlet handler
-        this.servletHandler = new ServletContextHandler(ServletContextHandler.NO_SESSIONS);
+        this.servletHandler = new ServletContextHandler(ServletContextHandler.SESSIONS);
         
         // add default test servlet
         servletHandler.addServlet(new ServletHolder(new HttpServlet() {

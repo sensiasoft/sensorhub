@@ -117,7 +117,7 @@ public class SensorDataProviderFactory implements IDataProviderFactory, IEventLi
             caps.setPhenomenonTime(phenTime);
         
             // use sensor uniqueID as procedure ID
-            caps.getProcedures().add(sensor.getCurrentSensorDescription().getUniqueIdentifier());
+            caps.getProcedures().add(sensor.getCurrentDescription().getUniqueIdentifier());
             
             // supported formats
             caps.getResponseFormats().add(SWESOfferingCapabilities.FORMAT_OM2);
@@ -227,7 +227,7 @@ public class SensorDataProviderFactory implements IDataProviderFactory, IEventLi
         try
         {
             if (Double.isNaN(time))
-                return sensor.getCurrentSensorDescription();
+                return sensor.getCurrentDescription();
             else
                 return sensor.getSensorDescription(time);
         }
