@@ -29,7 +29,7 @@ import org.vast.ows.OWSUtils;
 import org.vast.ows.sos.GetResultRequest;
 import org.vast.ows.sos.GetResultTemplateRequest;
 import org.vast.ows.sos.GetResultTemplateResponse;
-import org.vast.swe.SWEFactory;
+import org.vast.swe.SWEHelper;
 import org.vast.util.TimeExtent;
 
 
@@ -115,7 +115,7 @@ public class TestShowVideo
                         //OGCExceptionReader.parseException(is);
                     }
                     
-                    DataStreamParser parser = SWEFactory.createDataParser(grtResp.getResultEncoding());
+                    DataStreamParser parser = SWEHelper.createDataParser(grtResp.getResultEncoding());
                     parser.setDataComponents(grtResp.getResultStructure());
                     parser.setRenewDataBlock(false);
                     parser.setInput(is);

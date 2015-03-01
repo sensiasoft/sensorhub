@@ -44,6 +44,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vast.data.DataComponentHelper;
 import org.vast.process.DataQueue;
+import org.vast.sensorML.SMLFactory;
 
 
 /**
@@ -61,6 +62,7 @@ import org.vast.process.DataQueue;
  */
 public abstract class AbstractStreamProcess<ConfigType extends StreamProcessConfig> extends AbstractModule<ConfigType> implements IStreamProcess<ConfigType>
 {
+    public final static String DEFAULT_ID = "PROCESS_DESC";
     private static final Logger log = LoggerFactory.getLogger(AbstractStreamProcess.class);
     protected static final int MAX_ERRORS = 10;
         
@@ -105,6 +107,10 @@ public abstract class AbstractStreamProcess<ConfigType extends StreamProcessConf
     protected abstract void process(DataEvent lastEvent) throws ProcessException;
     
     
+    /**
+     * Helper method to make sure derived classes add outputs consistently in the different maps
+     * @param outputInterface
+     */
     protected void addOutput(IStreamingDataInterface outputInterface)
     {
         String outputName = outputInterface.getName();
@@ -144,6 +150,39 @@ public abstract class AbstractStreamProcess<ConfigType extends StreamProcessConf
     @Override
     public AbstractProcess getCurrentDescription() throws SensorHubException
     {
+        if (processDescription == null)
+        {
+            processDescription = new SMLFactory().newSimpleProcess();
+            
+            // default IDs
+            processDescription.setId(DEFAULT_ID);
+            processDescription.setUniqueIdentifier(getLocalID());
+            
+            // name
+            processDescription.setName(getName());
+            
+            // inputs
+            for (Entry<String, DataComponent> input: getInputDescriptors().entrySet())
+            {
+                DataComponent inputDesc = input.getValue();
+                processDescription.addInput(input.getKey(), inputDesc);
+            }
+            
+            // outputs
+            for (Entry<String, DataComponent> output: getOutputDescriptors().entrySet())
+            {
+                DataComponent outputDesc = output.getValue();
+                processDescription.addOutput(output.getKey(), outputDesc);
+            }
+            
+            // parameters
+            for (Entry<String, DataComponent> param: getParameters().entrySet())
+            {
+                DataComponent paramDesc = param.getValue();
+                processDescription.addParameter(param.getKey(), paramDesc);
+            }
+        }
+        
         return processDescription;
     }
 
@@ -229,11 +268,7 @@ public abstract class AbstractStreamProcess<ConfigType extends StreamProcessConf
                             firstSepIndex = inputLink.destination.indexOf('/');
                             String inputName = (firstSepIndex < 0) ? inputLink.destination : inputLink.destination.substring(0, firstSepIndex);
                             compPath = (firstSepIndex < 0) ? "/" : inputLink.destination.substring(firstSepIndex+1);
-                            DataComponent destData = getInputQueueDestination(inputName);
-                            if (destData == null)
-                                throw new ProcessException("Input " + inputName + " doesn't exist");
-                            DataComponent dest = DataComponentHelper.findComponentByPath(compPath, destData);
-                            inputQueue.setDestinationComponent(dest);
+                            connectInput(inputName, compPath, inputQueue);
                         }
                     }
                     catch (Exception e)
@@ -256,9 +291,13 @@ public abstract class AbstractStreamProcess<ConfigType extends StreamProcessConf
     }
     
     
-    protected DataComponent getInputQueueDestination(String inputName)
-    {
-        return inputs.get(inputName);
+    protected void connectInput(String inputName, String dataPath, DataQueue inputQueue) throws Exception
+    {        
+        DataComponent destData = inputs.get(inputName);
+        if (destData == null)
+            throw new ProcessException("Input " + inputName + " doesn't exist");
+        DataComponent dest = DataComponentHelper.findComponentByPath(dataPath, destData);
+        inputQueue.setDestinationComponent(dest);
     }
 
 

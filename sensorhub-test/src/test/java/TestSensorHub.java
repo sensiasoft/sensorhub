@@ -17,7 +17,7 @@ import org.vast.ows.OWSUtils;
 import org.vast.ows.sos.GetResultRequest;
 import org.vast.ows.sos.GetResultTemplateRequest;
 import org.vast.ows.sos.GetResultTemplateResponse;
-import org.vast.swe.SWEFactory;
+import org.vast.swe.SWEHelper;
 
 
 public class TestSensorHub
@@ -68,7 +68,7 @@ public class TestSensorHub
                         is = new BufferedInputStream(utils.sendGetRequest(gt).getInputStream());
                     }
                     
-                    DataStreamParser parser = SWEFactory.createDataParser(grtResp.getResultEncoding());
+                    DataStreamParser parser = SWEHelper.createDataParser(grtResp.getResultEncoding());
                     parser.setDataComponents(grtResp.getResultStructure());
                     parser.setRenewDataBlock(false);
                     parser.setInput(is);
