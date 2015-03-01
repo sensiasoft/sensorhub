@@ -8,8 +8,7 @@ Software distributed under the License is distributed on an "AS IS" basis,
 WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
 for the specific language governing rights and limitations under the License.
  
-The Initial Developer is Sensia Software LLC. Portions created by the Initial
-Developer are Copyright (C) 2014 the Initial Developer. All Rights Reserved.
+Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
  
 ******************************* END LICENSE BLOCK ***************************/
 
@@ -23,15 +22,17 @@ import org.sensorhub.ui.data.ContainerProperty;
 import org.sensorhub.ui.data.FieldProperty;
 import com.vaadin.data.Property;
 import com.vaadin.data.fieldgroup.FieldGroup;
+import com.vaadin.data.fieldgroup.FieldGroup.CommitException;
 import com.vaadin.server.Sizeable.Unit;
+import com.vaadin.ui.Button;
 import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.Field;
 import com.vaadin.ui.FormLayout;
+import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
-import com.vaadin.ui.Table;
 import com.vaadin.ui.TextField;
-import com.vaadin.ui.themes.Runo;
+import com.vaadin.ui.Button.ClickEvent;
 
 
 /**
@@ -40,13 +41,13 @@ import com.vaadin.ui.themes.Runo;
  * This auto-generates widget giving types of properties. 
  * </p>
  *
- * <p>Copyright (c) 2013</p>
- * @author Alexandre Robin <alex.robin@sensiasoftware.com>
+ * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @since Feb 1, 2014
  */
-public class GenericConfigFormBuilder implements IModuleConfigFormBuilder<ModuleConfig>
+public class GenericConfigFormBuilder implements IModuleConfigFormBuilder
 {
-    public static String ID_PROPERTY = "id";    
+    public static String PROP_ID = "id";
+    public static String PROP_MODULECLASS = "moduleClass";
     
     List<Field<?>> labels = new ArrayList<Field<?>>();
     List<Field<?>> textBoxes = new ArrayList<Field<?>>();
@@ -60,10 +61,12 @@ public class GenericConfigFormBuilder implements IModuleConfigFormBuilder<Module
     }
     
     
+    @SuppressWarnings("serial")
     @Override
-    public void buildForm(FormLayout form, FieldGroup fieldGroup)
+    public FormLayout buildForm(final FieldGroup fieldGroup)
     {
         reset();
+        FormLayout form = new FormLayout();
         
         // add widget for each visible attribute
         for (Object propId: fieldGroup.getUnboundPropertyIds())
@@ -92,10 +95,9 @@ public class GenericConfigFormBuilder implements IModuleConfigFormBuilder<Module
                 if (!((ContainerProperty)prop).getValue().getItemIds().isEmpty())
                 {
                     Object firstItemId = ((ContainerProperty)prop).getValue().getItemIds().iterator().next();
-                    FormLayout subform = new FormLayout();
-                    subform.setCaption(label);
                     FieldGroup newFieldGroup = new FieldGroup(((ContainerProperty)prop).getValue().getItem(firstItemId));
-                    new GenericConfigFormBuilder().buildForm(subform, newFieldGroup);
+                    FormLayout subform = new GenericConfigFormBuilder().buildForm(newFieldGroup);
+                    subform.setCaption(label);
                     otherWidgets.add(subform);
                 }
             }
@@ -140,14 +142,63 @@ public class GenericConfigFormBuilder implements IModuleConfigFormBuilder<Module
         for (Field<?> w: checkBoxes)
             form.addComponent(w);
         for (Component w: otherWidgets)
-            form.addComponent(w);
+            form.addComponent(w);        
+        
+        // add save button
+        HorizontalLayout buttonsLayout = new HorizontalLayout();
+        buttonsLayout.setWidth(100.0f, Unit.PERCENTAGE);
+        //buttonsLayout.setSizeFull();
+        buttonsLayout.setMargin(true);
+        buttonsLayout.setSpacing(true);
+        form.addComponent(buttonsLayout);
+        
+        Button saveButton = new Button("Save");
+        saveButton.addClickListener(new Button.ClickListener() {
+            @Override
+            public void buttonClick(ClickEvent event)
+            {
+                try
+                {
+                    fieldGroup.commit();
+                }
+                catch (CommitException e)
+                {
+                    e.printStackTrace();
+                }                
+            }
+        });
+        buttonsLayout.addComponent(saveButton);
+        //buttonsLayout.setComponentAlignment(saveButton, Alignment.MIDDLE_CENTER);
+        
+        // add cancel button
+        Button cancelButton = new Button("Cancel");
+        cancelButton.addClickListener(new Button.ClickListener() {
+            @Override
+            public void buttonClick(ClickEvent event)
+            {
+                fieldGroup.discard();
+            }
+        });
+        buttonsLayout.addComponent(cancelButton);
+        //buttonsLayout.setComponentAlignment(cancelButton, Alignment.MIDDLE_CENTER);
+        
+        return form;
     }
     
     
+    /**
+     * Allows to customize the field after creation by buildAndBind
+     * TODO customizeField method description
+     * @param propId
+     * @param prop
+     * @param field
+     */
     protected void customizeField(String propId, Property<?> prop, Field<?> field)
     {
-        if (propId.equals(ID_PROPERTY))
+        if (propId.equals(PROP_ID))
             field.setReadOnly(true);
+        else if (propId.equals(PROP_MODULECLASS))
+            field.setVisible(false);
         
         if (prop.getType().equals(String.class))
             field.setWidth(250, Unit.PIXELS);

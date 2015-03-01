@@ -14,35 +14,30 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.ui.api;
 
+import org.sensorhub.api.module.IModule;
 import org.sensorhub.api.module.ModuleConfig;
-import com.vaadin.data.fieldgroup.FieldGroup;
+import org.sensorhub.ui.data.MyBeanItem;
 import com.vaadin.ui.Component;
 
 
 /**
  * <p>
- * Interface for all form panel used to configure modules
+ * Interface for all UI panels used to interact with modules
  * </p>
  *
  * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @since 0.5
  */
-public interface IModuleConfigFormBuilder
-{
+public interface IModulePanelBuilder
+{ 
     
     /**
-     * Gets the title of the form
-     * @param config instance
-     * @return title string
+     * Builds the whole panel allowing interaction with a module
+     * @param beanItem bean item associated to the configuration properties
+     * @param module module instance or null if module hasn't been loaded
+     * @param formBuilder 
+     * @return Vaadin component containing all widgets for interacting with the module
      */
-    public String getTitle(ModuleConfig config);
-    
-    
-    /**
-     * Builds the whole form for a given config object.
-     * @param fieldGroup
-     * @return root component of the generated form
-     */
-    public Component buildForm(FieldGroup fieldGroup);
+    public Component buildPanel(MyBeanItem<ModuleConfig> beanItem, IModule<?> module, IModuleConfigFormBuilder formBuilder);
     
 }
