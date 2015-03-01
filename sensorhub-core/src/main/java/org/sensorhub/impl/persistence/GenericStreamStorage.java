@@ -37,7 +37,6 @@ import org.sensorhub.api.persistence.IStorageModule;
 import org.sensorhub.api.persistence.ITimeSeriesDataStore;
 import org.sensorhub.api.persistence.StorageConfig;
 import org.sensorhub.api.persistence.StorageException;
-import org.sensorhub.api.sensor.SensorDataEvent;
 import org.sensorhub.api.sensor.SensorEvent;
 import org.sensorhub.impl.SensorHub;
 import org.sensorhub.impl.module.AbstractModule;
@@ -66,16 +65,18 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
     WeakReference<IDataProducerModule<?>> dataSourceRef;
     
     
-    @SuppressWarnings("unused")
     @Override
     public void init(StreamStorageConfig config) throws SensorHubException
     {
         super.init(config);
         
         // instantiate underlying storage
-        StorageConfig storageConfig = config.storageConfig;
+        StorageConfig storageConfig = null;
         try
         {
+            storageConfig = (StorageConfig)config.storageConfig.clone();
+            storageConfig.id = getLocalID();
+            storageConfig.name = getName();            
             Class<IBasicStorage<StorageConfig>> clazz = (Class<IBasicStorage<StorageConfig>>)Class.forName(storageConfig.moduleClass);
             storage = clazz.newInstance();
             storage.init(storageConfig);
@@ -97,12 +98,20 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
     @Override
     public void start() throws SensorHubException
     {
-        // start the underlyign storage
+        // start the underlying storage
         storage.start();        
         
         IDataProducerModule<?> dataSource = dataSourceRef.get();
         if (dataSource != null)
         {        
+            // if storage is empty, initialize it
+            if (storage.getLatestDataSourceDescription() == null)
+                StorageHelper.configureStorageForDataSource(dataSource, storage, false);
+            
+            // otherwise get the latest sensor description in case we were down during the last update
+            else
+                storage.storeDataSourceDescription(dataSource.getCurrentDescription());
+            
             // register to data events
             if (config.selectedOutputs == null || config.selectedOutputs.length == 0)
             {
@@ -114,14 +123,6 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
                 for (String outputName: config.selectedOutputs)
                     dataSource.getAllOutputs().get(outputName).registerListener(this);
             }
-            
-            // if storage is empty, initialize it
-            if (storage.getLatestDataSourceDescription() == null)
-                StorageHelper.configureStorageForDataSource(dataSource, storage, false);
-            
-            // otherwise get the latest sensor description in case we were down during the last update
-            else
-                storage.storeDataSourceDescription(dataSource.getCurrentDescription());
         }
         else
             log.warn("Data source is unavailable for stream storage " + MsgUtils.moduleString(this));
@@ -166,16 +167,17 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
             // new data events
             if (e instanceof DataEvent)
             {
+                DataEvent dataEvent = (DataEvent)e;
                 boolean saveAutoCommitState = storage.isAutoCommit();
                 storage.setAutoCommit(false);
                 
                 // get datastore for output name
-                String outputName = ((SensorDataEvent) e).getSource().getName();
+                String outputName = dataEvent.getSource().getName();
                 ITimeSeriesDataStore<?> dataStore = storage.getDataStores().get(outputName);
                 
-                String producer = ((DataEvent) e).getSource().getParentModule().getLocalID();
+                String producer = dataEvent.getSource().getParentModule().getLocalID();
                 
-                for (DataBlock record: ((SensorDataEvent) e).getRecords())
+                for (DataBlock record: dataEvent.getRecords())
                 {
                     DataKey key = new DataKey(producer, e.getTimeStamp()/1000.);
                     dataStore.store(key, record);
@@ -272,9 +274,9 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
 
 
     @Override
-    public List<AbstractProcess> getDataSourceDescriptionHistory()
+    public List<AbstractProcess> getDataSourceDescriptionHistory(double startTime, double endTime)
     {
-        return storage.getDataSourceDescriptionHistory();
+        return storage.getDataSourceDescriptionHistory(startTime, endTime);
     }
 
 
@@ -307,9 +309,9 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
 
 
     @Override
-    public void removeDataSourceDescriptionHistory()
+    public void removeDataSourceDescriptionHistory(double startTime, double endTime)
     {
-        storage.removeDataSourceDescriptionHistory();        
+        storage.removeDataSourceDescriptionHistory(startTime, endTime);        
     }
 
 

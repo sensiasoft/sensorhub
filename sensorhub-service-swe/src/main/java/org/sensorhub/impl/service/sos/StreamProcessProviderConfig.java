@@ -20,31 +20,31 @@ import org.sensorhub.api.common.SensorHubException;
 
 /**
  * <p>
- * Configuration class for SOS data providers using the sensor API.
- * A storage can also be associated to the sensor so that archive request
- * for this sensor data can be handled through the same offering.
+ * Configuration class for SOS data providers using the stream processing API.
+ * A storage can also be associated to the process so that archive requests
+ * for this process data can be handled through the same offering.
  * </p>
  *
  * @author Alex Robin <alex.robin@sensiasoftware.com>
- * @since Sep 7, 2013
+ * @since Feb 28, 2015
  */
-public class SensorDataProviderConfig extends StreamDataProviderConfig
+public class StreamProcessProviderConfig extends StreamDataProviderConfig
 {
 
     /**
      * Local ID of sensor module to use as data source for
      * live-stream requests
      */
-    public String sensorID;
+    public String processID;
     
     
     @Override
     protected IDataProviderFactory getFactory() throws SensorHubException
     {
         if (storageID != null)
-            return new SensorWithStorageProviderFactory(this);
+            return new StreamProcessWithStorageProviderFactory(this);
         else
-            return new SensorDataProviderFactory(this);
+            return new StreamProcessProviderFactory(this);
     }
 
 }

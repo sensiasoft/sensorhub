@@ -45,10 +45,12 @@ public interface IBasicStorage<ConfigType extends StorageConfig> extends IStorag
     
     
     /**
-     * Retrieves whole history of data source description
+     * Retrieves history of data source description for the given time period
+     * @param startTime lower bound of the time period
+     * @param endTime upper bound of the time period
      * @return list of SensorML process descriptions (with disjoint time validity periods) 
      */
-    public List<AbstractProcess> getDataSourceDescriptionHistory();
+    public List<AbstractProcess> getDataSourceDescriptionHistory(double startTime, double endTime);
     
     
     /**
@@ -85,9 +87,11 @@ public interface IBasicStorage<ConfigType extends StorageConfig> extends IStorag
     
     
     /**
-     * Removes entire data source description history
+     * Removes data source descriptions whose validity periods lie within the given time period
+     * @param startTime lower bound of the time period
+     * @param endTime upper bound of the time period
      */
-    public void removeDataSourceDescriptionHistory();
+    public void removeDataSourceDescriptionHistory(double startTime, double endTime);
     
     
     /**

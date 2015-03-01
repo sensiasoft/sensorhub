@@ -22,25 +22,28 @@ import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.data.DataEvent;
 import org.sensorhub.api.data.IStreamingDataInterface;
 import org.sensorhub.api.module.IModule;
-import org.sensorhub.api.processing.IStreamProcess;
+import org.sensorhub.api.processing.IStreamProcessModule;
 import org.sensorhub.impl.common.BasicEventHandler;
+import org.vast.swe.SWEHelper;
 
 
 class DummyOutput implements IStreamingDataInterface
 {
-    IStreamProcess<?> parentProcess;
+    IStreamProcessModule<?> parentProcess;
     IEventHandler eventHandler;
     DataComponent outputDef;
+    DataEncoding outputEncoding;
     DataBlock lastRecord;
     double lastRecordTime = Double.NaN;
     double avgSamplingPeriod = 1.0;
     int avgSampleCount = 0;
-    
+        
 
-    protected DummyOutput(IStreamProcess<?> parentProcess, DataComponent outputDef)
+    protected DummyOutput(IStreamProcessModule<?> parentProcess, DataComponent outputDef)
     {
         this.parentProcess = parentProcess;
         this.outputDef = outputDef;
+        this.outputEncoding = SWEHelper.getDefaultEncoding(outputDef);
         this.eventHandler = new BasicEventHandler();
     }
     
@@ -86,7 +89,7 @@ class DummyOutput implements IStreamingDataInterface
     @Override
     public DataEncoding getRecommendedEncoding()
     {
-        return null;
+        return outputEncoding;
     }
 
 

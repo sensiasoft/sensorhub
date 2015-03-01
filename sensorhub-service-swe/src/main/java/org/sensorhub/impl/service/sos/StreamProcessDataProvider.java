@@ -14,37 +14,28 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.impl.service.sos;
 
-
-import org.sensorhub.api.common.SensorHubException;
+import org.sensorhub.api.common.IEventListener;
+import org.sensorhub.api.processing.IStreamProcessModule;
+import org.sensorhub.api.service.ServiceException;
+import org.vast.ows.server.SOSDataFilter;
+import org.vast.ows.sos.ISOSDataProvider;
 
 
 /**
  * <p>
- * Configuration class for SOS data providers using the sensor API.
- * A storage can also be associated to the sensor so that archive request
- * for this sensor data can be handled through the same offering.
+ * Implementation of SOS data provider connecting to a process via 
+ * SensorHub's stream processing API.<br/>
+ * Most of the logic is inherited from {@link StreamDataProvider}.
  * </p>
  *
  * @author Alex Robin <alex.robin@sensiasoftware.com>
- * @since Sep 7, 2013
+ * @since Feb 28, 2015
  */
-public class SensorDataProviderConfig extends StreamDataProviderConfig
+public class StreamProcessDataProvider extends StreamDataProvider implements ISOSDataProvider, IEventListener
 {
-
-    /**
-     * Local ID of sensor module to use as data source for
-     * live-stream requests
-     */
-    public String sensorID;
     
-    
-    @Override
-    protected IDataProviderFactory getFactory() throws SensorHubException
+    public StreamProcessDataProvider(IStreamProcessModule<?> srcProcess, SOSDataFilter filter) throws ServiceException
     {
-        if (storageID != null)
-            return new SensorWithStorageProviderFactory(this);
-        else
-            return new SensorDataProviderFactory(this);
+        super(srcProcess, filter);
     }
-
 }

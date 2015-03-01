@@ -31,7 +31,7 @@ import org.sensorhub.api.data.IDataProducerModule;
 import org.sensorhub.api.data.IStreamingDataInterface;
 import org.sensorhub.api.processing.DataSourceConfig;
 import org.sensorhub.api.processing.DataSourceConfig.InputLinkConfig;
-import org.sensorhub.api.processing.IStreamProcess;
+import org.sensorhub.api.processing.IStreamProcessModule;
 import org.sensorhub.api.processing.ProcessException;
 import org.sensorhub.api.processing.StorageDataSourceConfig;
 import org.sensorhub.api.processing.StreamProcessConfig;
@@ -60,7 +60,7 @@ import org.vast.sensorML.SMLFactory;
  * @param <ConfigType> Type of process configuration
  * @since Feb 22, 2015
  */
-public abstract class AbstractStreamProcess<ConfigType extends StreamProcessConfig> extends AbstractModule<ConfigType> implements IStreamProcess<ConfigType>
+public abstract class AbstractStreamProcess<ConfigType extends StreamProcessConfig> extends AbstractModule<ConfigType> implements IStreamProcessModule<ConfigType>
 {
     public final static String DEFAULT_ID = "PROCESS_DESC";
     private static final Logger log = LoggerFactory.getLogger(AbstractStreamProcess.class);

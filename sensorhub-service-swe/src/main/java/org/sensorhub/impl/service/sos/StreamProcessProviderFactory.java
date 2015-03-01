@@ -14,55 +14,33 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.impl.service.sos;
 
-import net.opengis.sensorml.v20.AbstractProcess;
 import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.common.SensorHubException;
-import org.sensorhub.api.sensor.ISensorModule;
-import org.sensorhub.api.sensor.SensorException;
+import org.sensorhub.api.processing.IStreamProcessModule;
 import org.sensorhub.api.service.ServiceException;
 import org.sensorhub.impl.SensorHub;
-import org.sensorhub.utils.MsgUtils;
 import org.vast.ows.server.SOSDataFilter;
 import org.vast.ows.sos.ISOSDataProvider;
 
 
 /**
  * <p>
- * Factory for sensor data providers.<br/>
+ * Factory for stream processing data providers.<br/>
  * Most of the logic is inherited from {@link StreamDataProviderFactory}.
  * </p>
  *
  * @author Alex Robin <alex.robin@sensiasoftware.com>
- * @since Sep 15, 2013
+ * @since Feb 28, 2015
  */
-public class SensorDataProviderFactory extends StreamDataProviderFactory<ISensorModule<?>> implements IDataProviderFactory, IEventListener
+public class StreamProcessProviderFactory extends StreamDataProviderFactory<IStreamProcessModule<?>> implements IDataProviderFactory, IEventListener
 {
     
     
-    protected SensorDataProviderFactory(SensorDataProviderConfig config) throws SensorHubException
+    protected StreamProcessProviderFactory(StreamProcessProviderConfig config) throws SensorHubException
     {
         super(config,
-              SensorHub.getInstance().getSensorManager().getModuleById(config.sensorID),
-              "Sensor");
-    }
-    
-    
-    @Override
-    public AbstractProcess generateSensorMLDescription(double time) throws ServiceException
-    {
-        checkEnabled();
-        
-        try
-        {
-            if (Double.isNaN(time))
-                return producer.getCurrentDescription();
-            else
-                return producer.getSensorDescription(time);
-        }
-        catch (SensorException e)
-        {
-            throw new ServiceException("Cannot retrieve SensorML description of sensor " + MsgUtils.moduleString(producer), e);
-        }
+              (IStreamProcessModule<?>)SensorHub.getInstance().getModuleRegistry().getModuleById(config.processID),
+              "Process");
     }
 
     
@@ -70,6 +48,6 @@ public class SensorDataProviderFactory extends StreamDataProviderFactory<ISensor
     public ISOSDataProvider getNewProvider(SOSDataFilter filter) throws ServiceException
     {
         checkEnabled();
-        return new SensorDataProvider(producer, filter);
+        return new StreamProcessDataProvider(producer, filter);
     }
 }

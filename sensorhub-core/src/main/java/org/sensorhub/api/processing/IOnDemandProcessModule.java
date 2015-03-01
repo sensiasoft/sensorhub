@@ -32,7 +32,7 @@ import net.opengis.swe.v20.DataComponent;
  * @param <ConfigType> Type of configuration class
  * @since Feb 20, 2015
  */
-public interface IOnDemandProcessFactory<ConfigType extends ProcessConfig> extends IProcessModule<ConfigType>
+public interface IOnDemandProcessModule<ConfigType extends ProcessConfig> extends IProcessModule<ConfigType>
 {
     
     /**

@@ -58,6 +58,12 @@
         <version>1.0</version>
      </dependency>
      <dependency>
+        <groupId>org.vast.opengis</groupId>
+        <artifactId>sensorml-core</artifactId>
+        <version>1.0</version>
+        <type>test-jar</type>
+     </dependency>
+     <dependency>
         <groupId>org.jcodec</groupId>
         <artifactId>jcodec</artifactId>
         <version>0.1.5</version>

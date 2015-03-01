@@ -15,7 +15,7 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 package org.sensorhub.impl.service.sos;
 
 import org.sensorhub.api.common.SensorHubException;
-import org.sensorhub.api.sensor.ISensorModule;
+import org.sensorhub.api.processing.IStreamProcessModule;
 import org.sensorhub.api.service.ServiceException;
 import org.sensorhub.impl.SensorHub;
 import org.sensorhub.utils.MsgUtils;
@@ -26,20 +26,21 @@ import org.vast.util.TimeExtent;
 
 /**
  * <p>
- * Factory for sensor data providers with storage.<br/>
+ * Factory for streaming data providers with storage.<br/>
  * Most of the logic is inherited from {@link StreamWithStorageProviderFactory}.
  * </p>
  *
  * @author Alex Robin <alex.robin@sensiasoftware.com>
- * @since Nov 15, 2014
+ * @since Feb 28, 2015
  */
-public class SensorWithStorageProviderFactory extends StreamWithStorageProviderFactory<ISensorModule<?>>
+public class StreamProcessWithStorageProviderFactory extends StreamWithStorageProviderFactory<IStreamProcessModule<?>>
 {
     
     
-    public SensorWithStorageProviderFactory(SensorDataProviderConfig config) throws SensorHubException
+    public StreamProcessWithStorageProviderFactory(StreamProcessProviderConfig config) throws SensorHubException
     {
-        super(config, SensorHub.getInstance().getSensorManager().getModuleById(config.sensorID));
+        super(config,
+              (IStreamProcessModule<?>)SensorHub.getInstance().getProcessingManager().getModuleById(config.processID));
     }
 
 
@@ -51,9 +52,9 @@ public class SensorWithStorageProviderFactory extends StreamWithStorageProviderF
         if (timeRange.isBaseAtNow() || timeRange.isBeginNow())
         {
             if (!producer.isEnabled())
-                throw new ServiceException("Sensor " + MsgUtils.moduleString(producer) + " is disabled");
+                throw new ServiceException("Process " + MsgUtils.moduleString(producer) + " is disabled");
             
-            return new SensorDataProvider(producer, filter);
+            return new StreamProcessDataProvider(producer, filter);
         }
         else
         {            

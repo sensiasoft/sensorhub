@@ -177,7 +177,7 @@ public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> impleme
     @Override
     public AbstractProcess getLatestDataSourceDescription()
     {
-        Iterator<AbstractProcess> it = dbRoot.descriptionTimeIndex.iterator(new Key(-Double.MAX_VALUE), new Key(Double.MAX_VALUE), Index.DESCENT_ORDER);
+        Iterator<AbstractProcess> it = dbRoot.descriptionTimeIndex.iterator(KEY_SML_START_ALL_TIME, KEY_SML_END_ALL_TIME, Index.DESCENT_ORDER);
         if (it.hasNext())
             return it.next();
         return null;
@@ -185,9 +185,10 @@ public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> impleme
 
 
     @Override
-    public List<AbstractProcess> getDataSourceDescriptionHistory()
+    public List<AbstractProcess> getDataSourceDescriptionHistory(double startTime, double endTime)
     {
-        return Collections.unmodifiableList(dbRoot.descriptionTimeIndex.getList(KEY_SML_START_ALL_TIME, KEY_SML_END_ALL_TIME));
+        List<AbstractProcess> processList = dbRoot.descriptionTimeIndex.getList(new Key(startTime), new Key(endTime));
+        return Collections.unmodifiableList(processList);
     }
 
 
@@ -204,25 +205,27 @@ public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> impleme
     @Override
     public synchronized void storeDataSourceDescription(AbstractProcess process) throws StorageException
     {
-        // we add the description in index for each validity period/instant
-        for (AbstractTimeGeometricPrimitive validTime: process.getValidTimeList())
+        if (process.getNumValidTimes() > 0)
         {
-            double time = Double.NaN;
-            
-            try
+            // we add the description in index for each validity period/instant
+            for (AbstractTimeGeometricPrimitive validTime: process.getValidTimeList())
             {
+                double time = Double.NaN;
+                
                 if (validTime instanceof TimeInstant)
                     time = ((TimeInstant) validTime).getTimePosition().getDecimalValue();
                 else if (validTime instanceof TimePeriod)
                     time = ((TimePeriod) validTime).getBeginPosition().getDecimalValue();
+                
+                if (!Double.isNaN(time))
+                    dbRoot.descriptionTimeIndex.put(new Key(time), process);
             }
-            catch (Exception e)
-            {
-                throw new StorageException("Sensor description must contain at least one validity period");
-            }
-            
-            if (!Double.isNaN(time))
-                dbRoot.descriptionTimeIndex.put(new Key(time), process);
+        }
+        else
+        {
+            // if no validity period is specified, we just add with current time
+            double time = System.currentTimeMillis() / 1000.;
+            dbRoot.descriptionTimeIndex.put(new Key(time), process);
         }
         
         if (autoCommit)
@@ -258,9 +261,9 @@ public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> impleme
 
 
     @Override
-    public synchronized void removeDataSourceDescriptionHistory()
+    public synchronized void removeDataSourceDescriptionHistory(double startTime, double endTime)
     {
-        Iterator<AbstractProcess> it = dbRoot.descriptionTimeIndex.iterator(KEY_SML_START_ALL_TIME, KEY_SML_END_ALL_TIME, Index.ASCENT_ORDER);
+        Iterator<AbstractProcess> it = dbRoot.descriptionTimeIndex.iterator(new Key(startTime), new Key(endTime), Index.ASCENT_ORDER);
         while (it.hasNext())
         {
             AbstractProcess sml = it.next();
