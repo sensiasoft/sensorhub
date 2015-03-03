@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -40,6 +41,8 @@ import org.sensorhub.api.persistence.ITimeSeriesDataStore;
 import org.sensorhub.api.persistence.StorageException;
 import org.sensorhub.impl.common.BasicEventHandler;
 import org.sensorhub.impl.module.AbstractModule;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -53,6 +56,8 @@ import org.sensorhub.impl.module.AbstractModule;
  */
 public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> implements IBasicStorage<BasicStorageConfig>
 {
+    private static final Logger log = LoggerFactory.getLogger(BasicStorageImpl.class);    
+    
     private static Key KEY_SML_START_ALL_TIME = new Key(Double.NEGATIVE_INFINITY);
     private static Key KEY_SML_END_ALL_TIME = new Key(Double.POSITIVE_INFINITY);
     static Key KEY_DATA_START_ALL_TIME = new Key(new Object[] {Double.NEGATIVE_INFINITY});
@@ -60,6 +65,7 @@ public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> impleme
     
     protected Storage db;
     protected DBRoot dbRoot;
+    protected Map<String, TimeSeriesImpl> dataStores;
     protected boolean autoCommit;
     
     
@@ -94,13 +100,29 @@ public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> impleme
                 db.setRoot(dbRoot);
             }
             
-            // make sure all data stores have event handlers
-            // HACK because transient variable is not recreated when loading from existing DB
+            // HACK transition from old storages
+            // replace old persistent map by an HashMap
+            if (!(dbRoot.dataStores instanceof HashMap))
+            {
+                dataStores = new HashMap<String, TimeSeriesImpl>(10);
+                dataStores.putAll(dbRoot.dataStores);
+                db.deallocate(dbRoot.dataStores);
+                dbRoot.dataStores = dataStores;
+                db.modify(dbRoot);
+                db.commit();
+                log.warn("Replacing datastores map in " + getName());
+            }            
+            
+            // make sure all data stores have parent and event handlers
+            // because transient variables are not recreated when loading from existing DB
+            // also keep strong reference to data stores because we may have listeners registered to them
             for (TimeSeriesImpl timeSeries: dbRoot.dataStores.values())
             {
                 timeSeries.eventHandler = new BasicEventHandler();
                 timeSeries.parentStorage = this;
             }
+            
+            dataStores = dbRoot.dataStores;
         }
         catch (Exception e)
         {
@@ -288,6 +310,7 @@ public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> impleme
     {
         TimeSeriesImpl newTimeSeries = new TimeSeriesImpl(this, recordStructure, recommendedEncoding);
         dbRoot.dataStores.put(name, newTimeSeries);
+        db.modify(dbRoot);
         if (autoCommit)
             commit();
         return newTimeSeries;
@@ -304,7 +327,7 @@ public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> impleme
         
         public DBRoot()
         {
-            dataStores = db.<String,TimeSeriesImpl>createMap(String.class, 10);
+            dataStores = new HashMap<String,TimeSeriesImpl>(10);
             descriptionTimeIndex = db.<AbstractProcess>createIndex(double.class, true);
         }
     }
