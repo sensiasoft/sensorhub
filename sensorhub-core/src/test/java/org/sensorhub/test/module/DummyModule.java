@@ -12,7 +12,7 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
  
 ******************************* END LICENSE BLOCK ***************************/
 
-package org.sensorhub.impl.module;
+package org.sensorhub.test.module;
 
 import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.module.IModule;
