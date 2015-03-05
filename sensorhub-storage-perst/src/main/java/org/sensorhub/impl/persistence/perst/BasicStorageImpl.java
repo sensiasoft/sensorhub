@@ -100,19 +100,6 @@ public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> impleme
                 db.setRoot(dbRoot);
             }
             
-            // HACK transition from old storages
-            // replace old persistent map by an HashMap
-            if (!(dbRoot.dataStores instanceof HashMap))
-            {
-                dataStores = new HashMap<String, TimeSeriesImpl>(10);
-                dataStores.putAll(dbRoot.dataStores);
-                db.deallocate(dbRoot.dataStores);
-                dbRoot.dataStores = dataStores;
-                db.modify(dbRoot);
-                db.commit();
-                log.warn("Replacing datastores map in " + getName());
-            }            
-            
             // make sure all data stores have parent and event handlers
             // because transient variables are not recreated when loading from existing DB
             // also keep strong reference to data stores because we may have listeners registered to them

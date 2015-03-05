@@ -44,10 +44,6 @@ public class DbExport
     
     public static void main(String[] args) throws Exception
     {
-        args = new String[] {
-            "/home/alex/Documents/Projects/Workspace_OGC/sensorhub/sensorhub-test/commute_2015-02-16/urn:android:device:060693280a28e015.dat"
-        };
-        
         if (args.length < 1)
         {
             System.out.println("Usage: DbExport storage_path");
@@ -57,6 +53,7 @@ public class DbExport
         // open storage
         String dbPath = args[0];
         BasicStorageConfig dbConf = new BasicStorageConfig();
+        dbConf.name = "StorageToExport";
         dbConf.enabled = true;
         dbConf.memoryCacheSize = 1024;
         dbConf.storagePath = dbPath;
@@ -107,15 +104,19 @@ public class DbExport
                 recordStructElt.appendChild(sweUtils.writeComponent(dom, recordStruct));
                 Element recordEncElt = dom.addElement(dataStoreElt, DbConstants.SECTION_RECORD_ENCODING);
                 recordEncElt.appendChild(sweUtils.writeEncoding(dom, recordEncoding));
-                System.out.println("Exported data store " + dataStoreName);
-                                
+                System.out.println("Exported metadata for data store " + dataStoreName);
+                System.out.println("Exporting records...");
+                
                 // write records to separate binary file
                 DataStreamWriter recordWriter = null;
                 try
                 {
                     File dataFile = new File(outputFile.getParent(), dataStoreName + ".export.data");
                     if (dataFile.exists())
-                        throw new IOException("Data store export file already exist: " + dataFile);
+                    {
+                        System.err.println("Data store export file already exist: " + dataFile);
+                        continue;
+                    }
                     OutputStream recordOutput = new BufferedOutputStream(new FileOutputStream(dataFile));
                     DataOutputStream dos = new DataOutputStream(recordOutput);
                     
@@ -125,11 +126,22 @@ public class DbExport
                     recordWriter.setOutput(recordOutput);
                     
                     // write all records
+                    int errorCount = 0;
                     int recordCount = 0;
                     Iterator<? extends IDataRecord<DataKey>> it = dataStore.getRecordIterator(recordFilter);
                     while (it.hasNext())
                     {
-                        IDataRecord<DataKey> rec = it.next();
+                        IDataRecord<DataKey> rec;
+                        try
+                        {
+                            rec = it.next();
+                        }
+                        catch (Exception e)
+                        {
+                            errorCount++;
+                            continue;
+                        }
+                        
                         dos.writeDouble(rec.getKey().timeStamp);
                         if (rec.getKey().producerID == null)
                             dos.writeUTF(DbConstants.KEY_NULL_PRODUCER);
@@ -140,9 +152,12 @@ public class DbExport
                         if (recordEncoding instanceof TextEncoding)
                             dos.write('\n');
                         recordCount++;
+                        
+                        if (recordCount % 100 == 0)
+                            System.out.print(recordCount + "\r");
                     }
                     
-                    System.out.println("Exported " + recordCount + " records");
+                    System.out.println("Exported " + recordCount + " records (" + errorCount + " errors)");
                 }
                 finally
                 {

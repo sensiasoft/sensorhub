@@ -39,11 +39,6 @@ public class DbImport
 
     public static void main(String[] args) throws Exception
     {
-        args = new String[] {
-            "/home/alex/Documents/Projects/Workspace_OGC/sensorhub/sensorhub-test/commute_2015-02-16/urn:android:device:060693280a28e015.dat.export.metadata",
-            "/home/alex/Documents/Projects/Workspace_OGC/sensorhub/sensorhub-test/commute_2015-02-16/test-db.dat"
-        };
-        
         if (args.length < 2)
         {
             System.out.println("Usage: DbImport export_file storage_path");
@@ -59,6 +54,7 @@ public class DbImport
         BasicStorageImpl db = new BasicStorageImpl();
         db.init(dbConf);
         db.start();
+        db.setAutoCommit(false);
         
         // read XML metadata file
         File metadataFile = new File(args[0]);
@@ -73,6 +69,7 @@ public class DbImport
             Element processElt = dom.getFirstChildElement((Element)smlElts.item(i));
             AbstractProcess process = smlUtils.readProcess(dom, processElt);
             db.storeDataSourceDescription(process);
+            db.commit();
             System.out.println("Imported SensorML description " + process.getId());
         }
         
@@ -87,10 +84,11 @@ public class DbImport
             Element resultEncodingElt = dom.getElement(dataStoreElt, "encoding/*");
             DataEncoding recordEncoding = sweUtils.readEncoding(dom, resultEncodingElt);
             ITimeSeriesDataStore<IDataFilter> dataStore = db.addNewDataStore(dataStoreName, recordStruct, recordEncoding);
-            System.out.println("Imported data store " + dataStoreName);
+            db.commit();
+            System.out.println("Imported metadata for data store " + dataStoreName);
             System.out.println("Importing records...");
             
-            // read records data
+            // read records data            
             DataStreamParser recordParser = null;
             try
             {
@@ -118,6 +116,9 @@ public class DbImport
                         DataBlock dataBlk = recordParser.parseNextBlock();
                         dataStore.store(key, dataBlk);
                         recordCount++;
+                        
+                        if (recordCount % 100 == 0)
+                            System.out.print(recordCount + "\r");
                     }
                     catch (EOFException e)
                     {
@@ -130,7 +131,9 @@ public class DbImport
             finally
             {
                 if (recordParser != null)
-                    recordParser.close();                
+                    recordParser.close();
+                
+                db.commit();
             }
         }
     }
