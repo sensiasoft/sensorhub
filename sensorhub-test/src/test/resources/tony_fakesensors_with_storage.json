@@ -50,9 +50,9 @@
     "name": "Weather Station",
     "moduleClass": "org.sensorhub.impl.sensor.station.metar.MetarSensor",
     "enabled": true,
-    "lat": 34.7300,
-    "lon": -86.5850,
-    "elevation": 100
+    "lat": 34.6502,
+    "lon": -86.7830,
+    "elevationMeters": 917
   },
   {
     "objClass": "org.sensorhub.impl.sensor.fakecam.FakeCamConfig",
