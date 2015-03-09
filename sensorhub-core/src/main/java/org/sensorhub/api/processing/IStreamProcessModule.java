@@ -34,7 +34,7 @@ import org.sensorhub.api.data.IDataProducerModule;
  * @param <ConfigType> Type of configuration class
  * @since Feb 20, 2015
  */
-public interface IStreamProcess<ConfigType extends StreamProcessConfig> extends IProcessModule<ConfigType>, IDataProducerModule<ConfigType>, IEventListener
+public interface IStreamProcessModule<ConfigType extends StreamProcessConfig> extends IProcessModule<ConfigType>, IDataProducerModule<ConfigType>, IEventListener
 {   
     
     /**

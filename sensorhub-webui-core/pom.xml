@@ -6,9 +6,9 @@
       <version>0.5</version>
       <relativePath>../sensorhub-all/pom.xml</relativePath>
    </parent>
-   <artifactId>sensorhub-core-webui</artifactId>
-   <name>SensorHub Core Web UI</name>
-   <description>Web based user interface for SensorHub core</description>
+   <artifactId>sensorhub-webui-core</artifactId>
+   <name>SensorHub Web UI Core</name>
+   <description>Web based user interface for SensorHub</description>
    <dependencies>
       <dependency>
          <groupId>org.sensorhub</groupId>
@@ -19,17 +19,17 @@
       <dependency>
          <groupId>com.vaadin</groupId>
          <artifactId>vaadin-server</artifactId>
-         <version>7.0.0</version>
+         <version>7.3.10</version>
       </dependency>
       <dependency>
          <groupId>com.vaadin</groupId>
          <artifactId>vaadin-client-compiled</artifactId>
-         <version>7.0.0</version>
+         <version>7.3.10</version>
       </dependency>
       <dependency>
          <groupId>com.vaadin</groupId>
          <artifactId>vaadin-themes</artifactId>
-         <version>7.0.0</version>
+         <version>7.3.10</version>
       </dependency>
    </dependencies>
 </project>

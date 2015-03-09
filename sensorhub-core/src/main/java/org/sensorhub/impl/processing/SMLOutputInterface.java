@@ -25,6 +25,7 @@ import org.sensorhub.api.module.IModule;
 import org.sensorhub.api.processing.ProcessException;
 import org.sensorhub.impl.common.BasicEventHandler;
 import org.vast.process.DataQueue;
+import org.vast.swe.SWEHelper;
 
 
 /*
@@ -36,6 +37,7 @@ class SMLOutputInterface implements IStreamingDataInterface
     SMLStreamProcess parentProcess;
     IEventHandler eventHandler;
     DataComponent outputDef;
+    DataEncoding outputEncoding;
     DataBlock lastRecord;
     double lastRecordTime = Double.NaN;
     double avgSamplingPeriod = 1.0;
@@ -74,13 +76,14 @@ class SMLOutputInterface implements IStreamingDataInterface
     {
         this.parentProcess = parentProcess;
         this.outputDef = outputDef;
+        this.outputEncoding = SWEHelper.getDefaultEncoding(outputDef);
         this.eventHandler = new BasicEventHandler();
         
         try
         {
             parentProcess.smlProcess.connectOutput(outputDef.getName(), "/", outputQueue);
         }
-        catch (org.vast.process.ProcessException e)
+        catch (org.vast.process.SMLProcessException e)
         {
             throw new ProcessException("Error while connecting output " + outputDef.getName(), e);
         }
@@ -118,7 +121,7 @@ class SMLOutputInterface implements IStreamingDataInterface
     @Override
     public DataEncoding getRecommendedEncoding()
     {
-        return null;
+        return outputEncoding;
     }
 
 

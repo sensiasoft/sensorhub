@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -40,6 +41,8 @@ import org.sensorhub.api.persistence.ITimeSeriesDataStore;
 import org.sensorhub.api.persistence.StorageException;
 import org.sensorhub.impl.common.BasicEventHandler;
 import org.sensorhub.impl.module.AbstractModule;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -53,6 +56,8 @@ import org.sensorhub.impl.module.AbstractModule;
  */
 public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> implements IBasicStorage<BasicStorageConfig>
 {
+    private static final Logger log = LoggerFactory.getLogger(BasicStorageImpl.class);    
+    
     private static Key KEY_SML_START_ALL_TIME = new Key(Double.NEGATIVE_INFINITY);
     private static Key KEY_SML_END_ALL_TIME = new Key(Double.POSITIVE_INFINITY);
     static Key KEY_DATA_START_ALL_TIME = new Key(new Object[] {Double.NEGATIVE_INFINITY});
@@ -60,6 +65,7 @@ public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> impleme
     
     protected Storage db;
     protected DBRoot dbRoot;
+    protected Map<String, TimeSeriesImpl> dataStores;
     protected boolean autoCommit;
     
     
@@ -94,13 +100,16 @@ public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> impleme
                 db.setRoot(dbRoot);
             }
             
-            // make sure all data stores have event handlers
-            // HACK because transient variable is not recreated when loading from existing DB
+            // make sure all data stores have parent and event handlers
+            // because transient variables are not recreated when loading from existing DB
+            // also keep strong reference to data stores because we may have listeners registered to them
             for (TimeSeriesImpl timeSeries: dbRoot.dataStores.values())
             {
                 timeSeries.eventHandler = new BasicEventHandler();
                 timeSeries.parentStorage = this;
             }
+            
+            dataStores = dbRoot.dataStores;
         }
         catch (Exception e)
         {
@@ -177,7 +186,7 @@ public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> impleme
     @Override
     public AbstractProcess getLatestDataSourceDescription()
     {
-        Iterator<AbstractProcess> it = dbRoot.descriptionTimeIndex.iterator(new Key(-Double.MAX_VALUE), new Key(Double.MAX_VALUE), Index.DESCENT_ORDER);
+        Iterator<AbstractProcess> it = dbRoot.descriptionTimeIndex.iterator(KEY_SML_START_ALL_TIME, KEY_SML_END_ALL_TIME, Index.DESCENT_ORDER);
         if (it.hasNext())
             return it.next();
         return null;
@@ -185,9 +194,10 @@ public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> impleme
 
 
     @Override
-    public List<AbstractProcess> getDataSourceDescriptionHistory()
+    public List<AbstractProcess> getDataSourceDescriptionHistory(double startTime, double endTime)
     {
-        return Collections.unmodifiableList(dbRoot.descriptionTimeIndex.getList(KEY_SML_START_ALL_TIME, KEY_SML_END_ALL_TIME));
+        List<AbstractProcess> processList = dbRoot.descriptionTimeIndex.getList(new Key(startTime), new Key(endTime));
+        return Collections.unmodifiableList(processList);
     }
 
 
@@ -204,25 +214,27 @@ public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> impleme
     @Override
     public synchronized void storeDataSourceDescription(AbstractProcess process) throws StorageException
     {
-        // we add the description in index for each validity period/instant
-        for (AbstractTimeGeometricPrimitive validTime: process.getValidTimeList())
+        if (process.getNumValidTimes() > 0)
         {
-            double time = Double.NaN;
-            
-            try
+            // we add the description in index for each validity period/instant
+            for (AbstractTimeGeometricPrimitive validTime: process.getValidTimeList())
             {
+                double time = Double.NaN;
+                
                 if (validTime instanceof TimeInstant)
                     time = ((TimeInstant) validTime).getTimePosition().getDecimalValue();
                 else if (validTime instanceof TimePeriod)
                     time = ((TimePeriod) validTime).getBeginPosition().getDecimalValue();
+                
+                if (!Double.isNaN(time))
+                    dbRoot.descriptionTimeIndex.put(new Key(time), process);
             }
-            catch (Exception e)
-            {
-                throw new StorageException("Sensor description must contain at least one validity period");
-            }
-            
-            if (!Double.isNaN(time))
-                dbRoot.descriptionTimeIndex.put(new Key(time), process);
+        }
+        else
+        {
+            // if no validity period is specified, we just add with current time
+            double time = System.currentTimeMillis() / 1000.;
+            dbRoot.descriptionTimeIndex.put(new Key(time), process);
         }
         
         if (autoCommit)
@@ -258,9 +270,9 @@ public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> impleme
 
 
     @Override
-    public synchronized void removeDataSourceDescriptionHistory()
+    public synchronized void removeDataSourceDescriptionHistory(double startTime, double endTime)
     {
-        Iterator<AbstractProcess> it = dbRoot.descriptionTimeIndex.iterator(KEY_SML_START_ALL_TIME, KEY_SML_END_ALL_TIME, Index.ASCENT_ORDER);
+        Iterator<AbstractProcess> it = dbRoot.descriptionTimeIndex.iterator(new Key(startTime), new Key(endTime), Index.ASCENT_ORDER);
         while (it.hasNext())
         {
             AbstractProcess sml = it.next();
@@ -285,6 +297,7 @@ public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> impleme
     {
         TimeSeriesImpl newTimeSeries = new TimeSeriesImpl(this, recordStructure, recommendedEncoding);
         dbRoot.dataStores.put(name, newTimeSeries);
+        db.modify(dbRoot);
         if (autoCommit)
             commit();
         return newTimeSeries;
@@ -301,7 +314,7 @@ public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> impleme
         
         public DBRoot()
         {
-            dataStores = db.<String,TimeSeriesImpl>createMap(String.class, 10);
+            dataStores = new HashMap<String,TimeSeriesImpl>(10);
             descriptionTimeIndex = db.<AbstractProcess>createIndex(double.class, true);
         }
     }

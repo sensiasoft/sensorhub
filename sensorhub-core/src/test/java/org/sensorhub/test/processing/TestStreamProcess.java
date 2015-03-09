@@ -16,7 +16,7 @@ package org.sensorhub.test.processing;
 
 import java.io.File;
 import java.io.IOException;
-import net.opengis.swe.v20.DataComponent;
+import java.net.URL;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -26,19 +26,23 @@ import org.sensorhub.api.data.DataEvent;
 import org.sensorhub.api.data.IStreamingDataInterface;
 import org.sensorhub.api.module.IModule;
 import org.sensorhub.api.processing.DataSourceConfig.InputLinkConfig;
-import org.sensorhub.api.processing.IStreamProcess;
+import org.sensorhub.api.processing.IStreamProcessModule;
 import org.sensorhub.api.processing.StreamProcessConfig;
 import org.sensorhub.api.processing.StreamingDataSourceConfig;
 import org.sensorhub.api.sensor.ISensorModule;
 import org.sensorhub.api.sensor.SensorConfig;
 import org.sensorhub.impl.SensorHub;
 import org.sensorhub.impl.SensorHubConfig;
+import org.sensorhub.impl.processing.SMLStreamProcess;
+import org.sensorhub.impl.processing.SMLStreamProcessConfig;
 import org.sensorhub.test.sensor.FakeSensor;
 import org.sensorhub.test.sensor.FakeSensorData;
 import org.vast.cdm.common.DataStreamWriter;
 import org.vast.data.TextEncodingImpl;
+import org.vast.sensorML.ProcessLoader;
+import org.vast.sensorML.SMLUtils;
+import org.vast.sensorML.test.TestSMLProcessing;
 import org.vast.swe.AsciiDataWriter;
-import org.vast.swe.SWECommonUtils;
 
 
 public class TestStreamProcess implements IEventListener
@@ -51,7 +55,7 @@ public class TestStreamProcess implements IEventListener
     
     File configFile;
     DataStreamWriter writer;
-    int sampleCount = 0;
+    int eventCount = 0;
         
     
     @Before
@@ -61,6 +65,9 @@ public class TestStreamProcess implements IEventListener
         configFile = new File("junit-test.json");
         configFile.deleteOnExit();
         SensorHub.createInstance(new SensorHubConfig(configFile.getAbsolutePath(), configFile.getParent()));
+        
+        URL processMapUrl = TestSMLProcessing.class.getResource("ProcessMap.xml");
+        ProcessLoader.loadMaps(processMapUrl.toString(), false);
     }
     
     
@@ -99,16 +106,16 @@ public class TestStreamProcess implements IEventListener
     }
     
     
-    protected IStreamProcess<?> createStreamProcess(Class<?> processClass, StreamingDataSourceConfig... dataSources) throws Exception
+    protected IStreamProcessModule<?> createStreamProcess(Class<?> processClass, StreamingDataSourceConfig... dataSources) throws Exception
     {
         StreamProcessConfig processCfg = new StreamProcessConfig();
         processCfg.enabled = false;
-        processCfg.name = "Processing #1";
+        processCfg.name = "Process #1";
         processCfg.moduleClass = processClass.getCanonicalName();
         for (StreamingDataSourceConfig dataSrc: dataSources)
             processCfg.dataSources.add(dataSrc);
         
-        IStreamProcess<?> process = (IStreamProcess<?>)SensorHub.getInstance().getModuleRegistry().loadModule(processCfg);
+        IStreamProcessModule<?> process = (IStreamProcessModule<?>)SensorHub.getInstance().getModuleRegistry().loadModule(processCfg);
         for (IStreamingDataInterface output: process.getAllOutputs().values())
             output.registerListener(this);
         
@@ -116,29 +123,9 @@ public class TestStreamProcess implements IEventListener
     }
     
     
-    protected void testDummyProcess(IStreamProcess<?> process) throws Exception
+    protected void runProcess(IStreamProcessModule<?> process) throws Exception
     {
-        SWECommonUtils sweUtils = new SWECommonUtils();
-        
-        // print out process inputs/outputs/parameters
-        System.out.println("** Inputs **");
-        for (DataComponent input: process.getInputDescriptors().values())
-        {
-            System.out.println(input.getName() + ":");
-            sweUtils.writeComponent(System.out, input, false, true);
-        }
-        System.out.println("\n** Outputs **");
-        for (DataComponent output: process.getOutputDescriptors().values())
-        {
-            System.out.println(output.getName() + ":");
-            sweUtils.writeComponent(System.out, output, false, true);
-        }
-        System.out.println("\n** Params **");
-        for (DataComponent param: process.getParameters().values())
-        {
-            System.out.println(param.getName() + ":");
-            sweUtils.writeComponent(System.out, param, false, true);
-        }
+        new SMLUtils().writeProcess(System.out, process.getCurrentDescription(), true);
         
         // prepare event writer
         writer = new AsciiDataWriter();
@@ -150,7 +137,7 @@ public class TestStreamProcess implements IEventListener
         
         synchronized (this) 
         {
-            while (sampleCount < SAMPLE_COUNT)
+            while (eventCount < SAMPLE_COUNT*2)
                 wait();
         }
         
@@ -162,11 +149,11 @@ public class TestStreamProcess implements IEventListener
     public void testDummyProcessAutoIOAll() throws Exception
     {
         ISensorModule<?> sensor1 = createSensorDataSource1();
-        IStreamProcess<?> process = createStreamProcess(DummyProcessAutoIO.class, buildDataSourceConfig(
+        IStreamProcessModule<?> process = createStreamProcess(DummyProcessAutoIO.class, buildDataSourceConfig(
                 sensor1,
                 new String[] {"/"},
                 new String[] {auto}));
-        testDummyProcess(process);
+        runProcess(process);
     }
     
     
@@ -174,11 +161,11 @@ public class TestStreamProcess implements IEventListener
     public void testDummyProcessAutoIOOneField() throws Exception
     {
         ISensorModule<?> sensor1 = createSensorDataSource1();
-        IStreamProcess<?> process = createStreamProcess(DummyProcessAutoIO.class, buildDataSourceConfig(
+        IStreamProcessModule<?> process = createStreamProcess(DummyProcessAutoIO.class, buildDataSourceConfig(
                 sensor1,
                 new String[] {"/windSpeed"},
                 new String[] {auto}));
-        testDummyProcess(process);
+        runProcess(process);
     }
     
     
@@ -186,11 +173,11 @@ public class TestStreamProcess implements IEventListener
     public void testDummyProcessAutoIOTwoFields() throws Exception
     {
         ISensorModule<?> sensor1 = createSensorDataSource1();
-        IStreamProcess<?> process = createStreamProcess(DummyProcessAutoIO.class, buildDataSourceConfig(
+        IStreamProcessModule<?> process = createStreamProcess(DummyProcessAutoIO.class, buildDataSourceConfig(
                 sensor1,
                 new String[] {"/windSpeed", "/temp"},
                 new String[] {auto, auto}));
-        testDummyProcess(process);
+        runProcess(process);
     }
     
     
@@ -198,11 +185,42 @@ public class TestStreamProcess implements IEventListener
     public void testDummyProcessFixedIO() throws Exception
     {
         ISensorModule<?> sensor1 = createSensorDataSource1();
-        IStreamProcess<?> process = createStreamProcess(DummyProcessFixedIO.class, buildDataSourceConfig(
+        IStreamProcessModule<?> process = createStreamProcess(DummyProcessFixedIO.class, buildDataSourceConfig(
                 sensor1,
                 new String[] {"/press"},
                 new String[] {DummyProcessFixedIO.INPUT_NAME}));
-        testDummyProcess(process);
+        runProcess(process);
+    }
+    
+    
+    protected IStreamProcessModule<?> createSMLProcess(String smlUrl, StreamingDataSourceConfig... dataSources) throws Exception
+    {
+        SMLStreamProcessConfig processCfg = new SMLStreamProcessConfig();
+        processCfg.enabled = false;
+        processCfg.name = "SensorML Process #1";
+        processCfg.moduleClass = SMLStreamProcess.class.getCanonicalName();
+        processCfg.sensorML = smlUrl;
+        for (StreamingDataSourceConfig dataSrc: dataSources)
+            processCfg.dataSources.add(dataSrc);
+        
+        IStreamProcessModule<?> process = (IStreamProcessModule<?>)SensorHub.getInstance().getModuleRegistry().loadModule(processCfg);
+        for (IStreamingDataInterface output: process.getAllOutputs().values())
+            output.registerListener(this);
+        
+        return process;
+    }
+    
+    
+    @Test
+    public void testSMLSimpleProcess() throws Exception
+    {
+        ISensorModule<?> sensor1 = createSensorDataSource1();
+        String testResource = "examples_v20/LinearInterpolator.xml";
+        IStreamProcessModule<?> process = createSMLProcess(TestSMLProcessing.class.getResource(testResource).toString(), buildDataSourceConfig(
+                sensor1,
+                new String[] {"/press"},
+                new String[] {"x"}));
+        runProcess(process);
     }
     
     
@@ -219,9 +237,7 @@ public class TestStreamProcess implements IEventListener
                 writer.write(((DataEvent)e).getRecords()[0]);
                 writer.flush();
                 System.out.println();
-                
-                if (e.getSource() instanceof DummyOutput)
-                    sampleCount++;
+                eventCount++;
             }
             catch (IOException ex)
             {

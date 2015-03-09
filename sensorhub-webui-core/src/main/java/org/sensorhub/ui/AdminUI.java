@@ -8,8 +8,7 @@ Software distributed under the License is distributed on an "AS IS" basis,
 WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
 for the specific language governing rights and limitations under the License.
  
-The Initial Developer is Sensia Software LLC. Portions created by the Initial
-Developer are Copyright (C) 2014 the Initial Developer. All Rights Reserved.
+Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
  
 ******************************* END LICENSE BLOCK ***************************/
 
@@ -20,9 +19,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.sensorhub.api.common.SensorHubException;
+import org.sensorhub.api.module.IModule;
 import org.sensorhub.api.module.ModuleConfig;
 import org.sensorhub.api.persistence.StorageConfig;
 import org.sensorhub.api.processing.ProcessConfig;
@@ -31,29 +29,25 @@ import org.sensorhub.api.service.ServiceConfig;
 import org.sensorhub.impl.SensorHub;
 import org.sensorhub.impl.service.HttpServer;
 import org.sensorhub.ui.api.IModuleConfigFormBuilder;
+import org.sensorhub.ui.api.IModulePanelBuilder;
 import org.sensorhub.ui.data.MyBeanItem;
 import org.sensorhub.ui.data.MyBeanItemContainer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.vaadin.annotations.Theme;
 import com.vaadin.data.Item;
-import com.vaadin.data.fieldgroup.FieldGroup;
-import com.vaadin.data.fieldgroup.FieldGroup.CommitException;
 import com.vaadin.event.Action;
 import com.vaadin.event.Action.Handler;
 import com.vaadin.event.ItemClickEvent;
 import com.vaadin.event.ItemClickEvent.ItemClickListener;
 import com.vaadin.server.ClassResource;
-import com.vaadin.server.Resource;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.ui.Accordion;
-import com.vaadin.ui.Button;
-import com.vaadin.ui.FormLayout;
-import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.Component;
 import com.vaadin.ui.HorizontalSplitPanel;
 import com.vaadin.ui.Notification;
-import com.vaadin.ui.Panel;
 import com.vaadin.ui.Table;
 import com.vaadin.ui.VerticalLayout;
-import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Window.CloseEvent;
 import com.vaadin.ui.Window.CloseListener;
 
@@ -67,13 +61,14 @@ public class AdminUI extends com.vaadin.ui.UI
     private static Action REMOVE_MODULE_ACTION = new Action("Remove Module", new ClassResource("/icons/module_delete.png"));
     private static Action ENABLE_MODULE_ACTION = new Action("Enable", new ClassResource("/icons/enable.png"));
     private static Action DISABLE_MODULE_ACTION = new Action("Disable", new ClassResource("/icons/disable.gif"));
-    private static Resource MODULE_SETTINGS_ICON = new ClassResource("/icons/brick.png");
     
-    private static final Log log = LogFactory.getLog(AdminUI.class);
+    private static final Logger log = LoggerFactory.getLogger(AdminUI.class);
     
     VerticalLayout configArea;
     AdminUIConfig uiConfig;
-    Map<String, IModuleConfigFormBuilder<ModuleConfig>> customForms = new HashMap<String, IModuleConfigFormBuilder<ModuleConfig>>();
+    
+    Map<String, IModulePanelBuilder> customPanels = new HashMap<String, IModulePanelBuilder>();
+    Map<String, IModuleConfigFormBuilder> customForms = new HashMap<String, IModuleConfigFormBuilder>();
     
     
     @Override
@@ -92,17 +87,34 @@ public class AdminUI extends com.vaadin.ui.UI
         }
         
         // prepare custom form builders
-        for (CustomFormConfig customForm: uiConfig.customForms)
+        for (CustomPanelConfig customForm: uiConfig.customForms)
         {
             try
             {
-                Class<?> className = Class.forName(customForm.formBuilderClass);
-                IModuleConfigFormBuilder<ModuleConfig> formBuilder = (IModuleConfigFormBuilder<ModuleConfig>)className.newInstance();
+                Class<?> className = Class.forName(customForm.builderClass);
+                IModuleConfigFormBuilder formBuilder = (IModuleConfigFormBuilder)className.newInstance();
                 customForms.put(customForm.configClass, formBuilder);
+                log.debug("Loaded custom form for " + customForm.configClass);
             }
             catch (Exception e)
             {
                 log.error("Error while instantiating form builder for config class " + customForm.configClass, e);
+            }
+        }
+        
+        // prepare custom panel builders
+        for (CustomPanelConfig customPanel: uiConfig.customPanels)
+        {
+            try
+            {
+                Class<?> className = Class.forName(customPanel.builderClass);
+                IModulePanelBuilder panelBuilder = (IModulePanelBuilder)className.newInstance();
+                customPanels.put(customPanel.configClass, panelBuilder);
+                log.debug("Loaded custom panel for " + customPanel.configClass);
+            }
+            catch (Exception e)
+            {
+                log.error("Error while instantiating panel builder for config class " + customPanel.configClass, e);
             }
         } 
         
@@ -316,70 +328,28 @@ public class AdminUI extends com.vaadin.ui.UI
     }
     
     
-    @SuppressWarnings("serial")
     protected void openModuleInfo(MyBeanItem<ModuleConfig> beanItem)
     {
         configArea.removeAllComponents();
         
-        //SplitPanel panel = new SplitPanel();
-        // find the best form builder for this module
         String configClass = beanItem.getBean().getClass().getCanonicalName();
-        IModuleConfigFormBuilder<ModuleConfig> configForm = customForms.get(configClass);
-        if (configForm == null)
-            configForm = new GenericConfigFormBuilder();
-                
-        // create panel with module name
-        String moduleType = configForm.getTitle(beanItem.getBean());
-        Panel panel = new Panel(moduleType);
+        
+        // TODO: do something different because getModuleById will load the module if not loaded yet
+        IModule<?> module = null;                
+        try { module = SensorHub.getInstance().getModuleRegistry().getModuleById(beanItem.getBean().id); }
+        catch (Exception e) {}
+        
+        // check if there is a custom form registered, if not use default        
+        IModuleConfigFormBuilder formBuilder = customForms.get(configClass);
+        if (formBuilder == null)
+            formBuilder = new GenericConfigFormBuilder();
+        
+        // check if there is a custom panel registered, if not use default
+        IModulePanelBuilder uiBuilder = customPanels.get(configClass);
+        if (uiBuilder == null)
+            uiBuilder = new DefaultModulePanelBuilder();
+        Component panel = uiBuilder.buildPanel(beanItem, module, formBuilder);
+        
         configArea.addComponent(panel);
-        
-        // add generated form
-        VerticalLayout layout = new VerticalLayout();
-        layout.setSizeUndefined();
-        layout.setMargin(true);
-        FormLayout form = new FormLayout();
-        final FieldGroup fieldGroup = new FieldGroup(beanItem);
-        configForm.buildForm(form, fieldGroup);
-        layout.addComponent(form);
-        
-        // add save button
-        HorizontalLayout buttonsLayout = new HorizontalLayout();
-        buttonsLayout.setWidth(100.0f, Unit.PERCENTAGE);
-        //buttonsLayout.setSizeFull();
-        buttonsLayout.setMargin(true);
-        buttonsLayout.setSpacing(true);
-        layout.addComponent(buttonsLayout);
-        
-        Button saveButton = new Button("Save");
-        saveButton.addClickListener(new Button.ClickListener() {
-            @Override
-            public void buttonClick(ClickEvent event)
-            {
-                try
-                {
-                    fieldGroup.commit();
-                }
-                catch (CommitException e)
-                {
-                    e.printStackTrace();
-                }                
-            }
-        });
-        buttonsLayout.addComponent(saveButton);
-        //buttonsLayout.setComponentAlignment(saveButton, Alignment.MIDDLE_CENTER);
-        
-        // add cancel button
-        Button cancelButton = new Button("Cancel");
-        cancelButton.addClickListener(new Button.ClickListener() {
-            @Override
-            public void buttonClick(ClickEvent event)
-            {
-                fieldGroup.discard();
-            }
-        });
-        buttonsLayout.addComponent(cancelButton);
-        //buttonsLayout.setComponentAlignment(cancelButton, Alignment.MIDDLE_CENTER);
-        
-        panel.setContent(layout);
     }
 }

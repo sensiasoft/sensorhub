@@ -14,8 +14,7 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.impl.service.sos;
 
-import java.util.ArrayList;
-import java.util.List;
+
 import org.sensorhub.api.common.SensorHubException;
 
 
@@ -29,44 +28,16 @@ import org.sensorhub.api.common.SensorHubException;
  * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @since Sep 7, 2013
  */
-public class SensorDataProviderConfig extends SOSProviderConfig
+public class SensorDataProviderConfig extends StreamDataProviderConfig
 {
-    
+
     /**
-     * Local ID of sensor to use as data source for
+     * Local ID of sensor module to use as data source for
      * live-stream requests
      */
     public String sensorID;
     
     
-    /**
-     * Local ID of storage containing the sensor data
-     * to use as data source for archive requests
-     */
-    public String storageID;
-    
-    
-    /**
-     * Names of sensor outputs to hide from SOS
-     */
-    public List<String> hiddenOutputs = new ArrayList<String>();
-    
-    
-    /**
-     * If true, forward "new sensor data" events via the WS-Notification
-     * interface of the service
-     */
-    public boolean activateNotifications;
-    
-    
-    /**
-     * Time-out after which real-time requests are disabled if no more
-     * measurements are received. Real-time is reactivated as soon as
-     * new records start being received again.
-     */
-    public double liveDataTimeout = 10.0;
-
-
     @Override
     protected IDataProviderFactory getFactory() throws SensorHubException
     {

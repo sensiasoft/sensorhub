@@ -19,6 +19,23 @@ import org.vast.ows.sos.ISOSDataProviderFactory;
 import org.vast.ows.sos.SOSOfferingCapabilities;
 
 
+/**
+ * <p>
+ * Common interface for all data provider factories.
+ * </p>
+ * <p>
+ * One data provider factory is created for each offering and is persistent
+ * throughout the lifetime of the service, so it must be threadsafe.
+ * </p>
+ * <p>
+ * However, the server obtains a new data provider instance from the factory
+ * for each incoming request so the providers themselves don't need to be
+ * threadsafe. 
+ * </p>
+ *
+ * @author Alex Robin <alex.robin@sensiasoftware.com>
+ * @since Sep 7, 2013
+ */
 public interface IDataProviderFactory extends ISOSDataProviderFactory
 {
 

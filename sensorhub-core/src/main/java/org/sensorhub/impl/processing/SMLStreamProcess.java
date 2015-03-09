@@ -14,7 +14,6 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.impl.processing;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.Map;
@@ -25,8 +24,9 @@ import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.data.DataEvent;
 import org.sensorhub.api.processing.DataSourceConfig;
 import org.sensorhub.api.processing.ProcessException;
-import org.sensorhub.api.sensor.SensorException;
 import org.sensorhub.utils.MsgUtils;
+import org.vast.process.DataQueue;
+import org.vast.process.SMLProcessException;
 import org.vast.sensorML.AbstractProcessImpl;
 import org.vast.sensorML.AggregateProcessImpl;
 import org.vast.sensorML.SMLHelper;
@@ -51,10 +51,12 @@ public class SMLStreamProcess extends AbstractStreamProcess<SMLStreamProcessConf
     @Override
     public void init(SMLStreamProcessConfig config) throws SensorHubException
     {
+        this.config = config;
+        SMLUtils utils = new SMLUtils();
+        
         // parse SensorML file
         try
         {
-            SMLUtils utils = new SMLUtils();
             InputStream is = new URL(config.sensorML).openStream();
             processDescription = utils.readProcess(is);
             smlProcess = (AbstractProcessImpl)processDescription;
@@ -63,10 +65,23 @@ public class SMLStreamProcess extends AbstractStreamProcess<SMLStreamProcessConf
             if (smlProcess instanceof AggregateProcessImpl)
                 ((AggregateProcessImpl)smlProcess).setChildrenThreadsOn(false);
         }
-        catch (IOException e)
+        catch (Exception e)
         {
-            throw new SensorException("Error while parsing static SensorML description for process " +
-                                        MsgUtils.moduleString(this), e);
+            throw new ProcessException("Error while parsing static SensorML description for process " +
+                    MsgUtils.moduleString(this), e);
+        }
+        
+        // make process executable
+        try
+        {
+            utils.makeProcessExecutable(smlProcess);
+            smlProcess.createNewInputBlocks();
+            smlProcess.createNewOutputBlocks();
+        }
+        catch (SMLProcessException e)
+        {
+            throw new ProcessException("Error while preparing SensorML process for execution in " +
+                    MsgUtils.moduleString(this), e);
         }
         
         // advertise process inputs and outputs
@@ -76,6 +91,13 @@ public class SMLStreamProcess extends AbstractStreamProcess<SMLStreamProcessConf
         
         // call super to make connections to data sources
         super.init(config);
+    }
+    
+    
+    @Override
+    protected void connectInput(String inputName, String dataPath, DataQueue inputQueue) throws Exception
+    {        
+        smlProcess.connectInput(inputName, dataPath, inputQueue);
     }
     
     
@@ -97,13 +119,6 @@ public class SMLStreamProcess extends AbstractStreamProcess<SMLStreamProcessConf
     
     
     @Override
-    protected DataComponent getInputQueueDestination(String inputName)
-    {
-        return SMLHelper.getIOComponent(smlProcess.getInput(inputName));
-    }
-    
-    
-    @Override
     public void start() throws SensorHubException
     {
         try
@@ -114,7 +129,7 @@ public class SMLStreamProcess extends AbstractStreamProcess<SMLStreamProcessConf
             // call super to register to input events
             super.start();
         }
-        catch (org.vast.process.ProcessException e)
+        catch (org.vast.process.SMLProcessException e)
         {
             throw new ProcessException("Error when starting SensorML process thread", e);
         }

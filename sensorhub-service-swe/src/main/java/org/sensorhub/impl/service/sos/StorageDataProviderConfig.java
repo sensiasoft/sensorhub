@@ -46,16 +46,16 @@ public class StorageDataProviderConfig extends SOSProviderConfig
     
 
     /*
-     * Copy constructor to configure storage from sensor provider info
+     * Copy constructor to configure storage from streaming data provider info
      */
-    protected StorageDataProviderConfig(SensorDataProviderConfig sensorConfig)
+    protected StorageDataProviderConfig(StreamDataProviderConfig streamProducerConfig)
     {
-        this.enabled = sensorConfig.enabled;
-        this.uri = sensorConfig.uri;
-        this.name = sensorConfig.name;
-        this.description = sensorConfig.description;
-        this.storageID = sensorConfig.storageID;
-        this.hiddenOutputs = sensorConfig.hiddenOutputs;
+        this.enabled = streamProducerConfig.enabled;
+        this.uri = streamProducerConfig.uri;
+        this.name = streamProducerConfig.name;
+        this.description = streamProducerConfig.description;
+        this.storageID = streamProducerConfig.storageID;
+        this.hiddenOutputs = streamProducerConfig.hiddenOutputs;
     }
     
     

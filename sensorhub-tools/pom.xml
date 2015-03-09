@@ -1,0 +1,31 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.sensorhub</groupId>
+    <artifactId>sensorhub-all</artifactId>
+    <version>0.5</version>
+  </parent>
+  <artifactId>sensorhub-tools</artifactId>
+  <version>0.5</version>
+  <name>SensorHub Admin Tools</name>
+  <description>Administration tools for SensorHub </description>
+  <dependencies>
+     <dependency>
+        <groupId>org.sensorhub</groupId>
+        <artifactId>sensorhub-storage-perst</artifactId>
+        <version>0.5</version>
+        <type>bundle</type>
+     </dependency>
+     <dependency>
+        <groupId>org.sensorhub</groupId>
+        <artifactId>sensorhub-core</artifactId>
+        <version>0.5</version>
+        <type>bundle</type>
+     </dependency>
+     <dependency>
+        <groupId>org.codehaus.woodstox</groupId>
+        <artifactId>woodstox-core-asl</artifactId>
+        <version>4.2.0</version>
+     </dependency>
+  </dependencies>
+</project>

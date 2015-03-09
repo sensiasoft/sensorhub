@@ -14,9 +14,7 @@ Developer are Copyright (C) 2014 the Initial Developer. All Rights Reserved.
 ******************************* END LICENSE BLOCK ***************************/
 
 import net.opengis.swe.v20.DataChoice;
-import org.sensorhub.api.module.IModule;
 import org.sensorhub.impl.SensorHub;
-import org.sensorhub.impl.sensor.axis.AxisCameraDriver;
 import org.vast.data.TextEncodingImpl;
 import org.vast.ows.sps.DescribeTaskingRequest;
 import org.vast.ows.sps.DescribeTaskingResponse;
@@ -27,15 +25,14 @@ import org.vast.swe.SWEData;
 
 public class TestSensorHubAxisSosSps
 {
-    //private final static String ENDPOINT = "http://localhost:8080/sensorhub/sps";
-    private final static String ENDPOINT = "http://bottsgeo.simple-url.com:2015/sensorhub/sps";
+    private final static String ENDPOINT = "http://localhost:8080/sensorhub/sps";
+    //private final static String ENDPOINT = "http://bottsgeo.simple-url.com:2015/sensorhub/sps";
     private final static String PROC_ID = "d136b6ea-3951-4691-bf56-c84ec7d89d72";
     
     
     public static void main(String[] args) throws Exception
     {
-        //SensorHub.main(new String[] {"src/test/resources/config_axis_sos_sps.json", "storage"});
-        //AxisCameraDriver sensor = (AxisCameraDriver)SensorHub.getInstance().getModuleRegistry().getModuleById(PROC_ID);
+        SensorHub.main(new String[] {"src/test/resources/config_axis_sos_sps.json", "storage"});
         
         // get procedure ID
         String procID = PROC_ID;
@@ -50,7 +47,7 @@ public class TestSensorHubAxisSosSps
         // send SPS describe tasking
         DescribeTaskingRequest dtReq = new DescribeTaskingRequest();
         dtReq.setVersion("2.0");
-        dtReq.setPostServer(ENDPOINT);
+        dtReq.setGetServer(ENDPOINT);
         dtReq.setProcedureID(procID);
         utils.writeXMLQuery(System.out, dtReq);
         DescribeTaskingResponse dtResp = utils.sendRequest(dtReq, false);
@@ -81,6 +78,23 @@ public class TestSensorHubAxisSosSps
             
             Thread.sleep(2000L);
         }
+        
+        // go back to home position
+        // generate new tasking parameters
+        ptzParams.renewDataBlock();
+        ptzParams.setSelectedItem("gotoserverpresetname");
+        ptzParams.getComponent("gotoserverpresetname").getData().setStringValue("Drive_wide");
+        taskParams.clearData();
+        taskParams.addData(ptzParams.getData());
+        
+        // build request
+        SubmitRequest subReq = new SubmitRequest();
+        subReq.setVersion("2.0");
+        subReq.setPostServer(ENDPOINT);
+        subReq.setProcedureID(procID);
+        subReq.setParameters(taskParams);
+        utils.writeXMLQuery(System.out, subReq);
+        utils.sendRequest(subReq, false);
     }
 
 }

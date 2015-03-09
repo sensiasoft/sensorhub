@@ -42,6 +42,7 @@
       <module>../sensorhub-driver-v4l</module>      
       <module>../sensorhub-driver-fakegps</module>
       <module>../sensorhub-driver-fakeweather</module>
+      <module>../sensorhub-tools</module>
    </modules>
    <dependencies>
       <dependency>

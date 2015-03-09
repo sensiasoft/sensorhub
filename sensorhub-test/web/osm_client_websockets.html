@@ -40,11 +40,12 @@
             marker = new OpenLayers.Marker(new OpenLayers.LonLat(0, 0), icon);
             markers.addMarker(marker);
 
+            // GPS
             // prepare reader
             var reader = new FileReader();
             reader.onload = function() {
                 var rec = reader.result;
-                console.log(rec);
+                //console.log(rec);
                 document.getElementById("text").innerHTML = rec;
                 var tokens = rec.trim().split(",");
                 var lat = parseFloat(tokens[1]);

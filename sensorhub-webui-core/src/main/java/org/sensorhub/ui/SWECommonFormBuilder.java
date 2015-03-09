@@ -8,8 +8,7 @@ Software distributed under the License is distributed on an "AS IS" basis,
 WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
 for the specific language governing rights and limitations under the License.
  
-The Initial Developer is Sensia Software LLC. Portions created by the Initial
-Developer are Copyright (C) 2014 the Initial Developer. All Rights Reserved.
+Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
  
 ******************************* END LICENSE BLOCK ***************************/
 
@@ -19,6 +18,8 @@ import net.opengis.swe.v20.DataArray;
 import net.opengis.swe.v20.DataChoice;
 import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataRecord;
+import net.opengis.swe.v20.Quantity;
+import org.vast.data.DataIterator;
 import org.vast.data.DataValue;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.FormLayout;
@@ -35,10 +36,14 @@ public class SWECommonFormBuilder
     public Panel buildForm(DataComponent dataComponent)
     {
         FormLayout layout = new FormLayout();
-        
-        
-        
-        
+               
+        for (int i = 0; i < dataComponent.getComponentCount(); i++)
+        {
+            DataComponent c = dataComponent.getComponent(i);
+            Component w = buildWidget(c);
+            if (w != null)
+                layout.addComponent(w);
+        }
         
         Panel panel = new Panel();
         panel.setContent(layout);
@@ -57,7 +62,8 @@ public class SWECommonFormBuilder
             {
                 DataComponent c = dataRecord.getComponent(i);
                 Component w = buildWidget(c);
-                layout.addComponent(w);
+                if (w != null)
+                    layout.addComponent(w);
             }
             
             Panel panel = new Panel();
@@ -80,9 +86,12 @@ public class SWECommonFormBuilder
             
         }
         
-        else if (dataComponent instanceof DataValue)
+        else if (dataComponent instanceof Quantity)
         {
-            
+            Label c = new Label();
+            c.setCaption(getPrettyName(dataComponent));
+            c.setDescription(dataComponent.getDescription());
+            return c;
         }
         
         return null;

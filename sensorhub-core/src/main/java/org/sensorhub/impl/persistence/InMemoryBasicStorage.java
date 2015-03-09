@@ -84,14 +84,38 @@ public class InMemoryBasicStorage extends AbstractModule<StorageConfig> implemen
     public AbstractProcess getLatestDataSourceDescription()
     {
         int historySize = dataSourceDescriptions.size();
+        if (historySize == 0)
+            return null;
         return dataSourceDescriptions.get(historySize - 1);
     }
 
 
     @Override
-    public List<AbstractProcess> getDataSourceDescriptionHistory()
+    public List<AbstractProcess> getDataSourceDescriptionHistory(double startTime, double endTime)
     {
-        return Collections.unmodifiableList(dataSourceDescriptions);
+        ArrayList<AbstractProcess> smlList = new ArrayList<AbstractProcess>();
+        
+        for (AbstractProcess sml: dataSourceDescriptions)
+        {
+            AbstractTimeGeometricPrimitive validTime = sml.getValidTimeList().get(0);
+            
+            if (validTime instanceof TimeInstant)
+            {
+                double time = ((TimeInstant)validTime).getTimePosition().getDecimalValue();
+                if (time >= startTime && time <= endTime)
+                    smlList.add(sml);
+            }
+            else if (validTime instanceof TimePeriod)
+            {
+                double beginPeriod = ((TimePeriod)validTime).getBeginPosition().getDecimalValue();
+                double endPeriod = ((TimePeriod)validTime).getBeginPosition().getDecimalValue();
+                if ((beginPeriod >= startTime && beginPeriod <= endTime) ||
+                    (endPeriod >= startTime && endPeriod <= endTime))
+                    smlList.add(sml);
+            }
+        }
+        
+        return smlList;
     }
 
 
@@ -144,7 +168,7 @@ public class InMemoryBasicStorage extends AbstractModule<StorageConfig> implemen
 
 
     @Override
-    public void removeDataSourceDescriptionHistory()
+    public void removeDataSourceDescriptionHistory(double startTime, double endTime)
     {
         dataSourceDescriptions.clear();        
     }
