@@ -450,7 +450,7 @@ a:hover {
 header {
   padding-top: 40px;
   padding-bottom: 40px;
-  font-family: /*'Architects Daughter',*/ 'Helvetica Neue', Helvetica, Arial, serif;
+  font-family: 'Droid Sans', 'Helvetica Neue', Helvetica, Arial, serif;
   background: #2e7bcf url(../images/header-bg.jpg) 0 0 repeat-x;
   border-bottom: solid 1px #275da1;
 }
@@ -464,6 +464,7 @@ header h1 {
   line-height: 1;
   color: #fff;
   letter-spacing: -1px;
+  background: url(../images/sensorhub_logo_128.png) no-repeat left transparent;
 }
 
 header h2 {
