@@ -1,2 +1,8 @@
-name: Architect Theme
+name: OpenSensorHub
+description: Documentation and Blog for the OpenSensorHub Project
+
+baseurl: "/sensorhub"
+
 markdown: redcarpet
+highlighter: pygments
+permalink: /:title/
