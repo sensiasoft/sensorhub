@@ -456,19 +456,18 @@ header {
 }
 
 header h1 {
-  width: 540px;
   margin-top: 0;
-  margin-bottom: 0.2em;
+  margin-bottom: 0;
   font-size: 72px;
   font-weight: normal;
-  line-height: 1;
+  line-height: 1.5;
   color: #fff;
   letter-spacing: -1px;
   background: url(../images/sensorhub_logo_128.png) no-repeat left transparent;
+  padding-left: 138px;
 }
 
 header h2 {
-  width: 540px;
   margin-top: 0;
   margin-bottom: 0;
   font-size: 26px;
