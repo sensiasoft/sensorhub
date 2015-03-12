@@ -12,7 +12,7 @@ title: OpenSensorHub Documentation
   </ul>
   <h1>Tutorials</h1>
   <ul class="posts">
-    {% for doc in site.categories.tutorial %}
+    {% for doc in site.docs %}
       <li><span>{{ doc.date | date_to_string }}</span> &raquo; <a href="{{ site.baseurl }}{{ doc.url }}">{{ doc.title }}</a></li>
     {% endfor %}
   </ul>
