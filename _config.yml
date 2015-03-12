@@ -5,3 +5,5 @@ baseurl: "/sensorhub"
 
 markdown: redcarpet
 highlighter: pygments
+
+asciidoc_ext: adoc,ad
