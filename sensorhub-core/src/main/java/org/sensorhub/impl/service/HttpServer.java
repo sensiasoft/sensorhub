@@ -15,13 +15,14 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 package org.sensorhub.impl.service;
 
 import java.io.IOException;
+import java.util.EnumSet;
 import java.util.Map;
+import javax.servlet.DispatcherType;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.eclipse.jetty.rewrite.handler.HeaderPatternRule;
-import org.eclipse.jetty.rewrite.handler.RewriteHandler;
+import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.HandlerList;
 import org.eclipse.jetty.server.handler.ResourceHandler;
@@ -119,18 +120,21 @@ public class HttpServer extends AbstractModule<HttpServerConfig>
             if (config.servletsRootUrl != null)
             {
                 // authorize cross domain requests
-                RewriteHandler rewrite = new RewriteHandler();
+                /*RewriteHandler rewrite = new RewriteHandler();
                 HeaderPatternRule rule = new HeaderPatternRule();
                 rule.setAdd(true);
                 rule.setPattern("*");//config.servletsRootUrl + "/*");
                 rule.setName("Access-Control-Allow-Origin");
                 rule.setValue("*");
                 rewrite.addRule(rule);
-                handlers.addHandler(rewrite);
+                handlers.addHandler(rewrite);*/
                 
                 servletHandler.setContextPath(config.servletsRootUrl);
                 handlers.addHandler(servletHandler);
                 log.info("Servlets root is " + config.servletsRootUrl);
+                
+                // filter to add proper cross-origin headers
+                servletHandler.addFilter(CrossOriginFilter.class, "/*", EnumSet.of(DispatcherType.REQUEST));
             }
             
             server.setHandler(handlers);
