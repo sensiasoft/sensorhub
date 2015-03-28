@@ -71,8 +71,7 @@ html {
   margin-top: 0;
   font-family: "Droid Sans", serif;
   font-size: 2.5rem;
-  background: url(../images/sensorhub_logo_128.png) no-repeat left transparent;
-  padding-left: 138px;
+  line-height: 2.5;
 }
 
 /* Sidebar nav */
