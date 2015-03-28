@@ -1,7 +1,7 @@
 <div class="sidebar">
   <div class="container sidebar-sticky">
     <div class="sidebar-about">
-      <img src="{{ site.baseurl }}images/sensorhub_logo_128.png"/>
+      <img src="{{ site.baseurl }}/images/sensorhub_logo_128.png"/>
       <h1>
         <a href="{{ site.baseurl }}">
           {{ site.title }}
@@ -31,7 +31,7 @@
       {% for node in site.docs %}
         {% if node.title != null %}
           {% if node.layout == "page" %}
-            <a class="sidebar-nav-item{% if page.url == node.url %} active{% endif %}" style="padding-left: 0.5em" href="{{ site.baseurl }}{{ node.url }}">{{ node.title }}</a>
+            <a class="sidebar-nav-item{% if page.url == node.url %} active{% endif %}" style="padding-left: 1em" href="{{ site.baseurl }}{{ node.url }}">{{ node.title }}</a>
           {% endif %}
         {% endif %}
       {% endfor %}
