@@ -1,5 +1,5 @@
 ---
-layout: post
+layout: page
 title:  "Writing your first sensor driver"
 date:   2015-03-11 10:40:56
 categories: 1.0 tutorial
