@@ -1,30 +1,13 @@
 ---
 layout: page
-title: About
+title:  "Welcome to SensorHub"
+date:   2015-03-10 10:40:56
 ---
 
-<p class="message">
-  Hey there! This page is included as an example. Feel free to customize it for your own use upon downloading. Carry on!
-</p>
+SensorHub software allows one to easily build interoperable and evolutive sensor networks with advanced processing capabilities and based on open-standards for all data exchanges. These open-standards are mostly [OGC](http://www.opengeospatial.org) standards from the [Sensor Web Enablement](http://www.opengeospatial.org/projects/groups/sensorwebdwg) (SWE) initiative and are key to design sensor networks that can largely evolve with time (addition of new types of sensors, reconfigurations, etc.).
 
-In the novel, *The Strange Case of Dr. Jeykll and Mr. Hyde*, Mr. Poole is Dr. Jekyll's virtuous and loyal butler. Similarly, Poole is an upstanding and effective butler that helps you build Jekyll themes. It's made by [@mdo](https://twitter.com/mdo).
+The Java framework allows one to connect any kind of sensors and actuators to a common bus via a simple yet generic driver API. Sensors can be connected through any available hardware interface such as [RS232/422](http://en.wikipedia.org/wiki/RS-232), [SPI](http://en.wikipedia.org/wiki/Serial_Peripheral_Interface_Bus), [I2C](http://en.wikipedia.org/wiki/I%C2%B2C), [USB](http://en.wikipedia.org/wiki/USB), [Ethernet](http://en.wikipedia.org/wiki/Ethernet), [Wifi](http://en.wikipedia.org/wiki/Wi-Fi), [Bluetooth](http://en.wikipedia.org/wiki/Bluetooth), [ZigBee](http://en.wikipedia.org/wiki/ZigBee), [HTTP](http://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol), etc... Once drivers are available for a specific sensor, it is automatically connected to the bus and it is then trivial to send commands and read data from it. An intuitive user interface allows the user to configure the network to suit its needs and more advanced processing capabilities are available via a plugin system.
 
-There are currently two themes built on Poole:
+SensorHub embeds the full power of OGC web services ([Sensor Observation Service](http://www.opengeospatial.org/standards/sos) or SOS, [Sensor Planning Service](http://www.opengeospatial.org/standards/sps) or SPS) to communicate with all connected sensors in the network as well as to provide robust metadata (owner, location and orientation, calibration, etc.) about them. Through these standard, several SensorHub instances can also communicate with each other to form larger networks.
 
-* [Hyde](http://hyde.getpoole.com)
-* [Lanyon](http://lanyon.getpoole.com)
-
-Learn more and contribute on [GitHub](https://github.com/poole).
-
-## Setup
-
-Some fun facts about the setup of this project include:
-
-* Built for [Jekyll](http://jekyllrb.com)
-* Developed on GitHub and hosted for free on [GitHub Pages](https://pages.github.com)
-* Coded with [Sublime Text 2](http://sublimetext.com), an amazing code editor
-* Designed and developed while listening to music like [Blood Bros Trilogy](https://soundcloud.com/maddecent/sets/blood-bros-series)
-
-Have questions or suggestions? Feel free to [open an issue on GitHub](https://github.com/poole/issues/new) or [ask me on Twitter](https://twitter.com/mdo).
-
-Thanks for reading!
+Low level functions of SensorHub (send commands and read data from sensor) are coded efficiently and can be used on embedded hardware running [Java SE®](http://www.oracle.com/technetwork/java/javase), [Java ME®](http://www.oracle.com/technetwork/java/embedded/javame) or [Android®](http://www.android.com) while more advanced data processing capabilities are fully multi-threaded and can thus benefit from a more powerful hardware platform (e.g. multi-processor servers or even clusters).
