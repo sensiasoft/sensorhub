@@ -1,14 +1,4 @@
 /*
- *  __                  __
- * /\ \                /\ \
- * \ \ \___   __  __   \_\ \     __
- *  \ \  _ `\/\ \/\ \  /'_` \  /'__`\
- *   \ \ \ \ \ \ \_\ \/\ \_\ \/\  __/
- *    \ \_\ \_\/`____ \ \___,_\ \____\
- *     \/_/\/_/`/___/> \/__,_ /\/____/
- *                /\___/
- *                \/__/
- *
  * Designed, built, and released under MIT license by @mdo. Learn more at
  * https://github.com/poole/hyde.
  */
@@ -79,8 +69,10 @@ html {
 .sidebar-about h1 {
   color: #fff;
   margin-top: 0;
-  font-family: "Abril Fatface", serif;
-  font-size: 3.25rem;
+  font-family: "Droid Sans", serif;
+  font-size: 2.5rem;
+  background: url(../images/sensorhub_logo_128.png) no-repeat left transparent;
+  padding-left: 138px;
 }
 
 /* Sidebar nav */

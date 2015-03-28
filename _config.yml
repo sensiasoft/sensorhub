@@ -1,6 +1,3 @@
-name: OpenSensorHub
-description: Documentation and Blog for the OpenSensorHub Project
-
 # Dependencies
 markdown:         redcarpet
 highlighter:      pygments
@@ -17,7 +14,7 @@ collections:
 # Setup
 title:            SensorHub
 tagline:          'Software for building smart sensor networks'
-description:      ''
+description:      'Documentation and Blog for the OpenSensorHub Project'
 url:              http://www.opensensorhub.org
 baseurl:          "/sensorhub/"
 
@@ -28,7 +25,7 @@ author:
 paginate:         5
 
 # Custom vars
-version:          1.0
+version:          1.0-beta
 
 github:
   repo:           https://github.com/sensiasoft/sensorhub
