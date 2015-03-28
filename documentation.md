@@ -5,6 +5,7 @@ title: "Documentation"
 
 Documentation
 
+<div>
   {% for node in site.docs %}
     {% if node.title != null %}
       {% if node.layout == "page" %}
@@ -12,3 +13,4 @@ Documentation
       {% endif %}
     {% endif %}
   {% endfor %}
+</div>
