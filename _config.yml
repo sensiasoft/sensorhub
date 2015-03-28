@@ -14,7 +14,7 @@ collections:
 # Setup
 title:            SensorHub
 tagline:          'Software for building smart sensor networks'
-description:      'Technical Documentation and Blog for the OpenSensorHub Project'
+description:      'Technical Docs and Blog for the OpenSensorHub Project'
 url:              http://www.opensensorhub.org
 baseurl:          "/sensorhub"
 
