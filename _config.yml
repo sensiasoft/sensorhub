@@ -1,11 +1,34 @@
 name: OpenSensorHub
 description: Documentation and Blog for the OpenSensorHub Project
 
-baseurl: "/sensorhub"
+# Dependencies
+markdown:         redcarpet
+highlighter:      pygments
 
-markdown: redcarpet
-highlighter: pygments
+# Permalinks
+permalink:        pretty
+relative_permalinks: true
 
+# Collections
 collections:
   docs:
     output: true
+
+# Setup
+title:            SensorHub
+tagline:          'Software for building smart sensor networks'
+description:      ''
+url:              http://www.opensensorhub.org
+baseurl:          "/sensorhub"
+
+author:
+  name:           'Sensia Software'
+  url:            http://www.sensiasoftware.com
+
+paginate:         5
+
+# Custom vars
+version:          1.0
+
+github:
+  repo:           https://github.com/sensiasoft/sensorhub
