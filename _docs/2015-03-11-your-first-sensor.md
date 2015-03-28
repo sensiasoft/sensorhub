@@ -76,7 +76,7 @@ Below is a JSON snippet to be included in the main SensorHub configuration file,
 
 ### The Sensor Module Class
 
-The sensor module class is the main entry point to the sensor driver implementation. It must implement the generic [ISensorModule][] interface which you can do directly although we recommend you derive from the generic class [AbstractSensorModule][] instead since it already provides some functionality common to most sensors. In both cases, your must further specify your class by setting the configuration class that you defined at the previous step as its generic parameter. 
+The sensor module class is the main entry point to the sensor driver implementation and must implement the generic [ISensorModule][] interface. You can implement this interface directly but in most cases you should derive from the [AbstractSensorModule][] class instead since it already provides some functionality common to most sensors. In both cases, your must further specify your class by setting the configuration class that you defined at the previous step as its generic parameter. 
 
 This is shown below for the Fake Weather example:
 
