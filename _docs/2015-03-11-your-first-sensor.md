@@ -51,6 +51,27 @@ public class FakeWeatherConfig extends SensorConfig
 }
 ```
 
+Below is a JSON snippet to be included in the main SensorHub configuration file, giving a possible configuration for the Fake Weather module:
+
+```json
+{
+    "objClass": "org.sensorhub.impl.sensor.fakeweather.FakeWeatherConfig",
+    "id": "d136b6ea-3950-4691-bf56-c84ec7d89d73",
+    "name": "Fake Weather Sensor",
+    "enabled": true,
+    "moduleClass": "org.sensorhub.impl.sensor.fakeweather.FakeWeatherSensor",
+    "sensorML": null,
+    "autoActivate": true,
+    "enableHistory": false,
+    "hiddenIO": null,
+    "centerLatitude": 43.6182,
+    "centerLongitude": 1.4238,
+    "centerAltitude": 150.0
+}
+```
+
+
+
 [FakeWeatherConfig]: https://github.com/sensiasoft/sensorhub/blob/master/sensorhub-driver-fakeweather/src/main/java/org/sensorhub/impl/sensor/fakeweather/FakeWeatherConfig.java
 
 
