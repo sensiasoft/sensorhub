@@ -1,6 +1,6 @@
 ---
 layout: page
-title:  "Your first sensor driver"
+title:  "Your First Sensor Driver"
 date:   2015-03-11 10:40:56
 categories: 1.0 tutorial
 ---
@@ -19,7 +19,7 @@ You need to create at least 4 classes to add a new sensor module to the SensorHu
 [Fake Weather]: https://github.com/sensiasoft/sensorhub/tree/master/sensorhub-driver-fakeweather/src/main/java/org/sensorhub/impl/sensor/fakeweather
 
 
-### The module configuration class
+### The Module Configuration Class
 
 The sensor module configuration class must be derived from [SensorConfig][]. You can add any other properties that your sensor needs to be properly configured. This class will be directly initialized by parsing equivalent JSON properties in the main SensorHub configuration file.
 
@@ -34,20 +34,46 @@ public class FakeWeatherConfig extends SensorConfig
 }
 ```
 
-Note that you can add annotations to provide hints UI to render teh fields nicely. This is shown below:
+We recommend that you use the `@DisplayInfo` annotation to provide rendering hints for UI classes. An example of this is shown below:
+
+```java
+public class FakeWeatherConfig extends SensorConfig
+{
+   @DisplayInfo(label="Latitude", desc="Latitude of Weather Station")
+   public double centerLatitude = 34.8038; // in deg
+   
+   @DisplayInfo(label="Longitude", desc="Longitude of Weather Station")
+   public double centerLongitude = -86.7228; // in deg
+   
+   @DisplayInfo(label="Altitude", desc="Altitude of Weather Station")
+   public double centerAltitude = 150.000; // in meters
+}
+```
 
 [FakeWeatherConfig]: https://github.com/sensiasoft/sensorhub/blob/master/sensorhub-driver-fakeweather/src/main/java/org/sensorhub/impl/sensor/fakeweather/FakeWeatherConfig.java
 
 
-### The main module class
+### The Sensor Module Class
+
+The sensor module class is the main entry point to the sensor driver implementation. It must implement the generic [ISensorModule][] interface which you can do directly although we recommend you derive from the generic class [AbstractSensorModule][] that already provides some functionality common to most sensors. In both case, your must further specify your class by providing the configuration class that you defined at the previous step as its generic parameter. 
+
+This is shown below for the Fake Weather example:
+
+```java
+public class FakeWeatherSensor extends AbstractSensorModule<FakeWeatherConfig>
+```
+
+
+[ISensorModule]: https://github.com/sensiasoft/sensorhub/blob/master/sensorhub-core/src/main/java/org/sensorhub/api/sensor/ISensorModule.java
+
+[AbstractSensorModule]: https://github.com/sensiasoft/sensorhub/blob/master/sensorhub-core/src/main/java/org/sensorhub/impl/sensor/AbstractSensorModule.java
+
+
+### The Sensor Output Class
 
 
 
-### The sensor output class
-
-
-
-### The module descriptor class
+### The Module Descriptor Class
 
 A module descriptor class must be provided to enable automatic discovery of your new module by the SensorHub module registry. By providing a class implementing the `IModuleProvider` interface, all SensorHub modules available on the classpath can indeed be discovered using the standard Java ServiceLoader API.
 
