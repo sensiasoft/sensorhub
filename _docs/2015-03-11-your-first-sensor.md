@@ -40,14 +40,14 @@ We recommend that you use the `@DisplayInfo` annotation to provide rendering hin
 ```java
 public class FakeWeatherConfig extends SensorConfig
 {
-   @DisplayInfo(label="Latitude", desc="Latitude of Weather Station")
-   public double centerLatitude = 34.8038; // in deg
-   
-   @DisplayInfo(label="Longitude", desc="Longitude of Weather Station")
-   public double centerLongitude = -86.7228; // in deg
-   
-   @DisplayInfo(label="Altitude", desc="Altitude of Weather Station")
-   public double centerAltitude = 150.000; // in meters
+  @DisplayInfo(label="Latitude", desc="Latitude of Weather Station")
+  public double centerLatitude = 34.8038; // in deg
+  
+  @DisplayInfo(label="Longitude", desc="Longitude of Weather Station")
+  public double centerLongitude = -86.7228; // in deg
+  
+  @DisplayInfo(label="Altitude", desc="Altitude of Weather Station")
+  public double centerAltitude = 150.000; // in meters
 }
 ```
 
@@ -55,29 +55,28 @@ Below is a JSON snippet to be included in the main SensorHub configuration file,
 
 ```json
 {
-    "objClass": "org.sensorhub.impl.sensor.fakeweather.FakeWeatherConfig",
-    "id": "d136b6ea-3950-4691-bf56-c84ec7d89d73",
-    "name": "Fake Weather Sensor",
-    "enabled": true,
-    "moduleClass": "org.sensorhub.impl.sensor.fakeweather.FakeWeatherSensor",
-    "sensorML": null,
-    "autoActivate": true,
-    "enableHistory": false,
-    "hiddenIO": null,
-    "centerLatitude": 43.6182,
-    "centerLongitude": 1.4238,
-    "centerAltitude": 150.0
+  "objClass": "org.sensorhub.impl.sensor.fakeweather.FakeWeatherConfig",
+  "id": "d136b6ea-3950-4691-bf56-c84ec7d89d73",
+  "name": "Fake Weather Sensor",
+  "enabled": true,
+  "moduleClass": "org.sensorhub.impl.sensor.fakeweather.FakeWeatherSensor",
+  "sensorML": null,
+  "autoActivate": true,
+  "enableHistory": false,
+  "hiddenIO": null,
+  "centerLatitude": 43.6182,
+  "centerLongitude": 1.4238,
+  "centerAltitude": 150.0
 }
 ```
-
-
 
 [FakeWeatherConfig]: https://github.com/sensiasoft/sensorhub/blob/master/sensorhub-driver-fakeweather/src/main/java/org/sensorhub/impl/sensor/fakeweather/FakeWeatherConfig.java
 
 
+
 ### The Sensor Module Class
 
-The sensor module class is the main entry point to the sensor driver implementation. It must implement the generic [ISensorModule][] interface which you can do directly although we recommend you derive from the generic class [AbstractSensorModule][] that already provides some functionality common to most sensors. In both case, your must further specify your class by providing the configuration class that you defined at the previous step as its generic parameter. 
+The sensor module class is the main entry point to the sensor driver implementation. It must implement the generic [ISensorModule][] interface which you can do directly although we recommend you derive from the generic class [AbstractSensorModule][] instead since it already provides some functionality common to most sensors. In both cases, your must further specify your class by setting the configuration class that you defined at the previous step as its generic parameter. 
 
 This is shown below for the Fake Weather example:
 
@@ -85,13 +84,48 @@ This is shown below for the Fake Weather example:
 public class FakeWeatherSensor extends AbstractSensorModule<FakeWeatherConfig>
 ```
 
+The sensor module class is responsible for creating an output interface object (implementation of [ISensorDataInterface][]) for each sensor ouput and preparing the SensorML description of the sensor.
+
+For the Fake Weather example module, implementation is provided in [FakeWeatherSensor][]. This module only defines a single output and no control input. The next snippet shows the constructor where the output interface is instantiated, initialized, and appended to the output list using the `addOutput()` method provided by [AbstractSensorOutput][]:
+
+```java
+public FakeWeatherSensor()
+{
+  dataInterface = new FakeWeatherOutput(this);
+  addOutput(dataInterface, false);
+  dataInterface.init();
+}
+```
+
+The module `start()` and `stop()` methods must also be implemented. They must do all processing needed when the sensor is enabled or disabled respectively. In the case of the Fake Weather module, these methods simply delegate to the output interface since it is this class that actually starts/stops the measurement thread.
+
+```java
+@Override
+public void start() throws SensorHubException
+{
+    dataInterface.start();        
+}
+
+@Override
+public void stop() throws SensorHubException
+{
+    dataInterface.stop();
+}
+```
+
 
 [ISensorModule]: https://github.com/sensiasoft/sensorhub/blob/master/sensorhub-core/src/main/java/org/sensorhub/api/sensor/ISensorModule.java
 
 [AbstractSensorModule]: https://github.com/sensiasoft/sensorhub/blob/master/sensorhub-core/src/main/java/org/sensorhub/impl/sensor/AbstractSensorModule.java
 
+[FakeWeatherSensor]: https://github.com/sensiasoft/sensorhub/blob/master/sensorhub-driver-fakeweather/src/main/java/org/sensorhub/impl/sensor/fakeweather/FakeWeatherSensor.java
+
+[ISensorDataInterface]: https://github.com/sensiasoft/sensorhub/blob/master/sensorhub-core/src/main/java/org/sensorhub/api/sensor/ISensorDataInterface.java
+
+[AbstractSensorOutput]: https://github.com/sensiasoft/sensorhub/blob/master/sensorhub-core/src/main/java/org/sensorhub/impl/sensor/AbstractSensorOutput.java
 
 ### The Sensor Output Class
+
 
 
 
@@ -104,41 +138,41 @@ The class provides metadata about the module such as a name, description and ver
 ```java
 public class FakeWeatherModuleDescriptor implements IModuleProvider
 {
-    @Override
-    public String getModuleName()
-    {
-        return "Fake Weather Sensor";
-    }
+  @Override
+  public String getModuleName()
+  {
+    return "Fake Weather Sensor";
+  }
 
-    @Override
-    public String getModuleDescription()
-    {
-        return "Fake weather station with randomly changing measurements";
-    }
+  @Override
+  public String getModuleDescription()
+  {
+    return "Fake weather station with randomly changing measurements";
+  }
 
-    @Override
-    public String getModuleVersion()
-    {
-        return "0.1";
-    }
+  @Override
+  public String getModuleVersion()
+  {
+    return "0.1";
+  }
 
-    @Override
-    public String getProviderName()
-    {
-        return "Botts Innovative Research Inc";
-    }
+  @Override
+  public String getProviderName()
+  {
+    return "Botts Innovative Research Inc";
+  }
 
-    @Override
-    public Class<? extends IModule<?>> getModuleClass()
-    {
-        return FakeWeatherSensor.class;
-    }
+  @Override
+  public Class<? extends IModule<?>> getModuleClass()
+  {
+    return FakeWeatherSensor.class;
+  }
 
-    @Override
-    public Class<? extends ModuleConfig> getModuleConfigClass()
-    {
-        return FakeWeatherConfig.class;
-    }
+  @Override
+  public Class<? extends ModuleConfig> getModuleConfigClass()
+  {
+    return FakeWeatherConfig.class;
+  }
 }
 ```
 
