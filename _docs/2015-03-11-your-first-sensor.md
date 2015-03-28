@@ -23,7 +23,7 @@ You need to create at least 4 classes to add a new sensor module to the SensorHu
 
 The sensor module configuration class must be derived from [SensorConfig][]. You can add any other properties that your sensor needs to be properly configured. This class will be directly initialized by parsing equivalent JSON properties in the main SensorHub configuration file.
 
-In the Fake Weather module, we simply added configuration fields to specify the station location:
+The configuration class for the Fake Weather module is [FakeWeatherConfig][], where we simply added fields to specify the station location:
 
 ```java
 public class FakeWeatherConfig extends SensorConfig
@@ -35,6 +35,8 @@ public class FakeWeatherConfig extends SensorConfig
 ```
 
 Note that you can add annotations to provide hints UI to render teh fields nicely. This is shown below:
+
+[FakeWeatherConfig]: https://github.com/sensiasoft/sensorhub/blob/master/sensorhub-driver-fakeweather/src/main/java/org/sensorhub/impl/sensor/fakeweather/FakeWeatherConfig.java
 
 
 ### The main module class
@@ -49,46 +51,46 @@ Note that you can add annotations to provide hints UI to render teh fields nicel
 
 A module descriptor class must be provided to enable automatic discovery of your new module by the SensorHub module registry. By providing a class implementing the `IModuleProvider` interface, all SensorHub modules available on the classpath can indeed be discovered using the standard Java ServiceLoader API.
 
-The class provides metadata about the module such as a name, description and version. It also indicates which configuration class and module class implements the module. It should thus point to the classes you created in the first two steps of this tutorial.
+The class provides metadata about the module such as a name, description and version. It also indicates which configuration class and module class make up the module. It should thus point to the classes you created in the first two steps of this tutorial.
 
 ```java
 public class FakeWeatherModuleDescriptor implements IModuleProvider
 {
-	@Override
-	public String getModuleName()
-	{
-		return "Fake Weather Sensor";
-	}
+    @Override
+    public String getModuleName()
+    {
+        return "Fake Weather Sensor";
+    }
 
-	@Override
-	public String getModuleDescription()
-	{
-		return "Fake weather station with randomly changing measurements";
-	}
+    @Override
+    public String getModuleDescription()
+    {
+        return "Fake weather station with randomly changing measurements";
+    }
 
-	@Override
-	public String getModuleVersion()
-	{
-		return "0.1";
-	}
+    @Override
+    public String getModuleVersion()
+    {
+        return "0.1";
+    }
 
-	@Override
-	public String getProviderName()
-	{
-		return "Botts Innovative Research Inc";
-	}
+    @Override
+    public String getProviderName()
+    {
+        return "Botts Innovative Research Inc";
+    }
 
-	@Override
-	public Class<? extends IModule<?>> getModuleClass()
-	{
-		return FakeWeatherSensor.class;
-	}
+    @Override
+    public Class<? extends IModule<?>> getModuleClass()
+    {
+        return FakeWeatherSensor.class;
+    }
 
-	@Override
-	public Class<? extends ModuleConfig> getModuleConfigClass()
-	{
-		return FakeWeatherConfig.class;
-	}
+    @Override
+    public Class<? extends ModuleConfig> getModuleConfigClass()
+    {
+        return FakeWeatherConfig.class;
+    }
 }
 ```
 
