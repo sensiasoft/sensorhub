@@ -11,6 +11,7 @@ This is a tutorial to help you write your first sensor driver, based on the [Fak
 The first step is to create the maven project that will contain the new sensor module. Follow the [steps on the wiki](https://github.com/sensiasoft/sensorhub/wiki/Adding-new-modules) to create a new Eclipse Maven project. For the sake of coherency, you should name your driver project `sensorhub-driver-{your_driver_name}`. In the case of the Fake Weather module, we named it `sensorhub-driver-fakeweather`.
 
 You need to create at least 4 classes to add a new sensor module to the SensorHub system:
+
   * The module configuration class
   * The main sensor module class
   * At least one sensor output class
