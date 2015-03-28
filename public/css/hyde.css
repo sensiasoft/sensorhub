@@ -113,8 +113,8 @@ a.sidebar-nav-item:focus {
  */
 
 .content {
-  padding-top:    4rem;
-  padding-bottom: 4rem;
+  padding-top:    3rem;
+  padding-bottom: 3rem;
 }
 
 @media (min-width: 48em) {
@@ -127,8 +127,8 @@ a.sidebar-nav-item:focus {
 
 @media (min-width: 64em) {
   .content {
-    margin-left: 22rem;
-    margin-right: 4rem;
+    margin-left: 21rem;
+    margin-right: 3rem;
   }
 }
 
@@ -152,8 +152,8 @@ a.sidebar-nav-item:focus {
 
 @media (min-width: 64em) {
   .layout-reverse .content {
-    margin-left: 4rem;
-    margin-right: 22rem;
+    margin-left: 3rem;
+    margin-right: 21rem;
   }
 }
 
