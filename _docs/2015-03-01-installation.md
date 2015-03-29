@@ -44,6 +44,6 @@ Also take a look at this simple [demo client](http://sensiasoft.net:8181/osm_cli
 
 ### Connect to the Admin console (still in pre-alpha stage)
 
-You can connect to the admin console at [http://localhost:8080/sensorhub/admin]
+You can connect to the admin console at [http://localhost:8080/sensorhub/admin][http://localhost:8080/sensorhub/admin].
 
 Please bear with us as this is still at very early stage. Even though this component is not as mature as the rest of the software, we still wanted to show it to you
