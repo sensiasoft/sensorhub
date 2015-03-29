@@ -131,9 +131,11 @@ public void stop() throws SensorHubException
 
 ### The Module Descriptor Class
 
-A module descriptor class must be provided to enable automatic discovery of your new module by the SensorHub module registry. By providing a class implementing the `IModuleProvider` interface, all SensorHub modules available on the classpath can indeed be discovered using the standard Java ServiceLoader API.
+A module descriptor class must be provided to enable automatic discovery of your new module by the SensorHub module registry. By providing a class implementing the `IModuleProvider` interface, all SensorHub modules available on the classpath can indeed be discovered using the standard Java [ServiceLoader][] API.
 
 The class provides metadata about the module such as a name, description and version. It also indicates which configuration class and module class make up the module. It should thus point to the classes you created in the first two steps of this tutorial.
+
+The snippet below shows the module descriptor for the Fake Weather sensor module:
 
 ```java
 public class FakeWeatherModuleDescriptor implements IModuleProvider
@@ -176,5 +178,12 @@ public class FakeWeatherModuleDescriptor implements IModuleProvider
 }
 ```
 
+In order to be discoverable by the [ServiceLoader][] API, the module descriptor class also needs to be advertised in a provider-configuration file called `org.sensorhub.api.module.IModuleProvider` in the resource directory `META-INF/services` (see [ServiceLoader][] documentation on Oracle website). For instance, the Fake Weather sensor module includes [this file](https://github.com/sensiasoft/sensorhub/blob/master/sensorhub-driver-fakeweather/src/main/resources/META-INF/services/org.sensorhub.api.module.IModuleProvider) file with the following line:
+
+```
+org.sensorhub.impl.sensor.fakeweather.FakeWeatherModuleDescriptor
+```
 
 [SensorConfig]: https://github.com/sensiasoft/sensorhub/blob/master/sensorhub-core/src/main/java/org/sensorhub/api/sensor/SensorConfig.java
+
+[ServiceLoader]: http://docs.oracle.com/javase/7/docs/api/java/util/ServiceLoader.html
