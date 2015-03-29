@@ -10,12 +10,12 @@ title: "Documentation"
 
 ### Tutorials
 
-<div>
+<ul>
   {% for node in site.docs %}
     {% if node.title != null %}
       {% if node.layout == "page" %}
-        <li><a class="sidebar-nav-item{% if page.url == node.url %} active{% endif %}" style="padding-left: 1em" href="{{ site.baseurl }}{{ node.url }}">{{ node.title }}</a></li>
+        <li><a href="{{ site.baseurl }}{{ node.url }}">{{ node.title }}</a></li>
       {% endif %}
     {% endif %}
   {% endfor %}
-</div>
+</ul>
