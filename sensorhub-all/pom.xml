@@ -2,7 +2,6 @@
    <modelVersion>4.0.0</modelVersion>
    <groupId>org.sensorhub</groupId>
    <artifactId>sensorhub-all</artifactId>
-   <version>0.5</version>
    <packaging>pom</packaging>
    <name>SensorHub</name>
    <url>http://code.google.com/p/sensorhub/</url>
@@ -104,4 +103,5 @@
          </plugin>
       </plugins>
    </build>
+   <version>1.0</version>
 </project>
