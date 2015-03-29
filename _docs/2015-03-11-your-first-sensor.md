@@ -178,7 +178,7 @@ public class FakeWeatherModuleDescriptor implements IModuleProvider
 }
 ```
 
-In order to be discoverable by the [ServiceLoader][] API, the module descriptor class also needs to be advertised in a provider-configuration file in the resource directory `META-INF/services` (see [ServiceLoader][] documentation on Oracle website). For instance, the Fake Weather sensor module includes the [META-INF/services/org.sensorhub.api.module.IModuleProvider](https://github.com/sensiasoft/sensorhub/blob/master/sensorhub-driver-fakeweather/src/main/resources/META-INF/services/org.sensorhub.api.module.IModuleProvider) file with the following line:
+In order to be discoverable by the [ServiceLoader][] API, the module descriptor class also needs to be advertised in a provider-configuration file called `org.sensorhub.api.module.IModuleProvider` in the resource directory `META-INF/services` (see [ServiceLoader][] documentation on Oracle website). For instance, the Fake Weather sensor module includes [this file](https://github.com/sensiasoft/sensorhub/blob/master/sensorhub-driver-fakeweather/src/main/resources/META-INF/services/org.sensorhub.api.module.IModuleProvider) file with the following line:
 
 ```
 org.sensorhub.impl.sensor.fakeweather.FakeWeatherModuleDescriptor
