@@ -5,8 +5,9 @@ title: "Documentation"
 
 ### Javadoc
 
+<div>
 [Java API docs v1.0]({{ site.baseurl }}/apidocs/v1.0)
-
+</div>
 
 ### Tutorials
 
