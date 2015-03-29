@@ -79,7 +79,7 @@ public class SPSService extends OWSServlet implements IServiceModule<SPSServiceC
     Map<String, ISPSConnector> connectors;
     IEventHandler eventHandler;
     ITaskDB taskDB;
-    SPSNotificationSystem notifSystem;
+    //SPSNotificationSystem notifSystem;
     
     
     public SPSService()
