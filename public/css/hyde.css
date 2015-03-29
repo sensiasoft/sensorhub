@@ -169,14 +169,14 @@ a.sidebar-nav-item:focus {
  * Read more about it at http://meyerweb.com/eric/thoughts/2011/09/12/.
  */
 
-.wrap,
+.content,
 .sidebar,
 .sidebar-toggle {
   -webkit-backface-visibility: hidden;
       -ms-backface-visibility: hidden;
           backface-visibility: hidden;
 }
-.wrap,
+.content,
 .sidebar-toggle {
   -webkit-transition: -webkit-transform .3s ease-in-out;
           transition: transform .3s ease-in-out;
@@ -187,7 +187,7 @@ a.sidebar-nav-item:focus {
   visibility: visible;
 }
 #sidebar-checkbox:checked ~ .sidebar,
-#sidebar-checkbox:checked ~ .wrap,
+#sidebar-checkbox:checked ~ .content,
 #sidebar-checkbox:checked ~ .sidebar-toggle {
   -webkit-transform: translateX(14rem);
       -ms-transform: translateX(14rem);
