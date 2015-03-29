@@ -42,9 +42,9 @@ import org.sensorhub.impl.module.ModuleRegistry;
 import org.sensorhub.utils.MsgUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.vast.data.DataComponentHelper;
 import org.vast.process.DataQueue;
 import org.vast.sensorML.SMLFactory;
+import org.vast.swe.SWEHelper;
 
 
 /**
@@ -244,7 +244,7 @@ public abstract class AbstractStreamProcess<ConfigType extends StreamProcessConf
                             streamSources.put(streamInterface, inputData);
                         }
                         
-                        DataComponent src = DataComponentHelper.findComponentByPath(compPath, inputData.srcDataBuffer);
+                        DataComponent src = SWEHelper.findComponentByPath(inputData.srcDataBuffer, compPath);
                         inputQueue.setSourceComponent(src);
                     }
                     catch (Exception e)
@@ -296,7 +296,7 @@ public abstract class AbstractStreamProcess<ConfigType extends StreamProcessConf
         DataComponent destData = inputs.get(inputName);
         if (destData == null)
             throw new ProcessException("Input " + inputName + " doesn't exist");
-        DataComponent dest = DataComponentHelper.findComponentByPath(dataPath, destData);
+        DataComponent dest = SWEHelper.findComponentByPath(destData, dataPath);
         inputQueue.setDestinationComponent(dest);
     }
 

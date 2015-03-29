@@ -32,7 +32,7 @@ public interface IEventProducer
      * The listener is reponsible for filtering received events.
      * @param listener
      */
-    public abstract void registerListener(IEventListener listener);
+    public void registerListener(IEventListener listener);
 
 
     /**
@@ -40,5 +40,5 @@ public interface IEventProducer
      * No more event will be sent to the listener from this producer.
      * @param listener
      */
-    public abstract void unregisterListener(IEventListener listener);
+    public void unregisterListener(IEventListener listener);
 }
