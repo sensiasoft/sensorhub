@@ -34,11 +34,10 @@ The demo configuration provided with the binary release instructs SensorHub to s
 
 You can connect to the SOS right away, to get sensor data and metadata:
 
-  * GetCapabilities:
-    <http://localhost:8080/sensorhub/sos?service=SOS&version=2.0&request=GetCapabilities>
+  * GetCapabilities: <http://localhost:8080/sensorhub/sos?service=SOS&version=2.0&request=GetCapabilities>
   * Get Weather Result Template: <http://localhost:8080/sensorhub/sos?service=SOS&version=2.0&request=GetResultTemplate&offering=urn:mysos:offering03&observedProperty=http://sensorml.com/ont/swe/property/Weather>
-  * Get Latest Weather Measurement: http://localhost:8080/sensorhub/sos?service=SOS&version=2.0&request=GetResult&offering=urn:mysos:offering03&observedProperty=http://sensorml.com/ont/swe/property/Weather&temporalFilter=phenomenonTime,now
-  * Get Historical Weather Measurements: http://localhost:8080/sensorhub/sos?service=SOS&version=2.0&request=GetResult&offering=urn:mysos:offering03&observedProperty=http://sensorml.com/ont/swe/property/Weather&temporalFilter=phenomenonTime,2015-01-01/now
+  * Get Latest Weather Measurement: <http://localhost:8080/sensorhub/sos?service=SOS&version=2.0&request=GetResult&offering=urn:mysos:offering03&observedProperty=http://sensorml.com/ont/swe/property/Weather&temporalFilter=phenomenonTime,now>
+  * Get Historical Weather Measurements: <http://localhost:8080/sensorhub/sos?service=SOS&version=2.0&request=GetResult&offering=urn:mysos:offering03&observedProperty=http://sensorml.com/ont/swe/property/Weather&temporalFilter=phenomenonTime,2015-01-01/now>
   
 Also take a look at this simple [demo client](http://sensiasoft.net:8181/osm_client_websockets.html) that connects to the fake GPS live feed through websockets to display it on a map using OpenLayers. You can easily reproduce this locally.
 
