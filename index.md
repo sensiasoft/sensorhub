@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "About"
+title: "Welcome to SensorHub"
 ---
 
 SensorHub software allows one to easily build interoperable and evolutive sensor networks, based on open-standards for all data exchanges, and providing advanced processing capabilities. The open-standards used are mostly [OGC](http://www.opengeospatial.org) standards from the [Sensor Web Enablement](http://www.opengeospatial.org/projects/groups/sensorwebdwg) (SWE) initiative and are key to design sensor networks that can largely evolve with time (addition of new types of sensors, reconfigurations, etc.).
