@@ -8,16 +8,16 @@ categories: blog
 [SensorHub v1.0 Beta][] was released today for testing by early adopters. This version includes support for the following features:
 
   * Sensor drivers API and examples 
-  * Sensor Observation Service
+  * Sensor Observation Service (no FOI support)
   * Sensor Planning Service (only synchronous commands supported)
   * Persistence using PERST Embedded Database
   * Basic SensorML processing capabilities
 
 The following sensor drivers are also included in this release:
 
-  * Fake GPS Sensor (based on random + realistic vehicle movements obtained Google Driving Directions)
-  * Fake WeatherStation
-  * V4Linux Cameras
+  * Fake GPS Sensor (random but realistic vehicle movements obtained using Google Driving Directions)
+  * Fake Weather Station
+  * Video4Linux Cameras
   * Axis Camera (with PTZ control)
   * Android Sensors (motion sensors, GPS location, cell/wifi location, and cameras)
   
