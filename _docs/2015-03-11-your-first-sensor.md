@@ -135,7 +135,7 @@ The main functions of the sensor output class are to:
  
 ##### Define the output data structure and encoding
 
-The snippet below is extracted from the Fake Weather example and shows how to create the measurement record structure using the [SWEHelper][] class. In this case, the sensor output is record composed of the following values:
+The snippet below is extracted from the Fake Weather example and shows how to create the measurement record structure using the [SWEHelper][] class. In this case, the sensor output is a record composed of the following values:
 
   * Time stamp (ISO time stamp expressed in UTC time frame)
   * Air temperature
