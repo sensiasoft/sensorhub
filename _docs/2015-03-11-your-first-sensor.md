@@ -86,7 +86,7 @@ public class FakeWeatherSensor extends AbstractSensorModule<FakeWeatherConfig>
 
 The sensor module class is responsible for creating an output interface object (implementation of [ISensorDataInterface][]) for each sensor ouput and preparing the SensorML description of the sensor.
 
-For the Fake Weather example module, implementation is provided in [FakeWeatherSensor][]. This module only defines a single output and no control input. The next snippet shows the constructor where the output interface is instantiated, initialized, and appended to the output list using the `addOutput()` method provided by [AbstractSensorOutput][]:
+For the Fake Weather example module, implementation is provided in [FakeWeatherSensor][]. This module only defines a single output and no control input. The next snippet shows the constructor where the output interface is instantiated, initialized, and appended to the output list using the `addOutput()` method provided by [AbstractSensorModule][]:
 
 ```java
 public FakeWeatherSensor()
@@ -100,13 +100,11 @@ public FakeWeatherSensor()
 The module `start()` and `stop()` methods must also be implemented. They must do all processing needed when the sensor is enabled or disabled respectively. In the case of the Fake Weather module, these methods simply delegate to the output interface since it is this class that actually starts/stops the measurement thread.
 
 ```java
-@Override
 public void start() throws SensorHubException
 {
     dataInterface.start();        
 }
 
-@Override
 public void stop() throws SensorHubException
 {
     dataInterface.stop();
@@ -122,12 +120,53 @@ public void stop() throws SensorHubException
 
 [ISensorDataInterface]: https://github.com/sensiasoft/sensorhub/blob/master/sensorhub-core/src/main/java/org/sensorhub/api/sensor/ISensorDataInterface.java
 
-[AbstractSensorOutput]: https://github.com/sensiasoft/sensorhub/blob/master/sensorhub-core/src/main/java/org/sensorhub/impl/sensor/AbstractSensorOutput.java
 
 ### The Sensor Output Class
 
+Each output interface of a sensor must be defined by a class implementing [ISensorDataInterface][]. Just like for the main sensor module class, we provide the [AbstractSensorOutput][] base class that already implements functionalities common to most sensors, so we highly recommend that you derive from it. For instance, the sole output of the Fake Weather example sensor is defined in the [FakeWeatherOutput][] class.
+
+The main functions of the sensor output class are to:
+
+  * Define the output the output data structure and encoding
+  
+```java
+protected void init()
+{
+    SWEHelper fac = new SWEHelper();
+    
+    // build SWE Common record structure
+    weatherData = new DataRecordImpl(5);
+    weatherData.setName(getName());
+    weatherData.setDefinition("http://sensorml.com/ont/swe/property/Weather");
+    
+    // add time, temperature, pressure, wind speed and wind direction fields
+    weatherData.addComponent("time", fac.newTimeStampIsoUTC());
+    weatherData.addComponent("temperature", fac.newQuantity(SWEHelper.getPropertyUri("AirTemperature"), "Air Temperature", null, "Cel"));
+    weatherData.addComponent("pressure", fac.newQuantity(SWEHelper.getPropertyUri("AtmosphericPressure"), "Air Pressure", null, "hPa"));
+    weatherData.addComponent("windSpeed", fac.newQuantity(SWEHelper.getPropertyUri("WindSpeed"), "Wind Speed", null, "m/s"));
+    
+    // for wind direction, we also specify a reference frame
+    Quantity q = fac.newQuantity(SWEHelper.getPropertyUri("WindDirection"), "Wind Direction", null, "deg");
+    q.setReferenceFrame("http://sensorml.com/ont/swe/property/NED");
+    q.setAxisID("z");
+    weatherData.addComponent("windDirection", q);
+    
+    // also generate encoding definition
+    weatherEncoding = fac.newTextEncoding(",", "\n");
+}
+```
+  * Provide the approximate/average sampling time of this output
+  * Start/stop measurement thread that gets readings from sensor hardware and package them in a [DataBlock][]
+  * Provide access to the latest measurement record and corresponding time stamp
 
 
+
+
+[FakeWeatherOutput]: https://github.com/sensiasoft/sensorhub/blob/master/sensorhub-driver-fakeweather/src/main/java/org/sensorhub/impl/sensor/fakeweather/FakeWeatherOutput.java
+
+[AbstractSensorOutput]: https://github.com/sensiasoft/sensorhub/blob/master/sensorhub-core/src/main/java/org/sensorhub/impl/sensor/AbstractSensorOutput.java
+
+[DataBlock]:
 
 ### The Module Descriptor Class
 
