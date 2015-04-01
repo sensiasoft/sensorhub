@@ -176,7 +176,7 @@ public double getAverageSamplingPeriod()
 }
 ```
 
-When the rate is now known or can vary, an average can be computed online (This is what is done in the [SOS-T Virtual Sensor][] for example since there is no way to know the rate of incoming data in advance).
+When the rate is not known a-priori and/or can vary, an average can be computed online (This is what is done in the [SOS-T Virtual Sensor][] for example since there is no way to know the rate of incoming data in advance).
 
 [SOS-T Virtual Sensor]: https://github.com/sensiasoft/sensorhub/blob/master/sensorhub-service-swe/src/main/java/org/sensorhub/impl/sensor/sost/SOSVirtualSensorOutput.java
 
