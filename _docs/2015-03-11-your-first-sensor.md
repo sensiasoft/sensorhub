@@ -135,13 +135,7 @@ The main functions of the sensor output class are to:
  
 ##### Define the output data structure and encoding
 
-The snippet below is extracted from the Fake Weather example and shows how to create the measurement record structure using the [SWEHelper][] class. In this case, the sensor output is a record composed of the following values:
-
-  * Time stamp (ISO time stamp expressed in UTC time frame)
-  * Air temperature
-  * Atmospheric pressure
-  * Wind speed
-  * Wind direction (rotation about Z axis of NED frame)
+The snippet below is extracted from the Fake Weather example and shows how to create the measurement record structure using the [SWEHelper][] class:
 
 ```java
 protected void init()
@@ -169,6 +163,14 @@ protected void init()
     weatherEncoding = fac.newTextEncoding(",", "\n");
 }
 ```
+
+In this case, the sensor output is a record composed of the following values:
+
+  * Time stamp (ISO time stamp expressed in UTC time frame)
+  * Air temperature
+  * Atmospheric pressure
+  * Wind speed
+  * Wind direction (rotation about Z axis of NED frame)
 
 [SWEHelper]: https://github.com/sensiasoft/lib-swe-common/blob/master/swe-common-core/src/main/java/org/vast/swe/SWEHelper.java
 
