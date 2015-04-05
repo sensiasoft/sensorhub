@@ -89,14 +89,8 @@ public interface ISensorDataInterface extends IStreamingDataInterface
     public DataBlock getLatestRecord();
     
     
-    /**
-     * Used to check when the last measurement was made.
-     * <p><i>Note: this method is useful to know if a measurement has really been made since the
-     * last call to {@link #getLatestRecord}.</i></p>
-     * @return time of last measurement as julian time (1970) or NaN if no measurement was made yet
-     */
     @Override
-    public double getLatestRecordTime();
+    public long getLatestRecordTime();
 
 
     /**

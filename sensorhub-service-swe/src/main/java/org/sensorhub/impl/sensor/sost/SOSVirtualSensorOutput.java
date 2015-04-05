@@ -29,8 +29,6 @@ public class SOSVirtualSensorOutput extends AbstractSensorOutput<SOSVirtualSenso
     SOSVirtualSensor parentSensor;
     DataComponent recordStructure;
     DataEncoding recordEncoding;
-    DataBlock latestRecord;
-    double lastRecordTime = Double.NEGATIVE_INFINITY;
     double avgSamplingPeriod = 100;
     int avgSampleCount = 0;
     
@@ -81,32 +79,17 @@ public class SOSVirtualSensorOutput extends AbstractSensorOutput<SOSVirtualSenso
     {
         return recordEncoding;
     }
-
-
-    @Override
-    public DataBlock getLatestRecord()
-    {
-        return latestRecord;
-    }
-    
-    
-    @Override
-    public double getLatestRecordTime()
-    {
-        return lastRecordTime;
-    }
     
     
     public void publishNewRecord(DataBlock dataBlock)
     {
-        // TODO obtain sampling time from record when possible 
-        double timeStamp =  System.currentTimeMillis() / 1000.;      
-        updateSamplingPeriod(timeStamp);       
-                
+        long now = System.currentTimeMillis();
+        updateSamplingPeriod(now);
+        
         // publish new sensor data event
         latestRecord = dataBlock;
-        lastRecordTime = timeStamp;
-        eventHandler.publishEvent(new SensorDataEvent(lastRecordTime, this, dataBlock));
+        latestRecordTime = now;
+        eventHandler.publishEvent(new SensorDataEvent(latestRecordTime, this, dataBlock));
     }
     
     
@@ -114,19 +97,20 @@ public class SOSVirtualSensorOutput extends AbstractSensorOutput<SOSVirtualSenso
      * Refine sampling period at each new measure received by 
      * incrementally computing dt average for the 100 first records
      */
-    protected void updateSamplingPeriod(double timeStamp)
+    protected void updateSamplingPeriod(long timeStamp)
     {
-        if (lastRecordTime < 0)
+        if (latestRecordTime == Long.MIN_VALUE)
             return;
-        
+                
         if (avgSampleCount < 100)
         {
             if (avgSampleCount == 0)
                 avgSamplingPeriod = 0.0;
             else
                 avgSamplingPeriod *= (double)avgSampleCount / (avgSampleCount+1);
+            
             avgSampleCount++;
-            avgSamplingPeriod += (timeStamp - lastRecordTime) / avgSampleCount;
+            avgSamplingPeriod += (timeStamp - latestRecordTime) / 1000.0 / avgSampleCount;
             
             SOSVirtualSensor.log.trace("Sampling period = " + avgSamplingPeriod + "s");
         }

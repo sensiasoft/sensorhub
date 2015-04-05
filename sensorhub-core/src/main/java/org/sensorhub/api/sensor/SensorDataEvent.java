@@ -32,13 +32,13 @@ public class SensorDataEvent extends DataEvent
 	
 	/**
 	 * Constructor from list of records with their descriptor
-	 * @param timeStamp time of event generation (julian time, base 1970)
+	 * @param timeStamp time of event generation (unix time in milliseconds, base 1970)
      * @param dataInterface sensor output interface that produced the associated data
 	 * @param records arrays of records that triggered this notification
 	 */
-	public SensorDataEvent(double timeStamp, ISensorDataInterface dataInterface, DataBlock ... records)
+	public SensorDataEvent(long timeStamp, ISensorDataInterface dataInterface, DataBlock ... records)
 	{
-		super((long)(timeStamp*1000), dataInterface, records);
+		super(timeStamp, dataInterface, records);
 	}
 
 

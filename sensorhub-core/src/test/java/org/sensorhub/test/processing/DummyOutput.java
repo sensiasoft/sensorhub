@@ -34,7 +34,7 @@ class DummyOutput implements IStreamingDataInterface
     DataComponent outputDef;
     DataEncoding outputEncoding;
     DataBlock lastRecord;
-    double lastRecordTime = Double.NaN;
+    long lastRecordTime = Long.MIN_VALUE;
     double avgSamplingPeriod = 1.0;
     int avgSampleCount = 0;
         
@@ -50,10 +50,9 @@ class DummyOutput implements IStreamingDataInterface
     
     public void sendOutput(DataBlock dataBlk)
     {
-        long now = System.currentTimeMillis();
         lastRecord = dataBlk;
-        lastRecordTime = now / 1000.;
-        DataEvent outputEvent = new DataEvent(now, this, dataBlk);
+        lastRecordTime = System.currentTimeMillis();
+        DataEvent outputEvent = new DataEvent(lastRecordTime, this, dataBlk);
         eventHandler.publishEvent(outputEvent);
     }
     
@@ -101,7 +100,7 @@ class DummyOutput implements IStreamingDataInterface
 
 
     @Override
-    public double getLatestRecordTime()
+    public long getLatestRecordTime()
     {
         return lastRecordTime;
     }

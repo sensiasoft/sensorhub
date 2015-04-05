@@ -62,7 +62,7 @@ public class DataEvent extends Event
 	
 	/**
 	 * Constructor from list of records with their descriptor
-	 * @param timeStamp time of event generation (julian time, base 1970)
+	 * @param timeStamp time of event generation (unix time in milliseconds, base 1970)
      * @param source stream interface that generated the associated data
 	 * @param records arrays of records that triggered this notification
 	 */

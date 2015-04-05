@@ -39,7 +39,7 @@ class SMLOutputInterface implements IStreamingDataInterface
     DataComponent outputDef;
     DataEncoding outputEncoding;
     DataBlock lastRecord;
-    double lastRecordTime = Double.NaN;
+    long lastRecordTime = Long.MIN_VALUE;
     double avgSamplingPeriod = 1.0;
     int avgSampleCount = 0;
     
@@ -64,8 +64,8 @@ class SMLOutputInterface implements IStreamingDataInterface
             }
             
             // save last record and send event
-            lastRecordTime = timeStamp;
-            lastRecord = data;            
+            lastRecord = data;
+            lastRecordTime = now;
             DataEvent e = new DataEvent(now, SMLOutputInterface.this, data);
             eventHandler.publishEvent(e);
         }        
@@ -133,7 +133,7 @@ class SMLOutputInterface implements IStreamingDataInterface
 
 
     @Override
-    public double getLatestRecordTime()
+    public long getLatestRecordTime()
     {
         return lastRecordTime;
     }

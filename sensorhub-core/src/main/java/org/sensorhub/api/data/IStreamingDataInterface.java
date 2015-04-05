@@ -81,10 +81,15 @@ public interface IStreamingDataInterface extends IEventProducer
     
     
     /**
-     * Used to check when the last record was produced.
-     * @return time of last measurement as julian time (1970) or NaN if no record is available yet
+     * Used to check when the last record was produced.<br/>
+     * This is usually set as system time when the output is sent, and must be
+     * the same as the corresponding event time stamp. However, it does not usually
+     * equal the sampling time stamp that is often sent with the data.
+     * <p><i>Note: this method is useful to know if a record has been produced since the
+     * last call to {@link #getLatestRecord}.</i></p>
+     * @return time of last record as unix time (1970) or {@link Long#MIN_VALUE} if no record is available yet
      */
-    public double getLatestRecordTime();
+    public long getLatestRecordTime();
     
     
     /**

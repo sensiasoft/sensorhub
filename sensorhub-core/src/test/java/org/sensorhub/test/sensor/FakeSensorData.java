@@ -53,6 +53,7 @@ public class FakeSensorData extends AbstractSensorOutput<FakeSensor> implements 
     int sampleCount;
     int bufferSize;
     double samplingPeriod; // seconds
+    long lastRecordTime = Long.MIN_VALUE;
     Deque<DataBlock> dataQueue;
     Timer timer;
     
@@ -110,9 +111,9 @@ public class FakeSensorData extends AbstractSensorOutput<FakeSensor> implements 
                     if (Math.random() > 0.8)
                         return;
                     
-                    double time = System.currentTimeMillis() / 1000.;
+                    double samplingTime = System.currentTimeMillis() / 1000.;
                     DataBlock data = new DataBlockDouble(4);
-                    data.setDoubleValue(0, time);
+                    data.setDoubleValue(0, samplingTime);
                     data.setDoubleValue(1, 1.0 + ((int)(Math.random()*100))/1000.);
                     data.setDoubleValue(2, 2.0 + ((int)(Math.random()*100))/1000.);
                     data.setDoubleValue(3, 3.0 + ((int)(Math.random()*100))/1000.);
@@ -126,7 +127,8 @@ public class FakeSensorData extends AbstractSensorOutput<FakeSensor> implements 
                         dataQueue.remove();
                     dataQueue.offer(data);
                     
-                    eventHandler.publishEvent(new SensorDataEvent(time, FakeSensorData.this, data));
+                    lastRecordTime = System.currentTimeMillis();
+                    eventHandler.publishEvent(new SensorDataEvent(lastRecordTime, FakeSensorData.this, data));
                 }                        
             }                
         };
@@ -217,15 +219,9 @@ public class FakeSensorData extends AbstractSensorOutput<FakeSensor> implements 
     
     
     @Override
-    public double getLatestRecordTime()
+    public long getLatestRecordTime()
     {
-        synchronized (dataQueue)
-        {
-            if (dataQueue.isEmpty())
-                return Double.NEGATIVE_INFINITY;
-            
-            return dataQueue.peekLast().getDoubleValue(0);
-        }
+        return lastRecordTime;
     }
 
 

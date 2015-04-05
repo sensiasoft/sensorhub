@@ -35,14 +35,14 @@ import org.vast.util.TimeExtent;
 public class StreamWithStorageProviderFactory<ProducerType extends IDataProducerModule<?>> extends StorageDataProviderFactory
 {
     final ProducerType producer;
-    double liveDataTimeOut;
+    long liveDataTimeOut;
     
     
     public StreamWithStorageProviderFactory(StreamDataProviderConfig config, ProducerType producer) throws SensorHubException
     {
         super(new StorageDataProviderConfig(config));
         this.producer = producer;
-        this.liveDataTimeOut = config.liveDataTimeout;
+        this.liveDataTimeOut = (long)(config.liveDataTimeout * 1000);
     }
 
 
@@ -82,21 +82,22 @@ public class StreamWithStorageProviderFactory<ProducerType extends IDataProducer
         {
             try
             {
+                long now =  System.currentTimeMillis();
+                
                 // check latest record time
-                double lastRecordTime = Double.NEGATIVE_INFINITY;
+                long lastRecordTime = Long.MIN_VALUE;
                 for (IStreamingDataInterface output: producer.getAllOutputs().values())
                 {
                     // skip hidden outputs
                     if (config.hiddenOutputs != null && config.hiddenOutputs.contains(output.getName()))
                         continue;
                     
-                    double recTime = output.getLatestRecordTime();
-                    if (!Double.isNaN(recTime) && recTime > lastRecordTime)
+                    long recTime = output.getLatestRecordTime();
+                    if (recTime != Long.MIN_VALUE && recTime > lastRecordTime)
                         lastRecordTime = recTime;
                 }
                 
                 // if latest record is not too old, enable real-time
-                double now =  System.currentTimeMillis() / 1000.; 
                 if (now - lastRecordTime < liveDataTimeOut)
                     caps.getPhenomenonTime().setEndNow(true);
             }

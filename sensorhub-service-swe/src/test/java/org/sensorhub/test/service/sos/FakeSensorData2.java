@@ -128,13 +128,6 @@ public class FakeSensorData2 extends AbstractSensorOutput<FakeSensor> implements
 
 
     @Override
-    public double getLatestRecordTime()
-    {
-        return 0;
-    }
-
-
-    @Override
     public void init()
     {
         // TODO Auto-generated method stub        
