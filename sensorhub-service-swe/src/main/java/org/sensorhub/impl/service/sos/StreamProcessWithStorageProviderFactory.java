@@ -35,12 +35,15 @@ import org.vast.util.TimeExtent;
  */
 public class StreamProcessWithStorageProviderFactory extends StreamWithStorageProviderFactory<IStreamProcessModule<?>>
 {
+    StreamProcessProviderConfig streamProviderConfig;
     
     
     public StreamProcessWithStorageProviderFactory(StreamProcessProviderConfig config) throws SensorHubException
     {
         super(config,
               (IStreamProcessModule<?>)SensorHub.getInstance().getProcessingManager().getModuleById(config.processID));
+        
+        this.streamProviderConfig = config;
     }
 
 
@@ -54,7 +57,7 @@ public class StreamProcessWithStorageProviderFactory extends StreamWithStoragePr
             if (!producer.isEnabled())
                 throw new ServiceException("Process " + MsgUtils.moduleString(producer) + " is disabled");
             
-            return new StreamProcessDataProvider(producer, filter);
+            return new StreamProcessDataProvider(producer, streamProviderConfig, filter);
         }
         else
         {            

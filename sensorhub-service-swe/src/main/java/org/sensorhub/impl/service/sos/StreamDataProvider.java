@@ -62,7 +62,7 @@ public abstract class StreamDataProvider implements ISOSDataProvider, IEventList
     int nextEventRecordIndex = 0;
             
     
-    public StreamDataProvider(IDataProducerModule<?> dataSource, SOSDataFilter filter) throws ServiceException
+    public StreamDataProvider(IDataProducerModule<?> dataSource, StreamDataProviderConfig config, SOSDataFilter filter) throws ServiceException
     {
         this.dataSource = dataSource;
         this.sourceOutputs = new ArrayList<IStreamingDataInterface>();
@@ -74,9 +74,15 @@ public abstract class StreamDataProvider implements ISOSDataProvider, IEventList
         // get list of desired stream outputs
         try
         {
+            dataSource.getConfiguration();
+            
             // loop through all outputs and connect to the ones containing observables we need
             for (IStreamingDataInterface outputInterface: dataSource.getAllOutputs().values())
             {
+                // skip hidden outputs
+                if (config.hiddenOutputs != null && config.hiddenOutputs.contains(outputInterface.getName()))
+                    continue;
+                
                 // skip if disabled
                 if (!outputInterface.isEnabled())
                     continue;

@@ -34,8 +34,8 @@ import org.vast.ows.sos.ISOSDataProvider;
 public class StreamProcessDataProvider extends StreamDataProvider implements ISOSDataProvider, IEventListener
 {
     
-    public StreamProcessDataProvider(IStreamProcessModule<?> srcProcess, SOSDataFilter filter) throws ServiceException
+    public StreamProcessDataProvider(IStreamProcessModule<?> srcProcess, StreamProcessProviderConfig config, SOSDataFilter filter) throws ServiceException
     {
-        super(srcProcess, filter);
+        super(srcProcess, config, filter);
     }
 }

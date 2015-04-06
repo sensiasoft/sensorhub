@@ -70,6 +70,6 @@ public class SensorDataProviderFactory extends StreamDataProviderFactory<ISensor
     public ISOSDataProvider getNewProvider(SOSDataFilter filter) throws ServiceException
     {
         checkEnabled();
-        return new SensorDataProvider(producer, filter);
+        return new SensorDataProvider(producer, (SensorDataProviderConfig)config, filter);
     }
 }

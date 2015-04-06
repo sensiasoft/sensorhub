@@ -37,9 +37,9 @@ public class SensorDataProvider extends StreamDataProvider implements ISOSDataPr
 {
 
     
-    public SensorDataProvider(ISensorModule<?> srcSensor, SOSDataFilter filter) throws ServiceException
+    public SensorDataProvider(ISensorModule<?> srcSensor, SensorDataProviderConfig config, SOSDataFilter filter) throws ServiceException
     {
-        super(srcSensor, filter);
+        super(srcSensor, config, filter);
     }
     
     

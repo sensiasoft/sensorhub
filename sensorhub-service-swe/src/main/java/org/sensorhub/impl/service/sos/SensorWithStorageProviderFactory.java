@@ -35,11 +35,13 @@ import org.vast.util.TimeExtent;
  */
 public class SensorWithStorageProviderFactory extends StreamWithStorageProviderFactory<ISensorModule<?>>
 {
+    SensorDataProviderConfig sensorProviderConfig;
     
     
     public SensorWithStorageProviderFactory(SensorDataProviderConfig config) throws SensorHubException
     {
         super(config, SensorHub.getInstance().getSensorManager().getModuleById(config.sensorID));
+        this.sensorProviderConfig = config;
     }
 
 
@@ -53,7 +55,7 @@ public class SensorWithStorageProviderFactory extends StreamWithStorageProviderF
             if (!producer.isEnabled())
                 throw new ServiceException("Sensor " + MsgUtils.moduleString(producer) + " is disabled");
             
-            return new SensorDataProvider(producer, filter);
+            return new SensorDataProvider(producer, sensorProviderConfig, filter);
         }
         else
         {            

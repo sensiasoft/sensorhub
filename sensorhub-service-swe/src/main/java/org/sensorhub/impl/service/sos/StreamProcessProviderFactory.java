@@ -48,6 +48,6 @@ public class StreamProcessProviderFactory extends StreamDataProviderFactory<IStr
     public ISOSDataProvider getNewProvider(SOSDataFilter filter) throws ServiceException
     {
         checkEnabled();
-        return new StreamProcessDataProvider(producer, filter);
+        return new StreamProcessDataProvider(producer, (StreamProcessProviderConfig)config, filter);
     }
 }

@@ -17,6 +17,7 @@ package org.sensorhub.impl.service.sos;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map.Entry;
 import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataEncoding;
@@ -67,7 +68,7 @@ public class StorageDataProvider implements ISOSDataProvider
     }
     
     
-    public StorageDataProvider(IBasicStorage<?> storage, final SOSDataFilter filter)
+    public StorageDataProvider(IBasicStorage<?> storage, StorageDataProviderConfig config, final SOSDataFilter filter)
     {
         this.storage = storage;
         this.dataStoresStates = new ArrayList<StorageState>();
@@ -94,11 +95,16 @@ public class StorageDataProvider implements ISOSDataProvider
                 return null;
             }
         };
-        
+
         // loop through all outputs and connect to the ones containing observables we need
-        for (ITimeSeriesDataStore<IDataFilter> dataStore: storage.getDataStores().values())
+        for (Entry<String, ? extends ITimeSeriesDataStore<IDataFilter>> dsEntry: storage.getDataStores().entrySet())
         {
+            // skip hidden outputs
+            if (config.hiddenOutputs != null && config.hiddenOutputs.contains(dsEntry.getKey()))
+                continue;
+            
             // keep it if we can find one of the observables
+            ITimeSeriesDataStore<IDataFilter> dataStore = dsEntry.getValue();
             DataIterator it = new DataIterator(dataStore.getRecordDescription());
             while (it.hasNext())
             {

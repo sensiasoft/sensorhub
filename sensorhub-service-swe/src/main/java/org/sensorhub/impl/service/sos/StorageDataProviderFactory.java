@@ -259,7 +259,7 @@ public class StorageDataProviderFactory implements IDataProviderFactory
     public ISOSDataProvider getNewProvider(SOSDataFilter filter) throws ServiceException
     {
         checkEnabled();
-        return new StorageDataProvider(storage, filter);
+        return new StorageDataProvider(storage, config, filter);
     }    
     
     
