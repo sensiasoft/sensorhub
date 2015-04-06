@@ -68,6 +68,11 @@
         <artifactId>jcodec</artifactId>
         <version>0.1.5</version>
      </dependency>
+     <dependency>
+        <groupId>org.sensorhub</groupId>
+        <artifactId>sensorhub-process-sat</artifactId>
+        <version>0.1-SNAPSHOT</version>
+     </dependency>
   </dependencies>
   <parent>
      <groupId>org.sensorhub</groupId>
