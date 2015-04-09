@@ -23,15 +23,15 @@
     "enableTransactional": true,
     "newStorageConfig": {
       "objClass": "org.sensorhub.impl.persistence.perst.BasicStorageConfig",
-      "memoryCacheSize": 65536,
+      "memoryCacheSize": 10240,
       "moduleClass": "org.sensorhub.impl.persistence.perst.BasicStorageImpl",
       "enabled": true
     },
     "dataProviders": [
       {
         "objClass": "org.sensorhub.impl.service.sos.SensorDataProviderConfig",
-        "sensorID": "3668f2be-52bf-444c-b77f-a9b7acaba53e",
-        "storageID": "ea5621e9-d54f-462a-aa9c-7fabf3c5dbd1",
+        "sensorID": "a8f88588-c7af-4564-b3ec-5e06c63738d7",
+        "storageID": "b431d55a-9414-408a-b757-c88527f96143",
         "hiddenOutputs": [],
         "activateNotifications": false,
         "liveDataTimeout": 10.0,
@@ -42,8 +42,8 @@
     "dataConsumers": [
       {
         "objClass": "org.sensorhub.impl.service.sos.SensorConsumerConfig",
-        "sensorID": "3668f2be-52bf-444c-b77f-a9b7acaba53e",
-        "storageID": "ea5621e9-d54f-462a-aa9c-7fabf3c5dbd1",
+        "sensorID": "a8f88588-c7af-4564-b3ec-5e06c63738d7",
+        "storageID": "b431d55a-9414-408a-b757-c88527f96143",
         "enabled": true,
         "offering": "urn:android:device:060693280a28e015-sos"
       }
@@ -87,27 +87,25 @@
     "sensorUID": "urn:android:device:060693280a28e015",
     "autoActivate": true,
     "enableHistory": true,
-    "id": "3668f2be-52bf-444c-b77f-a9b7acaba53e",
+    "id": "a8f88588-c7af-4564-b3ec-5e06c63738d7",
     "name": "ANDROID_SENSORS",
     "moduleClass": "org.sensorhub.impl.sensor.sost.SOSVirtualSensor",
     "enabled": true
   },
   {
-    "objClass": "org.sensorhub.impl.persistence.perst.BasicStorageConfig",
-    "storagePath": "urn:android:device:060693280a28e015.dat",
-    "memoryCacheSize": 65536,
-    "id": "ea5621e9-d54f-462a-aa9c-7fabf3c5dbd1",
+    "objClass": "org.sensorhub.impl.persistence.StreamStorageConfig",
+    "storageConfig": {
+      "objClass": "org.sensorhub.impl.persistence.perst.BasicStorageConfig",
+      "storagePath": "urn:android:device:060693280a28e015.dat",
+      "memoryCacheSize": 10240,
+      "moduleClass": "org.sensorhub.impl.persistence.perst.BasicStorageImpl",
+      "enabled": true
+    },
+    "dataSourceID": "a8f88588-c7af-4564-b3ec-5e06c63738d7",
+    "memoryCacheSize": 0,
+    "id": "b431d55a-9414-408a-b757-c88527f96143",
     "name": "ANDROID_SENSORS Storage",
-    "moduleClass": "org.sensorhub.impl.persistence.perst.BasicStorageImpl",
-    "enabled": true
-  },
-  {
-    "objClass": "org.sensorhub.impl.persistence.SensorStorageHelperConfig",
-    "storageID": "ea5621e9-d54f-462a-aa9c-7fabf3c5dbd1",
-    "sensorID": "3668f2be-52bf-444c-b77f-a9b7acaba53e",
-    "id": "8274c3ea-a5b0-40d2-91d2-7be69ebc95fd",
-    "name": "Storage Listener for ANDROID_SENSORS",
-    "moduleClass": "org.sensorhub.impl.persistence.SensorStorageHelper",
+    "moduleClass": "org.sensorhub.impl.persistence.GenericStreamStorage",
     "enabled": true
   }
 ]

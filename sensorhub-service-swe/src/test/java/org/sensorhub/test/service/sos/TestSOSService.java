@@ -28,12 +28,11 @@ import org.junit.Test;
 import org.sensorhub.api.module.IModule;
 import org.sensorhub.api.persistence.IBasicStorage;
 import org.sensorhub.api.persistence.StorageConfig;
-import org.sensorhub.api.sensor.ISensorModule;
 import org.sensorhub.api.sensor.SensorConfig;
 import org.sensorhub.impl.SensorHub;
 import org.sensorhub.impl.SensorHubConfig;
 import org.sensorhub.impl.persistence.InMemoryBasicStorage;
-import org.sensorhub.impl.persistence.StorageHelper;
+import org.sensorhub.impl.persistence.StreamStorageConfig;
 import org.sensorhub.impl.service.HttpServer;
 import org.sensorhub.impl.service.HttpServerConfig;
 import org.sensorhub.impl.service.ogc.OGCServiceConfig.CapabilitiesInfo;
@@ -171,16 +170,16 @@ public class TestSOSService
     {
         SensorDataProviderConfig sosProviderConfig = buildSensorProvider1(pushEnabled);
                        
-        // create in-memory storage
-        StorageConfig storageConfig = new StorageConfig();
-        storageConfig.moduleClass = InMemoryBasicStorage.class.getCanonicalName();
-        storageConfig.name = "Storage";
-        storageConfig.enabled = true;
+        // configure in-memory storage configure
+        StreamStorageConfig streamStorageConfig = new StreamStorageConfig();
+        streamStorageConfig.name = "Storage";
+        streamStorageConfig.enabled = true;
+        streamStorageConfig.storageConfig = new StorageConfig();
+        streamStorageConfig.storageConfig.moduleClass = InMemoryBasicStorage.class.getCanonicalName();
+        streamStorageConfig.dataSourceID = sosProviderConfig.sensorID;
         
         // configure storage for sensor
-        IBasicStorage<?> storage = (IBasicStorage<?>)SensorHub.getInstance().getModuleRegistry().loadModule(storageConfig);
-        ISensorModule<?> sensor = SensorHub.getInstance().getSensorManager().getModuleById(sosProviderConfig.sensorID);
-        StorageHelper.configureStorageForDataSource(sensor, storage, true);
+        IBasicStorage<?> storage = (IBasicStorage<?>)SensorHub.getInstance().getModuleRegistry().loadModule(streamStorageConfig);
         sosProviderConfig.storageID = storage.getLocalID();
         
         return sosProviderConfig;

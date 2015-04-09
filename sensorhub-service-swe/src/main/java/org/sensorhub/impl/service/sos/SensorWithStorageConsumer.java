@@ -17,12 +17,10 @@ package org.sensorhub.impl.service.sos;
 import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataEncoding;
 import org.sensorhub.api.common.SensorHubException;
-import org.sensorhub.api.module.IModule;
 import org.sensorhub.api.persistence.IBasicStorage;
 import org.sensorhub.api.persistence.ITimeSeriesDataStore;
 import org.sensorhub.impl.SensorHub;
 import org.sensorhub.impl.module.ModuleRegistry;
-import org.sensorhub.impl.persistence.SensorStorageHelper;
 import org.vast.ows.sos.ISOSDataConsumer;
 
 
@@ -61,25 +59,7 @@ public class SensorWithStorageConsumer extends SensorDataConsumer implements ISO
         
         // add additional datastore if not already there
         if (!storage.getDataStores().containsKey(templateID))
-        {
             storage.addNewDataStore(templateID, component, encoding);
-            
-            // look for storage helper
-            ModuleRegistry moduleReg = SensorHub.getInstance().getModuleRegistry();
-            for (IModule<?> module: moduleReg.getLoadedModules())
-            {
-                if (module instanceof SensorStorageHelper)
-                {
-                    SensorStorageHelper listener = (SensorStorageHelper)module;
-                                        
-                    if (listener.getConfiguration().sensorID.equals(sensor.getLocalID()))
-                    {
-                        // register for new events
-                        sensor.getAllOutputs().get(templateID).registerListener(listener);
-                    }
-                }
-            }
-        }
         
         return templateID;
     }

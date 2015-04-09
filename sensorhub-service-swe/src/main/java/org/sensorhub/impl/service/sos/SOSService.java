@@ -48,8 +48,7 @@ import org.sensorhub.api.service.IServiceModule;
 import org.sensorhub.api.service.ServiceException;
 import org.sensorhub.impl.SensorHub;
 import org.sensorhub.impl.module.ModuleRegistry;
-import org.sensorhub.impl.persistence.SensorStorageHelper;
-import org.sensorhub.impl.persistence.StorageHelper;
+import org.sensorhub.impl.persistence.StreamStorageConfig;
 import org.sensorhub.impl.sensor.sost.SOSVirtualSensorConfig;
 import org.sensorhub.impl.sensor.sost.SOSVirtualSensor;
 import org.sensorhub.impl.service.HttpServer;
@@ -529,19 +528,21 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
                 if (config.newStorageConfig != null)
                 {
                     // create new data storage
-                    StorageConfig newStorageConfig = (StorageConfig)config.newStorageConfig.clone();
-                    newStorageConfig.id = null;
-                    newStorageConfig.name = virtualSensor.getName() + " Storage";
-                    newStorageConfig.storagePath = sensorUID + ".dat";
-                    IBasicStorage<?> storage = (IBasicStorage<?>)moduleReg.loadModule(newStorageConfig);
-                    SensorStorageHelper dataListener = StorageHelper.configureStorageForDataSource(virtualSensor, storage, true);
+                    StreamStorageConfig streamStorageConfig = new StreamStorageConfig();
+                    streamStorageConfig.id = null;
+                    streamStorageConfig.name = virtualSensor.getName() + " Storage";
+                    streamStorageConfig.enabled = true;
+                    streamStorageConfig.dataSourceID = virtualSensor.getLocalID();
+                    streamStorageConfig.storageConfig = (StorageConfig)config.newStorageConfig.clone();
+                    streamStorageConfig.storageConfig.storagePath = sensorUID + ".dat";
+                    IBasicStorage<?> storage = (IBasicStorage<?>)moduleReg.loadModule(streamStorageConfig);
                                         
                     // associate storage to config                    
                     providerConfig.storageID = storage.getLocalID();
                     consumerConfig.storageID = storage.getLocalID();
                     
                     // save config so that registered sensor stays active after restart
-                    moduleReg.saveConfiguration(this.config, sensorConfig, newStorageConfig, dataListener.getConfiguration());
+                    moduleReg.saveConfiguration(this.config, sensorConfig, streamStorageConfig);
                 }
                 
                 // instantiate provider and consumer instances

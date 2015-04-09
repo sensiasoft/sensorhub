@@ -20,6 +20,7 @@ import java.io.OutputStream;
 import java.lang.ref.WeakReference;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import net.opengis.sensorml.v20.AbstractProcess;
 import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataComponent;
@@ -37,6 +38,7 @@ import org.sensorhub.api.persistence.IStorageModule;
 import org.sensorhub.api.persistence.ITimeSeriesDataStore;
 import org.sensorhub.api.persistence.StorageConfig;
 import org.sensorhub.api.persistence.StorageException;
+import org.sensorhub.api.sensor.ISensorModule;
 import org.sensorhub.api.sensor.SensorEvent;
 import org.sensorhub.impl.SensorHub;
 import org.sensorhub.impl.module.AbstractModule;
@@ -106,9 +108,9 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
         {        
             // if storage is empty, initialize it
             if (storage.getLatestDataSourceDescription() == null)
-                StorageHelper.configureStorageForDataSource(dataSource, storage, false);
+                configureStorageForDataSource(dataSource, storage);
             
-            // otherwise get the latest sensor description in case we were down during the last update
+            // otherwise just get the latest sensor description in case we were down during the last update
             else
                 storage.storeDataSourceDescription(dataSource.getCurrentDescription());
             
@@ -126,6 +128,33 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
         }
         else
             log.warn("Data source is unavailable for stream storage " + MsgUtils.moduleString(this));
+    }
+    
+    
+    protected void configureStorageForDataSource(IDataProducerModule<?> dataSource, IBasicStorage<?> storage) throws SensorHubException
+    {
+        if (storage.getDataStores().size() > 0)
+            throw new RuntimeException("Storage " + MsgUtils.moduleString(storage) + " is already configured");
+        
+        // copy sensor description history
+        if (dataSource instanceof ISensorModule<?> && ((ISensorModule<?>)dataSource).isSensorDescriptionHistorySupported())
+        {
+            ISensorModule<?> sensor = ((ISensorModule<?>)dataSource);
+            for (AbstractProcess sensorDesc: sensor.getSensorDescriptionHistory())
+                storage.storeDataSourceDescription(sensorDesc);
+        }
+        else
+        {
+            storage.storeDataSourceDescription(dataSource.getCurrentDescription());
+        }
+        
+        // create one data store for each sensor output
+        for (Entry<String, ? extends IStreamingDataInterface> item: dataSource.getAllOutputs().entrySet())
+        {
+            String name = item.getKey();
+            IStreamingDataInterface output = item.getValue();
+            storage.addNewDataStore(name, output.getRecordDescription(), output.getRecommendedEncoding());
+        }
     }
     
     
@@ -174,16 +203,18 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
                 // get datastore for output name
                 String outputName = dataEvent.getSource().getName();
                 ITimeSeriesDataStore<?> dataStore = storage.getDataStores().get(outputName);
+                int timeStampIndex = 0; // TODO precompute time stamp index value generically for any structure
                 
                 String producer = dataEvent.getSource().getParentModule().getLocalID();
                 
                 for (DataBlock record: dataEvent.getRecords())
                 {
-                    DataKey key = new DataKey(producer, e.getTimeStamp()/1000.);
+                    double time = record.getDoubleValue(timeStampIndex);
+                    DataKey key = new DataKey(producer, time);
                     dataStore.store(key, record);
                     if (log.isTraceEnabled())
                     {
-                        log.trace("Storing record " + key.timeStamp + " in DB");
+                        log.trace("Storing record " + key.timeStamp + " for output " + outputName);
                         log.trace("DB size: " + dataStore.getNumRecords());
                     }
                 }
@@ -214,6 +245,28 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
                 }
             }
         }
+    }
+    
+
+    @Override
+    public ITimeSeriesDataStore<IDataFilter> addNewDataStore(String name, DataComponent recordStructure, DataEncoding recommendedEncoding) throws StorageException
+    {
+        // create data store in underlying storage
+        ITimeSeriesDataStore<IDataFilter> dataStore = storage.addNewDataStore(name, recordStructure, recommendedEncoding);
+        
+        // also register to new events
+        try
+        {
+            IDataProducerModule<?> dataSource = dataSourceRef.get();
+            if (dataSource != null)
+                dataSource.getAllOutputs().get(name).registerListener(this);
+        }
+        catch (Exception e)
+        {
+            throw new StorageException("Error when registering to new data stream " + name, e);
+        }
+        
+        return dataStore;
     }
 
 
@@ -311,7 +364,7 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
     @Override
     public void removeDataSourceDescriptionHistory(double startTime, double endTime)
     {
-        storage.removeDataSourceDescriptionHistory(startTime, endTime);        
+        storage.removeDataSourceDescriptionHistory(startTime, endTime);
     }
 
 
@@ -319,12 +372,5 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
     public Map<String, ? extends ITimeSeriesDataStore<IDataFilter>> getDataStores()
     {
         return storage.getDataStores();
-    }
-
-
-    @Override
-    public ITimeSeriesDataStore<IDataFilter> addNewDataStore(String name, DataComponent recordStructure, DataEncoding recommendedEncoding) throws StorageException
-    {
-        return storage.addNewDataStore(name, recordStructure, recommendedEncoding);
     }
 }
