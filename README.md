@@ -18,7 +18,7 @@ SensorHub is licensed under the [Mozilla Public License version 2.0](http://www.
 
 ## Using
 
-Refer to the [User's Guide](https://github.com/sensiasoft/sensorhub/wiki/User's-Guide) for instructions on how to install and use SensorHub.
+Refer to the [Documentation Site](http://sensiasoft.github.io/sensorhub/) for instructions on how to install and use SensorHub, as well as get the latest news.
 
 
 ## Building
