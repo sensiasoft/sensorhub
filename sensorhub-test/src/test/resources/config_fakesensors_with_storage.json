@@ -39,18 +39,6 @@
     "autoActivate": true,
     "enableHistory": false,
     "hiddenIO": null
-  },
-  {
-    "objClass": "org.sensorhub.impl.sensor.fakecam.FakeCamConfig",
-    "id": "d136b6ea-3950-4691-bf56-c84ec7d89d74",
-    "name": "Fake Camera Sensor",
-    "enabled": true,
-    "moduleClass": "org.sensorhub.impl.sensor.fakecam.FakeCamSensor",
-    "sensorML": null,
-    "autoActivate": true,
-    "enableHistory": false,
-    "hiddenIO": null,
-    "videoFilePath": "/home/alex/Videos/output.mp4"
   }, 
   {
     "objClass": "org.sensorhub.impl.persistence.StreamStorageConfig",
