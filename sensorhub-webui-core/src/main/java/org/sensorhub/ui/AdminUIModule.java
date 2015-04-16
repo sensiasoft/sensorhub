@@ -16,6 +16,8 @@ package org.sensorhub.ui;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.LogManager;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.impl.module.AbstractModule;
 import org.sensorhub.impl.service.HttpServer;
@@ -26,6 +28,7 @@ public class AdminUIModule extends AbstractModule<AdminUIConfig>
 {
     protected final static String SERVLET_PARAM_UI_CLASS = "UI";
     protected final static String SERVLET_PARAM_MODULE_ID = "module_id";
+    protected final static String WIDGETSET = "widgetset";
     
     VaadinServlet vaadinServlet;
     
@@ -33,10 +36,15 @@ public class AdminUIModule extends AbstractModule<AdminUIConfig>
     @Override
     public void start() throws SensorHubException
     {
+        // reset java util logging config so we don't get annoying atmosphere logs
+        LogManager.getLogManager().reset();//.getLogger("org.atmosphere").setLevel(Level.OFF);
+        
         vaadinServlet = new VaadinServlet();
         Map<String, String> initParams = new HashMap<String, String>();
         initParams.put(SERVLET_PARAM_UI_CLASS, AdminUI.class.getCanonicalName());
         initParams.put(SERVLET_PARAM_MODULE_ID, getLocalID());
+        if (config.widgetSet != null)
+            initParams.put(WIDGETSET, config.widgetSet);
         initParams.put("productionMode", "true");        
         HttpServer.getInstance().deployServlet("/*", vaadinServlet, initParams);        
     }

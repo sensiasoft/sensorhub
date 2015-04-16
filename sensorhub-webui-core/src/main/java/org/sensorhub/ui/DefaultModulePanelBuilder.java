@@ -20,6 +20,7 @@ import org.sensorhub.ui.api.IModuleConfigFormBuilder;
 import org.sensorhub.ui.api.IModulePanelBuilder;
 import org.sensorhub.ui.data.MyBeanItem;
 import com.vaadin.data.fieldgroup.FieldGroup;
+import com.vaadin.server.Sizeable.Unit;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.VerticalLayout;
@@ -47,6 +48,7 @@ public class DefaultModulePanelBuilder implements IModulePanelBuilder
         // add generated form
         VerticalLayout layout = new VerticalLayout();
         layout.setSizeUndefined();
+        layout.setWidth(100.0f, Unit.PERCENTAGE);
         layout.setMargin(true);
         
         Component form = formBuilder.buildForm(new FieldGroup(beanItem));

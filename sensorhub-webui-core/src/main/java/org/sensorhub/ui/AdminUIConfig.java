@@ -21,7 +21,8 @@ import org.sensorhub.api.module.ModuleConfig;
 
 public class AdminUIConfig extends ModuleConfig
 {
-    private static final long serialVersionUID = 2000598898056182847L;
+    
+    public String widgetSet;
     
     
     public List<CustomPanelConfig> customPanels = new ArrayList<CustomPanelConfig>();

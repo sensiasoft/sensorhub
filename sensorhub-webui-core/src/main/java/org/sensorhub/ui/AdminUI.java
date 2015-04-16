@@ -91,8 +91,8 @@ public class AdminUI extends com.vaadin.ui.UI
         {
             try
             {
-                Class<?> className = Class.forName(customForm.builderClass);
-                IModuleConfigFormBuilder formBuilder = (IModuleConfigFormBuilder)className.newInstance();
+                Class<?> clazz = Class.forName(customForm.builderClass);
+                IModuleConfigFormBuilder formBuilder = (IModuleConfigFormBuilder)clazz.newInstance();
                 customForms.put(customForm.configClass, formBuilder);
                 log.debug("Loaded custom form for " + customForm.configClass);
             }
@@ -107,8 +107,8 @@ public class AdminUI extends com.vaadin.ui.UI
         {
             try
             {
-                Class<?> className = Class.forName(customPanel.builderClass);
-                IModulePanelBuilder panelBuilder = (IModulePanelBuilder)className.newInstance();
+                Class<?> clazz = Class.forName(customPanel.builderClass);
+                IModulePanelBuilder panelBuilder = (IModulePanelBuilder)clazz.newInstance();
                 customPanels.put(customPanel.configClass, panelBuilder);
                 log.debug("Loaded custom panel for " + customPanel.configClass);
             }
@@ -332,24 +332,39 @@ public class AdminUI extends com.vaadin.ui.UI
     {
         configArea.removeAllComponents();
         
-        String configClass = beanItem.getBean().getClass().getCanonicalName();
+        Class<?> configClass = beanItem.getBean().getClass();
+        Class<?> clazz;
         
         // TODO: do something different because getModuleById will load the module if not loaded yet
+        // but here we don't necessarily need to load the module automatically
         IModule<?> module = null;                
         try { module = SensorHub.getInstance().getModuleRegistry().getModuleById(beanItem.getBean().id); }
         catch (Exception e) {}
         
         // check if there is a custom form registered, if not use default        
-        IModuleConfigFormBuilder formBuilder = customForms.get(configClass);
+        IModuleConfigFormBuilder formBuilder = null;
+        clazz = configClass;
+        while (formBuilder == null && clazz != null)
+        {
+            formBuilder = customForms.get(clazz.getCanonicalName());
+            clazz = clazz.getSuperclass();
+        }
         if (formBuilder == null)
             formBuilder = new GenericConfigFormBuilder();
         
         // check if there is a custom panel registered, if not use default
-        IModulePanelBuilder uiBuilder = customPanels.get(configClass);
-        if (uiBuilder == null)
-            uiBuilder = new DefaultModulePanelBuilder();
-        Component panel = uiBuilder.buildPanel(beanItem, module, formBuilder);
+        IModulePanelBuilder panelBuilder = null;
+        clazz = configClass;
+        while (panelBuilder == null && clazz != null)
+        {
+            panelBuilder = customPanels.get(clazz.getCanonicalName());
+            clazz = clazz.getSuperclass();
+        }
+        if (panelBuilder == null)
+            panelBuilder = new DefaultModulePanelBuilder();
         
+        // generate module admin panel
+        Component panel = panelBuilder.buildPanel(beanItem, module, formBuilder);
         configArea.addComponent(panel);
     }
 }

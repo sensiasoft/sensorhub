@@ -14,10 +14,12 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.ui;
 
+import org.sensorhub.api.config.DisplayInfo;
+
 
 /**
  * <p>
- * TODO CustomPanelConfig type description
+ * Configuration options for a custom panel
  * </p>
  *
  * @author Alex Robin <alex.robin@sensiasoftware.com>
@@ -26,15 +28,11 @@ package org.sensorhub.ui;
 public class CustomPanelConfig
 {
     
-    /**
-     * Type of config class for which a custom form must be generated
-     */
+    @DisplayInfo(label="Config Class", desc="Type of module config class for which a custom panel must be generated")
     public String configClass;
     
     
-    /**
-     * Fully qualified name of class implementing IModuleConfigFormBuilder
-     */
+    @DisplayInfo(label="Builder Class", desc="Fully qualified name of class implementing IModulePanelBuilder")
     public String builderClass;
     
     
