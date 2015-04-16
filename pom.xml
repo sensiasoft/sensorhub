@@ -4,11 +4,63 @@
    <artifactId>sensorhub-build</artifactId>
    <packaging>pom</packaging>
    <name>SensorHub Build Script</name>
+   <version>1.0</version>
    <modules>
       <module>lib-swe-common/swe-common-all</module>
       <module>lib-sensorml/sensorml-all</module>
       <module>lib-ows/ows-framework-all</module>
       <module>sensorhub-all</module>
    </modules>
-   <version>1.0</version>
+   <build>
+      <plugins>
+         <plugin>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>maven-bundle-plugin</artifactId>
+            <version>2.4.0</version>
+            <extensions>true</extensions>
+         </plugin>
+         <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>exec-maven-plugin</artifactId>
+            <version>1.1</version>
+            <configuration>
+              <includeProjectDependencies>false</includeProjectDependencies>
+              <includePluginDependencies>true</includePluginDependencies>
+              <mainClass>org.sensorhub.impl.SensorHub</mainClass>            
+            </configuration>
+            <dependencies>
+              <dependency>
+                 <groupId>org.sensorhub</groupId>
+                 <artifactId>sensorhub-core</artifactId>
+                 <version>1.0</version>
+              </dependency>
+              <dependency>
+                 <groupId>org.sensorhub</groupId>
+                 <artifactId>sensorhub-service-swe</artifactId>
+                 <version>1.0</version>
+              </dependency>
+              <dependency>
+                 <groupId>org.sensorhub</groupId>
+                 <artifactId>sensorhub-storage-perst</artifactId>
+                 <version>1.0</version>
+              </dependency>
+              <dependency>
+                 <groupId>org.sensorhub</groupId>
+                 <artifactId>sensorhub-driver-fakegps</artifactId>
+                 <version>0.1</version>
+              </dependency>
+              <dependency>
+                 <groupId>org.sensorhub</groupId>
+                 <artifactId>sensorhub-driver-fakeweather</artifactId>
+                 <version>0.1</version>
+              </dependency>
+              <dependency>
+                 <groupId>org.sensorhub</groupId>
+                 <artifactId>sensorhub-webui-core</artifactId>
+                 <version>1.0</version>
+              </dependency>
+           </dependencies>
+         </plugin>
+      </plugins>
+   </build>
 </project>
