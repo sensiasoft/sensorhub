@@ -78,7 +78,8 @@ system.addCharacteristics("mechanical", mechSpecs);
 Add location as GML point:
 
 ```java
-Point pos = new PointImpl();
+GMLFactory gmlFac = new GMLFactory();
+Point pos = gmlFac.newPoint();
 pos.setId("P01");
 pos.setSrsName("http://www.opengis.net/def/crs/EPSG/0/4979");
 pos.setPos(new double[] {45.6, 2.3, 193.2});
