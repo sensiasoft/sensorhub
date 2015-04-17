@@ -181,7 +181,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                     {
                         displayText.append("<b>" + stream.getKey().getName() + " : </b>");
                         
-                        if (now - stream.getValue().lastSampleTime > 2000)
+                        if (now - stream.getValue().lastEventTime > 2000)
                             displayText.append("<font color='red'>NOK</font>");
                         else
                             displayText.append("<font color='green'>OK</font>");                        
