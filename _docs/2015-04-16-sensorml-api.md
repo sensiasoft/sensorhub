@@ -115,10 +115,12 @@ rec.setDescription("Record of synchronous weather measurements");
 rec.addField("time", sweFac.newTimeStampIsoUTC());
 
 // temperature measurement
-rec.addField("temp", sweFac.newQuantity("http://mmisw.org/ont/cf/parameter/air_temperature", "Air Temperature", null, "Cel"));
+rec.addField("temp", 
+              sweFac.newQuantity("http://mmisw.org/ont/cf/parameter/air_temperature", "Air Temperature", null, "Cel"));
 
 // pressure
-rec.addField("press", sweFac.newQuantity("http://mmisw.org/ont/cf/parameter/air_pressure_at_sea_level", "Air Pressure", null, "mbar"));
+rec.addField("press", 
+             sweFac.newQuantity("http://mmisw.org/ont/cf/parameter/air_pressure_at_sea_level", "Air Pressure", null, "mbar"));
 
 // wind speed
 rec.addField("wind_speed", sweFac.newQuantity("http://mmisw.org/ont/cf/parameter/wind_speed", "Wind Speed", null, "km/h"));
