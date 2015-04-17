@@ -120,13 +120,19 @@ rec.addField("temp", sweFac.newQuantity(
                             "Air Temperature", null, "Cel"));
 
 // pressure
-rec.addField("press", sweFac.newQuantity("http://mmisw.org/ont/cf/parameter/air_pressure_at_sea_level", "Air Pressure", null, "mbar"));
+rec.addField("press", sweFac.newQuantity(
+                            "http://mmisw.org/ont/cf/parameter/air_pressure_at_sea_level",
+                            "Air Pressure", null, "mbar"));
 
 // wind speed
-rec.addField("wind_speed", sweFac.newQuantity("http://mmisw.org/ont/cf/parameter/wind_speed", "Wind Speed", null, "km/h"));
+rec.addField("wind_speed", sweFac.newQuantity(
+                            "http://mmisw.org/ont/cf/parameter/wind_speed",
+                            "Wind Speed", null, "km/h"));
         
 // wind direction
-rec.addField("wind_dir", sweFac.newQuantity("http://mmisw.org/ont/cf/parameter/wind_to_direction", "Wind Direction", null, "deg"));
+rec.addField("wind_dir", sweFac.newQuantity(
+                            "http://mmisw.org/ont/cf/parameter/wind_to_direction",
+                            "Wind Direction", null, "deg"));
 
 // add as output
 system.addOutput("weather_data", rec);
@@ -136,14 +142,18 @@ You can also add accuracy info to some of the measured outputs:
 
 ```java
 // add accuracy info to temp output
-Quantity acc = sweFac.newQuantity("http://mmisw.org/ont/cf/parameter/accuracy", "Accuracy", null, "%");
+Quantity acc = sweFac.newQuantity(
+                      "http://mmisw.org/ont/cf/parameter/accuracy",
+                      "Accuracy", null, "%");
 (Quantity)rec.getField("temp")).addQuality(acc);
 ```
 
 Parameters can be added in a similar fashion:
 
 ```java
-system.addParameter("samplingPeriod", sweFac.newQuantity("http://sensorml.com/ont/swe/property/SamplingPeriod", "Sampling Period", null, "s"));
+system.addParameter("samplingPeriod", sweFac.newQuantity(
+                       "http://sensorml.com/ont/swe/property/SamplingPeriod",
+                       "Sampling Period", null, "s"));
 ```
 
 
