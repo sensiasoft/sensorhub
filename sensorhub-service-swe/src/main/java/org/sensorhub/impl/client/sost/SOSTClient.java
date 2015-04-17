@@ -79,7 +79,7 @@ public class SOSTClient extends AbstractModule<SOSTClientConfig> implements IEve
     public class StreamInfo
     {
         String templateID;
-        public long lastSampleTime = -1;
+        public long lastEventTime = -1;
         public int errorCount = 0;
         private int minRecordsPerRequest = 10;
         private SWEData resultData = new SWEData();
@@ -286,8 +286,8 @@ public class SOSTClient extends AbstractModule<SOSTClientConfig> implements IEve
                 return;
             }
             
-            // record last sample time
-            streamInfo.lastSampleTime = e.getTimeStamp();
+            // record last event time
+            streamInfo.lastEventTime = e.getTimeStamp();
             
             // append records to buffer
             for (DataBlock record: ((SensorDataEvent)e).getRecords())

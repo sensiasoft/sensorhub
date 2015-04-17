@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.ref.WeakReference;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -46,6 +47,8 @@ import org.sensorhub.impl.module.ModuleRegistry;
 import org.sensorhub.utils.MsgUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.vast.swe.SWEHelper;
+import org.vast.swe.ScalarIndexer;
 
 
 /**
@@ -65,6 +68,7 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
     
     IBasicStorage<StorageConfig> storage;
     WeakReference<IDataProducerModule<?>> dataSourceRef;
+    Map<String, ScalarIndexer> timeStampIndexers = new HashMap<String, ScalarIndexer>();
     
     
     @Override
@@ -118,12 +122,12 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
             if (config.selectedOutputs == null || config.selectedOutputs.length == 0)
             {
                 for (IStreamingDataInterface output: dataSource.getAllOutputs().values())
-                    output.registerListener(this);
+                    prepareToReceiveEvents(output);
             }
             else
             {
                 for (String outputName: config.selectedOutputs)
-                    dataSource.getAllOutputs().get(outputName).registerListener(this);
+                    prepareToReceiveEvents(dataSource.getAllOutputs().get(outputName));
             }
         }
         else
@@ -154,6 +158,21 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
             String name = item.getKey();
             IStreamingDataInterface output = item.getValue();
             storage.addNewDataStore(name, output.getRecordDescription(), output.getRecommendedEncoding());
+        }
+    }
+    
+    
+    protected void prepareToReceiveEvents(IStreamingDataInterface output)
+    {
+        output.registerListener(this);
+        
+        // create time stamp indexer
+        String outputName = output.getName();
+        ScalarIndexer timeStampIndexer = timeStampIndexers.get(outputName);
+        if (timeStampIndexer == null)
+        {
+            timeStampIndexer = SWEHelper.getTimeStampIndexer(output.getRecordDescription());
+            timeStampIndexers.put(outputName, timeStampIndexer);
         }
     }
     
@@ -203,13 +222,16 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
                 // get datastore for output name
                 String outputName = dataEvent.getSource().getName();
                 ITimeSeriesDataStore<?> dataStore = storage.getDataStores().get(outputName);
-                int timeStampIndex = 0; // TODO precompute time stamp index value generically for any structure
                 
+                // get indexer for looking up time stamp value
+                ScalarIndexer timeStampIndexer = timeStampIndexers.get(outputName);
+                
+                // get producer ID
                 String producer = dataEvent.getSource().getParentModule().getLocalID();
                 
                 for (DataBlock record: dataEvent.getRecords())
                 {
-                    double time = record.getDoubleValue(timeStampIndex);
+                    double time = timeStampIndexer.getDoubleValue(record);
                     DataKey key = new DataKey(producer, time);
                     dataStore.store(key, record);
                     if (log.isTraceEnabled())
@@ -254,12 +276,12 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
         // create data store in underlying storage
         ITimeSeriesDataStore<IDataFilter> dataStore = storage.addNewDataStore(name, recordStructure, recommendedEncoding);
         
-        // also register to new events
+        // prepare to receive events to this new data store
         try
         {
             IDataProducerModule<?> dataSource = dataSourceRef.get();
             if (dataSource != null)
-                dataSource.getAllOutputs().get(name).registerListener(this);
+                prepareToReceiveEvents(dataSource.getAllOutputs().get(name));
         }
         catch (Exception e)
         {
