@@ -103,8 +103,9 @@ system.addInput("weather_phenomena", obs);
 
 You can also add an input as xlink reference:
 
-    system.getInputList().add("rain", "http://remotedef.xml", null);
-
+```java
+system.getInputList().add("rain", "http://remotedef.xml", null);
+```
 
 Add output record (in this case we first create the record object and then add sub-components to it, before we add it as output):
 
