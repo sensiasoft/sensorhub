@@ -9,8 +9,11 @@ categories: 1.0 tutorial
 ## Introduction
 
 In SensorHub, sensor descriptions (or sensor metadata) are in the [SensorML 2.0](http://www.opengeospatial.org/standards/sensorml) format, an international open standard from the [Open Geospatial Consortium (OGC)](http://www.opengeospatial.org). They are often generated (at least partly) from code using the java SensorML bindings included in [lib-sensorml](https://github.com/sensiasoft/lib-sensorml).
+
 These bindings are automatically generated from the 2.0 XML schemas and thus are a direct reflection of the types and properties that are defined by it. The general rule is that each [XML Schema Complex Type](http://www.w3.org/TR/xmlschema-1/#Complex_Type_Definitions) (except OGC Property Types) becomes a Java interface with appropriate methods to handle each property (get/set/isSet/unSet, getNum/add for multiplicity > 1, etc.).
+
 There is one subtle difference compared to other bindings that could be generated with commonly used tools such as JAXB or XML Beans: OGC Property Types are not generated as separate objects thus removing many unnecessary layers in the generated object tree. Instead, properties are handled as a generic [_OgcProperty_](https://github.com/sensiasoft/lib-swe-common/blob/master/swe-common-core/src/main/java/net/opengis/OgcProperty.java) object, containing all info carried by the property such as name, xlink attributes, etc., and accessible via _'getProperty'_ methods. This means that calls to regular get methods would return the property value directly which makes constructing the object much more straight forward. This design allows for handling the entire content model from many OGC schemas without making the resulting object tree too complex.
+
 Let's look at examples of how to set different parts of a SensorML document using this API (All code in the following section assumes you have an instance of _PhysicalComponent_ or _PhysicalSystem_ called _'system'_ on hand):
 _Note: Most of the following examples are actually extracted from the 'testGenerateInstance()' method of this [JUnit Test Class](https://github.com/sensiasoft/lib-sensorml/blob/master/sensorml-core/src/test/java/org/vast/sensorML/test/TestSMLBindingsV20.java) so you can look at the code directly_
 
