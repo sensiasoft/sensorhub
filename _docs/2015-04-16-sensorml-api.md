@@ -76,7 +76,7 @@ system.addCharacteristics("mechanical", mechSpecs);
 ```
 
 
-## Sensor Location
+## Location
 
 Add location as GML point:
 
@@ -89,7 +89,7 @@ pos.setPos(new double[] {45.6, 2.3, 193.2});
 system.addPositionAsPoint(pos);
 ```
 
-## Sensor Inputs/Outputs/Parameters
+## Inputs/Outputs/Parameters
 
 All inputs, outputs and parameters in SensorML are described using the SWE Common Language so you can use the `SWEHelper` class to create these structures. 
 
