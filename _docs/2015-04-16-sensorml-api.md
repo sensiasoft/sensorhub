@@ -77,12 +77,13 @@ system.addCharacteristics("mechanical", mechSpecs);
 
 Add location as GML point:
 
-    Point pos = new PointImpl();
-    pos.setId("P01");
-    pos.setSrsName("http://www.opengis.net/def/crs/EPSG/0/4979");
-    pos.setPos(new double[] {45.6, 2.3, 193.2});
-    system.addPositionAsPoint(pos);
-
+```java
+Point pos = new PointImpl();
+pos.setId("P01");
+pos.setSrsName("http://www.opengis.net/def/crs/EPSG/0/4979");
+pos.setPos(new double[] {45.6, 2.3, 193.2});
+system.addPositionAsPoint(pos);
+```
 
 ## Sensor Inputs/Outputs/Parameters
 
@@ -90,45 +91,47 @@ All inputs, outputs and parameters in SensorML are described using the SWE Commo
 
 Add observable property as input:
 
-    ObservableProperty obs = new ObservablePropertyImpl();
-    obs.setDefinition("http://mmisw.org/ont/cf/parameter/weather");
-    system.addInput("weather_phenomena", obs);
+```java
+ObservableProperty obs = new ObservablePropertyImpl();
+obs.setDefinition("http://mmisw.org/ont/cf/parameter/weather");
+system.addInput("weather_phenomena", obs);
+```
+
+You can also add an input as xlink reference:
+
+    system.getInputList().add("rain", "http://remotedef.xml", null);
+
 
 Add output record (in this case we first create the record object and then add sub-components to it, before we add it as output):
 
-    DataRecord rec = new DataRecordImpl();
-    rec.setLabel("Weather Data Record");
-    rec.setDescription("Record of synchronous weather measurements");   
+```java
+DataRecord rec = sweFac.newDataRecord();
+rec.setLabel("Weather Data Record");
+rec.setDescription("Record of synchronous weather measurements");
+system.addOutput("weather_data", rec);
+
+// sampling time
+rec.addField("time", sweFac.newTimeStampIsoUTC());
+
+// temperature measurement
+rec.addField("temp", sweFac.newQuantity("http://mmisw.org/ont/cf/parameter/air_temperature", "Air Temperature", null, "Cel"));
+
+// pressure
+rec.addField("press", sweFac.newQuantity("http://mmisw.org/ont/cf/parameter/air_pressure_at_sea_level", "Air Pressure", null, "mbar"));
+
+// wind speed
+rec.addField("wind_speed", sweFac.newQuantity("http://mmisw.org/ont/cf/parameter/wind_speed", "Wind Speed", null, "km/h"));
         
-    // sampling time
-    Time t = new TimeImpl();
-    t.setDefinition("http://www.opengis.net/def/property/OGC/0/SamplingTime");
-    t.setReferenceFrame("http://www.opengis.net/def/trs/OGC/0/GPS");
-    t.setLabel("Sampling Time");
-    t.getUom().setHref("http://www.opengis.net/def/uom/ISO-8601/0/Gregorian");
-    rec.addField("time", t);
+// wind direction
+rec.addField("wind_dir", sweFac.newQuantity("http://mmisw.org/ont/cf/parameter/wind_to_direction", "Wind Direction", null, "deg"));
+```
 
-    // temperature measurement with accuracy
-    Quantity q1 = new QuantityImpl();
-    q1.setDefinition("http://mmisw.org/ont/cf/parameter/air_temperature");
-    q1.setLabel("Air Temperature");
-    q1.getUom().setCode("Cel");
-    Quantity acc = new QuantityImpl();
-    acc.setDefinition("http://mmisw.org/ont/cf/parameter/accuracy");
-    acc.getUom().setCode("%");
-    acc.setValue(0.9);
-    q1.addQuality(acc);
-    rec.addField("temp", q1);
-        
-    // atmospheric pressure measurement
-    Quantity q2 = new QuantityImpl();
-    q2.setDefinition("http://mmisw.org/ont/cf/parameter/air_pressure_at_sea_level");
-    q2.setLabel("Air Pressure");
-    q2.getUom().setCode("mbar");
-    rec.addField("press", q2);
-      
-    system.addOutput("weather_data", rec);
+You can also add accuracy info to some of the measured outputs:
 
-Inputs and Outputs can also be added as xlink references, for instance:
+```java
+// add accuracy info to temp output
+Quantity acc = sweFac.newQuantity("http://mmisw.org/ont/cf/parameter/accuracy", "Accuracy", null, "%");
+(Quantity)rec.getField("temp")).addQuality(acc);
+```
 
-    system.getInputList().add("rain", "http://remotedef.xml", null);
+
