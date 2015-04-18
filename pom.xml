@@ -1,10 +1,14 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
    <modelVersion>4.0.0</modelVersion>
-   <groupId>org.sensorhub</groupId>
-   <artifactId>sensorhub-build</artifactId>
+   <parent>
+      <groupId>org.sensorhub</groupId>
+      <artifactId>sensorhub-all</artifactId>
+      <version>1.0</version>
+      <relativePath>sensorhub-all/pom.xml</relativePath>
+   </parent>
+   <artifactId>sensorhub-base</artifactId>
    <packaging>pom</packaging>
-   <name>SensorHub Build Script</name>
-   <version>1.0</version>
+   <name>SensorHub Base</name>
    <modules>
       <module>lib-swe-common/swe-common-all</module>
       <module>lib-sensorml/sensorml-all</module>
@@ -19,12 +23,6 @@
    </modules>
    <build>
       <plugins>
-         <plugin>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>maven-bundle-plugin</artifactId>
-            <version>2.4.0</version>
-            <extensions>true</extensions>
-         </plugin>
          <plugin>
             <groupId>org.codehaus.mojo</groupId>
             <artifactId>exec-maven-plugin</artifactId>

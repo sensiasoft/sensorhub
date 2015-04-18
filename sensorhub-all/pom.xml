@@ -38,15 +38,6 @@
       <url>https://github.com/sensiasoft/sensorhub/issues</url>
       <system>GitHub</system>
    </issueManagement>
-   <modules>
-      <module>../sensorhub-core</module>
-      <module>../sensorhub-storage-perst</module>
-      <module>../sensorhub-service-swe</module>    
-      <module>../sensorhub-driver-fakegps</module>
-      <module>../sensorhub-driver-fakeweather</module>
-      <module>../sensorhub-tools</module>
-      <module>../sensorhub-webui-core</module>
-   </modules>
    <dependencies>
       <dependency>
          <groupId>junit</groupId>
