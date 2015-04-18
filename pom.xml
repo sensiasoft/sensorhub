@@ -13,6 +13,7 @@
       <module>lib-swe-common/swe-common-all</module>
       <module>lib-sensorml/sensorml-all</module>
       <module>lib-ows/ows-framework-all</module>
+      <module>sensorhub-all</module>
       <module>sensorhub-core</module>
       <module>sensorhub-storage-perst</module>
       <module>sensorhub-service-swe</module>    
