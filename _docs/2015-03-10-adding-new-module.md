@@ -1,6 +1,6 @@
 ---
 layout: page
-title:  "Create New SensorHub Maven Modules"
+title:  "Create New Maven Modules"
 date:   2015-03-10 10:40:56
 categories: 1.0 tutorial
 ---
