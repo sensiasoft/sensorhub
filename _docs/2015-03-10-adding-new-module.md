@@ -12,7 +12,7 @@ SensorHub enforces a modular design by making sure all contributions are made th
 
 So that it can be more easily integrated to SensorHub build process, we advise you to package each SensorHub module (or set of similar modules) as a separate eclipse project and corresponding Maven module. 
 
-If you are using Eclipse with the M2E plugin as described in the [Developer's Guide](./Developers-Guide), you can easily create the new project by following the steps below:
+If you are using Eclipse with the M2E plugin as described in the [Developer's Guide](https://github.com/sensiasoft/sensorhub/wiki/Developers-Guide), you can easily create the new project by following the steps below:
 
 #### Create a new Maven Eclipse project:
   * Right click in package explorer and select _"New > Other"_
