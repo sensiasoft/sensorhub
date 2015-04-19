@@ -47,6 +47,6 @@ The following tables explain how the server responds to different temporal filte
 ### Replay Extension
 The SOS implementation also supports replaying historical observations at arbitrary speed (i.e. at real-time speed, or slower/faster than real-time). This is supported by adding the `replaySpeed` parameter to a historical GetResult KVP request, such as in `temporalFilter=phenomenonTime,2014-01-01/2014-02-01&replaySpeed=2`. The parameter has no effect for a live stream request (i.e. if the requested period starts at 'now')
 
-Observations are replayed at exactly real-time speed (according to observations time tags) with `replaySpeed=1`. The replay value is in fact a factor relative to real-time so that 10 meansreplaying 10x faster than real-time (if bandwidth permits!) and 0.1 means replaying 10x slower than real-time.
+Observations are replayed at exactly real-time speed (according to observations time tags) with `replaySpeed=1`. The replay value is in fact a factor relative to real-time so that 10 means replaying 10x faster than real-time (if bandwidth permits!) and 0.1 means replaying 10x slower than real-time.
 
-SensorHub implements this functionality by pausing the SOS data provider thread just the right amount of time to match the period infered by two successive measurement record times.
+SensorHub implements this functionality by pausing the SOS data provider thread just the right amount of time to match the period infered by two successive measurement time stamps.
