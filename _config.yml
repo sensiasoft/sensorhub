@@ -18,7 +18,7 @@ title:            SensorHub
 tagline:          'Software for building smart sensor networks'
 description:      'Technical Docs and Blog for the OpenSensorHub Project'
 url:              http://www.opensensorhub.org
-baseurl:          "/"
+baseurl:          ""
 
 author:
   name:           'Sensia Software'
