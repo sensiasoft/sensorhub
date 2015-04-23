@@ -18,7 +18,7 @@ SensorHub is licensed under the [Mozilla Public License version 2.0](http://www.
 
 ## Using
 
-Refer to the [Documentation Site](http://docs.opensensorhub.org) for instructions on how to install and use SensorHub, as well as get the latest news.
+Refer to the [Documentation Site](http://docs.opensensorhub.org/documentation) for instructions on how to install and use SensorHub, as well as get the latest news.
 
 You can also go to this [Demo Page](http://sensiasoft.net:8181/demo.html) to see SensorHub in action with a few example sensor streams (Video, GPS, predicted satellite positions, etc.).
 
