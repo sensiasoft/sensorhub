@@ -64,7 +64,6 @@ import org.w3c.dom.NodeList;
 
 public class TestSOSService
 {
-    static String SERVICE_ENDPOINT = "/sos";
     static String NAME_OUTPUT1 = "weatherOut";
     static String NAME_OUTPUT2 = "imageOut";
     static String URI_OFFERING1 = "urn:mysos:sensor1";
@@ -73,6 +72,9 @@ public class TestSOSService
     static String NAME_OFFERING2 = "SOS Sensor Provider #2";
     static final double SAMPLING_PERIOD = 0.5;
     static final int NUM_GEN_SAMPLES = 5;
+    static final int SERVER_PORT = 8888;
+    static final String SERVICE_PATH = "/sos";
+    static final String SERVICE_ENDPOINT = "http://localhost:" + SERVER_PORT + "/sensorhub" + SERVICE_PATH;
     
     File configFile;
     
@@ -88,6 +90,7 @@ public class TestSOSService
         
         // start HTTP server
         HttpServerConfig httpConfig = new HttpServerConfig();
+        httpConfig.httpPort = SERVER_PORT;
         SensorHub.getInstance().getModuleRegistry().loadModule(httpConfig);
     }
     
@@ -97,7 +100,7 @@ public class TestSOSService
         // create service config
         SOSServiceConfig serviceCfg = new SOSServiceConfig();
         serviceCfg.moduleClass = SOSService.class.getCanonicalName();
-        serviceCfg.endPoint = SERVICE_ENDPOINT;
+        serviceCfg.endPoint = SERVICE_PATH;
         serviceCfg.enabled = true;
         serviceCfg.name = "SOS";
         CapabilitiesInfo srvcMetadata = serviceCfg.ogcCapabilitiesInfo;
@@ -189,7 +192,7 @@ public class TestSOSService
     protected GetObservationRequest generateGetObsNow(String offeringId)
     {
         GetObservationRequest getObs = new GetObservationRequest();
-        getObs.setGetServer("http://localhost:8080/sensorhub" + SERVICE_ENDPOINT);
+        getObs.setGetServer(SERVICE_ENDPOINT);
         getObs.setVersion("2.0");
         getObs.setOffering(offeringId);
         getObs.getObservables().add("urn:blabla:temperature");
@@ -231,7 +234,7 @@ public class TestSOSService
     {
         deployService(buildSensorProvider1(false));
         
-        InputStream is = new URL("http://localhost:8080/sensorhub" + SERVICE_ENDPOINT + "?service=SOS&version=2.0&request=GetCapabilities").openStream();
+        InputStream is = new URL(SERVICE_ENDPOINT + "?service=SOS&version=2.0&request=GetCapabilities").openStream();
         DOMHelper dom = new DOMHelper(is, false);
         dom.serialize(dom.getBaseElement(), System.out, true);
         
@@ -247,7 +250,7 @@ public class TestSOSService
     {
         deployService(buildSensorProvider1(false), buildSensorProvider2());
         
-        InputStream is = new URL("http://localhost:8080/sensorhub" + SERVICE_ENDPOINT + "?service=SOS&version=2.0&request=GetCapabilities").openStream();
+        InputStream is = new URL(SERVICE_ENDPOINT + "?service=SOS&version=2.0&request=GetCapabilities").openStream();
         DOMHelper dom = new DOMHelper(is, false);
         dom.serialize(dom.getBaseElement(), System.out, true);
         
@@ -267,7 +270,7 @@ public class TestSOSService
     {
         deployService(buildSensorProvider1(false), buildSensorProvider2());
         
-        InputStream is = new URL("http://localhost:8080/sensorhub" + SERVICE_ENDPOINT + "?service=SOS&version=2.0&request=GetResult&offering=urn:mysos:sensor1&observedProperty=urn:blabla:temperature").openStream();
+        InputStream is = new URL(SERVICE_ENDPOINT + "?service=SOS&version=2.0&request=GetResult&offering=urn:mysos:sensor1&observedProperty=urn:blabla:temperature").openStream();
         IOUtils.copy(is, System.out);
     }
     
@@ -277,7 +280,7 @@ public class TestSOSService
     {
         deployService(buildSensorProvider1(false), buildSensorProvider2());
         
-        InputStream is = new URL("http://localhost:8080/sensorhub" + SERVICE_ENDPOINT + "?service=SOS&version=2.0&request=GetResult&offering=urn:mysos:wrong&observedProperty=urn:blabla:temperature").openStream();
+        InputStream is = new URL(SERVICE_ENDPOINT + "?service=SOS&version=2.0&request=GetResult&offering=urn:mysos:wrong&observedProperty=urn:blabla:temperature").openStream();
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         IOUtils.copy(is, os);
         
@@ -322,7 +325,7 @@ public class TestSOSService
             Thread.sleep(((long)SAMPLING_PERIOD*500));
         
         // first get capabilities to know available time range
-        SOSServiceCapabilities caps = (SOSServiceCapabilities)new OWSUtils().getCapabilities("http://localhost:8080/sensorhub" + SERVICE_ENDPOINT, "SOS", "2.0");
+        SOSServiceCapabilities caps = (SOSServiceCapabilities)new OWSUtils().getCapabilities(SERVICE_ENDPOINT, "SOS", "2.0");
         TimeExtent timePeriod = ((SOSOfferingCapabilities)caps.getLayer(URI_OFFERING1)).getPhenomenonTime();
         System.out.println("Available time period is " + timePeriod.getIsoString(0));
         
@@ -348,7 +351,7 @@ public class TestSOSService
     {
         deployService(buildSensorProvider1(false));
         
-        InputStream is = new URL("http://localhost:8080/sensorhub" + SERVICE_ENDPOINT + "?service=SOS&version=2.0&request=GetObservation&offering=urn:mysos:sensor1&observedProperty=urn:blabla:temperature&responseFormat=badformat").openStream();
+        InputStream is = new URL(SERVICE_ENDPOINT + "?service=SOS&version=2.0&request=GetObservation&offering=urn:mysos:sensor1&observedProperty=urn:blabla:temperature&responseFormat=badformat").openStream();
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         IOUtils.copy(is, os);
         
@@ -370,7 +373,7 @@ public class TestSOSService
         try
         {
             InsertResultRequest req = new InsertResultRequest();
-            req.setPostServer("http://localhost:8080/sensorhub" + SERVICE_ENDPOINT);
+            req.setPostServer(SERVICE_ENDPOINT);
             req.setVersion("2.0");
             req.setTemplateId("template01");
             SWEData sweData = new SWEData();

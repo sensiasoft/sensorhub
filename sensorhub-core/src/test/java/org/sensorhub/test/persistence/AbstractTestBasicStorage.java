@@ -134,7 +134,7 @@ public abstract class AbstractTestBasicStorage<StorageType extends IBasicStorage
     @Test
     public void testStoreAndGetLatestSensorML() throws Exception
     {
-        SMLUtils smlUtils = new SMLUtils();
+        SMLUtils smlUtils = new SMLUtils(SMLUtils.V2_0);
         InputStream is = new BufferedInputStream(getClass().getResourceAsStream("/gamma2070_more.xml"));
         AbstractProcess smlIn = smlUtils.readProcess(is);
         storage.storeDataSourceDescription(smlIn);
@@ -147,7 +147,7 @@ public abstract class AbstractTestBasicStorage<StorageType extends IBasicStorage
     @Test
     public void testStoreAndGetSensorMLByTime() throws Exception
     {
-        SMLUtils smlUtils = new SMLUtils();
+        SMLUtils smlUtils = new SMLUtils(SMLUtils.V2_0);
         InputStream is;
                 
         // load SensorML doc and set first validity period

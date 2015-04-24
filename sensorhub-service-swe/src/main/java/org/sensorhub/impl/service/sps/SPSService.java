@@ -78,6 +78,8 @@ public class SPSService extends OWSServlet implements IServiceModule<SPSServiceC
     Map<String, SPSOfferingCapabilities> procedureToOfferingMap;
     Map<String, ISPSConnector> connectors;
     IEventHandler eventHandler;
+    
+    SMLUtils smlUtils = new SMLUtils(SMLUtils.V2_0);
     ITaskDB taskDB;
     //SPSNotificationSystem notifSystem;
     
@@ -152,12 +154,12 @@ public class SPSService extends OWSServlet implements IServiceModule<SPSServiceC
                     capabilities.getLayers().add(offCaps);
                     
                     // add connector and offering caps to maps
-                    String procedureID = offCaps.getProcedures().get(0);
+                    String procedureID = offCaps.getMainProcedure();
                     connectors.put(procedureID, connector);
                     procedureToOfferingMap.put(procedureID, offCaps);
                     
                     if (log.isDebugEnabled())
-                        log.debug("Offering " + "\"" + offCaps.toString() + "\" generated for procedure " + offCaps.getProcedures().get(0));
+                        log.debug("Offering " + "\"" + offCaps.toString() + "\" generated for procedure " + procedureID);
                 }
                 catch (Exception e)
                 {
@@ -231,7 +233,7 @@ public class SPSService extends OWSServlet implements IServiceModule<SPSServiceC
     
     
     @Override
-    public void handleEvent(Event e)
+    public void handleEvent(Event<?> e)
     {
         // what's important here is to redeploy if HTTP server is restarted
         if (e instanceof ModuleEvent && e.getSource() == HttpServer.getInstance())
@@ -401,7 +403,7 @@ public class SPSService extends OWSServlet implements IServiceModule<SPSServiceC
         
         // serialize and send SensorML description
         OutputStream os = new BufferedOutputStream(request.getResponseStream());
-        new SMLUtils().writeProcess(os, connector.generateSensorMLDescription(Double.NaN), true);
+        smlUtils.writeProcess(os, connector.generateSensorMLDescription(Double.NaN), true);
     }
     
     

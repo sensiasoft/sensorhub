@@ -52,7 +52,7 @@ public class SMLStreamProcess extends AbstractStreamProcess<SMLStreamProcessConf
     public void init(SMLStreamProcessConfig config) throws SensorHubException
     {
         this.config = config;
-        SMLUtils utils = new SMLUtils();
+        SMLUtils utils = new SMLUtils(SMLUtils.V2_0);
         
         // parse SensorML file
         try

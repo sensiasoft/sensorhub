@@ -120,6 +120,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     Map<String, String> templateToOfferingMap;
     Map<String, ISOSDataConsumer> dataConsumers;
         
+    SMLUtils smlUtils = new SMLUtils(SMLUtils.V2_0);
     boolean needCapabilitiesTimeUpdate = false;
 
     
@@ -205,10 +206,11 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
                     offeringCaps.put(offCaps.getIdentifier(), offCaps);
                     
                     // build procedure-offering map
-                    procedureToOfferingMap.put(offCaps.getProcedures().get(0), offCaps.getIdentifier());
+                    String procedureID = offCaps.getMainProcedure();
+                    procedureToOfferingMap.put(procedureID, offCaps.getIdentifier());
                     
                     if (log.isDebugEnabled())
-                        log.debug("Offering " + "\"" + offCaps.toString() + "\" generated for procedure " + offCaps.getProcedures().get(0));
+                        log.debug("Offering " + "\"" + offCaps.toString() + "\" generated for procedure " + procedureID);
                 }
                 catch (Exception e)
                 {
@@ -325,7 +327,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     
     
     @Override
-    public void handleEvent(Event e)
+    public void handleEvent(Event<?> e)
     {
         // what's important here is to redeploy if HTTP server is restarted
         if (e instanceof ModuleEvent && e.getSource() == HttpServer.getInstance())
@@ -473,7 +475,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
         
         // serialize and send SensorML description
         OutputStream os = new BufferedOutputStream(request.getResponseStream());
-        new SMLUtils().writeProcess(os, generateSensorML(sensorID, request.getTime()), true);
+        smlUtils.writeProcess(os, generateSensorML(sensorID, request.getTime()), true);
     }
     
     

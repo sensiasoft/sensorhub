@@ -21,7 +21,7 @@ import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataComponent;
 import org.junit.Assert;
 import org.vast.sensorML.SMLUtils;
-import org.vast.swe.SWECommonUtils;
+import org.vast.swe.SWEUtils;
 
 
 public class TestUtils
@@ -29,7 +29,7 @@ public class TestUtils
    
     public static void assertEquals(DataComponent comp1, DataComponent comp2) throws Exception
     {
-        SWECommonUtils sweUtils = new SWECommonUtils();
+        SWEUtils sweUtils = new SWEUtils(SWEUtils.V2_0);
         
         ByteArrayOutputStream os1 = new ByteArrayOutputStream(1024);
         sweUtils.writeComponent(os1, comp1, true, false);
@@ -54,7 +54,7 @@ public class TestUtils
     
     public static void assertEquals(AbstractProcess p1, AbstractProcess p2) throws Exception
     {
-        SMLUtils smlUtils = new SMLUtils();
+        SMLUtils smlUtils = new SMLUtils(SMLUtils.V2_0);
         
         ByteArrayOutputStream os1 = new ByteArrayOutputStream(1024);
         smlUtils.writeProcess(os1, p1, false);

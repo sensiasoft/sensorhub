@@ -30,7 +30,7 @@ import org.sensorhub.impl.persistence.perst.BasicStorageConfig;
 import org.sensorhub.impl.persistence.perst.BasicStorageImpl;
 import org.vast.cdm.common.DataStreamWriter;
 import org.vast.sensorML.SMLUtils;
-import org.vast.swe.SWECommonUtils;
+import org.vast.swe.SWEUtils;
 import org.vast.swe.SWEHelper;
 import org.vast.xml.DOMHelper;
 import org.vast.xml.XMLImplFinder;
@@ -70,8 +70,8 @@ public class DbExport
             
             // prepare XML output
             DOMHelper dom = new DOMHelper("db_export");
-            SMLUtils smlUtils = new SMLUtils();
-            SWECommonUtils sweUtils = new SWECommonUtils();
+            SMLUtils smlUtils = new SMLUtils(SMLUtils.V2_0);
+            SWEUtils sweUtils = new SWEUtils(SWEUtils.V2_0);
             XMLImplFinder.setStaxOutputFactory(new com.ctc.wstx.stax.WstxOutputFactory());
             
             // export all SensorML descriptions
@@ -101,7 +101,7 @@ public class DbExport
                 
                 // add data description
                 Element recordStructElt = dom.addElement(dataStoreElt, DbConstants.SECTION_RECORD_STRUCTURE);
-                recordStructElt.appendChild(sweUtils.writeComponent(dom, recordStruct));
+                recordStructElt.appendChild(sweUtils.writeComponent(dom, recordStruct, false));
                 Element recordEncElt = dom.addElement(dataStoreElt, DbConstants.SECTION_RECORD_ENCODING);
                 recordEncElt.appendChild(sweUtils.writeEncoding(dom, recordEncoding));
                 System.out.println("Exported metadata for data store " + dataStoreName);

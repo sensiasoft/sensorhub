@@ -27,7 +27,7 @@ import org.sensorhub.impl.persistence.perst.BasicStorageConfig;
 import org.sensorhub.impl.persistence.perst.BasicStorageImpl;
 import org.vast.cdm.common.DataStreamParser;
 import org.vast.sensorML.SMLUtils;
-import org.vast.swe.SWECommonUtils;
+import org.vast.swe.SWEUtils;
 import org.vast.swe.SWEHelper;
 import org.vast.xml.DOMHelper;
 import org.w3c.dom.Element;
@@ -59,8 +59,8 @@ public class DbImport
         // read XML metadata file
         File metadataFile = new File(args[0]);
         DOMHelper dom = new DOMHelper("file://" + metadataFile.getAbsolutePath(), false);
-        SMLUtils smlUtils = new SMLUtils();
-        SWECommonUtils sweUtils = new SWECommonUtils();
+        SMLUtils smlUtils = new SMLUtils(SMLUtils.V2_0);
+        SWEUtils sweUtils = new SWEUtils(SWEUtils.V2_0);
         
         // import each sensorML description
         NodeList smlElts = dom.getElements(DbConstants.SECTION_SENSORML);

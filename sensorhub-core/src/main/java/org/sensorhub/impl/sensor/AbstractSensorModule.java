@@ -150,7 +150,7 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
             {
                 try
                 {
-                    SMLUtils utils = new SMLUtils();
+                    SMLUtils utils = new SMLUtils(SMLUtils.V2_0);
                     InputStream is = new URL(config.sensorML).openStream();
                     sensorDescription = utils.readProcess(is);
                 }

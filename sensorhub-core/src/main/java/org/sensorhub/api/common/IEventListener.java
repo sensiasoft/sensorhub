@@ -25,5 +25,5 @@ package org.sensorhub.api.common;
  */
 public interface IEventListener
 {
-    public void handleEvent(Event e);
+    public void handleEvent(Event<?> e);
 }

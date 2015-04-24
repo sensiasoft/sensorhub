@@ -22,30 +22,49 @@ package org.sensorhub.api.common;
  * </p>
  *
  * @author Alex Robin <alex.robin@sensiasoftware.com>
+ * @param <EventTypeEnum> Enum of possible event sub-type
  * @since Nov 5, 2010
  */
-public class Event
+public abstract class Event<EventTypeEnum extends Enum<?>>
 {
-    protected Object source;
     protected long timeStamp;
-    protected int code;
+    protected EventTypeEnum type;
+    protected String sourceModuleID;
+    protected Object source;
+        
     
-    
-    public Object getSource()
-    {
-        return source;
-    }
-
-
+    /**
+     * @return Time stamp of event creation (Unix time in ms since 1970)
+     */
     public long getTimeStamp()
     {
         return timeStamp;
     }
-
-
-    public int getCode()
-    {
-        return code;
-    }    
     
+    
+    /**
+     * @return Event sub-type (depending on actual event class)
+     */
+    public EventTypeEnum getType()
+    {
+        return type;
+    }
+    
+    
+    /**
+     * @return ID of module that generated the event
+     */
+    public String getSourceModuleID()
+    {
+        return sourceModuleID;
+    }
+    
+    
+    /**
+     * @return Source object that generated this event
+     */
+    public Object getSource()
+    {
+        return source;
+    }
 }

@@ -15,6 +15,7 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 package org.sensorhub.api.persistence;
 
 import org.sensorhub.api.common.Event;
+import org.sensorhub.api.persistence.StorageEvent.Type;
 
 
 /**
@@ -25,7 +26,7 @@ import org.sensorhub.api.common.Event;
  * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @since Nov 12, 2010
  */
-public class StorageEvent extends Event
+public class StorageEvent extends Event<Type>
 {
     
     /**
@@ -38,25 +39,13 @@ public class StorageEvent extends Event
         DELETE,
         GET
     };
-    
-    
-    /**
-     * ID of storage that generated the event
-     */
-    protected String storageId;
-    
-    
-    /**
-     * Type of storage event
-     */
-    protected Type type;  
 
 
     public StorageEvent(long timeStamp, IStorageModule<?> source, Type type)
     {
         this.timeStamp = timeStamp;
         this.source = source;
-        this.storageId = source.getLocalID();
+        this.sourceModuleID = source.getLocalID();
         this.type = type;
     }
     
@@ -65,32 +54,20 @@ public class StorageEvent extends Event
     {
         this.timeStamp = timeStamp;
         this.source = source;
-        this.storageId = source.getParentStorage().getLocalID();
+        this.sourceModuleID = source.getParentStorage().getLocalID();
         this.type = type;
     }
     
     
     public String getStorageId()
     {
-        return storageId;
+        return sourceModuleID;
     }
 
 
-    public void setStorageId(String storageId)
-    {
-        this.storageId = storageId;
-    }
-
-
+    @Override
     public Type getType()
     {
         return type;
     }
-
-
-    public void setType(Type type)
-    {
-        this.type = type;
-    }
-
 }

@@ -125,7 +125,7 @@ public class TestStreamProcess implements IEventListener
     
     protected void runProcess(IStreamProcessModule<?> process) throws Exception
     {
-        new SMLUtils().writeProcess(System.out, process.getCurrentDescription(), true);
+        new SMLUtils(SMLUtils.V2_0).writeProcess(System.out, process.getCurrentDescription(), true);
         
         // prepare event writer
         writer = new AsciiDataWriter();
