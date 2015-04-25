@@ -267,7 +267,7 @@ public abstract class StreamDataProvider implements ISOSDataProvider, IEventList
     
     
     @Override
-    public void handleEvent(Event e)
+    public void handleEvent(Event<?> e)
     {
         if (e instanceof DataEvent)
         {

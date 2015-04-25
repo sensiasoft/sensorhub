@@ -50,7 +50,7 @@ public class BasicEventHandler implements IEventHandler
     List<WeakReference<IEventListener>> listeners = new ArrayList<WeakReference<IEventListener>>();
     List<IEventListener> toDelete = new ArrayList<IEventListener>();
     List<IEventListener> toAdd = new ArrayList<IEventListener>();
-    Deque<Event> eventQueue = new LinkedBlockingDeque<Event>();
+    Deque<Event<?>> eventQueue = new LinkedBlockingDeque<Event<?>>();
     boolean inPublish = false;
     
     
@@ -80,7 +80,7 @@ public class BasicEventHandler implements IEventHandler
     
     
     @Override
-    public synchronized void publishEvent(Event e)
+    public synchronized void publishEvent(Event<?> e)
     {
         // case of recursive call
         if (inPublish)

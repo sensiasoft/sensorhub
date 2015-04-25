@@ -44,7 +44,7 @@ public class SensorDataProvider extends StreamDataProvider implements ISOSDataPr
     
     
     @Override
-    public void handleEvent(Event e)
+    public void handleEvent(Event<?> e)
     {
         if (e instanceof SensorEvent)
         {

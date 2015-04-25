@@ -34,7 +34,7 @@ public interface IEventHandler extends IEventProducer
      * Dispatch event to all registered listeners
      * @param e event to dispatch
      */
-    public void publishEvent(Event e);
+    public void publishEvent(Event<?> e);
     
     
     /**

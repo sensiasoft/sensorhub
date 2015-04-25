@@ -225,7 +225,7 @@ public class TestStreamProcess implements IEventListener
     
     
     @Override
-    public void handleEvent(Event e)
+    public void handleEvent(Event<?> e)
     {
         if (e instanceof DataEvent)
         {

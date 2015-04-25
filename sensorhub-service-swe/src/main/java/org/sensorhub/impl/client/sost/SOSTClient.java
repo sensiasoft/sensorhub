@@ -242,7 +242,7 @@ public class SOSTClient extends AbstractModule<SOSTClientConfig> implements IEve
     
     
     @Override
-    public void handleEvent(final Event e)
+    public void handleEvent(final Event<?> e)
     {
         // sensor description updated
         if (e instanceof SensorEvent)

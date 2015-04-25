@@ -349,7 +349,7 @@ public abstract class AbstractStreamProcess<ConfigType extends StreamProcessConf
     
     
     @Override
-    public void handleEvent(Event e)
+    public void handleEvent(Event<?> e)
     {
         if (paused)
             return;

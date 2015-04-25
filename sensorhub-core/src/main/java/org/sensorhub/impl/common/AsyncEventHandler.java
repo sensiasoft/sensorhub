@@ -38,7 +38,7 @@ import org.sensorhub.api.common.IEventListener;
 public class AsyncEventHandler implements IEventHandler
 {
     private Thread dispatchThread;
-    private BlockingQueue<Event> eventQueue;
+    private BlockingQueue<Event<?>> eventQueue;
     private List<IEventListener> listeners;
     private boolean started;
     private boolean paused;
@@ -46,7 +46,7 @@ public class AsyncEventHandler implements IEventHandler
     
     public AsyncEventHandler()
     {
-        this.eventQueue = new LinkedBlockingQueue<Event>();
+        this.eventQueue = new LinkedBlockingQueue<Event<?>>();
         this.listeners = new ArrayList<IEventListener>();
         
         dispatchThread = new Thread() {            
@@ -56,7 +56,7 @@ public class AsyncEventHandler implements IEventHandler
                 {
                     synchronized (this)
                     {
-                        Event e = eventQueue.poll();
+                        Event<?> e = eventQueue.poll();
                         for (IEventListener l : listeners)
                             l.handleEvent(e);
                         
@@ -76,7 +76,7 @@ public class AsyncEventHandler implements IEventHandler
     
     
     @Override
-    public void publishEvent(Event e)
+    public void publishEvent(Event<?> e)
     {
         try
         {

@@ -237,7 +237,7 @@ public abstract class StreamDataProviderFactory<ProducerType extends IDataProduc
 
 
     @Override
-    public void handleEvent(Event e)
+    public void handleEvent(Event<?> e)
     {
         /*// we need to enable/disable this provider when the state of the
         // underlying sensor changes

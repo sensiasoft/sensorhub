@@ -41,8 +41,6 @@ import org.sensorhub.api.persistence.ITimeSeriesDataStore;
 import org.sensorhub.api.persistence.StorageException;
 import org.sensorhub.impl.common.BasicEventHandler;
 import org.sensorhub.impl.module.AbstractModule;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 
 /**
@@ -56,7 +54,7 @@ import org.slf4j.LoggerFactory;
  */
 public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> implements IBasicStorage<BasicStorageConfig>
 {
-    private static final Logger log = LoggerFactory.getLogger(BasicStorageImpl.class);    
+    //private static final Logger log = LoggerFactory.getLogger(BasicStorageImpl.class);    
     
     private static Key KEY_SML_START_ALL_TIME = new Key(Double.NEGATIVE_INFINITY);
     private static Key KEY_SML_END_ALL_TIME = new Key(Double.POSITIVE_INFINITY);
