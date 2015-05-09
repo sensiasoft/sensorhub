@@ -47,16 +47,10 @@ public class DataEvent extends EntityEvent<Type>
          */
         DATA_UPDATED
     };
-    
-    
-    /**
-	 * Description of data records contained in this event (by reference) 
-	 */
-	protected DataComponent recordDescription;
 	
 	
 	/**
-	 * New data that triggered this event.
+	 * New data that triggered this event.<br/>
 	 * Multiple records can be associated to a single event because with high
 	 * rate producers, it is often not practical to generate an event for
 	 * every single record of measurements.
@@ -65,39 +59,33 @@ public class DataEvent extends EntityEvent<Type>
 	
 	
 	/**
-	 * Constructor from a list of records and their descriptor, for an single producer
+	 * Constructs a data event with no related entity
 	 * @param timeStamp time of event generation (unix time in milliseconds, base 1970)
      * @param dataInterface stream interface that generated the associated data
 	 * @param records arrays of records that triggered this notification
 	 */
 	public DataEvent(long timeStamp, IStreamingDataInterface dataInterface, DataBlock ... records)
 	{
-	    this(timeStamp, dataInterface.getParentModule().getLocalID(), dataInterface, records);
+	    this(timeStamp, null, dataInterface, records);
 	}
 	
 	
 	/**
-     * Constructor from a list of records and their descriptor, for a producer within a group
+     * Constructs a data event associated to an identifiable entity
      * @param timeStamp time of event generation (unix time in milliseconds, base 1970)
-	 * @param producerID ID of producer within the network
+	 * @param entityID Unique ID of entity that produced the data records
      * @param dataInterface stream interface that generated the associated data
      * @param records arrays of records that triggered this notification
      */
-    public DataEvent(long timeStamp, String producerID, IStreamingDataInterface dataInterface, DataBlock ... records)
+    public DataEvent(long timeStamp, String entityID, IStreamingDataInterface dataInterface, DataBlock ... records)
     {
         this.type = Type.NEW_DATA_AVAILABLE;
         this.timeStamp = timeStamp;
+        //this.producerID = dataInterface.getParentModule().getLocalID();
+        //this.channelID = dataInterface.getName();
         this.source = dataInterface;
-        this.relatedObjectID = producerID;
-        this.recordDescription = dataInterface.getRecordDescription();
+        this.relatedEntityID = entityID;
         this.records = records;
-    }
-	
-	
-	@Override
-    public IStreamingDataInterface getSource()
-    {
-        return (IStreamingDataInterface)this.source;
     }
 		
 	
@@ -108,12 +96,19 @@ public class DataEvent extends EntityEvent<Type>
     }
 	
 	
+    @Override
+    public IStreamingDataInterface getSource()
+    {
+        return (IStreamingDataInterface)this.source;
+    }
+	   
+	
     /**
      * @return description of the data records attached to this event
      */
     public DataComponent getRecordDescription()
     {
-        return recordDescription;
+        return ((IStreamingDataInterface)source).getRecordDescription();
     }
 
 

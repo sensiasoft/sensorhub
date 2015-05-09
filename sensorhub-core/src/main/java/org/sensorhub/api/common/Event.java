@@ -29,8 +29,9 @@ public abstract class Event<EventTypeEnum extends Enum<?>>
 {
     protected long timeStamp;
     protected EventTypeEnum type;
-    protected String sourceModuleID;
-    protected Object source;
+//    protected String producerID;
+//    protected String channelID;
+    protected transient Object source;
         
     
     /**
@@ -51,16 +52,26 @@ public abstract class Event<EventTypeEnum extends Enum<?>>
     }
     
     
-    /**
-     * @return ID of module that generated the event
-     */
-    public String getSourceModuleID()
-    {
-        return sourceModuleID;
-    }
+//    /**
+//     * @return ID of event producer (e.g. usually a module ID)
+//     */
+//    public String getProducerID()
+//    {
+//        return producerID;
+//    }
+//    
+//    
+//    /**
+//     * @return ID of event channel (e.g. output name)
+//     */
+//    public String getChannelID()
+//    {
+//        return producerID;
+//    }
     
     
     /**
+     * Gets the source of the event as an object reference.
      * @return Source object that generated this event
      */
     public Object getSource()

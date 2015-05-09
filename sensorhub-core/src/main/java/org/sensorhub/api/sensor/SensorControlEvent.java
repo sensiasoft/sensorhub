@@ -49,7 +49,7 @@ public class SensorControlEvent extends EntityEvent<CommandStatus.StatusCode>
     /**
      * Constructs the event for a sensor that is part of a network
      * @param timeStamp unix time of event generation
-     * @param sensorID Id of individual sensor in the network
+     * @param sensorID ID of individual sensor in the network
      * @param controlInterface sensor control interface that generated the event
      * @param status status of command at time the event is generated
      */
@@ -57,23 +57,22 @@ public class SensorControlEvent extends EntityEvent<CommandStatus.StatusCode>
     {
         this.timeStamp = timeStamp;
         this.source = controlInterface;
-        this.sourceModuleID = controlInterface.getParentSensor().getLocalID();
-        this.relatedObjectID = sensorID;
+        //this.producerID = controlInterface.getParentSensor().getLocalID();
+        this.relatedEntityID = sensorID;
         this.type = status.status;
     }
     
     
     /**
-     * For individual sensors, this method will return the same value as
-     * {@link #getSourceModuleID()}, but for sensor networks, it can return
-     * either the ID of the network as a whole (if the command was global) or
-     * the ID of one of the sensor within the network (if the command was sent
-     * to a particular sensor).
+     * Gets the unique ID of the sensor related to this event.<br/>
+     * For sensor networks, it can be either the ID of the network as a whole 
+     * (if the command was global) or the ID of one of the sensor in the
+     * network (if the command was sent to a particular sensor).
      * @return the ID of the sensor that this event refers to
      */
     public String getSensorID()
     {
-        return relatedObjectID;
+        return relatedEntityID;
     }
 	
 

@@ -63,12 +63,15 @@ public class SensorEvent extends EntityEvent<Type>
 	/**
 	 * Constructs the event for an individual sensor
 	 * @param timeStamp unix time of event generation
-	 * @param source sensor module that generated the event
+	 * @param sensorModule sensor module that generated the event
 	 * @param type type of event
 	 */
-	public SensorEvent(long timeStamp, ISensorModule<?> source, Type type)
+	public SensorEvent(long timeStamp, ISensorModule<?> sensorModule, Type type)
 	{
-	    this(timeStamp, source.getLocalID(), source, type);
+	    this(timeStamp,
+	         sensorModule.getCurrentDescription().getUniqueIdentifier(),
+	         sensorModule,
+	         type);
 	}
 	
 	
@@ -76,30 +79,29 @@ public class SensorEvent extends EntityEvent<Type>
 	 * Constructs the event for a sensor that is part of a network
 	 * @param timeStamp unix time of event generation
 	 * @param sensorID Id of individual sensor in the network
-	 * @param source sensor module that generated the event
+	 * @param sensorModule sensor module that generated the event
 	 * @param type type of event
 	 */
-	public SensorEvent(long timeStamp, String sensorID, ISensorModule<?> source, Type type)
+	public SensorEvent(long timeStamp, String sensorID, ISensorModule<?> sensorModule, Type type)
     {
-        this.timeStamp = timeStamp;
-        this.source = source;
-        this.sourceModuleID = source.getLocalID();
-        this.relatedObjectID = sensorID;
-        this.type = type;
+	    this.type = type;
+	    this.timeStamp = timeStamp;
+        //this.producerID = sensorModule.getLocalID();
+        this.source = sensorModule;
+        this.relatedEntityID = sensorID;
     }
 	
 
 	/**
-     * For individual sensors, this method will return the same value as
-     * {@link #getSourceModuleID()}, but for sensor networks, this can be
-     * either the ID of the network as a whole (if the change is global) or
-     * the ID of one of the sensor within the network (if the change applies
-     * only to that particular sensor, e.g. recalibration).
+     * Gets the unique ID of the sensor related to this event.<br/>
+     * For sensor networks, this can be either the ID of the network as a whole
+     * (if the change is global) or the ID of one of the sensor in the network
+     * (if the change applies only to that particular sensor, e.g. recalibration).
      * @return the ID of the sensor that this event refers to
      */
     public String getSensorID()
     {
-        return relatedObjectID;
+        return relatedEntityID;
     }
     
     
