@@ -17,12 +17,12 @@ package org.sensorhub.test.persistence.perst;
 import java.io.File;
 import org.junit.After;
 import org.junit.Before;
-import org.sensorhub.impl.persistence.perst.BasicStorageConfig;
-import org.sensorhub.impl.persistence.perst.BasicStorageImpl;
-import org.sensorhub.test.persistence.AbstractTestBasicStorage;
+import org.sensorhub.impl.persistence.perst.ObsStorageConfig;
+import org.sensorhub.impl.persistence.perst.ObsStorageImpl;
+import org.sensorhub.test.persistence.AbstractTestObsStorage;
 
 
-public class TestPerstBasicStorage extends AbstractTestBasicStorage<BasicStorageImpl>
+public class TestPerstObsStorage extends AbstractTestObsStorage<ObsStorageImpl>
 {
     File dbFile;
     
@@ -30,14 +30,14 @@ public class TestPerstBasicStorage extends AbstractTestBasicStorage<BasicStorage
     @Before
     public void init() throws Exception
     {
-        BasicStorageConfig config = new BasicStorageConfig();
+        ObsStorageConfig config = new ObsStorageConfig();
         config.enabled = true;
         config.memoryCacheSize = 10*1024;
         dbFile = File.createTempFile("testdb", ".dat");
         dbFile.deleteOnExit();
         config.storagePath = dbFile.getAbsolutePath();
         
-        storage = new BasicStorageImpl();
+        storage = new ObsStorageImpl();
         storage.init(config);
         storage.start();
         storage.setAutoCommit(true);

@@ -23,12 +23,11 @@ import net.opengis.swe.v20.DataBlock;
  * </p>
  *
  * @author Alex Robin <alex.robin@sensiasoftware.com>
- * @param <KeyType> Type of record key
  * @since Nov 12, 2010
  */
-public interface IDataRecord<KeyType extends DataKey>
+public interface IDataRecord
 {
-    public KeyType getKey();
+    public DataKey getKey();
     
     public DataBlock getData();
 }

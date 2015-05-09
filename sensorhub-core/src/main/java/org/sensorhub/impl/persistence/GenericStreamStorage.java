@@ -19,6 +19,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -35,8 +36,9 @@ import org.sensorhub.api.data.IStreamingDataInterface;
 import org.sensorhub.api.persistence.DataKey;
 import org.sensorhub.api.persistence.IBasicStorage;
 import org.sensorhub.api.persistence.IDataFilter;
+import org.sensorhub.api.persistence.IDataRecord;
 import org.sensorhub.api.persistence.IStorageModule;
-import org.sensorhub.api.persistence.ITimeSeriesDataStore;
+import org.sensorhub.api.persistence.IRecordInfo;
 import org.sensorhub.api.persistence.StorageConfig;
 import org.sensorhub.api.persistence.StorageException;
 import org.sensorhub.api.sensor.ISensorModule;
@@ -137,7 +139,7 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
     
     protected void configureStorageForDataSource(IDataProducerModule<?> dataSource, IBasicStorage<?> storage) throws SensorHubException
     {
-        if (storage.getDataStores().size() > 0)
+        if (storage.getRecordTypes().size() > 0)
             throw new RuntimeException("Storage " + MsgUtils.moduleString(storage) + " is already configured");
         
         // copy sensor description history
@@ -157,7 +159,7 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
         {
             String name = item.getKey();
             IStreamingDataInterface output = item.getValue();
-            storage.addNewDataStore(name, output.getRecordDescription(), output.getRecommendedEncoding());
+            storage.addRecordType(name, output.getRecordDescription(), output.getRecommendedEncoding());
         }
     }
     
@@ -219,26 +221,18 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
                 boolean saveAutoCommitState = storage.isAutoCommit();
                 storage.setAutoCommit(false);
                 
-                // get datastore for output name
-                String outputName = dataEvent.getSource().getName();
-                ITimeSeriesDataStore<?> dataStore = storage.getDataStores().get(outputName);
-                
                 // get indexer for looking up time stamp value
+                String outputName = dataEvent.getSource().getName();
                 ScalarIndexer timeStampIndexer = timeStampIndexers.get(outputName);
-                
-                // get producer ID
-                String producer = dataEvent.getSource().getParentModule().getLocalID();
                 
                 for (DataBlock record: dataEvent.getRecords())
                 {
                     double time = timeStampIndexer.getDoubleValue(record);
-                    DataKey key = new DataKey(producer, time);
-                    dataStore.store(key, record);
+                    DataKey key = new DataKey(outputName, time);
+                    storage.storeRecord(key, record);
+                    
                     if (log.isTraceEnabled())
-                    {
                         log.trace("Storing record " + key.timeStamp + " for output " + outputName);
-                        log.trace("DB size: " + dataStore.getNumRecords());
-                    }
                 }
                 
                 storage.commit();
@@ -271,12 +265,12 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
     
 
     @Override
-    public ITimeSeriesDataStore<IDataFilter> addNewDataStore(String name, DataComponent recordStructure, DataEncoding recommendedEncoding) throws StorageException
+    public void addRecordType(String name, DataComponent recordStructure, DataEncoding recommendedEncoding) throws StorageException
     {
-        // create data store in underlying storage
-        ITimeSeriesDataStore<IDataFilter> dataStore = storage.addNewDataStore(name, recordStructure, recommendedEncoding);
+        // register new record type with underlying storage
+        storage.addRecordType(name, recordStructure, recommendedEncoding);
         
-        // prepare to receive events to this new data store
+        // prepare to receive events
         try
         {
             IDataProducerModule<?> dataSource = dataSourceRef.get();
@@ -287,8 +281,6 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
         {
             throw new StorageException("Error when registering to new data stream " + name, e);
         }
-        
-        return dataStore;
     }
 
 
@@ -391,8 +383,77 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
 
 
     @Override
-    public Map<String, ? extends ITimeSeriesDataStore<IDataFilter>> getDataStores()
+    public Map<String, ? extends IRecordInfo> getRecordTypes()
     {
-        return storage.getDataStores();
+        return storage.getRecordTypes();
+    }
+
+
+    public DataBlock getDataBlock(DataKey key)
+    {
+        return storage.getDataBlock(key);
+    }
+
+
+    @Override
+    public Iterator<DataBlock> getDataBlockIterator(IDataFilter filter)
+    {
+        return storage.getDataBlockIterator(filter);
+    }
+
+
+    @Override
+    public Iterator<? extends IDataRecord> getRecordIterator(IDataFilter filter)
+    {
+        return storage.getRecordIterator(filter);
+    }
+
+
+    @Override
+    public int getNumMatchingRecords(IDataFilter filter)
+    {
+        return storage.getNumMatchingRecords(filter);
+    }
+
+    
+    @Override
+    public int getNumRecords(String recordType)
+    {
+        return storage.getNumRecords(recordType);
+    }
+
+
+    @Override
+    public double[] getRecordsTimeRange(String recordType)
+    {
+        return storage.getRecordsTimeRange(recordType);
+    }
+
+
+    @Override
+    public void storeRecord(DataKey key, DataBlock data)
+    {
+        storage.storeRecord(key, data);
+    }
+
+
+    @Override
+    public void updateRecord(DataKey key, DataBlock data)
+    {
+        storage.updateRecord(key, data);
+    }
+
+
+    @Override
+    public void removeRecord(DataKey key)
+    {
+        storage.removeRecord(key);
+    }
+
+
+    @Override
+    public int removeRecord(IDataFilter filter)
+    {
+        return storage.removeRecord(filter);
     }
 }

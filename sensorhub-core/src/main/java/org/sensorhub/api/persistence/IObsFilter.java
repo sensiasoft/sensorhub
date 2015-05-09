@@ -14,15 +14,15 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.api.persistence;
 
-import java.util.List;
-import org.vast.util.TimeExtent;
+import java.util.Set;
 import com.vividsolutions.jts.geom.Polygon;
 
 
 /**
  * <p>
- * Simple structure for defining filtering criteria when retrieving observations from storage.
- * These criteria correspond to properties of the O&M model.
+ * Simple structure for defining filtering criteria when retrieving observations
+ * from storage. These criteria correspond to properties of the O&M model.<br/>
+ * There is an implicit logical AND between all criteria.
  * </p>
  *
  * @author Alex Robin <alex.robin@sensiasoftware.com>
@@ -30,26 +30,43 @@ import com.vividsolutions.jts.geom.Polygon;
  */
 public interface IObsFilter extends IDataFilter
 {
+    
     /**
-     * @return the sampling time period from which to retrieve observations
+     * Gets filter criteria for selecting observations based on phenomenon time.<br/>
+     * Only observations whose phenomenon time (i.e sampling time for sensors) lies within
+     * that range will be selected (range is inclusive).<br/>
+     * If range is null, no filtering on phenomenon time will be applied.
+     * @return Desired phenomenon time range
      */
-    public TimeExtent getSamplingTimeRange();
+    public double[] getTimeStampRange();
     
     
     /**
-     * @return the list of features of interest to retrieve observations of
+     * Gets filter criteria for selecting observations based on result time.<br/>
+     * Only observations whose result time (e.g. model run time) lies within
+     * that range will be selected (range is inclusive).<br/>
+     * If range is null, no filtering on result time will be applied.
+     * @return Desired result time range
      */
-    public List<String> getFoiIds();
+    public double[] getResultTimeRange();
     
     
     /**
-     * @return the list of observed properties to retrieved data for
+     * Gets filter criteria for selecting observations associated to certain features
+     * of interest.<br/>
+     * Only observations associated to one of the listed FoI IDs will be selected.<br/>
+     * If the list is null or empty, no filtering on FoI ID will be applied.
+     * @return List of desired producer IDs
      */
-    public List<String> getObservedProperties();
+    public Set<String> getFoiIDs();
     
     
     /**
-     * @return the region of interest from which to retrieve observations
+     * Gets filter criteria for selecting observations based on their sampling geometry.<br/>
+     * Only observations whose sampling geometry is included within the polygon will be selected.<br/>
+     * If the polygon is null, no filtering on location will be applied.<br/>
+     * The polygon must be expressed in the same coordinate reference system as the one used for storage.
+     * @return Polygonal Region of Interest
      */
     public Polygon getRoi();
 }

@@ -12,25 +12,18 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
  
 ******************************* END LICENSE BLOCK ***************************/
 
-package org.sensorhub.api.persistence;
+package org.sensorhub.impl.persistence.perst;
 
 
 /**
  * <p>
- * This interface adds time tagging support to a record storage
+ * Configuration class for PERST basic storage
  * </p>
  *
  * @author Alex Robin <alex.robin@sensiasoftware.com>
- * @param <FilterType> 
- * @since Nov 27, 2014
+ * @since Sep 7, 2013
  */
-public interface ITimeSeriesDataStore<FilterType extends IDataFilter> extends IRecordDataStore<DataKey, FilterType>
+public class ObsStorageConfig extends BasicStorageConfig
 {
 
-    /**
-     * Get time range of all data contained in this storage.
-     * @return array of length 2 in the form [minTime maxTime] or [NaN NaN] is data store is empty
-     */
-    public double[] getDataTimeRange();
-    
 }

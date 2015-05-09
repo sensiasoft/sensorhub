@@ -39,29 +39,19 @@ public class StorageEvent extends Event<Type>
         DELETE,
         GET
     };
+    
+    
+    String recordType;
 
 
-    public StorageEvent(long timeStamp, IStorageModule<?> source, Type type)
+    public StorageEvent(long timeStamp, IStorageModule<?> source, String recordType, Type type)
     {
-        this.timeStamp = timeStamp;
-        this.source = source;
-        this.sourceModuleID = source.getLocalID();
         this.type = type;
-    }
-    
-    
-    public StorageEvent(long timeStamp, IRecordDataStore<?,?> source, Type type)
-    {
         this.timeStamp = timeStamp;
+        //this.producerID = source.getLocalID();
+        //this.channelID = recordType;
         this.source = source;
-        this.sourceModuleID = source.getParentStorage().getLocalID();
-        this.type = type;
-    }
-    
-    
-    public String getStorageId()
-    {
-        return sourceModuleID;
+        this.recordType = recordType;
     }
 
 
@@ -69,5 +59,18 @@ public class StorageEvent extends Event<Type>
     public Type getType()
     {
         return type;
+    }
+    
+    
+    @Override
+    public IStorageModule<?> getSource()
+    {
+        return (IStorageModule<?>)this.source;
+    }
+    
+    
+    public String getRecordType()
+    {
+        return recordType;
     }
 }

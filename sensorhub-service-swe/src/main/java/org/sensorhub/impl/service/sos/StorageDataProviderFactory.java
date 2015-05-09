@@ -26,8 +26,7 @@ import net.opengis.swe.v20.SimpleComponent;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.module.IModule;
 import org.sensorhub.api.persistence.IBasicStorage;
-import org.sensorhub.api.persistence.IDataFilter;
-import org.sensorhub.api.persistence.ITimeSeriesDataStore;
+import org.sensorhub.api.persistence.IRecordInfo;
 import org.sensorhub.api.persistence.StorageException;
 import org.sensorhub.api.sensor.SensorException;
 import org.sensorhub.api.service.ServiceException;
@@ -166,13 +165,13 @@ public class StorageDataProviderFactory implements IDataProviderFactory
         TimeExtent timeExtent = new TimeExtent();
         
         // process outputs descriptions
-        for (Entry<String, ? extends ITimeSeriesDataStore<IDataFilter>> entry: storage.getDataStores().entrySet())
+        for (Entry<String, ? extends IRecordInfo> entry: storage.getRecordTypes().entrySet())
         {
             // skip hidden outputs
             if (config.hiddenOutputs != null && config.hiddenOutputs.contains(entry.getKey()))
                 continue;
             
-            double[] storedPeriod = entry.getValue().getDataTimeRange();
+            double[] storedPeriod = storage.getRecordsTimeRange(entry.getKey());
             
             if (!Double.isNaN(storedPeriod[0]))
             {
@@ -193,7 +192,7 @@ public class StorageDataProviderFactory implements IDataProviderFactory
         HashSet<String> observableUris = new LinkedHashSet<String>();
         
         // process outputs descriptions
-        for (Entry<String, ? extends ITimeSeriesDataStore<IDataFilter>> entry: storage.getDataStores().entrySet())
+        for (Entry<String, ? extends IRecordInfo> entry: storage.getRecordTypes().entrySet())
         {
             // skip hidden outputs
             if (config.hiddenOutputs != null && config.hiddenOutputs.contains(entry.getKey()))
@@ -201,8 +200,8 @@ public class StorageDataProviderFactory implements IDataProviderFactory
             
             // iterate through all SWE components and add all definition URIs as observables
             // this way only composites with URI will get added
-            ITimeSeriesDataStore<?> timeSeries = entry.getValue();
-            DataIterator it = new DataIterator(timeSeries.getRecordDescription());
+            DataComponent recordStruct = entry.getValue().getRecordDescription();
+            DataIterator it = new DataIterator(recordStruct);
             while (it.hasNext())
             {
                 String defUri = (String)it.next().getDefinition();
@@ -224,20 +223,19 @@ public class StorageDataProviderFactory implements IDataProviderFactory
         obsTypes.add(IObservation.OBS_TYPE_GENERIC);
         
         // process outputs descriptions
-        for (Entry<String, ? extends ITimeSeriesDataStore<IDataFilter>> entry: storage.getDataStores().entrySet())
+        for (Entry<String, ? extends IRecordInfo> entry: storage.getRecordTypes().entrySet())
         {
             // skip hidden outputs
             if (config.hiddenOutputs != null && config.hiddenOutputs.contains(entry.getKey()))
                 continue;
             
             // obs type depends on top-level component
-            ITimeSeriesDataStore<?> timeSeries = entry.getValue();
-            DataComponent dataStruct = timeSeries.getRecordDescription();
-            if (dataStruct instanceof SimpleComponent)
+            DataComponent recordStruct = entry.getValue().getRecordDescription();
+            if (recordStruct instanceof SimpleComponent)
                 obsTypes.add(IObservation.OBS_TYPE_SCALAR);
-            else if (dataStruct instanceof DataRecord)
+            else if (recordStruct instanceof DataRecord)
                 obsTypes.add(IObservation.OBS_TYPE_RECORD);
-            else if (dataStruct instanceof DataArray)
+            else if (recordStruct instanceof DataArray)
                 obsTypes.add(IObservation.OBS_TYPE_ARRAY);
         }
         

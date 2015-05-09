@@ -503,7 +503,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
                 offering = sensorUID + "-sos";
                 ModuleRegistry moduleReg = SensorHub.getInstance().getModuleRegistry();           
                 
-                // create and register new virtual sensor module as data consumer
+                // create and register new virtual sensor module
                 SOSVirtualSensorConfig sensorConfig = new SOSVirtualSensorConfig();
                 sensorConfig.enabled = false;
                 sensorConfig.sensorUID = sensorUID;

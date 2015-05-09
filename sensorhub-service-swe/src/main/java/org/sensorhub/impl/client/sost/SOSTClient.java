@@ -34,7 +34,6 @@ import org.sensorhub.api.sensor.ISensorDataInterface;
 import org.sensorhub.api.sensor.ISensorModule;
 import org.sensorhub.api.sensor.SensorDataEvent;
 import org.sensorhub.api.sensor.SensorEvent;
-import org.sensorhub.api.sensor.SensorException;
 import org.sensorhub.api.service.ServiceException;
 import org.sensorhub.impl.SensorHub;
 import org.sensorhub.impl.module.AbstractModule;
@@ -157,24 +156,18 @@ public class SOSTClient extends AbstractModule<SOSTClientConfig> implements IEve
      */
     protected void registerSensor(ISensorModule<?> sensor) throws OWSException
     {
-        try
-        {
-            // build insert sensor request
-            InsertSensorRequest req = new InsertSensorRequest();
-            req.setPostServer(config.sosEndpointUrl);
-            req.setVersion("2.0");
-            req.setProcedureDescription(sensor.getCurrentDescription());
-            req.setProcedureDescriptionFormat(InsertSensorRequest.DEFAULT_PROCEDURE_FORMAT);
-            req.getObservationTypes().add(IObservation.OBS_TYPE_RECORD);
-            req.getFoiTypes().add("gml:Feature");
-            
-            InsertSensorResponse resp = (InsertSensorResponse)sosUtils.sendRequest(req, false);
-            this.offering = resp.getAssignedOffering();
-        }
-        catch (SensorException e)
-        {
-            throw new RuntimeException("Cannot get SensorML description for sensor " + sensor.getName());
-        }
+        // build insert sensor request
+        InsertSensorRequest req = new InsertSensorRequest();
+        req.setPostServer(config.sosEndpointUrl);
+        req.setVersion("2.0");
+        req.setProcedureDescription(sensor.getCurrentDescription());
+        req.setProcedureDescriptionFormat(InsertSensorRequest.DEFAULT_PROCEDURE_FORMAT);
+        req.getObservationTypes().add(IObservation.OBS_TYPE_RECORD);
+        req.getFoiTypes().add("gml:Feature");
+        
+        // send request and get assigned ID
+        InsertSensorResponse resp = (InsertSensorResponse)sosUtils.sendRequest(req, false);
+        this.offering = resp.getAssignedOffering();
         
         // register to sensor change event
         sensor.registerListener(this);
@@ -188,22 +181,16 @@ public class SOSTClient extends AbstractModule<SOSTClientConfig> implements IEve
      */
     protected void updateSensor(ISensorModule<?> sensor) throws OWSException
     {
-        try
-        {
-            // build update sensor request
-            UpdateSensorRequest req = new UpdateSensorRequest(SOSUtils.SOS);
-            req.setPostServer(config.sosEndpointUrl);
-            req.setVersion("2.0");
-            req.setProcedureId(sensor.getCurrentDescription().getUniqueIdentifier());
-            req.setProcedureDescription(sensor.getCurrentDescription());
-            req.setProcedureDescriptionFormat(InsertSensorRequest.DEFAULT_PROCEDURE_FORMAT);
-            
-            sosUtils.sendRequest(req, false);
-        }
-        catch (SensorException e)
-        {
-            throw new RuntimeException("Cannot get SensorML description for sensor " + sensor.getName());
-        }
+        // build update sensor request
+        UpdateSensorRequest req = new UpdateSensorRequest(SOSUtils.SOS);
+        req.setPostServer(config.sosEndpointUrl);
+        req.setVersion("2.0");
+        req.setProcedureId(sensor.getCurrentDescription().getUniqueIdentifier());
+        req.setProcedureDescription(sensor.getCurrentDescription());
+        req.setProcedureDescriptionFormat(InsertSensorRequest.DEFAULT_PROCEDURE_FORMAT);
+        
+        // send request
+        sosUtils.sendRequest(req, false);
     }
     
     

@@ -208,15 +208,7 @@ public abstract class StreamDataProviderFactory<ProducerType extends IDataProduc
     public AbstractProcess generateSensorMLDescription(double time) throws ServiceException
     {
         checkEnabled();
-        
-        try
-        {
-            return producer.getCurrentDescription();
-        }
-        catch (SensorHubException e)
-        {
-            throw new ServiceException("Cannot retrieve SensorML description of " + MsgUtils.moduleString(producer), e);
-        }
+        return producer.getCurrentDescription();
     }
     
     

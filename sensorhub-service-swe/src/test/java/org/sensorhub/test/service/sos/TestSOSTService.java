@@ -30,12 +30,10 @@ import org.apache.commons.io.IOUtils;
 import org.junit.After;
 import org.junit.Test;
 import org.sensorhub.api.module.IModule;
-import org.sensorhub.api.persistence.StorageConfig;
 import org.sensorhub.api.sensor.SensorConfig;
 import org.sensorhub.impl.SensorHub;
 import org.sensorhub.impl.SensorHubConfig;
 import org.sensorhub.impl.module.ModuleRegistry;
-import org.sensorhub.impl.persistence.InMemorySensorStorage;
 import org.sensorhub.impl.service.HttpServer;
 import org.sensorhub.impl.service.HttpServerConfig;
 import org.sensorhub.impl.service.ogc.OGCServiceConfig.CapabilitiesInfo;
@@ -94,13 +92,6 @@ public class TestSOSTService
     {   
         ModuleRegistry registry = SensorHub.getInstance().getModuleRegistry();
                 
-        // start sensorML storage module
-        StorageConfig config = new StorageConfig();
-        config.moduleClass = InMemorySensorStorage.class.getCanonicalName();
-        config.name = "SensorML DB";
-        config.enabled = true;
-        registry.loadModule(config);
-        
         // create service config
         SOSServiceConfig serviceCfg = new SOSServiceConfig();
         serviceCfg.moduleClass = SOSService.class.getCanonicalName();

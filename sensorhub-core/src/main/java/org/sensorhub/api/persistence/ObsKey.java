@@ -14,10 +14,13 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.api.persistence;
 
+import com.vividsolutions.jts.geom.Polygon;
+
 
 /**
  * <p>
- * Interface for keys used to index observations
+ * Class for keys associated to observations in SensorHub.
+ * This type of key is used to store observations in storage.
  * </p>
  *
  * @author Alex Robin <alex.robin@sensiasoftware.com>
@@ -26,14 +29,37 @@ package org.sensorhub.api.persistence;
 public class ObsKey extends DataKey
 {
     /**
-     * ID of feature of interest (i.e. the feature that was the target of the oservation)
+     * ID of feature of interest (i.e. feature whose properties were observed/measured).<br/>
+     * If value is null, observation will never be selected when filtering on FoI ID
      */
     public String foiID;
     
     
-    public ObsKey(String producerID, String foiID, long timeStamp)
+    /**
+     * Observation result time (i.e. time at which the observation result was obtained).<br/>
+     * If value is NaN, observation will never be selected when filtering on result time
+     */
+    public double resultTime = Double.NaN;
+    
+    
+    /**
+     * Sampling Geometry (i.e. area or volume in 2D or 3D space, where the observation was made).<br/>
+     * If value is null, FoI geometry is used instead when provided. If neither geometry is provided,
+     * observation will never be selected when filtering on geometry.<br/>
+     * In a given data store, all geometries must be expressed in the same coordinate reference system.
+     */
+    public Polygon samplingGeometry;
+    
+    
+    /**
+     * Default constructor providing mandatory indexing metadata
+     * @param recordType {@link #recordType}
+     * @param foiID {@link #foiID}
+     * @param timeStamp {@link #timeStamp}
+     */
+    public ObsKey(String recordType, String foiID, double timeStamp)
     {
-        super(producerID, timeStamp);
+        super(recordType, timeStamp);
         this.foiID = foiID;
     }
 }

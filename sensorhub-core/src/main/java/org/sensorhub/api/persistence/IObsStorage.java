@@ -14,21 +14,59 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.api.persistence;
 
-import java.util.List;
+import java.util.Iterator;
+import net.opengis.gml.v32.AbstractFeature;
 
 
 /**
  * <p>
- * Adds support for filtering by features of interest IDs
+ * Adds support for storing/retrieving features of interests.<br/>
+ * {@link ObsKey} and {@link IObsFilter} can be used in all record retrieval
+ * methods and concrete implementations must handle them properly (e.g. they
+ * must handle all obs filter criteria when they are specified)
  * </p>
  *
  * @author Alex Robin <alex.robin@sensiasoftware.com>
- * @since Nov 6, 2010
+ * @param <ConfigType> Type of storage configuration
+ * @since April 25, 2015
  */
-public interface IObsStorage extends ITimeSeriesDataStore<IObsFilter>
+public interface IObsStorage<ConfigType extends StorageConfig> extends IBasicStorage<ConfigType>
 {    
+    
     /**
-     * @return list of fois for which observations are available on this storage
+     * @return Number of features of interest registered in this storage
      */
-    public List<String> getFeatureOfInterestIds();
+    int getNumFois();
+    
+    
+    /**
+     * @return Iterator over IDs of features of interest for which observations
+     * are available in this storage
+     */
+    public Iterator<String> getFoiIDs();
+    
+    
+    /**
+     * Retrieves a feature of interest by unique ID
+     * @param uid unique ID of desired feature
+     * @return The feature object or null if none exist with the given UID
+     */
+    public AbstractFeature getFoi(String uid);
+    
+    
+    /**
+     * Retrieves features of interest matching the given filter 
+     * @param filter observation filter
+     * @return Iterator over matching FOIs
+     */
+    public Iterator<AbstractFeature> getFois(IObsFilter filter);
+    
+    
+    /**
+     * Stores a new feature of interest description into storage.
+     * @param foi feature object to store
+     * @throws StorageException if new FoI cannot be stored
+     */
+    public void storeFoi(AbstractFeature foi) throws StorageException;
+    
 }

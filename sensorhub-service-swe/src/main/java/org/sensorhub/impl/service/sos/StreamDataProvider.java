@@ -29,7 +29,6 @@ import org.sensorhub.api.data.DataEvent;
 import org.sensorhub.api.data.IDataProducerModule;
 import org.sensorhub.api.data.IStreamingDataInterface;
 import org.sensorhub.api.service.ServiceException;
-import org.sensorhub.utils.MsgUtils;
 import org.vast.data.DataIterator;
 import org.vast.ogc.def.DefinitionRef;
 import org.vast.ogc.gml.FeatureRef;
@@ -72,43 +71,36 @@ public abstract class StreamDataProvider implements ISOSDataProvider, IEventList
         stopTime = ((long)filter.getTimeRange().getStopTime()) * 1000L;
         
         // get list of desired stream outputs
-        try
+        dataSource.getConfiguration();
+        
+        // loop through all outputs and connect to the ones containing observables we need
+        for (IStreamingDataInterface outputInterface: dataSource.getAllOutputs().values())
         {
-            dataSource.getConfiguration();
+            // skip hidden outputs
+            if (config.hiddenOutputs != null && config.hiddenOutputs.contains(outputInterface.getName()))
+                continue;
             
-            // loop through all outputs and connect to the ones containing observables we need
-            for (IStreamingDataInterface outputInterface: dataSource.getAllOutputs().values())
+            // skip if disabled
+            if (!outputInterface.isEnabled())
+                continue;
+            
+            // keep it if we can find one of the observables
+            DataIterator it = new DataIterator(outputInterface.getRecordDescription());
+            while (it.hasNext())
             {
-                // skip hidden outputs
-                if (config.hiddenOutputs != null && config.hiddenOutputs.contains(outputInterface.getName()))
-                    continue;
-                
-                // skip if disabled
-                if (!outputInterface.isEnabled())
-                    continue;
-                
-                // keep it if we can find one of the observables
-                DataIterator it = new DataIterator(outputInterface.getRecordDescription());
-                while (it.hasNext())
+                String defUri = (String)it.next().getDefinition();
+                if (filter.getObservables().contains(defUri))
                 {
-                    String defUri = (String)it.next().getDefinition();
-                    if (filter.getObservables().contains(defUri))
-                    {
-                        // set to time out if no data is received after 10 sampling periods or min 5s
-                        timeOut = (long)(outputInterface.getAverageSamplingPeriod() * 10. * 1000.);
-                        timeOut = Math.max(timeOut, 5000L);
-                        sourceOutputs.add(outputInterface);
-                        
-                        // break for now since we support only requesting data from one output at a time
-                        // TODO support case of multiple outputs since it is technically possible with GetObservation
-                        break; 
-                    }
+                    // set to time out if no data is received after 10 sampling periods or min 5s
+                    timeOut = (long)(outputInterface.getAverageSamplingPeriod() * 10. * 1000.);
+                    timeOut = Math.max(timeOut, 5000L);
+                    sourceOutputs.add(outputInterface);
+                    
+                    // break for now since we support only requesting data from one output at a time
+                    // TODO support case of multiple outputs since it is technically possible with GetObservation
+                    break; 
                 }
             }
-        }
-        catch (SensorHubException e)
-        {
-            throw new ServiceException("Error while fetching output description for data source " + MsgUtils.moduleString(dataSource), e);
         }
         
         // if everything went well listen for events on the selected outputs

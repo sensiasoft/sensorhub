@@ -14,25 +14,42 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.api.persistence;
 
+import java.util.Set;
+
 
 /**
  * <p>
- * Base interface for filter objects allowing to get records by criteria
+ * Basic filter interface to get time series data records from storage.<br/>
+ * There is an implicit logical AND between all criteria.
  * </p>
  *
  * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @since Nov 12, 2010
  */
 public interface IDataFilter
-{    
+{   
+    
     /**
-     * @return the time stamp range to filter on
+     * @return the record type that needs to be retrieved (cannot be null)
+     */
+    public String getRecordType();
+    
+    
+    /**
+     * Gets filter criteria for selecting data records based on time stamp.<br/>
+     * Only records whose time stamp (usually sampling time for sensors) lies within
+     * that range will be selected (range is inclusive).<br/>
+     * If range is null, no filtering on time stamp will be applied.
+     * @return Desired time stamp range
      */
     public double[] getTimeStampRange();
     
     
     /**
-     * @return the producer ID to filter on
+     * Gets filter criteria for selecting data records associated to certain producers.<br/>
+     * Only data records associated to one of the listed producer IDs will be selected.<br/>
+     * If the list is null or empty, no filtering on producer ID will be applied.
+     * @return List of desired producer IDs
      */
-    public String getProducerID();
+    public Set<String> getProducerIDs();
 }

@@ -18,7 +18,7 @@ import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataEncoding;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.persistence.IBasicStorage;
-import org.sensorhub.api.persistence.ITimeSeriesDataStore;
+import org.sensorhub.api.persistence.IRecordInfo;
 import org.sensorhub.impl.SensorHub;
 import org.sensorhub.impl.module.ModuleRegistry;
 import org.vast.ows.sos.ISOSDataConsumer;
@@ -47,8 +47,8 @@ public class SensorWithStorageConsumer extends SensorDataConsumer implements ISO
         this.sensor.setSensorDescription(storage.getLatestDataSourceDescription());
         
         // reassign existing templates
-        for (ITimeSeriesDataStore<?> dataStore: storage.getDataStores().values())
-            sensor.newResultTemplate(dataStore.getRecordDescription(), dataStore.getRecommendedEncoding());
+        for (IRecordInfo recordType: storage.getRecordTypes().values())
+            sensor.newResultTemplate(recordType.getRecordDescription(), recordType.getRecommendedEncoding());
     }
 
 
@@ -58,8 +58,8 @@ public class SensorWithStorageConsumer extends SensorDataConsumer implements ISO
         String templateID = sensor.newResultTemplate(component, encoding);
         
         // add additional datastore if not already there
-        if (!storage.getDataStores().containsKey(templateID))
-            storage.addNewDataStore(templateID, component, encoding);
+        if (!storage.getRecordTypes().containsKey(templateID))
+            storage.addRecordType(templateID, component, encoding);
         
         return templateID;
     }

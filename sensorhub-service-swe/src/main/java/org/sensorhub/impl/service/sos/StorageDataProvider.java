@@ -21,11 +21,11 @@ import java.util.Map.Entry;
 import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataEncoding;
-import org.sensorhub.api.persistence.DataKey;
 import org.sensorhub.api.persistence.IBasicStorage;
+import org.sensorhub.api.persistence.DataFilter;
 import org.sensorhub.api.persistence.IDataFilter;
 import org.sensorhub.api.persistence.IDataRecord;
-import org.sensorhub.api.persistence.ITimeSeriesDataStore;
+import org.sensorhub.api.persistence.IRecordInfo;
 import org.sensorhub.api.sensor.SensorException;
 import org.vast.data.DataIterator;
 import org.vast.ogc.def.DefinitionRef;
@@ -62,9 +62,9 @@ public class StorageDataProvider implements ISOSDataProvider
     
     class StorageState
     {
-        ITimeSeriesDataStore<IDataFilter> dataStore;
-        Iterator<? extends IDataRecord<DataKey>> recordIterator;
-        IDataRecord<DataKey> nextRecord;        
+        IRecordInfo recordInfo;
+        Iterator<? extends IDataRecord> recordIterator;
+        IDataRecord nextRecord;        
     }
     
     
@@ -80,40 +80,35 @@ public class StorageDataProvider implements ISOSDataProvider
             filter.getTimeRange().getStopTime()
         };
         
-        // prepare record filter
-        IDataFilter storageFilter = new IDataFilter() {
-
-            @Override
-            public double[] getTimeStampRange()
-            {
-                return timePeriod;
-            }
-
-            @Override
-            public String getProducerID()
-            {
-                return null;
-            }
-        };
-
         // loop through all outputs and connect to the ones containing observables we need
-        for (Entry<String, ? extends ITimeSeriesDataStore<IDataFilter>> dsEntry: storage.getDataStores().entrySet())
+        for (Entry<String, ? extends IRecordInfo> dsEntry: storage.getRecordTypes().entrySet())
         {
             // skip hidden outputs
             if (config.hiddenOutputs != null && config.hiddenOutputs.contains(dsEntry.getKey()))
                 continue;
             
+            IRecordInfo recordInfo = dsEntry.getValue();
+            String recordType = recordInfo.getRecordType();          
+                     
             // keep it if we can find one of the observables
-            ITimeSeriesDataStore<IDataFilter> dataStore = dsEntry.getValue();
-            DataIterator it = new DataIterator(dataStore.getRecordDescription());
+            DataIterator it = new DataIterator(recordInfo.getRecordDescription());
             while (it.hasNext())
             {
                 String defUri = (String)it.next().getDefinition();
                 if (filter.getObservables().contains(defUri))
                 {
+                    // prepare record filter
+                    IDataFilter storageFilter = new DataFilter(recordType) {
+                        @Override
+                        public double[] getTimeStampRange()
+                        {
+                            return timePeriod;
+                        }
+                    };
+                    
                     StorageState state = new StorageState();
-                    state.dataStore = dataStore;
-                    state.recordIterator = dataStore.getRecordIterator(storageFilter);
+                    state.recordInfo = recordInfo;
+                    state.recordIterator = storage.getRecordIterator(storageFilter);
                     if (state.recordIterator.hasNext()) // prefetch first record
                         state.nextRecord = state.recordIterator.next();
                     dataStoresStates.add(state);
@@ -237,7 +232,7 @@ public class StorageDataProvider implements ISOSDataProvider
         }        
         
         // return record properly filtered according to selected observables
-        return recordFilter.getFilteredRecord(state.dataStore.getRecordDescription(), datablk);
+        return recordFilter.getFilteredRecord(state.recordInfo.getRecordDescription(), datablk);
     }
     
 
@@ -246,14 +241,14 @@ public class StorageDataProvider implements ISOSDataProvider
     {
         // TODO generate choice if request includes several outputs
         
-        return dataStoresStates.get(0).dataStore.getRecordDescription();
+        return dataStoresStates.get(0).recordInfo.getRecordDescription();
     }
     
 
     @Override
     public DataEncoding getDefaultResultEncoding()
     {
-        return dataStoresStates.get(0).dataStore.getRecommendedEncoding();
+        return dataStoresStates.get(0).recordInfo.getRecommendedEncoding();
     }
 
 
