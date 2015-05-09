@@ -49,10 +49,10 @@ public interface ISensorModule<ConfigType extends SensorConfig> extends IDataPro
 
 
     /**
-     * Retrieves most current sensor description
+     * Retrieves most current sensor description.
      */
     @Override
-    public AbstractProcess getCurrentDescription() throws SensorException;
+    public AbstractProcess getCurrentDescription();
 
 
     /**
@@ -91,34 +91,30 @@ public interface ISensorModule<ConfigType extends SensorConfig> extends IDataPro
 
     /**
      * Retrieves the list of interfaces to all sensor data outputs
-     * @throws SensorException 
      */
     @Override
-    public Map<String, ? extends ISensorDataInterface> getAllOutputs() throws SensorException;
+    public Map<String, ? extends ISensorDataInterface> getAllOutputs();
 
 
     /**
      * Retrieves the list of interface to sensor status outputs
      * @return map of output names -> data interface objects
-     * @throws SensorException 
      */
-    public Map<String, ? extends ISensorDataInterface> getStatusOutputs() throws SensorException;
+    public Map<String, ? extends ISensorDataInterface> getStatusOutputs();
 
 
     /**
      * Retrieves the list of interface to sensor observation outputs
      * @return map of output names -> data interface objects
-     * @throws SensorException 
      */
-    public Map<String, ? extends ISensorDataInterface> getObservationOutputs() throws SensorException;
+    public Map<String, ? extends ISensorDataInterface> getObservationOutputs();
 
 
     /**
      * Retrieves the list of interface to sensor command inputs
      * @return map of input names -> control interface objects
-     * @throws SensorException 
      */
-    public Map<String, ? extends ISensorControlInterface> getCommandInputs() throws SensorException;
+    public Map<String, ? extends ISensorControlInterface> getCommandInputs();
 
 
     /**

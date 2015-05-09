@@ -15,7 +15,6 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 package org.sensorhub.api.data;
 
 import net.opengis.sensorml.v20.AbstractProcess;
-import org.sensorhub.api.common.SensorHubException;
 
 
 /**
@@ -31,11 +30,12 @@ public interface IModuleWithDescription
 {
 
     /**
-     * Retrieves most current SensorML description of this module
+     * Retrieves most current SensorML description of this module.
+     * All implementations must return an instance of AbstractProcess with a
+     * valid unique identifier.
      * @return AbstractProcess object containing all metadata about the module
-     * @throws SensorHubException 
      */
-    public abstract AbstractProcess getCurrentDescription() throws SensorHubException;
+    public abstract AbstractProcess getCurrentDescription();
 
 
     /**

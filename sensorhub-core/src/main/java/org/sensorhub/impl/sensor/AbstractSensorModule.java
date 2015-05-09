@@ -121,7 +121,7 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
 
 
     @Override
-    public AbstractProcess getCurrentDescription() throws SensorException
+    public AbstractProcess getCurrentDescription()
     {
         synchronized (sensorDescription)
         {
@@ -141,7 +141,7 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
      * time stamp and send a SENSOR_CHANGED event when 
      * @throws SensorException
      */
-    protected void updateSensorDescription() throws SensorException
+    protected void updateSensorDescription()
     {
         synchronized (sensorDescription)
         {
@@ -156,8 +156,8 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
                 }
                 catch (IOException e)
                 {
-                    throw new SensorException("Error while parsing static SensorML description for sensor " +
-                                                MsgUtils.moduleString(this), e);
+                    throw new IllegalStateException("Error while parsing static SensorML description for sensor " +
+                                                    MsgUtils.moduleString(this), e);
                 }
             }
             else
@@ -252,7 +252,7 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
 
 
     @Override
-    public Map<String, ISensorDataInterface> getAllOutputs() throws SensorException
+    public Map<String, ISensorDataInterface> getAllOutputs()
     {
         Map<String, ISensorDataInterface> allOutputs = new LinkedHashMap<String, ISensorDataInterface>();  
         allOutputs.putAll(obsOutputs);
@@ -262,21 +262,21 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
 
 
     @Override
-    public Map<String, ISensorDataInterface> getStatusOutputs() throws SensorException
+    public Map<String, ISensorDataInterface> getStatusOutputs()
     {
         return Collections.unmodifiableMap(statusOutputs);
     }
 
 
     @Override
-    public Map<String, ISensorDataInterface> getObservationOutputs() throws SensorException
+    public Map<String, ISensorDataInterface> getObservationOutputs()
     {
         return Collections.unmodifiableMap(obsOutputs);
     }
 
 
     @Override
-    public Map<String, ISensorControlInterface> getCommandInputs() throws SensorException
+    public Map<String, ISensorControlInterface> getCommandInputs()
     {
         return Collections.unmodifiableMap(controlInputs);
     }

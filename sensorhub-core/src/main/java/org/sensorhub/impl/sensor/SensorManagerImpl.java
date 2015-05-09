@@ -22,7 +22,6 @@ import org.sensorhub.api.module.IModuleProvider;
 import org.sensorhub.api.module.ModuleConfig;
 import org.sensorhub.api.sensor.ISensorModule;
 import org.sensorhub.api.sensor.ISensorManager;
-import org.sensorhub.api.sensor.SensorException;
 import org.sensorhub.impl.module.ModuleRegistry;
 
 
@@ -101,14 +100,8 @@ public class SensorManagerImpl implements ISensorManager
         List<ISensorModule<?>> enabledSensors = getLoadedModules();
         for (ISensorModule<?> sensor: enabledSensors)
         {
-            try
-            {
-                if (uid.equals(sensor.getCurrentDescription().getIdentifier()))
-                    return sensor;
-            }
-            catch (SensorException e)
-            {
-            }
+            if (uid.equals(sensor.getCurrentDescription().getIdentifier()))
+                return sensor;
         }
         
         return null;

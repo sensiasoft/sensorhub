@@ -79,7 +79,7 @@ public class FakeSensor extends AbstractSensorModule<SensorConfig>
 
 
     @Override
-    protected void updateSensorDescription() throws SensorException
+    protected void updateSensorDescription()
     {
         synchronized (sensorDescription)
         {

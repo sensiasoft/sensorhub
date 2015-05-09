@@ -15,7 +15,6 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 package org.sensorhub.api.data;
 
 import java.util.Map;
-import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.module.IModule;
 import org.sensorhub.api.module.ModuleConfig;
 
@@ -35,8 +34,7 @@ public interface IDataProducerModule<ConfigType extends ModuleConfig> extends IM
     /**
      * Retrieves the list of data outputs
      * @return map of output names -> data interface objects
-     * @throws SensorHubException 
      */
-    public Map<String, ? extends IStreamingDataInterface> getAllOutputs() throws SensorHubException;
+    public Map<String, ? extends IStreamingDataInterface> getAllOutputs();
     
 }

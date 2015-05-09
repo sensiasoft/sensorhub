@@ -141,14 +141,14 @@ public abstract class AbstractStreamProcess<ConfigType extends StreamProcessConf
     
     
     @Override
-    public Map<String, IStreamingDataInterface> getAllOutputs() throws SensorHubException
+    public Map<String, IStreamingDataInterface> getAllOutputs()
     {
         return Collections.unmodifiableMap(outputInterfaces);
     }
 
 
     @Override
-    public AbstractProcess getCurrentDescription() throws SensorHubException
+    public AbstractProcess getCurrentDescription()
     {
         if (processDescription == null)
         {
@@ -357,8 +357,7 @@ public abstract class AbstractStreamProcess<ConfigType extends StreamProcessConf
         if (e instanceof DataEvent)
         {
             // retrieve input data attached to the event source interface
-            IStreamingDataInterface streamInterface = ((DataEvent)e).getSource();
-            InputData inputData = streamSources.get(streamInterface);
+            InputData inputData = streamSources.get(e.getSource());
             
             // check if streaming interface is still available
             // if source module was unloaded, it could have been GCed
