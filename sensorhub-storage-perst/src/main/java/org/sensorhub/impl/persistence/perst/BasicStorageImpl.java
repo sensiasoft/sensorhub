@@ -275,6 +275,7 @@ public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> impleme
     @Override
     public void addRecordType(String name, DataComponent recordStructure, DataEncoding recommendedEncoding) throws StorageException
     {
+        recordStructure.setName(name);
         TimeSeriesImpl newTimeSeries = new TimeSeriesImpl(db, recordStructure, recommendedEncoding);
         dbRoot.dataStores.put(name, newTimeSeries);
         db.modify(dbRoot);

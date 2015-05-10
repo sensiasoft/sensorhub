@@ -15,6 +15,7 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 package org.sensorhub.test.persistence;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -44,139 +45,275 @@ import org.sensorhub.test.TestUtils;
  */
 public abstract class AbstractTestObsStorage<StorageType extends IObsStorage<?>> extends AbstractTestBasicStorage<StorageType>
 {
-          
-    @Test
-    public void testStoreOneFoiAndGetMultipleRecordsByFoiID() throws Exception
+    static String[] FOI_SET1_IDS = new String[]
     {
-        DataBlock data;
-        ObsKey key;
-        
-        final String recordType = "ds2";
-        DataComponent recordDef = createDs2();
-        
+        "urn:domain:features:foi001",
+        "urn:domain:features:foi002",
+        "urn:domain:features:foi003"
+    };
+    
+    static int[] FOI_SET1_STARTS = new int[] {0, 20, 60};
+    
+    
+    String[] FOI_IDS = FOI_SET1_IDS;
+    int[] FOI_STARTS = FOI_SET1_STARTS;
+    
+    
+    
+    protected List<DataBlock> addObservationsWithFoiToStorage(DataComponent recordDef) throws Exception
+    {
         // write N records
-        final String foiID = "urn:domain:features:foi001";
         final double timeStep = 0.1;
         final int numRecords = 100;
         List<DataBlock> dataList = new ArrayList<DataBlock>(numRecords);
         storage.setAutoCommit(false);
         for (int i=0; i<numRecords; i++)
         {
-            data = recordDef.createDataBlock();
-            data.setDoubleValue(0, i - 0.3);
+            DataBlock data = recordDef.createDataBlock();
+            data.setDoubleValue(0, i*0.1);
             data.setIntValue(1, 3*i);
-            data.setStringValue(2, "testfilter" + i);
+            data.setStringValue(2, "test" + i);
             dataList.add(data);
-            key = new ObsKey(recordType, foiID, i*timeStep);
+            String foiID = null;
+            for (int f=0; f<FOI_IDS.length; f++)
+            {
+                if (i >= FOI_STARTS[f])
+                    foiID = FOI_IDS[f];
+            }
+            ObsKey key = new ObsKey(recordDef.getName(), foiID, i*timeStep);
             storage.storeRecord(key, data);
         }
+        
         storage.commit();
         forceReadBackFromStorage();
         
-        // prepare filter
-        IObsFilter filter = new ObsFilter(recordType) {
-            public Set<String> getFoiIDs()
-            {
-                Set<String> foiSet = new HashSet<String>();
-                foiSet.add(foiID);
-                return foiSet;
-            }
+        return dataList;
+    }
+    
+    
+    protected IObsFilter buildFilterByFoiID(DataComponent recordDef, List<DataBlock> dataList, final int[] foiIndexes)
+    {
+        final Set<String> foiSet = new HashSet<String>();
+        for (int index: foiIndexes)
+            foiSet.add(FOI_IDS[index]);
+        
+        // generate filter
+        IObsFilter filter = new ObsFilter(recordDef.getName()) {
+            public Set<String> getFoiIDs() { return foiSet; }
         };
         
-        // retrieve data blocks and check their values
+        // filter dataList to provide ground truth
         int i = 0;
+        Iterator<DataBlock> it = dataList.iterator();
+        while (it.hasNext())
+        {
+            it.next();
+            boolean foundFoi = false;
+            
+            // check foi index ranges
+            for (int index: foiIndexes)
+            {
+                int startIndex = FOI_STARTS[index];
+                int endIndex = (index == FOI_IDS.length-1) ? 100 : FOI_STARTS[index+1];
+                
+                if (i >= startIndex && i <= endIndex-1)
+                {
+                    foundFoi = true;
+                    break;
+                }
+            }
+            
+            if (!foundFoi)
+                it.remove();
+            
+            i++;
+        }
+        
+        return filter;
+    }
+    
+    
+    protected IObsFilter buildFilterByFoiIDAndTime(DataComponent recordDef, List<DataBlock> dataList, int[] foiIndexes, final double[] timeRange)
+    {
+        final Set<String> foiSet = new HashSet<String>();
+        for (int index: foiIndexes)
+            foiSet.add(FOI_IDS[index]);
+        
+        // generate filter
+        IObsFilter filter = new ObsFilter(recordDef.getName()) {
+            public double[] getTimeStampRange() { return timeRange; }
+            public Set<String> getFoiIDs() { return foiSet; }
+        };
+        
+        // filter dataList to provide ground truth
+        int i = 0;
+        Iterator<DataBlock> it = dataList.iterator();
+        while (it.hasNext())
+        {
+            DataBlock data = it.next();
+            double timeStamp = data.getDoubleValue(0);
+            boolean foundFoi = false;
+            
+            // remove if not this FOI record or if not within time range
+            // check foi index ranges
+            for (int index: foiIndexes)
+            {
+                int startIndex = FOI_STARTS[index];
+                int endIndex = (index == FOI_IDS.length-1) ? 100 : FOI_STARTS[index+1];
+                
+                if (i >= startIndex && i <= endIndex-1)
+                {
+                    foundFoi = true;
+                    break;
+                }
+            }
+            
+            if (!foundFoi || timeStamp < timeRange[0] || timeStamp > timeRange[1])
+                it.remove();
+            
+            i++;
+        }
+        
+        return filter;
+    }
+    
+    
+    protected void checkFilteredResults(IObsFilter filter, List<DataBlock> dataList) throws Exception
+    {
+        int i;
+        
+        // check data blocks
+        i = 0;
         Iterator<DataBlock> it1 = storage.getDataBlockIterator(filter);
         while (it1.hasNext())
         {
             TestUtils.assertEquals(dataList.get(i), it1.next());
             i++;
         }
-    
-        // retrieve records and check their values
+        
+        assertEquals("Wrong number of records", dataList.size(), i);
+        
+        // check full DB records
         i = 0;
         Iterator<? extends IDataRecord> it2 = storage.getRecordIterator(filter);
         while (it2.hasNext())
         {
-            TestUtils.assertEquals(dataList.get(i), it2.next().getData());
+            IDataRecord dbRec = it2.next();
+            TestUtils.assertEquals(dataList.get(i), dbRec.getData());
+            assertTrue(filter.getFoiIDs().contains(((ObsKey)dbRec.getKey()).foiID));
             i++;
+        }
+        
+        assertEquals("Wrong number of records", dataList.size(), i);
+    }
+    
+    
+    @Test
+    public void testStoreOneFoiAndGetRecordsByFoiID() throws Exception
+    {
+        FOI_IDS = new String[] {"urn:domain:features:myfoi"};
+        FOI_STARTS = new int[1];
+        DataComponent recordDef = createDs2();
+        List<DataBlock> dataList = addObservationsWithFoiToStorage(recordDef);
+        
+        int[] foiIndex = new int[] { 0 };
+        IObsFilter filter = buildFilterByFoiID(recordDef, dataList, foiIndex);
+        checkFilteredResults(filter, dataList);
+    }
+    
+    
+    @Test
+    public void testGetRecordsForOneFoiID() throws Exception
+    {
+        DataComponent recordDef = createDs2();
+        List<DataBlock> dataList = addObservationsWithFoiToStorage(recordDef);
+        List<DataBlock> testList = new ArrayList<DataBlock>(dataList.size());
+        
+        for (int foiIndex = 0; foiIndex < FOI_IDS.length; foiIndex++)
+        {
+            testList.clear();
+            testList.addAll(dataList);
+            IObsFilter filter = buildFilterByFoiID(recordDef, testList, new int[] {foiIndex});
+            checkFilteredResults(filter, testList);
         }
     }
     
     
     @Test
-    public void testStoreMultipleFoisAndGetMultipleRecordsByFoiID() throws Exception
+    public void testGetRecordsForMultipleFoiIDs() throws Exception
     {
-        DataBlock data;
-        ObsKey key;
-        
-        final String recordType = "ds2";
         DataComponent recordDef = createDs2();
+        List<DataBlock> dataList = addObservationsWithFoiToStorage(recordDef);
+        List<DataBlock> testList = new ArrayList<DataBlock>(dataList.size());
         
-        // write N records
-        final String foi1 = "urn:domain:features:foi001";
-        final String foi2 = "urn:domain:features:foi002";
-        final String foi3 = "urn:domain:features:foi003";
-        final double timeStep = 0.1;
-        final int numRecords = 100;
-        int foi2StartIndex = 20;
-        int foi3StartIndex = 60;
-        List<DataBlock> dataList = new ArrayList<DataBlock>(numRecords);
-        storage.setAutoCommit(false);
-        for (int i=0; i<numRecords; i++)
-        {
-            data = recordDef.createDataBlock();
-            data.setDoubleValue(0, i - 0.3);
-            data.setIntValue(1, 3*i);
-            data.setStringValue(2, "testfilter" + i);
-            dataList.add(data);
-            String foiID = foi1;
-            if (i >= foi3StartIndex)
-                foiID = foi3;
-            else if (i >= foi2StartIndex)
-                foiID = foi2;
-            key = new ObsKey(recordType, foiID, i*timeStep);
-            storage.storeRecord(key, data);
-        }
-        storage.commit();
-        forceReadBackFromStorage();
+        // FOI 1 and 2
+        testList.clear();
+        testList.addAll(dataList);
+        IObsFilter filter = buildFilterByFoiID(recordDef, testList, new int[] {0, 1});
+        checkFilteredResults(filter, testList);
         
-        // retrieve Foi1 records and check their values
-        IObsFilter filter = new ObsFilter(recordType) {
-            public Set<String> getFoiIDs()
-            {
-                Set<String> foiSet = new HashSet<String>();
-                foiSet.add(foi1);
-                return foiSet;
-            }
-        };
+        // FOI 1 and 3
+        testList.clear();
+        testList.addAll(dataList);
+        filter = buildFilterByFoiID(recordDef, testList, new int[] {0, 2});
+        checkFilteredResults(filter, testList);
         
-        int i = 0;
-        Iterator<? extends IDataRecord> it = storage.getRecordIterator(filter);
-        while (it.hasNext())
-        {
-            TestUtils.assertEquals(dataList.get(i), it.next().getData());
-            i++;
-        }
-        assertEquals(foi2StartIndex, i);
+        // FOI 3 and 2
+        testList.clear();
+        testList.addAll(dataList);
+        filter = buildFilterByFoiID(recordDef, testList, new int[] {2, 1});
+        checkFilteredResults(filter, testList);
+        
+        // FOI 2, 1 and 3
+        testList.clear();
+        testList.addAll(dataList);
+        filter = buildFilterByFoiID(recordDef, testList, new int[] {1, 0, 2});
+        checkFilteredResults(filter, testList);
+    }
     
-        // retrieve Foi2 records and check their values
-        filter = new ObsFilter(recordType) {
-            public Set<String> getFoiIDs()
-            {
-                Set<String> foiSet = new HashSet<String>();
-                foiSet.add(foi2);
-                return foiSet;
-            }
-        };
+    
+    @Test
+    public void testGetRecordsForOneFoiIDAndTime() throws Exception
+    {
+        DataComponent recordDef = createDs2();
+        List<DataBlock> dataList = addObservationsWithFoiToStorage(recordDef);
+        List<DataBlock> testList = new ArrayList<DataBlock>(dataList.size());
         
-        i = foi2StartIndex;
-        it = storage.getRecordIterator(filter);
-        while (it.hasNext())
+        double[] timeRange1 = new double[] {1.0, 8.4};
+        
+        // test FOI 1 by 1
+        for (int foiIndex = 0; foiIndex < FOI_IDS.length; foiIndex++)
         {
-            TestUtils.assertEquals(dataList.get(i), it.next().getData());
-            i++;
+            testList.clear();
+            testList.addAll(dataList);
+            IObsFilter filter = buildFilterByFoiIDAndTime(recordDef, testList, new int[] {foiIndex}, timeRange1);
+            checkFilteredResults(filter, testList);
         }
-        assertEquals(foi3StartIndex, i);
+    }
+    
+    
+    @Test
+    public void testGetRecordsForMultipleFoiIDsAndTime() throws Exception
+    {
+        DataComponent recordDef = createDs2();
+        List<DataBlock> dataList = addObservationsWithFoiToStorage(recordDef);
+        List<DataBlock> testList = new ArrayList<DataBlock>(dataList.size());
+        double[] timeRange;
+        IObsFilter filter;
+        
+        // FOI 1 and 2
+        timeRange = new double[] {1.0, 8.4};
+        testList.clear();
+        testList.addAll(dataList);
+        filter = buildFilterByFoiIDAndTime(recordDef, testList, new int[] {0, 1}, timeRange);
+        checkFilteredResults(filter, testList);
+        
+        // FOI 3 and 2
+        timeRange = new double[] {2.5, 8.4};
+        testList.clear();
+        testList.addAll(dataList);
+        filter = buildFilterByFoiIDAndTime(recordDef, testList, new int[] {2, 1}, timeRange);
+        checkFilteredResults(filter, testList);
     }
     
 }

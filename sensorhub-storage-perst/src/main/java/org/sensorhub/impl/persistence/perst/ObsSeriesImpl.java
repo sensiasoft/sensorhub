@@ -66,8 +66,27 @@ public class ObsSeriesImpl extends TimeSeriesImpl
         {
             Set<FoiTimePeriod> foiTimes = foiTimesStore.getSortedFoiTimes(foiIDs);
             
-            // adjust periods using filter time range
-            
+            // trim periods to filter time range if specified
+            double[] timeRange = filter.getTimeStampRange();
+            if (timeRange != null)
+            {
+                Iterator<FoiTimePeriod> it = foiTimes.iterator();
+                while (it.hasNext())
+                {
+                    FoiTimePeriod foiTime = it.next();
+                    
+                    // trim foi period to filter time range
+                    if (foiTime.timePeriod[0] < timeRange[0])
+                        foiTime.timePeriod[0] = timeRange[0];
+                    
+                    if (foiTime.timePeriod[1] > timeRange[1])
+                        foiTime.timePeriod[1] = timeRange[1];
+                                    
+                    // case period is completely outside of time range
+                    if (foiTime.timePeriod[0] >= foiTime.timePeriod[1])
+                        it.remove();
+                }
+            }
             
             return foiTimes;
         }

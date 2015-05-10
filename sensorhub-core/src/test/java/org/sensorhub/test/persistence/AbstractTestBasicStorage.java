@@ -70,7 +70,8 @@ public abstract class AbstractTestBasicStorage<StorageType extends IBasicStorage
     protected DataComponent createDs1() throws Exception
     {
         DataComponent recordDesc = new QuantityImpl();
-        storage.addRecordType("ds1", recordDesc, new TextEncodingImpl());
+        recordDesc.setName("ds1");
+        storage.addRecordType(recordDesc.getName(), recordDesc, new TextEncodingImpl());
         return recordDesc;
     }
     
@@ -78,6 +79,7 @@ public abstract class AbstractTestBasicStorage<StorageType extends IBasicStorage
     protected DataComponent createDs2() throws Exception
     {
         DataComponent recordDesc = new DataRecordImpl();
+        recordDesc.setName("ds2");
         recordDesc.setDefinition("urn:auth:blabla:record-stuff");
         Quantity q = new QuantityImpl();
         q.setLabel("My Quantity");
@@ -85,7 +87,7 @@ public abstract class AbstractTestBasicStorage<StorageType extends IBasicStorage
         recordDesc.addComponent("c1", q);
         recordDesc.addComponent("c2", new CountImpl());
         recordDesc.addComponent("c3", new TextImpl());
-        storage.addRecordType("ds2", recordDesc, new TextEncodingImpl());
+        storage.addRecordType(recordDesc.getName(), recordDesc, new TextEncodingImpl());
         return recordDesc;
     }
     
@@ -93,9 +95,10 @@ public abstract class AbstractTestBasicStorage<StorageType extends IBasicStorage
     protected DataComponent createDs3(DataComponent nestedRec) throws Exception
     {
         DataComponent recordDesc = new DataArrayImpl(10);
+        recordDesc.setName("ds3");
         recordDesc.setDefinition("urn:auth:blabla:array-stuff");
         ((DataArray)recordDesc).setElementType("elt", nestedRec);
-        storage.addRecordType("ds3", recordDesc, new BinaryEncodingImpl());
+        storage.addRecordType(recordDesc.getName(), recordDesc, new BinaryEncodingImpl());
         return recordDesc;
     }
     
@@ -104,7 +107,6 @@ public abstract class AbstractTestBasicStorage<StorageType extends IBasicStorage
     public void testCreateDataStores() throws Exception
     {
         Map<String, ? extends IRecordInfo> recordTypes;
-        String dataStoreName;
         
         DataComponent recordDs1 = createDs1();
         recordTypes = storage.getRecordTypes();
@@ -116,21 +118,18 @@ public abstract class AbstractTestBasicStorage<StorageType extends IBasicStorage
         
         forceReadBackFromStorage();
         recordTypes = storage.getRecordTypes();
-        dataStoreName = "ds1";
-        TestUtils.assertEquals(recordDs1, recordTypes.get(dataStoreName).getRecordDescription());
-        assertEquals(TextEncodingImpl.class, recordTypes.get(dataStoreName).getRecommendedEncoding().getClass());
+        TestUtils.assertEquals(recordDs1, recordTypes.get(recordDs1.getName()).getRecordDescription());
+        assertEquals(TextEncodingImpl.class, recordTypes.get(recordDs1.getName()).getRecommendedEncoding().getClass());
         
-        dataStoreName = "ds2";
-        TestUtils.assertEquals(recordDs2, recordTypes.get(dataStoreName).getRecordDescription());
-        assertEquals(TextEncodingImpl.class, recordTypes.get(dataStoreName).getRecommendedEncoding().getClass());
+        TestUtils.assertEquals(recordDs2, recordTypes.get(recordDs2.getName()).getRecordDescription());
+        assertEquals(TextEncodingImpl.class, recordTypes.get(recordDs2.getName()).getRecommendedEncoding().getClass());
         
-        dataStoreName = "ds3";
         DataComponent recordDs3 = createDs3(recordDs2);
         forceReadBackFromStorage();
         recordTypes = storage.getRecordTypes();
         assertEquals(3, recordTypes.size());        
-        TestUtils.assertEquals(recordDs3, recordTypes.get(dataStoreName).getRecordDescription());
-        assertEquals(BinaryEncodingImpl.class, recordTypes.get(dataStoreName).getRecommendedEncoding().getClass());
+        TestUtils.assertEquals(recordDs3, recordTypes.get(recordDs3.getName()).getRecordDescription());
+        assertEquals(BinaryEncodingImpl.class, recordTypes.get(recordDs3.getName()).getRecommendedEncoding().getClass());
     }
     
     
@@ -208,35 +207,32 @@ public abstract class AbstractTestBasicStorage<StorageType extends IBasicStorage
     @Test
     public void testStoreAndGetRecordsByKey() throws Exception
     {
-        String recordType;
         DataBlock data, readData;
         DataKey key;
         
         // test data store #1
-        recordType = "ds1";
-        data = createDs1().createDataBlock();
+        DataComponent recordDs1 = createDs1();
+        data = recordDs1.createDataBlock();
         data.setDoubleValue(0.95);
-        key = new DataKey(recordType, 12.0);
+        key = new DataKey(recordDs1.getName(), 12.0);
         storage.storeRecord(key, data);
         forceReadBackFromStorage();
         readData = storage.getDataBlock(key);
         TestUtils.assertEquals(data, readData);
         
         // test data store #2
-        recordType = "ds2";
         DataComponent recordDs2 = createDs2();
         data = recordDs2.createDataBlock();
         data.setDoubleValue(0, 1.0);
         data.setIntValue(1, 2);
         data.setStringValue(2, "test");
-        key = new DataKey(recordType, 123.0);
+        key = new DataKey(recordDs2.getName(), 123.0);
         storage.storeRecord(key, data);
         forceReadBackFromStorage();
         readData = storage.getDataBlock(key);
         TestUtils.assertEquals(data, readData);
         
         // test data store #3
-        recordType = "ds3";
         DataArray recordDs3 = (DataArray)createDs3(recordDs2);
         data = recordDs3.createDataBlock();
         int arraySize = recordDs3.getElementCount().getValue();
@@ -247,7 +243,7 @@ public abstract class AbstractTestBasicStorage<StorageType extends IBasicStorage
             data.setIntValue(offset++, 2*i);
             data.setStringValue(offset++, "test" + i);
         }
-        key = new DataKey(recordType, 10.);
+        key = new DataKey(recordDs3.getName(), 10.);
         storage.storeRecord(key, data);
         forceReadBackFromStorage();
         readData = storage.getDataBlock(key);
@@ -258,11 +254,9 @@ public abstract class AbstractTestBasicStorage<StorageType extends IBasicStorage
     @Test
     public void testStoreAndGetMultipleRecordsByKey() throws Exception
     {
-        String recordType;
         DataBlock data;
         DataKey key;
         
-        recordType = "ds2";
         DataComponent recordDef = createDs2();
         
         // write N records
@@ -277,7 +271,7 @@ public abstract class AbstractTestBasicStorage<StorageType extends IBasicStorage
             data.setIntValue(1, 2*i);
             data.setStringValue(2, "test" + i);
             dataList.add(data);
-            key = new DataKey(recordType, i*timeStep);
+            key = new DataKey(recordDef.getName(), i*timeStep);
             storage.storeRecord(key, data);
         }
         storage.commit();
@@ -286,7 +280,7 @@ public abstract class AbstractTestBasicStorage<StorageType extends IBasicStorage
         // retrieve them and check their values
         for (int i=0; i<numRecords; i++)
         {
-            key = new DataKey(recordType, i*timeStep);
+            key = new DataKey(recordDef.getName(), i*timeStep);
             data = storage.getDataBlock(key);
             TestUtils.assertEquals(dataList.get(i), data);
         }
@@ -299,7 +293,6 @@ public abstract class AbstractTestBasicStorage<StorageType extends IBasicStorage
         DataBlock data;
         DataKey key;
         
-        final String recordType = "ds2";
         DataComponent recordDef = createDs2();
         
         // write N records
@@ -314,14 +307,14 @@ public abstract class AbstractTestBasicStorage<StorageType extends IBasicStorage
             data.setIntValue(1, 3*i);
             data.setStringValue(2, "testfilter" + i);
             dataList.add(data);
-            key = new DataKey(recordType, i*timeStep);
+            key = new DataKey(recordDef.getName(), i*timeStep);
             storage.storeRecord(key, data);
         }
         storage.commit();
         forceReadBackFromStorage();
         
         // prepare filter
-        IDataFilter filter = new DataFilter(recordType) {
+        IDataFilter filter = new DataFilter(recordDef.getName()) {
             public double[] getTimeStampRange() { return new double[] {0, numRecords*timeStep}; }
         };
     
@@ -339,11 +332,9 @@ public abstract class AbstractTestBasicStorage<StorageType extends IBasicStorage
     @Test
     public void testStoreAndGetTimeRange() throws Exception
     {
-        String recordType;
         DataBlock data;
         DataKey key;
         
-        recordType = "ds2";
         DataComponent recordDef = createDs2();
         
         // write N records
@@ -360,14 +351,14 @@ public abstract class AbstractTestBasicStorage<StorageType extends IBasicStorage
             data.setStringValue(2, "test" + i);
             dataList.add(data);
             timeStamp = i*timeStep;
-            key = new DataKey(recordType, timeStamp);
+            key = new DataKey(recordDef.getName(), timeStamp);
             storage.storeRecord(key, data);
         }
         storage.commit();
         forceReadBackFromStorage();
         
         // retrieve them and check their values
-        double[] timeRange = storage.getRecordsTimeRange(recordType);
+        double[] timeRange = storage.getRecordsTimeRange(recordDef.getName());
         assertEquals("Invalid begin time", 0., timeRange[0], 0.0);
         assertEquals("Invalid end time", timeStamp, timeRange[1], 0.0);
     }
