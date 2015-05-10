@@ -21,8 +21,6 @@ import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataEncoding;
 import org.sensorhub.api.persistence.DataKey;
-import org.sensorhub.api.persistence.IDataFilter;
-import org.sensorhub.api.persistence.ITimeSeriesDataStore;
 import org.sensorhub.impl.persistence.perst.BasicStorageConfig;
 import org.sensorhub.impl.persistence.perst.BasicStorageImpl;
 import org.vast.cdm.common.DataStreamParser;
@@ -78,21 +76,21 @@ public class DbImport
         for (int i = 0; i < dataStoreElts.getLength(); i++)
         {
             Element dataStoreElt = (Element)dataStoreElts.item(i);
-            String dataStoreName = dom.getAttributeValue(dataStoreElt, "name");
+            String recordType = dom.getAttributeValue(dataStoreElt, "name");
             Element resultStructElt = dom.getElement(dataStoreElt, "elementType/*");
             DataComponent recordStruct = sweUtils.readComponent(dom, resultStructElt);
             Element resultEncodingElt = dom.getElement(dataStoreElt, "encoding/*");
             DataEncoding recordEncoding = sweUtils.readEncoding(dom, resultEncodingElt);
-            ITimeSeriesDataStore<IDataFilter> dataStore = db.addNewDataStore(dataStoreName, recordStruct, recordEncoding);
+            db.addRecordType(recordType, recordStruct, recordEncoding);
             db.commit();
-            System.out.println("Imported metadata for data store " + dataStoreName);
+            System.out.println("Imported metadata for data store " + recordType);
             System.out.println("Importing records...");
             
             // read records data            
             DataStreamParser recordParser = null;
             try
             {
-                File dataFile = new File(metadataFile.getParent(), dataStoreName + ".export.data");
+                File dataFile = new File(metadataFile.getParent(), recordType + ".export.data");
                 InputStream recordInput = new BufferedInputStream(new FileInputStream(dataFile));
                 DataInputStream dis = new DataInputStream(recordInput);
                 
@@ -112,9 +110,10 @@ public class DbImport
                         if (producerID.equals(DbConstants.KEY_NULL_PRODUCER))
                             producerID = null;
                             
-                        DataKey key = new DataKey(producerID, timeStamp);
+                        DataKey key = new DataKey(recordType, timeStamp);
+                        key.producerID = producerID;
                         DataBlock dataBlk = recordParser.parseNextBlock();
-                        dataStore.store(key, dataBlk);
+                        db.storeRecord(key, dataBlk);
                         recordCount++;
                         
                         if (recordCount % 100 == 0)

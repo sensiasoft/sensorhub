@@ -22,10 +22,10 @@ import net.opengis.sensorml.v20.AbstractProcess;
 import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataEncoding;
 import net.opengis.swe.v20.TextEncoding;
-import org.sensorhub.api.persistence.DataKey;
+import org.sensorhub.api.persistence.DataFilter;
 import org.sensorhub.api.persistence.IDataFilter;
 import org.sensorhub.api.persistence.IDataRecord;
-import org.sensorhub.api.persistence.ITimeSeriesDataStore;
+import org.sensorhub.api.persistence.IRecordInfo;
 import org.sensorhub.impl.persistence.perst.BasicStorageConfig;
 import org.sensorhub.impl.persistence.perst.BasicStorageImpl;
 import org.vast.cdm.common.DataStreamWriter;
@@ -84,34 +84,35 @@ public class DbExport
             
             // export all datastores
             final double[] timePeriod = new double[] {Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY};
-            IDataFilter recordFilter = new IDataFilter() {
-                public double[] getTimeStampRange() { return timePeriod; }
-                public String getProducerID() { return null; }
-            };
-            
-            for (Entry<String, ? extends ITimeSeriesDataStore<IDataFilter>> entry: db.getDataStores().entrySet())
+                        
+            for (Entry<String, ? extends IRecordInfo> entry: db.getRecordTypes().entrySet())
             {
-                String dataStoreName = entry.getKey();
-                ITimeSeriesDataStore<IDataFilter> dataStore = entry.getValue();
-                DataComponent recordStruct = dataStore.getRecordDescription();
-                DataEncoding recordEncoding = dataStore.getRecommendedEncoding();
+                String recordType = entry.getKey();
+                IRecordInfo recordInfo = entry.getValue();
+                DataComponent recordStruct = recordInfo.getRecordDescription();
+                DataEncoding recordEncoding = recordInfo.getRecommendedEncoding();
                 
                 Element dataStoreElt = dom.addElement('+' + DbConstants.SECTION_DATASTORE);
-                dom.setAttributeValue(dataStoreElt, "name", dataStoreName);
+                dom.setAttributeValue(dataStoreElt, "name", recordType);
                 
                 // add data description
                 Element recordStructElt = dom.addElement(dataStoreElt, DbConstants.SECTION_RECORD_STRUCTURE);
                 recordStructElt.appendChild(sweUtils.writeComponent(dom, recordStruct, false));
                 Element recordEncElt = dom.addElement(dataStoreElt, DbConstants.SECTION_RECORD_ENCODING);
                 recordEncElt.appendChild(sweUtils.writeEncoding(dom, recordEncoding));
-                System.out.println("Exported metadata for data store " + dataStoreName);
+                System.out.println("Exported metadata for data store " + recordType);
                 System.out.println("Exporting records...");
+                
+                // prepare filter
+                IDataFilter recordFilter = new DataFilter(recordType) {
+                    public double[] getTimeStampRange() { return timePeriod; }
+                };
                 
                 // write records to separate binary file
                 DataStreamWriter recordWriter = null;
                 try
                 {
-                    File dataFile = new File(outputFile.getParent(), dataStoreName + ".export.data");
+                    File dataFile = new File(outputFile.getParent(), recordType + ".export.data");
                     if (dataFile.exists())
                     {
                         System.err.println("Data store export file already exist: " + dataFile);
@@ -128,10 +129,10 @@ public class DbExport
                     // write all records
                     int errorCount = 0;
                     int recordCount = 0;
-                    Iterator<? extends IDataRecord<DataKey>> it = dataStore.getRecordIterator(recordFilter);
+                    Iterator<? extends IDataRecord> it = db.getRecordIterator(recordFilter);
                     while (it.hasNext())
                     {
-                        IDataRecord<DataKey> rec;
+                        IDataRecord rec;
                         try
                         {
                             rec = it.next();
