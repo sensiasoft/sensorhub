@@ -15,6 +15,7 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 package org.sensorhub.impl.persistence.perst;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -72,17 +73,19 @@ class FoiTimesStoreImpl extends Persistent
     transient String lastFoi;
     
     
-    // default constructor needed on Android JVM
-    FoiTimesStoreImpl() {}
+    // default constructor needed by PERST on Android JVM
+    @SuppressWarnings("unused")
+    private FoiTimesStoreImpl() {}
 
     
     FoiTimesStoreImpl(Storage db)
     {
+        super(db);
         idIndex = db.createMap(String.class);
     }
     
     
-    Set<FoiTimePeriod> getSortedFoiTimes(Set<String> uids)
+    Set<FoiTimePeriod> getSortedFoiTimes(Collection<String> uids)
     {
         // create set with custom comparator for sorting FoiTimePeriod objects
         TreeSet<FoiTimePeriod> foiTimes = new TreeSet<FoiTimePeriod>(new FoiTimePeriodComparator());

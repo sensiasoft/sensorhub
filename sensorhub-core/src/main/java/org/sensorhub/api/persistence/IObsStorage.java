@@ -27,10 +27,9 @@ import net.opengis.gml.v32.AbstractFeature;
  * </p>
  *
  * @author Alex Robin <alex.robin@sensiasoftware.com>
- * @param <ConfigType> Type of storage configuration
  * @since April 25, 2015
  */
-public interface IObsStorage<ConfigType extends StorageConfig> extends IBasicStorage<ConfigType>
+public interface IObsStorage extends IBasicStorage
 {    
     
     /**
@@ -56,17 +55,16 @@ public interface IObsStorage<ConfigType extends StorageConfig> extends IBasicSto
     
     /**
      * Retrieves features of interest matching the given filter 
-     * @param filter observation filter
+     * @param filter feature filter
      * @return Iterator over matching FOIs
      */
-    public Iterator<AbstractFeature> getFois(IObsFilter filter);
+    public Iterator<AbstractFeature> getFois(IFeatureFilter filter);
     
     
     /**
      * Stores a new feature of interest description into storage.
      * @param foi feature object to store
-     * @throws StorageException if new FoI cannot be stored
      */
-    public void storeFoi(AbstractFeature foi) throws StorageException;
+    public void storeFoi(AbstractFeature foi);
     
 }

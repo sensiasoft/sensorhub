@@ -19,8 +19,8 @@ import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.sensor.ISensorModule;
 import org.sensorhub.api.sensor.SensorEvent;
 import org.sensorhub.api.service.ServiceException;
-import org.vast.ows.server.SOSDataFilter;
 import org.vast.ows.sos.ISOSDataProvider;
+import org.vast.ows.sos.SOSDataFilter;
 
 
 /**

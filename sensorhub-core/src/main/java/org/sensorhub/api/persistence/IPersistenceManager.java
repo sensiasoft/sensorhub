@@ -36,7 +36,7 @@ public interface IPersistenceManager extends IModuleManager<IStorageModule<?>>
      * @return list of storage instances or empty list if none are found
      * @throws SensorHubException
      */
-    public List<? extends IBasicStorage<?>> findStorageForSensor(String sensorID) throws SensorHubException;
+    public List<? extends IRecordStorageModule<?>> findStorageForSensor(String sensorID) throws SensorHubException;
     
     
     /**

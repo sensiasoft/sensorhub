@@ -12,18 +12,24 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
  
 ******************************* END LICENSE BLOCK ***************************/
 
-package org.sensorhub.impl.persistence.perst;
+package org.sensorhub.api.persistence;
 
 
 /**
  * <p>
- * Configuration class for PERST basic storage
+ * Options for observation storage implementations
  * </p>
  *
  * @author Alex Robin <alex.robin@sensiasoftware.com>
- * @since Sep 7, 2013
+ * @since May 15, 2015
  */
-public class ObsStorageConfig extends BasicStorageConfig
+public class ObsStorageConfig extends StorageConfig
 {
+    
+	/**
+	 * ID of external feature storage where the actual feature descriptions
+	 * are stored. If null, features are stored in the observation storage.
+	 */
+	public String externalFeatureStorageID;
 
 }

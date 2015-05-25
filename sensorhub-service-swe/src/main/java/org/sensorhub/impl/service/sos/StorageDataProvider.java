@@ -18,14 +18,15 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Set;
 import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataEncoding;
 import org.sensorhub.api.persistence.IBasicStorage;
-import org.sensorhub.api.persistence.DataFilter;
-import org.sensorhub.api.persistence.IDataFilter;
 import org.sensorhub.api.persistence.IDataRecord;
+import org.sensorhub.api.persistence.IObsFilter;
 import org.sensorhub.api.persistence.IRecordInfo;
+import org.sensorhub.api.persistence.ObsFilter;
 import org.sensorhub.api.sensor.SensorException;
 import org.vast.data.DataIterator;
 import org.vast.ogc.def.DefinitionRef;
@@ -33,10 +34,11 @@ import org.vast.ogc.gml.FeatureRef;
 import org.vast.ogc.om.IObservation;
 import org.vast.ogc.om.ObservationImpl;
 import org.vast.ogc.om.ProcedureRef;
-import org.vast.ows.server.SOSDataFilter;
 import org.vast.ows.sos.ISOSDataProvider;
+import org.vast.ows.sos.SOSDataFilter;
 import org.vast.swe.SWEConstants;
 import org.vast.util.TimeExtent;
+import com.vividsolutions.jts.geom.Polygon;
 
 
 /**
@@ -52,7 +54,7 @@ public class StorageDataProvider implements ISOSDataProvider
 {
     private static final long MAX_WAIT_TIME = 5000L;
     
-    IBasicStorage<?> storage;
+    IBasicStorage storage;
     List<StorageState> dataStoresStates;
     DataComponentFilter recordFilter;
     double replaySpeedFactor;
@@ -64,21 +66,28 @@ public class StorageDataProvider implements ISOSDataProvider
     {
         IRecordInfo recordInfo;
         Iterator<? extends IDataRecord> recordIterator;
-        IDataRecord nextRecord;        
+        IDataRecord nextRecord;
     }
     
     
-    public StorageDataProvider(IBasicStorage<?> storage, StorageDataProviderConfig config, final SOSDataFilter filter)
+    public StorageDataProvider(IBasicStorage storage, StorageDataProviderConfig config, final SOSDataFilter filter)
     {
         this.storage = storage;
         this.dataStoresStates = new ArrayList<StorageState>();
         this.recordFilter = new DataComponentFilter(filter);
         this.replaySpeedFactor = filter.getReplaySpeedFactor();
         
-        final double[] timePeriod = new double[] {
-            filter.getTimeRange().getStartTime(),
-            filter.getTimeRange().getStopTime()
-        };
+        // prepare time range filter
+        final double[] timePeriod;
+        if (filter.getTimeRange() != null && !filter.getTimeRange().isNull())
+        {
+            timePeriod = new double[] {
+                filter.getTimeRange().getStartTime(),
+                filter.getTimeRange().getStopTime()
+            };
+        }
+        else
+            timePeriod = null;
         
         // loop through all outputs and connect to the ones containing observables we need
         for (Entry<String, ? extends IRecordInfo> dsEntry: storage.getRecordTypes().entrySet())
@@ -88,8 +97,8 @@ public class StorageDataProvider implements ISOSDataProvider
                 continue;
             
             IRecordInfo recordInfo = dsEntry.getValue();
-            String recordType = recordInfo.getRecordType();          
-                     
+            String recordType = recordInfo.getRecordType();
+            
             // keep it if we can find one of the observables
             DataIterator it = new DataIterator(recordInfo.getRecordDescription());
             while (it.hasNext())
@@ -98,12 +107,10 @@ public class StorageDataProvider implements ISOSDataProvider
                 if (filter.getObservables().contains(defUri))
                 {
                     // prepare record filter
-                    IDataFilter storageFilter = new DataFilter(recordType) {
-                        @Override
-                        public double[] getTimeStampRange()
-                        {
-                            return timePeriod;
-                        }
+                    IObsFilter storageFilter = new ObsFilter(recordType) {
+                        public double[] getTimeStampRange() { return timePeriod; }
+                        public Set<String> getFoiIDs() { return filter.getFoiIds(); }
+                        public Polygon getRoi() {return filter.getRoi(); }
                     };
                     
                     StorageState state = new StorageState();

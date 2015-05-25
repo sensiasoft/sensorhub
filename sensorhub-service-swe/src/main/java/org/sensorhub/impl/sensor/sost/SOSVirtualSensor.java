@@ -28,6 +28,7 @@ import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataEncoding;
 import net.opengis.swe.v20.DataStream;
 import org.sensorhub.api.common.SensorHubException;
+import org.sensorhub.api.data.FoiEvent;
 import org.sensorhub.api.sensor.SensorEvent;
 import org.sensorhub.api.sensor.SensorException;
 import org.sensorhub.impl.sensor.AbstractSensorModule;
@@ -35,6 +36,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vast.data.BinaryComponentImpl;
 import org.vast.data.DataIterator;
+import org.vast.ogc.gml.FeatureRef;
+import org.vast.ogc.gml.GenericFeature;
 import org.vast.ogc.om.IObservation;
 
 
@@ -94,6 +97,12 @@ public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfi
 
     public String newResultTemplate(DataComponent component, DataEncoding encoding)
     {
+        return newResultTemplate(component, encoding, null);
+    }
+    
+    
+    public String newResultTemplate(DataComponent component, DataEncoding encoding, IObservation obsTemplate)
+    {
         // TODO check if template is compatible with sensor description outputs?        
         // TODO merge all templates with same structure but different encodings to the same output
         
@@ -103,7 +112,7 @@ public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfi
                 
         // create a new one if needed
         if (templateID == null)
-        {        
+        {
             SOSVirtualSensorOutput newOutput = new SOSVirtualSensorOutput(this, component, encoding);
             templateID = config.sensorUID + "-" + Integer.toHexString(hashObj.hashCode());
             component.setName(templateID);
@@ -111,7 +120,40 @@ public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfi
             structureToOutputMap.put(hashObj, templateID);
         }
         
+        // process feature of interest
+        if (obsTemplate != null)
+            newFeatureOfInterest(obsTemplate.getFeatureOfInterest());
+        
         return templateID;
+    }
+    
+    
+    public void newFeatureOfInterest(GenericFeature foi)
+    {
+        if (foi != null)
+        {            
+            long now = System.currentTimeMillis();
+            FoiEvent e = null;
+            
+            if (foi instanceof FeatureRef)
+            {
+                try
+                {
+                    foi = ((FeatureRef) foi).getTarget();
+                    e = new FoiEvent(now, this, foi, now/1000.0);
+                }
+                catch (Exception e1)
+                {
+                    e = new FoiEvent(now, this, ((FeatureRef) foi).getHref(), now/1000.0);
+                }                    
+            }
+            else
+            {
+                e = new FoiEvent(now, this, foi, now/1000.0);
+            }
+
+            eventHandler.publishEvent(e);
+        }
     }
     
     

@@ -19,7 +19,7 @@ import net.opengis.gml.v32.AbstractFeature;
 import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataEncoding;
 import org.garret.perst.Storage;
-import org.sensorhub.api.persistence.IObsFilter;
+import org.sensorhub.api.persistence.IFeatureFilter;
 import org.sensorhub.api.persistence.IObsStorage;
 import org.sensorhub.api.persistence.StorageException;
 
@@ -32,61 +32,56 @@ import org.sensorhub.api.persistence.StorageException;
  * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @since Nov 15, 2015
  */
-public class ObsStorageImpl extends BasicStorageImpl implements IObsStorage<BasicStorageConfig>
+public class ObsStorageImpl extends BasicStorageImpl implements IObsStorage
 {
-    protected FeatureStoreImpl featureStore;
-    
-    
+        
     @Override
     protected BasicStorageRoot createRoot(Storage db)
     {
         ObsStorageRoot dbRoot = new ObsStorageRoot(db);
-        featureStore = dbRoot.featureStore;
         return dbRoot;
     }
     
     
     @Override
-    public int getNumFois()
+    public final int getNumFois()
     {
-        return featureStore.getNumFeatures();
+        return ((ObsStorageRoot)dbRoot).getNumFois();
     }
 
 
     @Override
-    public Iterator<String> getFoiIDs()
+    public final Iterator<String> getFoiIDs()
     {
-        return featureStore.getFeatureIDs();
+        return ((ObsStorageRoot)dbRoot).getFoiIDs();
     }
 
 
     @Override
-    public AbstractFeature getFoi(String uid)
+    public final AbstractFeature getFoi(String uid)
     {
-        return featureStore.getFeatureById(uid);
+        return ((ObsStorageRoot)dbRoot).getFoi(uid);
     }
 
 
     @Override
-    public Iterator<AbstractFeature> getFois(IObsFilter filter)
+    public Iterator<AbstractFeature> getFois(IFeatureFilter filter)
     {
-        return featureStore.getFois(filter);
+        return ((ObsStorageRoot)dbRoot).getFois(filter);
     }
     
     
     @Override
-    public void storeFoi(AbstractFeature foi) throws StorageException
+    public synchronized void storeFoi(AbstractFeature foi)
     {
-        featureStore.store(foi);        
+        ((ObsStorageRoot)dbRoot).storeFoi(foi);       
     }
 
 
     @Override
-    public void addRecordType(String name, DataComponent recordStructure, DataEncoding recommendedEncoding) throws StorageException
+    public synchronized void addRecordType(String name, DataComponent recordStructure, DataEncoding recommendedEncoding) throws StorageException
     {
-        ObsSeriesImpl newTimeSeries = new ObsSeriesImpl(db, recordStructure, recommendedEncoding);
-        dbRoot.dataStores.put(name, newTimeSeries);
-        db.modify(dbRoot);
+        dbRoot.addRecordType(name, recordStructure, recommendedEncoding);
         if (autoCommit)
             commit();
     }

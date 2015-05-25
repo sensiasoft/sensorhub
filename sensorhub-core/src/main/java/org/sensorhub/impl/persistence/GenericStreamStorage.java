@@ -18,11 +18,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.ref.WeakReference;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import net.opengis.gml.v32.AbstractFeature;
 import net.opengis.sensorml.v20.AbstractProcess;
 import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataComponent;
@@ -31,14 +33,18 @@ import org.sensorhub.api.common.Event;
 import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.data.DataEvent;
+import org.sensorhub.api.data.FoiEvent;
 import org.sensorhub.api.data.IDataProducerModule;
 import org.sensorhub.api.data.IStreamingDataInterface;
 import org.sensorhub.api.persistence.DataKey;
-import org.sensorhub.api.persistence.IBasicStorage;
+import org.sensorhub.api.persistence.IFeatureFilter;
+import org.sensorhub.api.persistence.IObsStorage;
+import org.sensorhub.api.persistence.IRecordStorageModule;
 import org.sensorhub.api.persistence.IDataFilter;
 import org.sensorhub.api.persistence.IDataRecord;
 import org.sensorhub.api.persistence.IStorageModule;
 import org.sensorhub.api.persistence.IRecordInfo;
+import org.sensorhub.api.persistence.ObsKey;
 import org.sensorhub.api.persistence.StorageConfig;
 import org.sensorhub.api.persistence.StorageException;
 import org.sensorhub.api.sensor.ISensorModule;
@@ -64,13 +70,14 @@ import org.vast.swe.ScalarIndexer;
  * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @since Feb 21, 2015
  */
-public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> implements IBasicStorage<StreamStorageConfig>, IEventListener
+public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> implements IRecordStorageModule<StreamStorageConfig>, IObsStorage, IEventListener
 {
     private static final Logger log = LoggerFactory.getLogger(GenericStreamStorage.class);
     
-    IBasicStorage<StorageConfig> storage;
+    IRecordStorageModule<StorageConfig> storage;
     WeakReference<IDataProducerModule<?>> dataSourceRef;
     Map<String, ScalarIndexer> timeStampIndexers = new HashMap<String, ScalarIndexer>();
+    String currentFoi;
     
     
     @Override
@@ -84,9 +91,9 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
         {
             storageConfig = (StorageConfig)config.storageConfig.clone();
             storageConfig.id = getLocalID();
-            storageConfig.name = getName();            
-            Class<IBasicStorage<StorageConfig>> clazz = (Class<IBasicStorage<StorageConfig>>)Class.forName(storageConfig.moduleClass);
-            storage = clazz.newInstance();
+            storageConfig.name = getName();       
+            Class<?> clazz = (Class<?>)Class.forName(storageConfig.moduleClass);
+            storage = (IRecordStorageModule<StorageConfig>)clazz.newInstance();
             storage.init(storageConfig);
         }
         catch (Exception e)
@@ -137,18 +144,20 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
     }
     
     
-    protected void configureStorageForDataSource(IDataProducerModule<?> dataSource, IBasicStorage<?> storage) throws SensorHubException
+    protected void configureStorageForDataSource(IDataProducerModule<?> dataSource, IRecordStorageModule<?> storage) throws SensorHubException
     {
         if (storage.getRecordTypes().size() > 0)
             throw new RuntimeException("Storage " + MsgUtils.moduleString(storage) + " is already configured");
         
-        // copy sensor description history
+        // copy sensor description history (if supported)
         if (dataSource instanceof ISensorModule<?> && ((ISensorModule<?>)dataSource).isSensorDescriptionHistorySupported())
         {
             ISensorModule<?> sensor = ((ISensorModule<?>)dataSource);
             for (AbstractProcess sensorDesc: sensor.getSensorDescriptionHistory())
                 storage.storeDataSourceDescription(sensorDesc);
         }
+        
+        // or only copy current description
         else
         {
             storage.storeDataSourceDescription(dataSource.getCurrentDescription());
@@ -160,6 +169,13 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
             String name = item.getKey();
             IStreamingDataInterface output = item.getValue();
             storage.addRecordType(name, output.getRecordDescription(), output.getRecommendedEncoding());
+        }
+        
+        // copy features of interests
+        if (storage instanceof IObsStorage)
+        {
+            for (AbstractFeature foi: dataSource.getFeaturesOfInterest())
+                ((IObsStorage) storage).storeFoi(foi);
         }
     }
     
@@ -227,8 +243,12 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
                 
                 for (DataBlock record: dataEvent.getRecords())
                 {
-                    double time = timeStampIndexer.getDoubleValue(record);
-                    DataKey key = new DataKey(outputName, time);
+                    double time;
+                    if (timeStampIndexer != null)
+                        time = timeStampIndexer.getDoubleValue(record);
+                    else
+                        time = e.getTimeStamp() / 1000.;
+                    ObsKey key = new ObsKey(outputName, currentFoi, time);
                     storage.storeRecord(key, record);
                     
                     if (log.isTraceEnabled())
@@ -237,6 +257,20 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
                 
                 storage.commit();
                 storage.setAutoCommit(saveAutoCommitState);
+            }
+            
+            else if (e instanceof FoiEvent)
+            {
+                FoiEvent foiEvent = (FoiEvent)e;
+                
+                // store feature object if specified
+                if (storage instanceof IObsStorage)
+                {
+                    if (foiEvent.getFoi() != null)
+                        ((IObsStorage) storage).storeFoi(foiEvent.getFoi());
+                }
+                
+                currentFoi = foiEvent.getFoiID();
             }
             
             else if (e instanceof SensorEvent)
@@ -452,8 +486,56 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
 
 
     @Override
-    public int removeRecord(IDataFilter filter)
+    public int removeRecords(IDataFilter filter)
     {
-        return storage.removeRecord(filter);
+        return storage.removeRecords(filter);
+    }
+
+
+    @Override
+    public int getNumFois()
+    {
+        if (storage instanceof IObsStorage)
+            return ((IObsStorage) storage).getNumFois();
+        
+        return 0;
+    }
+
+
+    @Override
+    public Iterator<String> getFoiIDs()
+    {
+        if (storage instanceof IObsStorage)
+            return ((IObsStorage) storage).getFoiIDs();
+        
+        return Collections.EMPTY_LIST.iterator();
+    }
+
+
+    @Override
+    public AbstractFeature getFoi(String uid)
+    {
+        if (storage instanceof IObsStorage)
+            return ((IObsStorage) storage).getFoi(uid);
+        
+        return null;
+    }
+
+
+    @Override
+    public Iterator<AbstractFeature> getFois(IFeatureFilter filter)
+    {
+        if (storage instanceof IObsStorage)
+            return ((IObsStorage) storage).getFois(filter);
+        
+        return Collections.EMPTY_LIST.iterator();
+    }
+
+
+    @Override
+    public void storeFoi(AbstractFeature foi)
+    {
+        if (storage instanceof IObsStorage)
+            storeFoi(foi);        
     }
 }

@@ -26,17 +26,15 @@ import net.opengis.swe.v20.DataEncoding;
 /**
  * <p>
  * Storage for one or more data streams coming from a single source.
- * (for instance, the source can be a sensor, a service or a process)
- * 
+ * (for instance, the source can be a sensor, a service or a process)<br/> 
  * This also supports storing lineage information if a description of the
  * data source is provided. 
  * </p>
  *
  * @author Alex Robin <alex.robin@sensiasoftware.com>
- * @param <ConfigType> Type of storage configuration
  * @since Nov 27, 2014
  */
-public interface IBasicStorage<ConfigType extends StorageConfig> extends IStorageModule<ConfigType> 
+public interface IBasicStorage
 {
     
     /**
@@ -197,6 +195,6 @@ public interface IBasicStorage<ConfigType extends StorageConfig> extends IStorag
      * @param filter filtering parameters
      * @return number of deleted records
      */
-    public int removeRecord(IDataFilter filter);
+    public int removeRecords(IDataFilter filter);
 
 }

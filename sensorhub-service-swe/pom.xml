@@ -38,6 +38,13 @@
          <scope>test</scope>
       </dependency>
       <dependency>
+         <groupId>org.sensorhub</groupId>
+         <artifactId>sensorhub-storage-perst</artifactId>
+         <version>1.0</version>
+         <type>bundle</type>
+         <scope>test</scope>
+      </dependency>
+      <dependency>
          <groupId>org.vast.opengis</groupId>
          <artifactId>ows-framework-bindings</artifactId>
          <version>1.0</version>

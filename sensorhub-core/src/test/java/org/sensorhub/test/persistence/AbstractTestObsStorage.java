@@ -24,6 +24,7 @@ import java.util.Set;
 import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataComponent;
 import org.junit.Test;
+import org.sensorhub.api.persistence.IRecordStorageModule;
 import org.sensorhub.api.persistence.IDataRecord;
 import org.sensorhub.api.persistence.IObsFilter;
 import org.sensorhub.api.persistence.IObsStorage;
@@ -43,7 +44,7 @@ import org.sensorhub.test.TestUtils;
  * @param <StorageType> type of storage under test
  * @since May 5, 2015
  */
-public abstract class AbstractTestObsStorage<StorageType extends IObsStorage<?>> extends AbstractTestBasicStorage<StorageType>
+public abstract class AbstractTestObsStorage<StorageType extends IRecordStorageModule<?>> extends AbstractTestBasicStorage<StorageType>
 {
     static String[] FOI_SET1_IDS = new String[]
     {

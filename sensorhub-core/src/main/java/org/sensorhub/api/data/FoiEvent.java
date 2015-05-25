@@ -53,33 +53,70 @@ public class FoiEvent extends EntityEvent<Type>
 	
 	
 	/**
-	 * Time at which the feature of interest starts being observed
+	 * Time at which the feature of interest started being observed.<br/>
+	 * Use {@link Double#NaN} with a value for {@link #stopTime} to end the
+	 * FoI observation period.<br/>
 	 */
 	protected double startTime;
 	
 	
-	protected boolean replacePreviousFoi;
+	/**
+	 * Time at which the feature of interest stopped being observed.<br/>
+     * Use {@link Double#NaN} with a value for {@link #startTime} to start a
+     * new observation period for the FoI 
+	 */
+	protected double stopTime;
 	
 	
 	/**
-	 * Creates a {@link Type#NEW_FOI} event
+	 * Creates a {@link Type#NEW_FOI} event with only the feature ID
 	 * @param timeStamp time of event generation (unix time in milliseconds, base 1970)
      * @param srcModule module that generated the event
+	 * @param foiID ID of feature of interest
+     * @param startTime time at which observation of the FoI started (julian time in seconds, base 1970)
 	 */
-	public FoiEvent(long timeStamp, IDataProducerModule<?> srcModule)
+	public FoiEvent(long timeStamp, IDataProducerModule<?> srcModule, String foiID, double startTime)
 	{
 	    this(timeStamp,
 	         srcModule.getCurrentDescription().getUniqueIdentifier(),
-	         srcModule);
+	         srcModule, foiID, startTime);
 	}
 	
 	
-	public FoiEvent(long timeStamp, String sensorID, IDataProducerModule<?> srcModule)
+	public FoiEvent(long timeStamp, String sensorID, IDataProducerModule<?> srcModule, String foiID, double startTime)
     {
         this.type = Type.NEW_FOI;
         this.timeStamp = timeStamp;
         this.source = srcModule;
         this.relatedEntityID = sensorID;
+        this.foiID = foiID;
+    }
+	
+	
+	/**
+     * Creates a {@link Type#NEW_FOI} event with an attached feature object
+     * @param timeStamp time of event generation (unix time in milliseconds, base 1970)
+     * @param srcModule module that generated the event
+     * @param foi feature object
+	 * @param startTime time at which observation of the FoI started (julian time in seconds, base 1970)
+     */
+	public FoiEvent(long timeStamp, IDataProducerModule<?> srcModule, AbstractFeature foi, double startTime)
+    {
+        this(timeStamp,
+             srcModule.getCurrentDescription().getUniqueIdentifier(),
+             srcModule, foi, startTime);
+    }
+	
+	
+	public FoiEvent(long timeStamp, String sensorID, IDataProducerModule<?> srcModule, AbstractFeature foi, double startTime)
+    {
+        this.type = Type.NEW_FOI;
+        this.timeStamp = timeStamp;
+        this.source = srcModule;
+        this.relatedEntityID = sensorID;
+        this.foi = foi;
+        this.foiID = foi.getUniqueIdentifier();
+        this.startTime = startTime;
     }
 	
 	
@@ -92,6 +129,18 @@ public class FoiEvent extends EntityEvent<Type>
     public String getFoiID()
     {
         return foiID;
+    }
+
+
+    public double getStartTime()
+    {
+        return startTime;
+    }
+
+
+    public double getStopTime()
+    {
+        return stopTime;
     }
 
 }

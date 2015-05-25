@@ -22,8 +22,8 @@ import org.sensorhub.api.sensor.SensorException;
 import org.sensorhub.api.service.ServiceException;
 import org.sensorhub.impl.SensorHub;
 import org.sensorhub.utils.MsgUtils;
-import org.vast.ows.server.SOSDataFilter;
 import org.vast.ows.sos.ISOSDataProvider;
+import org.vast.ows.sos.SOSDataFilter;
 
 
 /**
@@ -67,7 +67,7 @@ public class SensorDataProviderFactory extends StreamDataProviderFactory<ISensor
 
     
     @Override
-    public ISOSDataProvider getNewProvider(SOSDataFilter filter) throws ServiceException
+    public ISOSDataProvider getNewDataProvider(SOSDataFilter filter) throws ServiceException
     {
         checkEnabled();
         return new SensorDataProvider(producer, (SensorDataProviderConfig)config, filter);

@@ -21,6 +21,7 @@ import org.sensorhub.api.persistence.IBasicStorage;
 import org.sensorhub.api.persistence.IRecordInfo;
 import org.sensorhub.impl.SensorHub;
 import org.sensorhub.impl.module.ModuleRegistry;
+import org.vast.ogc.om.IObservation;
 import org.vast.ows.sos.ISOSDataConsumer;
 
 
@@ -34,14 +35,14 @@ import org.vast.ows.sos.ISOSDataConsumer;
  */
 public class SensorWithStorageConsumer extends SensorDataConsumer implements ISOSDataConsumer
 {
-    IBasicStorage<?> storage;
+    IBasicStorage storage;
     
     
     public SensorWithStorageConsumer(SensorConsumerConfig config) throws SensorHubException
     {
         super(config);
         ModuleRegistry moduleReg = SensorHub.getInstance().getModuleRegistry();
-        this.storage = (IBasicStorage<?>)moduleReg.getModuleById(config.storageID);
+        this.storage = (IBasicStorage)moduleReg.getModuleById(config.storageID);
         
         // reassign current sensor description
         this.sensor.setSensorDescription(storage.getLatestDataSourceDescription());
@@ -53,9 +54,9 @@ public class SensorWithStorageConsumer extends SensorDataConsumer implements ISO
 
 
     @Override
-    public String newResultTemplate(DataComponent component, DataEncoding encoding) throws Exception
+    public String newResultTemplate(DataComponent component, DataEncoding encoding, IObservation obsTemplate) throws Exception
     {
-        String templateID = sensor.newResultTemplate(component, encoding);
+        String templateID = sensor.newResultTemplate(component, encoding, obsTemplate);
         
         // add additional datastore if not already there
         if (!storage.getRecordTypes().containsKey(templateID))

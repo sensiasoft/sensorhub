@@ -14,6 +14,7 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.impl.persistence.perst;
 
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -44,8 +45,9 @@ public class ObsSeriesImpl extends TimeSeriesImpl
     FoiTimesStoreImpl foiTimesStore;
     
     
-    // default constructor needed on Android JVM
-    ObsSeriesImpl() {}
+    // default constructor needed by PERST on Android JVM
+    @SuppressWarnings("unused")
+    private ObsSeriesImpl() {}
     
     
     ObsSeriesImpl(Storage db, DataComponent recordDescription, DataEncoding recommendedEncoding)
@@ -58,7 +60,7 @@ public class ObsSeriesImpl extends TimeSeriesImpl
     Set<FoiTimePeriod> getFoiTimePeriods(IDataFilter filter)
     {
         // FOI ID list
-        Set<String> foiIDs = ((IObsFilter)filter).getFoiIDs();
+        Collection<String> foiIDs = ((IObsFilter)filter).getFoiIDs();
         
         // TODO FOI spatial filter
         
@@ -211,8 +213,11 @@ public class ObsSeriesImpl extends TimeSeriesImpl
         {
             // update FOI times
             String foiID = ((ObsKey)key).foiID;
-            double timeStamp = key.timeStamp;
-            foiTimesStore.updateFoiPeriod(foiID, timeStamp);
+            if (foiID != null)
+            {
+                double timeStamp = key.timeStamp;
+                foiTimesStore.updateFoiPeriod(foiID, timeStamp);
+            }
         }
     }
 

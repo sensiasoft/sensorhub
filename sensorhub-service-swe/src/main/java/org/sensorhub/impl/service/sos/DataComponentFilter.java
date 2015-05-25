@@ -16,7 +16,7 @@ package org.sensorhub.impl.service.sos;
 
 import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataComponent;
-import org.vast.ows.server.SOSDataFilter;
+import org.vast.ows.sos.SOSDataFilter;
 
 
 /**

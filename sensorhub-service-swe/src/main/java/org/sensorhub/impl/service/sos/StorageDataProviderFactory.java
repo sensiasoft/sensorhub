@@ -14,19 +14,24 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.impl.service.sos;
 
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Map.Entry;
 import java.util.Set;
+import net.opengis.gml.v32.AbstractFeature;
 import net.opengis.sensorml.v20.AbstractProcess;
 import net.opengis.swe.v20.DataArray;
 import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataRecord;
 import net.opengis.swe.v20.SimpleComponent;
 import org.sensorhub.api.common.SensorHubException;
-import org.sensorhub.api.module.IModule;
-import org.sensorhub.api.persistence.IBasicStorage;
+import org.sensorhub.api.persistence.IFeatureFilter;
+import org.sensorhub.api.persistence.IObsStorage;
+import org.sensorhub.api.persistence.IRecordStorageModule;
 import org.sensorhub.api.persistence.IRecordInfo;
+import org.sensorhub.api.persistence.IStorageModule;
 import org.sensorhub.api.persistence.StorageException;
 import org.sensorhub.api.sensor.SensorException;
 import org.sensorhub.api.service.ServiceException;
@@ -34,8 +39,8 @@ import org.sensorhub.impl.SensorHub;
 import org.sensorhub.utils.MsgUtils;
 import org.vast.data.DataIterator;
 import org.vast.ogc.om.IObservation;
-import org.vast.ows.server.SOSDataFilter;
 import org.vast.ows.sos.ISOSDataProvider;
+import org.vast.ows.sos.SOSDataFilter;
 import org.vast.ows.sos.SOSOfferingCapabilities;
 import org.vast.ows.swe.SWESOfferingCapabilities;
 import org.vast.swe.SWEConstants;
@@ -62,20 +67,20 @@ import org.vast.util.TimeExtent;
 public class StorageDataProviderFactory implements IDataProviderFactory
 {
     final StorageDataProviderConfig config;
-    final IBasicStorage<?> storage;
+    final IRecordStorageModule<?> storage;
     SOSOfferingCapabilities caps;
     
     
     protected StorageDataProviderFactory(StorageDataProviderConfig config) throws SensorHubException
     {
         this.config = config;
-        IModule<?> storageModule = null;
+        IStorageModule<?> storageModule = null;
         
         // get handle to data storage instance
         try
         {
             storageModule = SensorHub.getInstance().getPersistenceManager().getModuleById(config.storageID);
-            this.storage = (IBasicStorage<?>)storageModule;
+            this.storage = (IRecordStorageModule<?>)storageModule;
         }
         catch (ClassCastException e)
         {
@@ -254,11 +259,21 @@ public class StorageDataProviderFactory implements IDataProviderFactory
     
     
     @Override
-    public ISOSDataProvider getNewProvider(SOSDataFilter filter) throws ServiceException
+    public ISOSDataProvider getNewDataProvider(SOSDataFilter filter) throws ServiceException
     {
         checkEnabled();
         return new StorageDataProvider(storage, config, filter);
     }    
+    
+    
+    @Override
+    public Iterator<AbstractFeature> getFoiIterator(final IFeatureFilter filter) throws Exception
+    {
+        if (storage instanceof IObsStorage)
+            return ((IObsStorage) storage).getFois(filter);
+        
+        return Collections.EMPTY_LIST.iterator();
+    }
     
     
     /**

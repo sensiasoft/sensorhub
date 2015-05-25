@@ -17,7 +17,7 @@ package org.sensorhub.test.persistence.perst;
 import java.io.File;
 import org.junit.After;
 import org.junit.Before;
-import org.sensorhub.impl.persistence.perst.ObsStorageConfig;
+import org.sensorhub.impl.persistence.perst.BasicStorageConfig;
 import org.sensorhub.impl.persistence.perst.ObsStorageImpl;
 import org.sensorhub.test.persistence.AbstractTestObsStorage;
 
@@ -30,7 +30,7 @@ public class TestPerstObsStorage extends AbstractTestObsStorage<ObsStorageImpl>
     @Before
     public void init() throws Exception
     {
-        ObsStorageConfig config = new ObsStorageConfig();
+        BasicStorageConfig config = new BasicStorageConfig();
         config.enabled = true;
         config.memoryCacheSize = 10*1024;
         dbFile = File.createTempFile("testdb", ".dat");

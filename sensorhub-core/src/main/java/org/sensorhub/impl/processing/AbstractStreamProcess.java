@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.WeakHashMap;
+import net.opengis.gml.v32.AbstractFeature;
 import net.opengis.sensorml.v20.AbstractProcess;
 import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataComponent;
@@ -144,6 +145,13 @@ public abstract class AbstractStreamProcess<ConfigType extends StreamProcessConf
     public Map<String, IStreamingDataInterface> getAllOutputs()
     {
         return Collections.unmodifiableMap(outputInterfaces);
+    }
+    
+    
+    @Override
+    public List<AbstractFeature> getFeaturesOfInterest()
+    {
+        return Collections.EMPTY_LIST;
     }
 
 

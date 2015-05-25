@@ -15,23 +15,25 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 package org.sensorhub.test.service.sos;
 
 import java.nio.ByteOrder;
+import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
+import net.opengis.gml.v32.AbstractFeature;
 import net.opengis.swe.v20.BinaryEncoding;
 import net.opengis.swe.v20.ByteEncoding;
-import net.opengis.swe.v20.Count;
 import net.opengis.swe.v20.DataArray;
 import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataEncoding;
 import net.opengis.swe.v20.DataType;
+import org.sensorhub.api.data.FoiEvent;
+import org.sensorhub.api.sensor.SensorDataEvent;
 import org.sensorhub.impl.sensor.AbstractSensorOutput;
 import org.sensorhub.test.sensor.FakeSensor;
 import org.sensorhub.test.sensor.IFakeSensorOutput;
 import org.vast.data.BinaryComponentImpl;
-import org.vast.data.BinaryEncodingImpl;
-import org.vast.data.CountImpl;
-import org.vast.data.DataArrayImpl;
 import org.vast.data.DataBlockByte;
-import org.vast.data.DataRecordImpl;
+import org.vast.swe.SWEHelper;
 
 
 /**
@@ -44,17 +46,33 @@ import org.vast.data.DataRecordImpl;
  */
 public class FakeSensorData2 extends AbstractSensorOutput<FakeSensor> implements IFakeSensorOutput
 {
-    static int MAX_COUNT = 2;
     static int ARRAY_SIZE = 12000;
     
     String name;
-    int count;
+    DataComponent outputStruct;
+    DataEncoding outputEncoding;
+    int maxSampleCount;
+    int sampleCount;
+    double samplingPeriod; // seconds
+    Map<Integer, Integer> obsFoiMap;
+    Timer timer;
     
     
-    public FakeSensorData2(FakeSensor sensor, String name)
+    public FakeSensorData2(FakeSensor sensor, String name, double samplingPeriod, int maxSampleCount)
     {
         super(sensor);
         this.name = name;
+        this.samplingPeriod = samplingPeriod;
+        this.maxSampleCount = maxSampleCount;
+        
+        init();
+    }
+    
+    
+    public FakeSensorData2(FakeSensor sensor, String name, double samplingPeriod, int maxSampleCount, Map<Integer, Integer> obsFoiMap)
+    {
+        this(sensor, name, samplingPeriod, maxSampleCount);
+        this.obsFoiMap = obsFoiMap;
     }
     
     
@@ -63,16 +81,12 @@ public class FakeSensorData2 extends AbstractSensorOutput<FakeSensor> implements
     {
         return name;
     }
-
-
-    @Override
-    public boolean isEnabled()
+    
+    
+    public int getMaxSampleCount()
     {
-        if (count >= MAX_COUNT)
-            return false;
-        else
-            return true;
-    }    
+        return maxSampleCount;
+    }
 
 
     @Override
@@ -85,59 +99,96 @@ public class FakeSensorData2 extends AbstractSensorOutput<FakeSensor> implements
     @Override
     public DataComponent getRecordDescription()
     {
-        DataArray img = new DataArrayImpl(ARRAY_SIZE);
-        img.setDefinition("urn:blabla:image");
-        img.setName(this.name);        
-        DataComponent record = new DataRecordImpl(3);        
-        Count r = new CountImpl(DataType.BYTE);
-        record.addComponent("red", r);
-        Count g = new CountImpl(DataType.BYTE);
-        record.addComponent("green", g);
-        Count b = new CountImpl(DataType.BYTE);
-        record.addComponent("blue", b);        
-        img.addComponent("pixel", record);        
-        return img;
+        return outputStruct;
     }
     
     
     @Override
     public DataEncoding getRecommendedEncoding()
     {
-        BinaryEncoding dataEnc = new BinaryEncodingImpl();
-        dataEnc.setByteEncoding(ByteEncoding.RAW);
-        dataEnc.setByteOrder(ByteOrder.BIG_ENDIAN);
-        dataEnc.addMemberAsComponent(new BinaryComponentImpl("pixel/red", DataType.BYTE));
-        dataEnc.addMemberAsComponent(new BinaryComponentImpl("pixel/green", DataType.BYTE));
-        dataEnc.addMemberAsComponent(new BinaryComponentImpl("pixel/blue", DataType.BYTE));
-        return dataEnc;
-    }
-
-
-    @Override
-    public DataBlock getLatestRecord()
-    {
-        if (Math.random() > 0.3)
-            return null;
-        
-        count++;
-        DataBlock data = new DataBlockByte(3*ARRAY_SIZE);
-        for (int i=0; i<ARRAY_SIZE; i++)
-            data.setByteValue(i, (byte)(i%255));
-        return data;
+        return outputEncoding;
     }
 
 
     @Override
     public void init()
     {
-        // TODO Auto-generated method stub        
-    }
+        // generate output structure and encoding
+        SWEHelper fac = new SWEHelper();
+        
+        DataArray img = fac.newDataArray(ARRAY_SIZE);
+        img.setDefinition("urn:blabla:image");
+        img.setName(this.name);        
+        DataComponent record = fac.newDataRecord(3);        
+        record.addComponent("red", fac.newCount("urn:blabla:RedChannel", "Red Channel", null, DataType.BYTE));
+        record.addComponent("green", fac.newCount("urn:blabla:GreenChannel", "Green Channel", null, DataType.BYTE));
+        record.addComponent("blue", fac.newCount("urn:blabla:BlueChannel", "Blue Channel", null, DataType.BYTE));       
+        img.addComponent("pixel", record);     
+        this.outputStruct = img; 
+        
+        BinaryEncoding dataEnc = fac.newBinaryEncoding(ByteOrder.BIG_ENDIAN, ByteEncoding.RAW);
+        dataEnc.addMemberAsComponent(new BinaryComponentImpl("pixel/red", DataType.BYTE));
+        dataEnc.addMemberAsComponent(new BinaryComponentImpl("pixel/green", DataType.BYTE));
+        dataEnc.addMemberAsComponent(new BinaryComponentImpl("pixel/blue", DataType.BYTE));
+        this.outputEncoding = dataEnc;
+        
+        // start data production timer
+        TimerTask sensorTask = new TimerTask()
+        {
+            @Override
+            public void run()
+            {
+                // safety to make sure we don't output more samples than requested
+                // cancel does not seem to be taken into account early enough with high rates
+                if (sampleCount >= maxSampleCount)
+                    return;
+                
+                DataBlock data = new DataBlockByte(3*ARRAY_SIZE);
+                for (int i=0; i<ARRAY_SIZE; i++)
+                    data.setByteValue(i, (byte)(i%255));
+                           
+                sampleCount++;
+                latestRecordTime = System.currentTimeMillis();
+                latestRecord = data;
+                
+                if (obsFoiMap != null)
+                {
+                    Integer foiNum = obsFoiMap.get(sampleCount);
+                    if (foiNum != null)
+                    {
+                        AbstractFeature foi = FakeSensorData2.this.getParentModule().getFeaturesOfInterest().get(foiNum-1);
+                        eventHandler.publishEvent(new FoiEvent(latestRecordTime, getParentModule(), foi, latestRecordTime/1000.));
+                        System.out.println("Observing FOI #" + foiNum);
+                    }
+                }
+                
+                eventHandler.publishEvent(new SensorDataEvent(latestRecordTime, FakeSensorData2.this, latestRecord)); 
+                System.out.println("Record #" + sampleCount + " generated");
+                
+                if (sampleCount >= maxSampleCount)
+                    cancel();
+            }                
+        };
+        
+        timer = new Timer(name, true);
+        timer.scheduleAtFixedRate(sensorTask, 500, (long)(samplingPeriod * 1000)); // keep 1s delay otherwise sensor starts to early during some tests
+    }   
 
 
     @Override
     public void stop()
     {
-        // TODO Auto-generated method stub
-        
+        timer.cancel();
+        timer.purge();        
     }
+
+
+    @Override
+    public boolean isEnabled()
+    {
+        if (sampleCount >= maxSampleCount)
+            return false;
+        else
+            return true;
+    } 
 }

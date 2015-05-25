@@ -14,11 +14,14 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.api.persistence;
 
+import java.util.Iterator;
+import net.opengis.gml.v32.AbstractFeature;
+
 
 /**
  * <p>
- * Interface for feature data storage implementations.
- * This type of storage provides complex filtering capabilities based on property values
+ * Interface for feature data storage implementations. This type of storage
+ * provides spatial filtering capabilities.
  * </p>
  *
  * @author Alex Robin <alex.robin@sensiasoftware.com>
@@ -26,5 +29,22 @@ package org.sensorhub.api.persistence;
  */
 public interface IFeatureStorage
 {
-    // provide
+    
+    
+    public int getNumFeatures();
+    
+    
+    /**
+     * @param uid unique ID of feature
+     * @return Feature object or null if none was found
+     */
+    public AbstractFeature getFeatureById(String uid);
+    
+    
+    /**
+     * Gets features matching the specified filter
+     * @param filter filtering parameters
+     * @return an iterator over features matching the filter, sorted by ID
+     */
+    public Iterator<AbstractFeature> getFeatureIterator(IFeatureFilter filter);
 }

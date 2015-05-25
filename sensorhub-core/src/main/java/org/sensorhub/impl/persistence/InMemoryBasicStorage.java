@@ -34,7 +34,7 @@ import net.opengis.swe.v20.DataEncoding;
 import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.persistence.DataKey;
-import org.sensorhub.api.persistence.IBasicStorage;
+import org.sensorhub.api.persistence.IRecordStorageModule;
 import org.sensorhub.api.persistence.IDataFilter;
 import org.sensorhub.api.persistence.IDataRecord;
 import org.sensorhub.api.persistence.IRecordInfo;
@@ -57,7 +57,7 @@ import org.sensorhub.impl.module.AbstractModule;
  * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @since Nov 8, 2013
  */
-public class InMemoryBasicStorage extends AbstractModule<StorageConfig> implements IBasicStorage<StorageConfig>
+public class InMemoryBasicStorage extends AbstractModule<StorageConfig> implements IRecordStorageModule<StorageConfig>
 {
     Map<String, TimeSeriesImpl> dataStores = new LinkedHashMap<String, TimeSeriesImpl>();
     List<AbstractProcess> dataSourceDescriptions = new ArrayList<AbstractProcess>();
@@ -338,7 +338,7 @@ public class InMemoryBasicStorage extends AbstractModule<StorageConfig> implemen
 
 
     @Override
-    public int removeRecord(IDataFilter filter)
+    public int removeRecords(IDataFilter filter)
     {
         TimeSeriesImpl dataStore = dataStores.get(filter.getRecordType());
         if (dataStore == null)

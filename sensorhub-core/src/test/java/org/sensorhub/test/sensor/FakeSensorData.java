@@ -53,7 +53,6 @@ public class FakeSensorData extends AbstractSensorOutput<FakeSensor> implements 
     int sampleCount;
     int bufferSize;
     double samplingPeriod; // seconds
-    long lastRecordTime = Long.MIN_VALUE;
     Deque<DataBlock> dataQueue;
     Timer timer;
     
@@ -127,8 +126,8 @@ public class FakeSensorData extends AbstractSensorOutput<FakeSensor> implements 
                         dataQueue.remove();
                     dataQueue.offer(data);
                     
-                    lastRecordTime = System.currentTimeMillis();
-                    eventHandler.publishEvent(new SensorDataEvent(lastRecordTime, FakeSensorData.this, data));
+                    latestRecordTime = System.currentTimeMillis();
+                    eventHandler.publishEvent(new SensorDataEvent(latestRecordTime, FakeSensorData.this, data));
                 }                        
             }                
         };
@@ -215,13 +214,6 @@ public class FakeSensorData extends AbstractSensorOutput<FakeSensor> implements 
         {
             return dataQueue.peekLast();
         }
-    }
-    
-    
-    @Override
-    public long getLatestRecordTime()
-    {
-        return lastRecordTime;
     }
 
 

@@ -14,14 +14,14 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.api.persistence;
 
-import java.util.Set;
+import java.util.Collection;
 
 
 /**
  * <p>
  * Default implementation of {@link IDataFilter} returning null on all filter
  * predicates. It is meant be used as a base to implement your own filter and
- * unlike {@link IDataFilter} doesn't require implementing all the methods.
+ * unlike {@link IDataFilter} doesn't require implementing all methods.
  * </p>
  *
  * @author Alex Robin <alex.robin@sensiasoftware.com>
@@ -53,7 +53,7 @@ public class DataFilter implements IDataFilter
 
 
     @Override
-    public Set<String> getProducerIDs()
+    public Collection<String> getProducerIDs()
     {
         return null;
     }

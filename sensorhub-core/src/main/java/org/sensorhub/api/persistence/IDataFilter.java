@@ -14,7 +14,7 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.api.persistence;
 
-import java.util.Set;
+import java.util.Collection;
 
 
 /**
@@ -51,5 +51,5 @@ public interface IDataFilter
      * If the list is null or empty, no filtering on producer ID will be applied.
      * @return List of desired producer IDs
      */
-    public Set<String> getProducerIDs();
+    public Collection<String> getProducerIDs();
 }

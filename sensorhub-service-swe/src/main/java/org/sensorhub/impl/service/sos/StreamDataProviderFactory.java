@@ -15,9 +15,11 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 package org.sensorhub.impl.service.sos;
 
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Map.Entry;
 import java.util.Set;
+import net.opengis.gml.v32.AbstractFeature;
 import net.opengis.sensorml.v20.AbstractProcess;
 import net.opengis.swe.v20.DataArray;
 import net.opengis.swe.v20.DataComponent;
@@ -28,14 +30,17 @@ import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.data.IDataProducerModule;
 import org.sensorhub.api.data.IStreamingDataInterface;
+import org.sensorhub.api.persistence.IFeatureFilter;
 import org.sensorhub.api.service.ServiceException;
 import org.sensorhub.utils.MsgUtils;
 import org.vast.data.DataIterator;
+import org.vast.ogc.gml.JTSUtils;
 import org.vast.ogc.om.IObservation;
 import org.vast.ows.sos.SOSOfferingCapabilities;
 import org.vast.ows.swe.SWESOfferingCapabilities;
 import org.vast.swe.SWEConstants;
 import org.vast.util.TimeExtent;
+import com.vividsolutions.jts.geom.Geometry;
 
 
 /**
@@ -209,6 +214,67 @@ public abstract class StreamDataProviderFactory<ProducerType extends IDataProduc
     {
         checkEnabled();
         return producer.getCurrentDescription();
+    }
+    
+    
+    @Override
+    public Iterator<AbstractFeature> getFoiIterator(final IFeatureFilter filter) throws Exception
+    {
+        checkEnabled();
+        
+        // get all fois advertised by producer
+        final Iterator<AbstractFeature> allFois = producer.getFeaturesOfInterest().iterator();
+        
+        // return all features if no filter is used
+        if (filter.getFeatureIDs() == null && filter.getRoi() == null)
+            return allFois;
+        
+        // otherwise apply filter
+        return new Iterator<AbstractFeature>()
+        {
+            AbstractFeature nextFeature;
+            
+            public boolean hasNext()
+            {
+                while (allFois.hasNext())
+                {
+                    AbstractFeature f = allFois.next();
+                    boolean keep = true;
+                    
+                    // filter on feature ID
+                    if (filter.getFeatureIDs() != null && !filter.getFeatureIDs().isEmpty())
+                    {
+                        if (!filter.getFeatureIDs().contains(f.getUniqueIdentifier()))
+                            keep = false;
+                    }
+                    
+                    // filter on feature geometry
+                    if (keep && filter.getRoi() != null && f.getLocation() != null)
+                    {
+                        Geometry fGeom = JTSUtils.getAsJTSGeometry(f.getLocation());
+                        if (fGeom.disjoint(filter.getRoi()))
+                            keep = false;
+                    }
+                    
+                    if (keep)
+                    {
+                        nextFeature = f;
+                        break;
+                    }
+                }
+                
+                return false;
+            }
+
+            public AbstractFeature next()
+            {
+                return nextFeature;
+            }
+
+            public void remove()
+            {                
+            }
+        };
     }
     
     

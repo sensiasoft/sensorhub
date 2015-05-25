@@ -68,7 +68,7 @@ public class TestShowVideo
         gt.setGetServer("http://localhost:8080/sensorhub/sos");
         gt.setOffering(offering);
         gt.getObservables().add("http://sensorml.com/ont/swe/property/VideoFrame");
-        gt.setTime(TimeExtent.getNowToFutureDatePeriod(System.currentTimeMillis()/1000. + 3600.));
+        gt.setTime(TimeExtent.getPeriodStartingNow(System.currentTimeMillis()/1000. + 3600.));
         gt.setVersion("2.0");
         
         Runnable job = new Runnable() {

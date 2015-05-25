@@ -14,14 +14,20 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.impl.persistence.perst;
 
+import java.util.Collection;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 import net.opengis.gml.v32.AbstractFeature;
 import org.garret.perst.Index;
 import org.garret.perst.Persistent;
-import org.garret.perst.SpatialIndexR2;
+import org.garret.perst.RectangleRn;
+import org.garret.perst.SpatialIndexRn;
 import org.garret.perst.Storage;
-import org.sensorhub.api.persistence.IObsFilter;
+import org.sensorhub.api.persistence.IFeatureFilter;
+import org.sensorhub.api.persistence.IFeatureStorage;
+import com.vividsolutions.jts.geom.Envelope;
 
 
 /**
@@ -32,10 +38,10 @@ import org.sensorhub.api.persistence.IObsFilter;
  * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @since May 8, 2015
  */
-class FeatureStoreImpl extends Persistent
+class FeatureStoreImpl extends Persistent implements IFeatureStorage
 {
     Index<AbstractFeature> idIndex;
-    SpatialIndexR2<AbstractFeature> geoIndex;
+    SpatialIndexRn<AbstractFeature> geoIndex;
     
     
     // default constructor needed on Android JVM
@@ -45,11 +51,11 @@ class FeatureStoreImpl extends Persistent
     FeatureStoreImpl(Storage db)
     {
         idIndex = db.createIndex(String.class, true);
-        geoIndex = db.createSpatialIndexR2();
+        geoIndex = db.createSpatialIndexRn();
     }
     
     
-    int getNumFeatures()
+    public int getNumFeatures()
     {
         return idIndex.size();
     }
@@ -78,26 +84,67 @@ class FeatureStoreImpl extends Persistent
     }
     
     
-    AbstractFeature getFeatureById(String uid)
+    public AbstractFeature getFeatureById(String uid)
     {
         return idIndex.get(uid);
     }
     
     
-    Iterator<AbstractFeature> getFois(IObsFilter filter)
-    {
+    public Iterator<AbstractFeature> getFeatureIterator(IFeatureFilter filter)
+    {        
+        // case of requesting several IDs at once
+        Collection<String> foiIDs = filter.getFeatureIDs();
+        if (foiIDs != null && !foiIDs.isEmpty())
+        {
+            final Set<String> ids = new LinkedHashSet<String>();
+            ids.addAll(filter.getFeatureIDs());
+            final Iterator<String> it = ids.iterator();
+            
+            return new Iterator<AbstractFeature>()
+            {
+                int count = 0;
+                
+                public boolean hasNext()
+                {
+                    return count < ids.size();
+                }
+
+                public AbstractFeature next()
+                {
+                    count++;
+                    return idIndex.get(it.next());
+                }
+
+                public void remove()
+                {                    
+                }
+            };
+        }
+            
+        // case of ROI
+        if (filter.getRoi() != null)
+        {
+            // iterate through spatial index using bounding rectangle
+            // TODO filter on exact polygon geometry using JTS
+            Envelope env = filter.getRoi().getEnvelopeInternal();
+            double[] coords = new double[] {env.getMinX(), env.getMinY(), Double.NEGATIVE_INFINITY, env.getMaxX(), env.getMaxY(), Double.POSITIVE_INFINITY};
+            return geoIndex.iterator(new RectangleRn(coords));
+        }
+        
+        // TODO handle ROI + IDs?        
+        
         return idIndex.iterator();
-        
-        // TODO iterate through spatial index using bounding rectangle
-        // + filter on exact polygon geometry using JTS
-        
-        // TODO handle case of requesting several IDs at once
-        
     }
     
     
     void store(AbstractFeature foi)
     {
-        idIndex.put(foi.getUniqueIdentifier(), foi);
+        boolean newFoi = idIndex.put(foi.getUniqueIdentifier(), foi);
+        
+        if (newFoi && foi.getLocation() != null)
+        {
+            RectangleRn rect = PerstUtils.getBoundingRectangle(foi.getLocation());
+            geoIndex.put(rect, foi);
+        }
     }    
 }

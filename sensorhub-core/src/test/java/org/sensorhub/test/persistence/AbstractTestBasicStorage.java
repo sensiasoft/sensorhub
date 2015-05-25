@@ -32,7 +32,7 @@ import net.opengis.swe.v20.Quantity;
 import org.junit.Test;
 import org.sensorhub.api.persistence.DataFilter;
 import org.sensorhub.api.persistence.DataKey;
-import org.sensorhub.api.persistence.IBasicStorage;
+import org.sensorhub.api.persistence.IRecordStorageModule;
 import org.sensorhub.api.persistence.IDataFilter;
 import org.sensorhub.api.persistence.IDataRecord;
 import org.sensorhub.api.persistence.IRecordInfo;
@@ -59,7 +59,7 @@ import org.vast.util.DateTimeFormat;
  * @param <StorageType> type of storage under test
  * @since Nov 29, 2014
  */
-public abstract class AbstractTestBasicStorage<StorageType extends IBasicStorage<?>>
+public abstract class AbstractTestBasicStorage<StorageType extends IRecordStorageModule<?>>
 {
     protected StorageType storage;
     
