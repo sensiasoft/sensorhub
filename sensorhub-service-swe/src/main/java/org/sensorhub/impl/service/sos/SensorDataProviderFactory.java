@@ -18,10 +18,8 @@ import net.opengis.sensorml.v20.AbstractProcess;
 import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.sensor.ISensorModule;
-import org.sensorhub.api.sensor.SensorException;
 import org.sensorhub.api.service.ServiceException;
 import org.sensorhub.impl.SensorHub;
-import org.sensorhub.utils.MsgUtils;
 import org.vast.ows.sos.ISOSDataProvider;
 import org.vast.ows.sos.SOSDataFilter;
 
@@ -52,17 +50,10 @@ public class SensorDataProviderFactory extends StreamDataProviderFactory<ISensor
     {
         checkEnabled();
         
-        try
-        {
-            if (Double.isNaN(time))
-                return producer.getCurrentDescription();
-            else
-                return producer.getSensorDescription(time);
-        }
-        catch (SensorException e)
-        {
-            throw new ServiceException("Cannot retrieve SensorML description of sensor " + MsgUtils.moduleString(producer), e);
-        }
+        if (Double.isNaN(time) || !producer.isSensorDescriptionHistorySupported())
+            return producer.getCurrentDescription();
+        else
+            return producer.getSensorDescription(time);
     }
 
     

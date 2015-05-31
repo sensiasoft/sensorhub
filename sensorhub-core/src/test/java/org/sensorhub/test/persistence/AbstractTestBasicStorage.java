@@ -18,6 +18,7 @@ import static org.junit.Assert.*;
 import java.io.BufferedInputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -61,7 +62,11 @@ import org.vast.util.DateTimeFormat;
  */
 public abstract class AbstractTestBasicStorage<StorageType extends IRecordStorageModule<?>>
 {
+    static String SENSOR_UID_PREFIX = "urn:domain:sensors:";
+    
     protected StorageType storage;
+    protected String producerID = SENSOR_UID_PREFIX + 1;
+    protected Collection<String> producerFilterList = null;
     
     
     protected abstract void forceReadBackFromStorage() throws Exception;
@@ -214,7 +219,7 @@ public abstract class AbstractTestBasicStorage<StorageType extends IRecordStorag
         DataComponent recordDs1 = createDs1();
         data = recordDs1.createDataBlock();
         data.setDoubleValue(0.95);
-        key = new DataKey(recordDs1.getName(), 12.0);
+        key = new DataKey(recordDs1.getName(), producerID, 12.0);
         storage.storeRecord(key, data);
         forceReadBackFromStorage();
         readData = storage.getDataBlock(key);
@@ -226,7 +231,7 @@ public abstract class AbstractTestBasicStorage<StorageType extends IRecordStorag
         data.setDoubleValue(0, 1.0);
         data.setIntValue(1, 2);
         data.setStringValue(2, "test");
-        key = new DataKey(recordDs2.getName(), 123.0);
+        key = new DataKey(recordDs2.getName(), producerID, 123.0);
         storage.storeRecord(key, data);
         forceReadBackFromStorage();
         readData = storage.getDataBlock(key);
@@ -243,7 +248,7 @@ public abstract class AbstractTestBasicStorage<StorageType extends IRecordStorag
             data.setIntValue(offset++, 2*i);
             data.setStringValue(offset++, "test" + i);
         }
-        key = new DataKey(recordDs3.getName(), 10.);
+        key = new DataKey(recordDs3.getName(), producerID, 10.);
         storage.storeRecord(key, data);
         forceReadBackFromStorage();
         readData = storage.getDataBlock(key);
@@ -271,7 +276,7 @@ public abstract class AbstractTestBasicStorage<StorageType extends IRecordStorag
             data.setIntValue(1, 2*i);
             data.setStringValue(2, "test" + i);
             dataList.add(data);
-            key = new DataKey(recordDef.getName(), i*timeStep);
+            key = new DataKey(recordDef.getName(), producerID, i*timeStep);
             storage.storeRecord(key, data);
         }
         storage.commit();
@@ -280,7 +285,7 @@ public abstract class AbstractTestBasicStorage<StorageType extends IRecordStorag
         // retrieve them and check their values
         for (int i=0; i<numRecords; i++)
         {
-            key = new DataKey(recordDef.getName(), i*timeStep);
+            key = new DataKey(recordDef.getName(), producerID, i*timeStep);
             data = storage.getDataBlock(key);
             TestUtils.assertEquals(dataList.get(i), data);
         }
@@ -307,7 +312,7 @@ public abstract class AbstractTestBasicStorage<StorageType extends IRecordStorag
             data.setIntValue(1, 3*i);
             data.setStringValue(2, "testfilter" + i);
             dataList.add(data);
-            key = new DataKey(recordDef.getName(), i*timeStep);
+            key = new DataKey(recordDef.getName(), producerID, i*timeStep);
             storage.storeRecord(key, data);
         }
         storage.commit();
@@ -351,7 +356,7 @@ public abstract class AbstractTestBasicStorage<StorageType extends IRecordStorag
             data.setStringValue(2, "test" + i);
             dataList.add(data);
             timeStamp = i*timeStep;
-            key = new DataKey(recordDef.getName(), timeStamp);
+            key = new DataKey(recordDef.getName(), producerID, timeStamp);
             storage.storeRecord(key, data);
         }
         storage.commit();

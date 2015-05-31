@@ -29,7 +29,7 @@ import com.vividsolutions.jts.geom.Polygon;
  */
 public interface IFeatureFilter
 {
-        
+       
     /**
      * Gets filter criteria for selecting features by ID.<br/>
      * Only features identified with one of the listed IDs will be selected.<br/>

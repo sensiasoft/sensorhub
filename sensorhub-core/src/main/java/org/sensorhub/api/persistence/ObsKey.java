@@ -62,4 +62,18 @@ public class ObsKey extends DataKey
         super(recordType, timeStamp);
         this.foiID = foiID;
     }
+    
+    
+    /**
+     * DConstructor with specific entity ID
+     * @param recordType {@link #recordType}
+     * @param producerID {@link #producerID}
+     * @param foiID {@link #foiID}
+     * @param timeStamp {@link #timeStamp}
+     */
+    public ObsKey(String recordType, String producerID, String foiID, double timeStamp)
+    {
+        this(recordType, foiID, timeStamp);
+        this.producerID = producerID;
+    }
 }

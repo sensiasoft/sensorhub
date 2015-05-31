@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
+import net.opengis.gml.v32.AbstractFeature;
 import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataEncoding;
@@ -27,6 +28,7 @@ import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.data.DataEvent;
 import org.sensorhub.api.data.IDataProducerModule;
+import org.sensorhub.api.data.IMultiSourceDataProducer;
 import org.sensorhub.api.data.IStreamingDataInterface;
 import org.sensorhub.api.service.ServiceException;
 import org.vast.data.DataIterator;
@@ -159,12 +161,31 @@ public abstract class StreamDataProvider implements ISOSDataProvider, IEventList
         
         // use same value for resultTime for now
         TimeExtent resultTime = new TimeExtent();
-        resultTime.setBaseTime(samplingTime);        
+        resultTime.setBaseTime(samplingTime);
         
-        // create observation object
+        // observation property URI
+        String obsPropDef = result.getDefinition();
+        if (obsPropDef == null)
+            obsPropDef = SWEConstants.NIL_UNKNOWN;
+        
+        // FOI
+        AbstractFeature foi = dataSource.getCurrentFeatureOfInterest();
+        if (dataSource instanceof IMultiSourceDataProducer)
+        {
+            String entityID = lastDataEvent.getRelatedEntityID();
+            foi = ((IMultiSourceDataProducer) dataSource).getCurrentFeatureOfInterest(entityID);
+        }
+        
+        String foiID;
+        if (foi != null)
+            foiID = foi.getUniqueIdentifier();
+        else
+            foiID = SWEConstants.NIL_UNKNOWN;
+        
+        // create observation object        
         IObservation obs = new ObservationImpl();
-        obs.setFeatureOfInterest(new FeatureRef("http://TODO"));
-        obs.setObservedProperty(new DefinitionRef("http://TODO"));
+        obs.setFeatureOfInterest(new FeatureRef(foiID));
+        obs.setObservedProperty(new DefinitionRef(obsPropDef));
         obs.setProcedure(new ProcedureRef(dataSource.getCurrentDescription().getUniqueIdentifier()));
         obs.setPhenomenonTime(phenTime);
         obs.setResultTime(resultTime);

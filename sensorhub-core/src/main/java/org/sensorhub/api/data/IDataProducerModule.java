@@ -14,7 +14,6 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.api.data;
 
-import java.util.List;
 import java.util.Map;
 import net.opengis.gml.v32.AbstractFeature;
 import org.sensorhub.api.module.IModule;
@@ -41,9 +40,14 @@ public interface IDataProducerModule<ConfigType extends ModuleConfig> extends IM
     
     
     /**
-     * Retrieves list of features of interest for which this producer is generating data
-     * @return list of feature objects
+     * Retrieves the feature of interest for which this producer is 
+     * currently generating data.<br/><br/>
+     * In the case of a module generating data from multiple entities (e.g. 
+     * sensor network), the feature of interest currently observed by a given
+     * entity can be retrieved using 
+     * {@link IMultiSourceDataProducer#getCurrentFeatureOfInterest(String)}
+     * @return map of entityID to feature objects
      */
-    public List<AbstractFeature> getFeaturesOfInterest();
+    public AbstractFeature getCurrentFeatureOfInterest();
     
 }

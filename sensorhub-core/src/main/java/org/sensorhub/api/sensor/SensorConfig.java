@@ -14,7 +14,9 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.api.sensor;
 
+import java.net.URL;
 import java.util.List;
+import org.sensorhub.api.config.DisplayInfo;
 import org.sensorhub.api.module.ModuleConfig;
 
 
@@ -32,6 +34,7 @@ public class SensorConfig extends ModuleConfig
     /**
      * URL of SensorML description of the sensor
      */
+    @DisplayInfo(label="SensorML", desc="URL of SensorML file")
     public String sensorML;
     
     
@@ -58,4 +61,24 @@ public class SensorConfig extends ModuleConfig
      * Can be included in SensorML v2.0
      */
     public List<SensorDriverConfig> driverConfigs;
+    
+    
+    /**
+     * Gets the URL of the SensorML template.<br/>
+     * If the {@link #sensorML} field is not a URL, it is interpreted as a
+     * relative path relative to the config class.
+     * @return URL of template SensorML description
+     */
+    public String getSensorDescriptionURL()
+    {
+        if (sensorML == null)
+            return null;
+        
+        if (sensorML.contains(":"))
+            return sensorML;
+        
+        // else try to get java resource
+        URL resourceUrl = getClass().getResource(sensorML);
+        return (resourceUrl == null) ? null : resourceUrl.toString();
+    }
 }

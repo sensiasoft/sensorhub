@@ -35,7 +35,6 @@ import org.sensorhub.api.persistence.IBasicStorage;
 import org.sensorhub.api.persistence.IDataFilter;
 import org.sensorhub.api.persistence.IDataRecord;
 import org.sensorhub.api.persistence.IRecordInfo;
-import org.sensorhub.api.persistence.StorageException;
 
 
 /**
@@ -96,7 +95,7 @@ class BasicStorageRoot extends Persistent implements IBasicStorage
 
 
     @Override
-    public synchronized void storeDataSourceDescription(AbstractProcess process) throws StorageException
+    public synchronized void storeDataSourceDescription(AbstractProcess process)
     {
         if (process.getNumValidTimes() > 0)
         {
@@ -124,7 +123,7 @@ class BasicStorageRoot extends Persistent implements IBasicStorage
 
 
     @Override
-    public void updateDataSourceDescription(AbstractProcess process) throws StorageException
+    public void updateDataSourceDescription(AbstractProcess process)
     {
         // TODO Auto-generated method stub
         
@@ -161,7 +160,7 @@ class BasicStorageRoot extends Persistent implements IBasicStorage
     
     
     @Override
-    public void addRecordType(String name, DataComponent recordStructure, DataEncoding recommendedEncoding) throws StorageException
+    public void addRecordType(String name, DataComponent recordStructure, DataEncoding recommendedEncoding)
     {
         recordStructure.setName(name);
         TimeSeriesImpl newTimeSeries = new TimeSeriesImpl(getStorage(), recordStructure, recommendedEncoding);
@@ -175,114 +174,83 @@ class BasicStorageRoot extends Persistent implements IBasicStorage
     {
         return Collections.unmodifiableMap(dataStores);
     }
+    
+    
+    protected final TimeSeriesImpl getRecordStore(String recordType)
+    {
+        TimeSeriesImpl dataStore = dataStores.get(recordType);
+        if (dataStore == null)
+            throw new IllegalArgumentException("");
+        return dataStore;            
+    }
 
 
     @Override
     public int getNumRecords(String recordType)
     {
-        TimeSeriesImpl dataStore = dataStores.get(recordType);
-        if (dataStore == null)
-            return 0;
-        
-        return dataStore.getNumRecords();
+        return getRecordStore(recordType).getNumRecords();
     }
 
     
     @Override
     public double[] getRecordsTimeRange(String recordType)
     {
-        TimeSeriesImpl dataStore = dataStores.get(recordType);
-        if (dataStore == null)
-            return new double[] {Double.NaN, Double.NaN};
-        
-        return dataStore.getDataTimeRange();
+        return getRecordStore(recordType).getDataTimeRange();
     }
     
     
     @Override
     public DataBlock getDataBlock(DataKey key)
     {
-        TimeSeriesImpl dataStore = dataStores.get(key.recordType);
-        if (dataStore == null)
-            return null;
-        
-        return dataStore.getDataBlock(key);
+        return getRecordStore(key.recordType).getDataBlock(key);
     }
 
 
     @Override
     public Iterator<DataBlock> getDataBlockIterator(IDataFilter filter)
     {
-        TimeSeriesImpl dataStore = dataStores.get(filter.getRecordType());
-        if (dataStore == null)
-            return null;
-        
-        return dataStore.getDataBlockIterator(filter);
+        return getRecordStore(filter.getRecordType()).getDataBlockIterator(filter);
     }
 
 
     @Override
     public Iterator<? extends IDataRecord> getRecordIterator(IDataFilter filter)
     {
-        TimeSeriesImpl dataStore = dataStores.get(filter.getRecordType());
-        if (dataStore == null)
-            return null;
-        
-        return dataStore.getRecordIterator(filter);
+        return getRecordStore(filter.getRecordType()).getRecordIterator(filter);
     }
 
 
     @Override
     public int getNumMatchingRecords(IDataFilter filter)
     {
-        TimeSeriesImpl dataStore = dataStores.get(filter.getRecordType());
-        if (dataStore == null)
-            return 0;
-        
-        return dataStore.getNumMatchingRecords(filter);
+        return getRecordStore(filter.getRecordType()).getNumMatchingRecords(filter);
     }
     
 
     @Override
     public void storeRecord(DataKey key, DataBlock data)
     {
-        TimeSeriesImpl dataStore = dataStores.get(key.recordType);
-        if (dataStore == null)
-            return;
-        
-        dataStore.store(key, data);
+        getRecordStore(key.recordType).store(key, data);
     }
 
 
     @Override
     public void updateRecord(DataKey key, DataBlock data)
     {
-        TimeSeriesImpl dataStore = dataStores.get(key.recordType);
-        if (dataStore == null)
-            return;
-        
-        dataStore.update(key, data);
+        getRecordStore(key.recordType).update(key, data);
     }
 
 
     @Override
     public void removeRecord(DataKey key)
     {
-        TimeSeriesImpl dataStore = dataStores.get(key.recordType);
-        if (dataStore == null)
-            return;
-        
-        dataStore.remove(key);
+        getRecordStore(key.recordType).remove(key);
     }
 
 
     @Override
     public int removeRecords(IDataFilter filter)
     {
-        TimeSeriesImpl dataStore = dataStores.get(filter.getRecordType());
-        if (dataStore == null)
-            return 0;
-        
-        return dataStore.remove(filter);
+        return getRecordStore(filter.getRecordType()).remove(filter);
     }
 }

@@ -29,7 +29,6 @@ import net.opengis.swe.v20.DataType;
 import org.sensorhub.api.data.FoiEvent;
 import org.sensorhub.api.sensor.SensorDataEvent;
 import org.sensorhub.impl.sensor.AbstractSensorOutput;
-import org.sensorhub.test.sensor.FakeSensor;
 import org.sensorhub.test.sensor.IFakeSensorOutput;
 import org.vast.data.BinaryComponentImpl;
 import org.vast.data.DataBlockByte;
@@ -44,7 +43,7 @@ import org.vast.swe.SWEHelper;
  * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @since Sep 20, 2013
  */
-public class FakeSensorData2 extends AbstractSensorOutput<FakeSensor> implements IFakeSensorOutput
+public class FakeSensorData2 extends AbstractSensorOutput<FakeSensorWithFoi> implements IFakeSensorOutput
 {
     static int ARRAY_SIZE = 12000;
     
@@ -58,7 +57,7 @@ public class FakeSensorData2 extends AbstractSensorOutput<FakeSensor> implements
     Timer timer;
     
     
-    public FakeSensorData2(FakeSensor sensor, String name, double samplingPeriod, int maxSampleCount)
+    public FakeSensorData2(FakeSensorWithFoi sensor, String name, double samplingPeriod, int maxSampleCount)
     {
         super(sensor);
         this.name = name;
@@ -69,7 +68,7 @@ public class FakeSensorData2 extends AbstractSensorOutput<FakeSensor> implements
     }
     
     
-    public FakeSensorData2(FakeSensor sensor, String name, double samplingPeriod, int maxSampleCount, Map<Integer, Integer> obsFoiMap)
+    public FakeSensorData2(FakeSensorWithFoi sensor, String name, double samplingPeriod, int maxSampleCount, Map<Integer, Integer> obsFoiMap)
     {
         this(sensor, name, samplingPeriod, maxSampleCount);
         this.obsFoiMap = obsFoiMap;
@@ -156,7 +155,8 @@ public class FakeSensorData2 extends AbstractSensorOutput<FakeSensor> implements
                     Integer foiNum = obsFoiMap.get(sampleCount);
                     if (foiNum != null)
                     {
-                        AbstractFeature foi = FakeSensorData2.this.getParentModule().getFeaturesOfInterest().get(foiNum-1);
+                        String entityID = FakeSensorWithFoi.SENSOR_UID_PREFIX + foiNum;
+                        AbstractFeature foi = FakeSensorData2.this.getParentModule().getCurrentFeatureOfInterest(entityID);
                         eventHandler.publishEvent(new FoiEvent(latestRecordTime, getParentModule(), foi, latestRecordTime/1000.));
                         System.out.println("Observing FOI #" + foiNum);
                     }

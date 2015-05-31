@@ -17,7 +17,6 @@ package org.sensorhub.impl.persistence.perst;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
-import java.util.Map;
 import java.util.Set;
 import net.opengis.gml.v32.AbstractFeature;
 import org.garret.perst.Index;
@@ -27,6 +26,7 @@ import org.garret.perst.SpatialIndexRn;
 import org.garret.perst.Storage;
 import org.sensorhub.api.persistence.IFeatureFilter;
 import org.sensorhub.api.persistence.IFeatureStorage;
+import org.vast.util.Bbox;
 import com.vividsolutions.jts.geom.Envelope;
 
 
@@ -55,26 +55,39 @@ class FeatureStoreImpl extends Persistent implements IFeatureStorage
     }
     
     
-    public int getNumFeatures()
+    public int getNumMatchingFeatures(IFeatureFilter filter)
     {
         return idIndex.size();
     }
     
     
-    Iterator<String> getFeatureIDs()
+    @Override
+    public Bbox getFeaturesSpatialExtent()
     {
-        final Iterator<Map.Entry<Object,AbstractFeature>> entryIt = idIndex.entryIterator();
+        RectangleRn boundingRect = geoIndex.getWrappingRectangle();
+        if (boundingRect == null)
+            return null;
+        
+        return PerstUtils.toBbox(boundingRect);
+    }
+    
+    
+    public Iterator<String> getFeatureIDs(IFeatureFilter filter)
+    {
+        // TODO optimize implementation to avoid loading whole feature objects
+        
+        final Iterator<AbstractFeature> it = getFeatures(filter);
         
         return new Iterator<String>()
         {
             public boolean hasNext()
             {
-                return entryIt.hasNext();
+                return it.hasNext();
             }
 
             public String next()
             {
-                return (String)entryIt.next().getKey();
+                return (String)it.next().getUniqueIdentifier();
             }
 
             public void remove()
@@ -84,15 +97,9 @@ class FeatureStoreImpl extends Persistent implements IFeatureStorage
     }
     
     
-    public AbstractFeature getFeatureById(String uid)
-    {
-        return idIndex.get(uid);
-    }
-    
-    
-    public Iterator<AbstractFeature> getFeatureIterator(IFeatureFilter filter)
+    public Iterator<AbstractFeature> getFeatures(IFeatureFilter filter)
     {        
-        // case of requesting several IDs at once
+        // case of requesting by IDs
         Collection<String> foiIDs = filter.getFeatureIDs();
         if (foiIDs != null && !foiIDs.isEmpty())
         {
@@ -100,25 +107,33 @@ class FeatureStoreImpl extends Persistent implements IFeatureStorage
             ids.addAll(filter.getFeatureIDs());
             final Iterator<String> it = ids.iterator();
             
-            return new Iterator<AbstractFeature>()
+            Iterator<AbstractFeature> it2 = new Iterator<AbstractFeature>()
             {
-                int count = 0;
+                AbstractFeature nextFeature;
                 
                 public boolean hasNext()
                 {
-                    return count < ids.size();
+                    return (nextFeature != null);
                 }
 
                 public AbstractFeature next()
                 {
-                    count++;
-                    return idIndex.get(it.next());
+                    AbstractFeature currentFeature = nextFeature;
+                    nextFeature = null;
+                    
+                    while (nextFeature == null && it.hasNext())
+                        nextFeature = idIndex.get(it.next());
+                                        
+                    return currentFeature;
                 }
 
                 public void remove()
                 {                    
                 }
             };
+            
+            it2.next();
+            return it2;
         }
             
         // case of ROI
@@ -146,5 +161,6 @@ class FeatureStoreImpl extends Persistent implements IFeatureStorage
             RectangleRn rect = PerstUtils.getBoundingRectangle(foi.getLocation());
             geoIndex.put(rect, foi);
         }
-    }    
+    }
+
 }

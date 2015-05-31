@@ -149,9 +149,9 @@ public abstract class AbstractStreamProcess<ConfigType extends StreamProcessConf
     
     
     @Override
-    public List<AbstractFeature> getFeaturesOfInterest()
+    public AbstractFeature getCurrentFeatureOfInterest()
     {
-        return Collections.EMPTY_LIST;
+        return null;
     }
 
 

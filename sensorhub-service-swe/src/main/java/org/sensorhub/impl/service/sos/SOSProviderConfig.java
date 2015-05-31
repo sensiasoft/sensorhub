@@ -48,6 +48,12 @@ public abstract class SOSProviderConfig
     
     
     /**
+     * Maximum number of FoI IDs listed in capabilities
+     */
+    public int maxFois = 10;
+    
+    
+    /**
      * Retrieves the factory associated with this type of data provider
      * @return
      */

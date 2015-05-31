@@ -15,8 +15,7 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 package org.sensorhub.impl.persistence.perst;
 
 import org.garret.perst.RectangleRn;
-import com.vividsolutions.jts.geom.Envelope;
-import com.vividsolutions.jts.geom.Geometry;
+import org.vast.util.Bbox;
 import net.opengis.gml.v32.AbstractGeometry;
 import net.opengis.gml.v32.LineString;
 import net.opengis.gml.v32.Point;
@@ -117,5 +116,26 @@ public class PerstUtils
         }
         
         return bboxCoords;
+    }
+    
+    
+    public static Bbox toBbox(RectangleRn rect)
+    {
+        int nDims = rect.nDimensions();
+        Bbox bbox = new Bbox();
+        
+        bbox.setMinX(rect.getMinCoord(0));
+        bbox.setMaxX(rect.getMaxCoord(0));
+        
+        bbox.setMinY(rect.getMinCoord(1));
+        bbox.setMaxY(rect.getMaxCoord(1));
+        
+        if (nDims == 3)
+        {
+            bbox.setMinZ(rect.getMinCoord(2));
+            bbox.setMaxZ(rect.getMaxCoord(2));
+        }
+        
+        return bbox;
     }
 }

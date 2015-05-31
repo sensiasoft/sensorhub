@@ -18,10 +18,12 @@ import java.util.Iterator;
 import net.opengis.gml.v32.AbstractFeature;
 import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataEncoding;
+import org.garret.perst.Persistent;
 import org.garret.perst.Storage;
-import org.sensorhub.api.persistence.IFeatureFilter;
+import org.sensorhub.api.persistence.IFoiFilter;
 import org.sensorhub.api.persistence.IObsStorage;
-import org.sensorhub.api.persistence.StorageException;
+import org.sensorhub.api.persistence.IObsStorageModule;
+import org.vast.util.Bbox;
 
 
 /**
@@ -32,11 +34,11 @@ import org.sensorhub.api.persistence.StorageException;
  * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @since Nov 15, 2015
  */
-public class ObsStorageImpl extends BasicStorageImpl implements IObsStorage
+public class ObsStorageImpl extends BasicStorageImpl implements IObsStorageModule<BasicStorageConfig>
 {
         
     @Override
-    protected BasicStorageRoot createRoot(Storage db)
+    protected Persistent createRoot(Storage db)
     {
         ObsStorageRoot dbRoot = new ObsStorageRoot(db);
         return dbRoot;
@@ -44,44 +46,44 @@ public class ObsStorageImpl extends BasicStorageImpl implements IObsStorage
     
     
     @Override
-    public final int getNumFois()
+    public final int getNumFois(IFoiFilter filter)
     {
-        return ((ObsStorageRoot)dbRoot).getNumFois();
+        return ((ObsStorageRoot)dbRoot).getNumFois(filter);
+    }
+    
+    
+    @Override
+    public Bbox getFoisSpatialExtent()
+    {
+        return ((ObsStorageRoot)dbRoot).getFoisSpatialExtent();        
     }
 
 
     @Override
-    public final Iterator<String> getFoiIDs()
+    public final Iterator<String> getFoiIDs(IFoiFilter filter)
     {
-        return ((ObsStorageRoot)dbRoot).getFoiIDs();
+        return ((ObsStorageRoot)dbRoot).getFoiIDs(filter);
     }
 
 
     @Override
-    public final AbstractFeature getFoi(String uid)
-    {
-        return ((ObsStorageRoot)dbRoot).getFoi(uid);
-    }
-
-
-    @Override
-    public Iterator<AbstractFeature> getFois(IFeatureFilter filter)
+    public Iterator<AbstractFeature> getFois(IFoiFilter filter)
     {
         return ((ObsStorageRoot)dbRoot).getFois(filter);
     }
     
     
     @Override
-    public synchronized void storeFoi(AbstractFeature foi)
+    public synchronized void storeFoi(String producerID, AbstractFeature foi)
     {
-        ((ObsStorageRoot)dbRoot).storeFoi(foi);       
+        ((ObsStorageRoot)dbRoot).storeFoi(producerID, foi);       
     }
 
 
     @Override
-    public synchronized void addRecordType(String name, DataComponent recordStructure, DataEncoding recommendedEncoding) throws StorageException
+    public synchronized void addRecordType(String name, DataComponent recordStructure, DataEncoding recommendedEncoding)
     {
-        dbRoot.addRecordType(name, recordStructure, recommendedEncoding);
+        ((ObsStorageRoot)dbRoot).addRecordType(name, recordStructure, recommendedEncoding);
         if (autoCommit)
             commit();
     }

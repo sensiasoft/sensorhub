@@ -28,21 +28,25 @@ import net.opengis.sensorml.v20.AbstractProcess;
  */
 public interface IModuleWithDescription
 {
-
+        
     /**
-     * Retrieves most current SensorML description of this module.
-     * All implementations must return an instance of AbstractProcess with a
-     * valid unique identifier.
-     * @return AbstractProcess object containing all metadata about the module
+     * Retrieves most current SensorML description of the entity whose data
+     * is provided by this module. All implementations must return an instance
+     * of AbstractProcess with a valid unique identifier.<br/>
+     * In the case of a module generating data from multiple entities (e.g. 
+     * sensor network), this returns the description of the group as a whole.
+     * Descriptions of individual entities within the group are retrived using
+     * {@link IMultiSourceDataProducer#getCurrentDescription(String)}
+     * @return AbstractProcess SensorML description of the data producer
      */
-    public abstract AbstractProcess getCurrentDescription();
+    public AbstractProcess getCurrentDescription();
 
 
     /**
      * Used to check when SensorML description was last updated.
      * This is useful to avoid requesting the object when it hasn't changed.
-     * @return date/time of last description update as julian time (1970)
+     * @return Date/time of last description update as julian time (1970)
      */
-    public abstract double getLastDescriptionUpdate();
+    public double getLastDescriptionUpdate();
 
 }

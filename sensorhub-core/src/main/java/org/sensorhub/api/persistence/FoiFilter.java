@@ -15,31 +15,23 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 package org.sensorhub.api.persistence;
 
 import java.util.Collection;
-import com.vividsolutions.jts.geom.Polygon;
 
 
 /**
  * <p>
- * Default implementation of {@link IFeatureFilter} returning null on all filter
+ * Default implementation of {@link IFoiFilter} returning null on all filter
  * predicates. It is meant be used as a base to implement your own filter and
- * unlike {@link IFeatureFilter} doesn't require implementing all methods.  
+ * unlike {@link IFoiFilter} doesn't require implementing all methods.  
  * </p>
  *
  * @author Alex Robin <alex.robin@sensiasoftware.com>
- * @since May 9, 2015
+ * @since May 25, 2015
  */
-public class FeatureFilter implements IFeatureFilter
+public class FoiFilter extends FeatureFilter implements IFoiFilter
 {
-    
-    @Override
-    public Collection<String> getFeatureIDs()
-    {
-        return null;
-    }
-
 
     @Override
-    public Polygon getRoi()
+    public Collection<String> getProducerIDs()
     {
         return null;
     }

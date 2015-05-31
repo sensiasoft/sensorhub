@@ -14,8 +14,7 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.api.persistence;
 
-import java.util.List;
-import net.opengis.sensorml.v20.AbstractProcess;
+import java.util.Collection;
 
 
 /**
@@ -24,69 +23,30 @@ import net.opengis.sensorml.v20.AbstractProcess;
  * </p>
  *
  * @author Alex Robin <alex.robin@sensiasoftware.com>
+ * @param <StorageType> Type of record storage used for each source
  * @since March 1, 2014
  */
-public interface IMultiSourceStorage
+public interface IMultiSourceStorage<StorageType extends IBasicStorage>
 {    
     
+    /**
+     * @return Collection of producer IDs that feed data into this storage
+     */
+    public Collection<String> getProducerIDs();
+    
+     
+    /**
+     * Retrieves the data store holding data for the given producer.
+     * @param producerID
+     * @return Data store instance
+     */
+	public StorageType getDataStore(String producerID);
+	
+	
 	/**
-     * Retrieves data source description using the specified unique id
-     * @param uid unique ID of data source
-     * @return SensorML process description
-     */
-    public AbstractProcess getDataSourceDescription(String uid);
-    
-    
-    /**
-     * Retrieves data source description using the specified unique id
-     * @param uid unique ID of data source
-     * @param startTime lower bound of the time period
-     * @param endTime upper bound of the time period
-     * @return list of descriptions for the selected data source (with disjoint time validity periods) 
-     */
-    public List<AbstractProcess> getDataSourceDescriptionHistory(String uid, double startTime, double endTime);
-	
-	
-    /**
-     * Retrieves data source description valid at specified time
-     * @param uid unique ID of data source
-     * @param time
-     * @return SensorML process description
-     */
-    public AbstractProcess getDataSourceDescriptionAtTime(String uid, double time);
-    
-	
-    /**
-     * Stores a new data source description into storage.<br/>
-     * Validity period must not overlap with existing descriptions
-     * @param process SensorML process description to store
-     * @throws StorageException 
-     */
-    public void storeDataSourceDescription(AbstractProcess process) throws StorageException;
-    
-    
-	/**
-	 * Updates the data source description in storage.<br/>
-	 * Validity period must be exactly the same as the one in storage
-	 * @param process SensorML process description to update
-	 * @throws StorageException 
+	 * Creates a new record data store for the given producer
+	 * @param producerID ID of producer to create a new record store for
+	 * @return Newly created data store instance
 	 */
-    public void updateDataSourceDescription(AbstractProcess process) throws StorageException;
-    
-
-    /**
-     * Removes data source description valid at specified time
-     * @param uid unique ID of data source
-     * @param time 
-     */
-    public void removeDataSourceDescription(String uid, double time);
-    
-    
-    /**
-     * Removes data source sensor description history
-     * @param uid unique ID of data source
-     * @param startTime lower bound of the time period
-     * @param endTime upper bound of the time period
-     */
-    public void removeDataSourceDescriptionHistory(String uid, double startTime, double endTime);
+	public StorageType addDataStore(String producerID);
 }

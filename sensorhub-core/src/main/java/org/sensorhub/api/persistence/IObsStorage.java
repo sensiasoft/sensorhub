@@ -15,6 +15,7 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 package org.sensorhub.api.persistence;
 
 import java.util.Iterator;
+import org.vast.util.Bbox;
 import net.opengis.gml.v32.AbstractFeature;
 
 
@@ -33,38 +34,42 @@ public interface IObsStorage extends IBasicStorage
 {    
     
     /**
+     * Gets the number of features of interest matching the filter
+     * @param filter filtering criterias
      * @return Number of features of interest registered in this storage
      */
-    int getNumFois();
+    int getNumFois(IFoiFilter filter);
     
     
     /**
-     * @return Iterator over IDs of features of interest for which observations
-     * are available in this storage
+     * Gets the bounding rectangle of all features of interest contained
+     * in this storage
+     * @return bounding rectangle as Bbox instance
      */
-    public Iterator<String> getFoiIDs();
+    Bbox getFoisSpatialExtent();
     
     
     /**
-     * Retrieves a feature of interest by unique ID
-     * @param uid unique ID of desired feature
-     * @return The feature object or null if none exist with the given UID
+     * Gets IDs of FOIs matching the filter
+     * @param filter filtering criterias
+     * @return A read-only iterator over IDs of features of interest
      */
-    public AbstractFeature getFoi(String uid);
+    public Iterator<String> getFoiIDs(IFoiFilter filter);
     
     
     /**
      * Retrieves features of interest matching the given filter 
-     * @param filter feature filter
-     * @return Iterator over matching FOIs
+     * @param filter filtering criterias
+     * @return A read-only iterator over matching FOIs
      */
-    public Iterator<AbstractFeature> getFois(IFeatureFilter filter);
+    public Iterator<AbstractFeature> getFois(IFoiFilter filter);
     
     
     /**
      * Stores a new feature of interest description into storage.
+     * @param producerID ID of producer by which this FOI has been observed
      * @param foi feature object to store
      */
-    public void storeFoi(AbstractFeature foi);
+    public void storeFoi(String producerID, AbstractFeature foi);
     
 }

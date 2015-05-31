@@ -17,20 +17,30 @@ package org.sensorhub.test.persistence;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import javax.xml.namespace.QName;
+import net.opengis.gml.v32.AbstractFeature;
+import net.opengis.gml.v32.Point;
+import net.opengis.gml.v32.impl.GMLFactory;
 import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataComponent;
 import org.junit.Test;
-import org.sensorhub.api.persistence.IRecordStorageModule;
+import org.sensorhub.api.persistence.FoiFilter;
+import org.sensorhub.api.persistence.IObsStorageModule;
 import org.sensorhub.api.persistence.IDataRecord;
 import org.sensorhub.api.persistence.IObsFilter;
 import org.sensorhub.api.persistence.IObsStorage;
 import org.sensorhub.api.persistence.ObsFilter;
 import org.sensorhub.api.persistence.ObsKey;
 import org.sensorhub.test.TestUtils;
+import org.vast.ogc.gml.GenericFeatureImpl;
+import org.vast.util.Bbox;
+import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.geom.Polygon;
 
 
 /**
@@ -44,13 +54,17 @@ import org.sensorhub.test.TestUtils;
  * @param <StorageType> type of storage under test
  * @since May 5, 2015
  */
-public abstract class AbstractTestObsStorage<StorageType extends IRecordStorageModule<?>> extends AbstractTestBasicStorage<StorageType>
+public abstract class AbstractTestObsStorage<StorageType extends IObsStorageModule<?>> extends AbstractTestBasicStorage<StorageType>
 {
+    static String FOI_UID_PREFIX = "urn:domain:features:foi";
+    static int NUM_FOIS = 100;
+    GMLFactory gmlFac = new GMLFactory(true);
+    
     static String[] FOI_SET1_IDS = new String[]
     {
-        "urn:domain:features:foi001",
-        "urn:domain:features:foi002",
-        "urn:domain:features:foi003"
+        FOI_UID_PREFIX + "001",
+        FOI_UID_PREFIX + "002",
+        FOI_UID_PREFIX + "003"
     };
     
     static int[] FOI_SET1_STARTS = new int[] {0, 20, 60};
@@ -59,6 +73,135 @@ public abstract class AbstractTestObsStorage<StorageType extends IRecordStorageM
     String[] FOI_IDS = FOI_SET1_IDS;
     int[] FOI_STARTS = FOI_SET1_STARTS;
     
+    
+    protected void addFoisToStorage() throws Exception
+    {
+        storage.setAutoCommit(false);
+        
+        for (int foiNum = 1; foiNum <= NUM_FOIS; foiNum++)
+        {
+            QName fType = new QName("http://myNsUri", "MyFeature");
+            AbstractFeature foi = new GenericFeatureImpl(fType);
+            foi.setId("F" + foiNum);
+            foi.setUniqueIdentifier(FOI_UID_PREFIX + foiNum);
+            foi.setName("FOI" + foiNum);
+            foi.setDescription("This is feature of interest #" + foiNum);                        
+            Point p = gmlFac.newPoint();
+            p.setPos(new double[] {foiNum, foiNum, 0.0});
+            foi.setLocation(p);
+            storage.storeFoi(producerID, foi);
+        }
+        
+        storage.commit();
+        forceReadBackFromStorage();
+    }
+    
+    
+    @Test
+    public void testStoreAndRetrieveFoisByID() throws Exception
+    {
+        addFoisToStorage();
+        testFilterFoiByID(1, 2, 3, 22, 50, 78);
+        testFilterFoiByID(1);
+        testFilterFoiByID(56);
+        int[] ids = new int[NUM_FOIS];
+        for (int i = 1; i <= NUM_FOIS; i++)
+            ids[i-1] = i;
+        testFilterFoiByID(ids);
+    }
+    
+    
+    @Test
+    public void testStoreAndRetrieveFoisWithWrongIDs() throws Exception
+    {
+        addFoisToStorage();
+        testFilterFoiByID(102);
+        testFilterFoiByID(102, 56, 516);
+        testFilterFoiByID(102, 103, 104, 56, 516, 5);
+    }
+    
+    
+    protected void testFilterFoiByID(int... foiNums)
+    {
+        final List<String> idList = new ArrayList<String>(foiNums.length);
+        for (int foiNum: foiNums)
+            idList.add(FOI_UID_PREFIX + foiNum);
+            
+        FoiFilter filter = new FoiFilter()
+        {
+            public Collection<String> getFeatureIDs() { return idList; };
+            public Collection<String> getProducerIDs() {return producerFilterList; };
+        };
+        
+        int numWrongIDs = 0;        
+        for (int foiNum: foiNums)
+            numWrongIDs += (foiNum > NUM_FOIS) ? 1 : 0;
+            
+        // test retrieve objects
+        Iterator<AbstractFeature> it = storage.getFois(filter);
+        int i = 0;
+        int foiCount = 0;
+        while (it.hasNext())
+        {
+            int nextNum = foiNums[i++];
+            if (nextNum <= NUM_FOIS)
+            {
+                assertEquals(FOI_UID_PREFIX + nextNum, it.next().getUniqueIdentifier());
+                foiCount++;
+            }
+        }
+        assertEquals(foiNums.length-numWrongIDs, foiCount);
+        
+        // test retrieve ids only
+        Iterator<String> it2 = storage.getFoiIDs(filter);
+        i = 0;
+        foiCount = 0;
+        while (it2.hasNext())
+        {
+            int nextNum = foiNums[i++];
+            if (nextNum <= NUM_FOIS)
+            {
+                assertEquals(FOI_UID_PREFIX + nextNum, it2.next());
+                foiCount++;
+            }
+        }
+        assertEquals(foiNums.length-numWrongIDs, foiCount);
+    }
+    
+    
+    @Test
+    public void testStoreAndRetrieveFoisByRoi() throws Exception
+    {
+        addFoisToStorage();
+        
+        for (int i = 1; i <= NUM_FOIS; i++)
+            testFilterFoiByRoi(new Bbox(i-0.5, i-0.5, i+0.5, i+0.5), i);
+    }
+    
+    
+    protected void testFilterFoiByRoi(Bbox bbox, int... foiNums)
+    {
+        final Polygon poly = (Polygon)new GeometryFactory().toGeometry(bbox.toJtsEnvelope());
+        FoiFilter filter = new FoiFilter()
+        {
+            public Polygon getRoi() { return poly; };
+            public Collection<String> getProducerIDs() {return producerFilterList; };
+        };
+        
+        // test retrieve objects
+        Iterator<AbstractFeature> it = storage.getFois(filter);
+        int i = 0;
+        while (it.hasNext())
+            assertEquals(FOI_UID_PREFIX + foiNums[i++], it.next().getUniqueIdentifier());
+        assertEquals(foiNums.length, i);
+        
+        // test retrieve ids only
+        Iterator<String> it2 = storage.getFoiIDs(filter);
+        i = 0;
+        while (it2.hasNext())
+            assertEquals(FOI_UID_PREFIX + foiNums[i++], it2.next());
+        assertEquals(foiNums.length, i);
+    }
     
     
     protected List<DataBlock> addObservationsWithFoiToStorage(DataComponent recordDef) throws Exception
@@ -81,7 +224,7 @@ public abstract class AbstractTestObsStorage<StorageType extends IRecordStorageM
                 if (i >= FOI_STARTS[f])
                     foiID = FOI_IDS[f];
             }
-            ObsKey key = new ObsKey(recordDef.getName(), foiID, i*timeStep);
+            ObsKey key = new ObsKey(recordDef.getName(), producerID, foiID, i*timeStep);
             storage.storeRecord(key, data);
         }
         
@@ -101,6 +244,7 @@ public abstract class AbstractTestObsStorage<StorageType extends IRecordStorageM
         // generate filter
         IObsFilter filter = new ObsFilter(recordDef.getName()) {
             public Set<String> getFoiIDs() { return foiSet; }
+            public Collection<String> getProducerIDs() {return producerFilterList; };
         };
         
         // filter dataList to provide ground truth
@@ -144,6 +288,7 @@ public abstract class AbstractTestObsStorage<StorageType extends IRecordStorageM
         IObsFilter filter = new ObsFilter(recordDef.getName()) {
             public double[] getTimeStampRange() { return timeRange; }
             public Set<String> getFoiIDs() { return foiSet; }
+            public Collection<String> getProducerIDs() {return producerFilterList; };
         };
         
         // filter dataList to provide ground truth

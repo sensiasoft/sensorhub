@@ -74,8 +74,7 @@ class FoiTimesStoreImpl extends Persistent
     
     
     // default constructor needed by PERST on Android JVM
-    @SuppressWarnings("unused")
-    private FoiTimesStoreImpl() {}
+    FoiTimesStoreImpl() {}
 
     
     FoiTimesStoreImpl(Storage db)
@@ -108,24 +107,40 @@ class FoiTimesStoreImpl extends Persistent
     
     void updateFoiPeriod(String uid, double timeStamp)
     {
+        // if lastFoi is null (after restart), set to the one for which we last received data
+        if (lastFoi == null)
+        {
+            double latestTime = Double.NEGATIVE_INFINITY;
+            for (FeatureEntry entry: idIndex.values())
+            {
+                int nPeriods = entry.timePeriods.size();
+                if (entry.timePeriods.get(nPeriods-1)[1] > latestTime)
+                    lastFoi = entry.uid;
+            }
+        }
+        
         FeatureEntry entry = idIndex.get(uid);
         if (entry == null)
         {
             entry = new FeatureEntry(uid);
             idIndex.put(uid, entry);
-        }   
-         
+        }
+        
         // if same foi, keep growing period
         if (uid.equals(lastFoi))
         {
             int numPeriods = entry.timePeriods.size();
-            entry.timePeriods.get(numPeriods-1)[1] = timeStamp;            
+            entry.timePeriods.get(numPeriods-1)[1] = timeStamp;
         }
         
         // otherwise start new period
         else
             entry.timePeriods.add(new double[] {timeStamp, timeStamp});
         
+        // mark entry as modified so changes can be commited
+        getStorage().modify(entry);
+        
+        // remember current FOI
         lastFoi = uid;
     }
     

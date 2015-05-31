@@ -54,6 +54,11 @@
      </dependency>
      <dependency>
         <groupId>org.sensorhub</groupId>
+        <artifactId>sensorhub-driver-weatherStation</artifactId>
+        <version>0.1</version>
+     </dependency>
+     <dependency>
+        <groupId>org.sensorhub</groupId>
         <artifactId>sensorhub-driver-axis</artifactId>
         <version>0.1</version>
         <type>bundle</type>

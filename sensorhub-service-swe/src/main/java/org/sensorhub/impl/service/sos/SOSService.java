@@ -57,9 +57,8 @@ import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.module.IModuleStateLoader;
 import org.sensorhub.api.module.IModuleStateSaver;
 import org.sensorhub.api.module.ModuleEvent;
-import org.sensorhub.api.persistence.FeatureFilter;
-import org.sensorhub.api.persistence.IFeatureFilter;
-import org.sensorhub.api.persistence.IObsStorage;
+import org.sensorhub.api.persistence.FoiFilter;
+import org.sensorhub.api.persistence.IFoiFilter;
 import org.sensorhub.api.persistence.IStorageModule;
 import org.sensorhub.api.persistence.StorageConfig;
 import org.sensorhub.api.service.IServiceModule;
@@ -78,9 +77,7 @@ import org.vast.cdm.common.DataStreamParser;
 import org.vast.cdm.common.DataStreamWriter;
 import org.vast.data.DataBlockMixed;
 import org.vast.ogc.OGCRegistry;
-import org.vast.ogc.gml.FeatureRef;
 import org.vast.ogc.gml.GMLStaxBindings;
-import org.vast.ogc.gml.GenericFeatureImpl;
 import org.vast.ogc.om.IObservation;
 import org.vast.ows.GetCapabilitiesRequest;
 import org.vast.ows.OWSExceptionReport;
@@ -112,13 +109,13 @@ import org.vast.ows.swe.DescribeSensorRequest;
 import org.vast.ows.swe.SWESOfferingCapabilities;
 import org.vast.ows.swe.UpdateSensorRequest;
 import org.vast.ows.swe.UpdateSensorResponse;
+import org.vast.sensorML.SMLStaxBindings;
 import org.vast.sensorML.SMLUtils;
 import org.vast.swe.DataSourceDOM;
 import org.vast.swe.SWEHelper;
 import org.vast.util.ReaderException;
 import org.vast.util.TimeExtent;
 import org.vast.xml.XMLImplFinder;
-import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Polygon;
 
 
@@ -199,6 +196,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
         capabilities.getGetServers().put("GetCapabilities", config.endPoint);
         capabilities.getGetServers().put("DescribeSensor", config.endPoint);
         capabilities.getGetServers().put("GetFeatureOfInterest", config.endPoint);
+        capabilities.getGetServers().put("GetObservation", config.endPoint);
         capabilities.getGetServers().put("GetResult", config.endPoint);
         capabilities.getGetServers().put("GetResultTemplate", config.endPoint);
         capabilities.getPostServers().putAll(capabilities.getGetServers());      
@@ -301,6 +299,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
             if (timeExtent != null)
                 time = timeExtent.getBaseTime();
             return factory.generateSensorMLDescription(time);
+            
         }
         catch (Exception e)
         {
@@ -593,16 +592,11 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
         // prepare feature filter
         final Polygon poly;
         if (request.getSpatialFilter() != null)
-        {
-            GeometryFactory fac = new GeometryFactory();
-            poly = (Polygon)fac.toGeometry(request.getBbox().toJtsEnvelope());
-        }
+            poly = request.getBbox().toJtsPolygon();
         else
-        {
             poly = null;
-        }
         
-        IFeatureFilter filter = new FeatureFilter()
+        IFoiFilter filter = new FoiFilter()
         {
             public Polygon getRoi() { return poly; }
             public Collection<String> getFeatureIDs() { return request.getFoiIDs(); };
@@ -622,6 +616,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
         
         // prepare GML writing
         GMLStaxBindings gmlBindings = new GMLStaxBindings();
+        gmlBindings.registerFeatureBindings(new SMLStaxBindings());
         gmlBindings.declareNamespacesOnRootElement();
         gmlBindings.writeNamespaces(xmlWriter);
         
@@ -640,8 +635,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
                 // write namespace on root because in most cases it is common to all features
                 if (first)
                 {
-                    if (f instanceof GenericFeatureImpl)
-                        xmlWriter.writeNamespace("ns1", ((GenericFeatureImpl)f).getQName().getNamespaceURI());
+                    xmlWriter.writeNamespace("ns1", f.getQName().getNamespaceURI());
                     first = false;
                 }
                 
@@ -725,12 +719,12 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
                     // save config so that registered sensor stays active after restart
                     moduleReg.saveConfiguration(this.config, sensorConfig, streamStorageConfig);
                     
-                    // also add related features to storage
+                    /*// also add related features to storage
                     if (storage instanceof IObsStorage)
                     {
                         for (FeatureRef featureRef: request.getRelatedFeatures())
                             ((IObsStorage) storage).storeFoi(featureRef.getTarget());
-                    }
+                    }*/
                 }
                 
                 // instantiate provider and consumer instances

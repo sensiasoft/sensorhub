@@ -80,7 +80,7 @@ public class TestSOSService
     static String URI_PROP2 = "urn:blabla:image";
     static String NAME_OFFERING1 = "SOS Sensor Provider #1";
     static String NAME_OFFERING2 = "SOS Sensor Provider #2";
-    static final double SAMPLING_PERIOD = 0.25;
+    static final double SAMPLING_PERIOD = 0.1;
     static final int NUM_GEN_SAMPLES = 5;
     static final int NUM_GEN_FEATURES = 3;
     static final int SERVER_PORT = 8888;
@@ -145,7 +145,7 @@ public class TestSOSService
         sensorCfg.name = "Sensor1";
         FakeSensor sensor = (FakeSensor)SensorHub.getInstance().getModuleRegistry().loadModule(sensorCfg);
         sensor.setSensorUID(UID_SENSOR1);
-        sensor.setDataInterfaces(new FakeSensorData((FakeSensor)sensor, NAME_OUTPUT1, 10, SAMPLING_PERIOD, NUM_GEN_SAMPLES));
+        sensor.setDataInterfaces(new FakeSensorData(sensor, NAME_OUTPUT1, 10, SAMPLING_PERIOD, NUM_GEN_SAMPLES));
         
         // create SOS data provider config
         SensorDataProviderConfig provCfg = new SensorDataProviderConfig();
@@ -166,11 +166,11 @@ public class TestSOSService
         sensorCfg.enabled = true;
         sensorCfg.moduleClass = FakeSensorWithFoi.class.getCanonicalName();
         sensorCfg.name = "Sensor2";
-        FakeSensor sensor = (FakeSensor)SensorHub.getInstance().getModuleRegistry().loadModule(sensorCfg);
+        FakeSensorWithFoi sensor = (FakeSensorWithFoi)SensorHub.getInstance().getModuleRegistry().loadModule(sensorCfg);
         sensor.setSensorUID(UID_SENSOR2);
         sensor.setDataInterfaces(
-                new FakeSensorData((FakeSensor)sensor, NAME_OUTPUT1),
-                new FakeSensorData2((FakeSensor)sensor, NAME_OUTPUT2, SAMPLING_PERIOD, NUM_GEN_SAMPLES, obsFoiMap));
+                new FakeSensorData(sensor, NAME_OUTPUT1),
+                new FakeSensorData2(sensor, NAME_OUTPUT2, SAMPLING_PERIOD, NUM_GEN_SAMPLES, obsFoiMap));
         
         // create SOS data provider config
         SensorDataProviderConfig provCfg = new SensorDataProviderConfig();
@@ -483,7 +483,7 @@ public class TestSOSService
     {
         GetObservationRequest getObs = generateGetObs(offeringId, obsProp);
         for (int foiNum: foiNums)
-            getObs.getFoiIDs().add(FakeSensorWithFoi.UID_PREFIX + foiNum);
+            getObs.getFoiIDs().add(FakeSensorWithFoi.FOI_UID_PREFIX + foiNum);
         return getObs;
     }
     
@@ -522,7 +522,7 @@ public class TestSOSService
         req.setGetServer(SERVICE_ENDPOINT);
         req.setVersion("2.0");
         for (int foiNum: foiNums)
-            req.getFoiIDs().add(FakeSensorWithFoi.UID_PREFIX + foiNum);
+            req.getFoiIDs().add(FakeSensorWithFoi.FOI_UID_PREFIX + foiNum);
         
         DOMHelper dom = sendRequest(req, false); 
         assertEquals("Wrong number of features returned", foiNums.length, dom.getElements("*/*").getLength());

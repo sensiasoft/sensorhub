@@ -56,6 +56,7 @@ public class StorageDataProviderConfig extends SOSProviderConfig
         this.description = streamProducerConfig.description;
         this.storageID = streamProducerConfig.storageID;
         this.hiddenOutputs = streamProducerConfig.hiddenOutputs;
+        this.maxFois = streamProducerConfig.maxFois;
     }
     
     

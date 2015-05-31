@@ -65,18 +65,16 @@ public interface IBasicStorage
      * Stores a new data source description into storage.
      * Validity period must not overlap with existing descriptions
      * @param process SensorML process description to store
-     * @throws StorageException if new description cannot be stored
      */
-    public void storeDataSourceDescription(AbstractProcess process) throws StorageException;
+    public void storeDataSourceDescription(AbstractProcess process);
     
     
     /**
      * Update the data source description in storage.
      * Validity period must be exactly the same as one in storage
      * @param process SensorML process description to update
-     * @throws StorageException if validity period doesn't match any already in storage or new description cannot be stored
      */
-    public void updateDataSourceDescription(AbstractProcess process) throws StorageException;
+    public void updateDataSourceDescription(AbstractProcess process);
     
 
     /**
@@ -106,9 +104,8 @@ public interface IBasicStorage
      * @param name name of record stream (should match output name of the data source)
      * @param recordStructure SWE data component describing the record structure
      * @param recommendedEncoding recommended encoding for this record type
-     * @throws StorageException if new record type cannot be added to this storage
      */
-    public void addRecordType(String name, DataComponent recordStructure, DataEncoding recommendedEncoding) throws StorageException;
+    public void addRecordType(String name, DataComponent recordStructure, DataEncoding recommendedEncoding);
         
     
     /**
@@ -140,7 +137,7 @@ public interface IBasicStorage
     /**
      * Gets iterator of raw data blocks matching the specified filter
      * @param filter filtering parameters
-     * @return an iterator among data blocks matching the filter
+     * @return A read-only iterator among data blocks matching the filter
      */
     public Iterator<DataBlock> getDataBlockIterator(IDataFilter filter);
     
@@ -148,7 +145,7 @@ public interface IBasicStorage
     /**
      * Gets iterator of records matching the specified filter
      * @param filter filtering parameters
-     * @return an iterator among records matching the filter
+     * @return A read-only iterator among records matching the filter
      */
     public Iterator<? extends IDataRecord> getRecordIterator(IDataFilter filter);
     

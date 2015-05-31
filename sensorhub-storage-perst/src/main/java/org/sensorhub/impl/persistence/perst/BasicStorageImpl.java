@@ -25,9 +25,9 @@ import net.opengis.sensorml.v20.AbstractProcess;
 import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataEncoding;
+import org.garret.perst.Persistent;
 import org.garret.perst.Storage;
 import org.garret.perst.StorageFactory;
-import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.persistence.DataKey;
 import org.sensorhub.api.persistence.IBasicStorage;
@@ -55,8 +55,7 @@ public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> impleme
     //private static final Logger log = LoggerFactory.getLogger(BasicStorageImpl.class);    
     
     protected Storage db;
-    protected BasicStorageRoot dbRoot;    
-    protected Map<String, TimeSeriesImpl> dataStores;
+    protected Persistent dbRoot;
     protected boolean autoCommit;
     
         
@@ -82,8 +81,6 @@ public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> impleme
                 dbRoot = createRoot(db);    
                 db.setRoot(dbRoot);
             }
-            
-            dataStores = dbRoot.dataStores;
         }
         catch (Exception e)
         {
@@ -92,11 +89,11 @@ public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> impleme
     }
     
     
-    protected BasicStorageRoot createRoot(Storage db)
+    protected Persistent createRoot(Storage db)
     {
         return new BasicStorageRoot(db);
     }
-
+    
 
     @Override
     public void stop() throws SensorHubException
@@ -173,37 +170,37 @@ public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> impleme
     @Override
     public AbstractProcess getLatestDataSourceDescription()
     {
-        return dbRoot.getLatestDataSourceDescription();
+        return ((BasicStorageRoot)dbRoot).getLatestDataSourceDescription();
     }
 
 
     @Override
     public List<AbstractProcess> getDataSourceDescriptionHistory(double startTime, double endTime)
     {
-        return dbRoot.getDataSourceDescriptionHistory(startTime, endTime);
+        return ((BasicStorageRoot)dbRoot).getDataSourceDescriptionHistory(startTime, endTime);
     }
 
 
     @Override
     public AbstractProcess getDataSourceDescriptionAtTime(double time)
     {
-        return dbRoot.getDataSourceDescriptionAtTime(time);
+        return ((BasicStorageRoot)dbRoot).getDataSourceDescriptionAtTime(time);
     }
 
 
     @Override
-    public synchronized void storeDataSourceDescription(AbstractProcess process) throws StorageException
+    public synchronized void storeDataSourceDescription(AbstractProcess process)
     {
-        dbRoot.storeDataSourceDescription(process);        
+        ((BasicStorageRoot)dbRoot).storeDataSourceDescription(process);        
         if (autoCommit)
             commit();
     }
 
 
     @Override
-    public synchronized void updateDataSourceDescription(AbstractProcess process) throws StorageException
+    public synchronized void updateDataSourceDescription(AbstractProcess process)
     {
-        dbRoot.updateDataSourceDescription(process);
+        ((BasicStorageRoot)dbRoot).updateDataSourceDescription(process);
         if (autoCommit)
             commit();
     }
@@ -212,7 +209,7 @@ public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> impleme
     @Override
     public synchronized void removeDataSourceDescription(double time)
     {
-        dbRoot.removeDataSourceDescription(time);        
+        ((BasicStorageRoot)dbRoot).removeDataSourceDescription(time);        
         if (autoCommit)
             commit();
     }
@@ -221,16 +218,16 @@ public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> impleme
     @Override
     public synchronized void removeDataSourceDescriptionHistory(double startTime, double endTime)
     {
-        dbRoot.removeDataSourceDescriptionHistory(startTime, endTime);        
+        ((BasicStorageRoot)dbRoot).removeDataSourceDescriptionHistory(startTime, endTime);        
         if (autoCommit)
             commit();
     }
     
     
     @Override
-    public synchronized void addRecordType(String name, DataComponent recordStructure, DataEncoding recommendedEncoding) throws StorageException
+    public synchronized void addRecordType(String name, DataComponent recordStructure, DataEncoding recommendedEncoding)
     {
-        dbRoot.addRecordType(name, recordStructure, recommendedEncoding);
+        ((BasicStorageRoot)dbRoot).addRecordType(name, recordStructure, recommendedEncoding);
         if (autoCommit)
             commit();
     }
@@ -239,56 +236,56 @@ public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> impleme
     @Override
     public Map<String, ? extends IRecordInfo> getRecordTypes()
     {
-        return dbRoot.getRecordTypes();
+        return ((BasicStorageRoot)dbRoot).getRecordTypes();
     }
 
 
     @Override
     public int getNumRecords(String recordType)
     {
-        return dbRoot.getNumRecords(recordType);
+        return ((BasicStorageRoot)dbRoot).getNumRecords(recordType);
     }
 
     
     @Override
     public double[] getRecordsTimeRange(String recordType)
     {
-        return dbRoot.getRecordsTimeRange(recordType);
+        return ((BasicStorageRoot)dbRoot).getRecordsTimeRange(recordType);
     }
     
     
     @Override
     public DataBlock getDataBlock(DataKey key)
     {
-        return dbRoot.getDataBlock(key);
+        return ((BasicStorageRoot)dbRoot).getDataBlock(key);
     }
 
 
     @Override
     public Iterator<DataBlock> getDataBlockIterator(IDataFilter filter)
     {
-        return dbRoot.getDataBlockIterator(filter);
+        return ((BasicStorageRoot)dbRoot).getDataBlockIterator(filter);
     }
 
 
     @Override
     public Iterator<? extends IDataRecord> getRecordIterator(IDataFilter filter)
     {
-        return dbRoot.getRecordIterator(filter);
+        return ((BasicStorageRoot)dbRoot).getRecordIterator(filter);
     }
 
 
     @Override
     public int getNumMatchingRecords(IDataFilter filter)
     {
-        return dbRoot.getNumMatchingRecords(filter);
+        return ((BasicStorageRoot)dbRoot).getNumMatchingRecords(filter);
     }
     
 
     @Override
     public synchronized void storeRecord(DataKey key, DataBlock data)
     {
-        dbRoot.storeRecord(key, data);        
+        ((BasicStorageRoot)dbRoot).storeRecord(key, data);        
         if (autoCommit)
             commit();
         
@@ -299,7 +296,7 @@ public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> impleme
     @Override
     public synchronized void updateRecord(DataKey key, DataBlock data)
     {
-        dbRoot.updateRecord(key, data);
+        ((BasicStorageRoot)dbRoot).updateRecord(key, data);
         if (autoCommit)
             commit();
         
@@ -310,7 +307,7 @@ public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> impleme
     @Override
     public synchronized void removeRecord(DataKey key)
     {
-        dbRoot.removeRecord(key);
+        ((BasicStorageRoot)dbRoot).removeRecord(key);
         if (autoCommit)
             commit();
         
@@ -321,25 +318,11 @@ public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> impleme
     @Override
     public synchronized int removeRecords(IDataFilter filter)
     {
-        int count = dbRoot.removeRecords(filter);
+        int count = ((BasicStorageRoot)dbRoot).removeRecords(filter);
         if (autoCommit)
             commit();
         
         eventHandler.publishEvent(new StorageEvent(System.currentTimeMillis(), this, filter.getRecordType(), Type.DELETE));
         return count;
-    }
-
-
-    @Override
-    public void registerListener(IEventListener listener)
-    {
-        eventHandler.registerListener(listener);
-    }
-
-
-    @Override
-    public void unregisterListener(IEventListener listener)
-    {
-        eventHandler.unregisterListener(listener);
     }
 }

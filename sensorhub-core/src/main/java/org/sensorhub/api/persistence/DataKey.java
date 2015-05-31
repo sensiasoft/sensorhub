@@ -57,4 +57,17 @@ public class DataKey
         this.recordType = recordType;
         this.timeStamp = timeStamp;
     }
+    
+    
+    /**
+     * Constructor with specific producer ID
+     * @param recordType {@link #recordType}
+     * @param producerID {@link #producerID}
+     * @param timeStamp {@link #timeStamp}
+     */
+    public DataKey(String recordType, String producerID, double timeStamp)
+    {
+        this(recordType, timeStamp);
+        this.producerID = producerID;
+    }
 }

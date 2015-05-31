@@ -14,47 +14,98 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.test.service.sos;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Set;
 import javax.xml.namespace.QName;
 import net.opengis.gml.v32.AbstractFeature;
 import net.opengis.gml.v32.Point;
 import net.opengis.gml.v32.impl.GMLFactory;
+import net.opengis.sensorml.v20.AbstractProcess;
+import net.opengis.sensorml.v20.PhysicalComponent;
+import org.sensorhub.api.data.IMultiSourceDataProducer;
 import org.sensorhub.test.sensor.FakeSensor;
 import org.vast.ogc.gml.GenericFeatureImpl;
+import org.vast.sensorML.SMLHelper;
 
 
-public class FakeSensorWithFoi extends FakeSensor
+public class FakeSensorWithFoi extends FakeSensor implements IMultiSourceDataProducer
 {
     static int MAX_FOIS = 3;
-    static String UID_PREFIX = "urn:blabla:myfois:";
+    static String FOI_UID_PREFIX = "urn:blabla:myfois:";
+    static String SENSOR_UID_PREFIX = "urn:blabla:sensors:";
     GMLFactory gmlFac = new GMLFactory(true);
-    List<AbstractFeature> fois;
+    Map<String, AbstractFeature> fois;
+    Set<String> foiIDs;
     
     
     public FakeSensorWithFoi()
     {
-        fois = new ArrayList<AbstractFeature>();
+        fois = new LinkedHashMap<String, AbstractFeature>();
+        foiIDs = new LinkedHashSet<String>();
         
         for (int foiNum = 1; foiNum <= MAX_FOIS; foiNum++)
         {
             QName fType = new QName("http://myNsUri", "MyFeature");
             AbstractFeature foi = new GenericFeatureImpl(fType);
             foi.setId("F" + foiNum);
-            foi.setUniqueIdentifier(UID_PREFIX + foiNum);
+            foi.setUniqueIdentifier(FOI_UID_PREFIX + foiNum);
             foi.setName("FOI" + foiNum);
             foi.setDescription("This is feature of interest #" + foiNum);                        
             Point p = gmlFac.newPoint();
             p.setPos(new double[] {foiNum, foiNum, 0.0});
             foi.setLocation(p);
-            fois.add(foi);
+            fois.put(SENSOR_UID_PREFIX + foiNum, foi);
+            foiIDs.add(foi.getUniqueIdentifier());
         }        
     }
     
     
     @Override
-    public List<AbstractFeature> getFeaturesOfInterest()
+    public Collection<String> getEntityIDs()
     {
-        return fois;
+        return fois.keySet();
+    }
+
+
+    @Override
+    public AbstractProcess getCurrentDescription(String entityID)
+    {
+        SMLHelper fac = new SMLHelper();
+        PhysicalComponent sensor = fac.newPhysicalComponent();
+        sensor.setUniqueIdentifier(entityID);
+        sensor.setName("Networked sensor " + entityID.substring(entityID.lastIndexOf(':')+1));
+        return sensor;
+    }
+
+
+    @Override
+    public double getLastDescriptionUpdate(String entityID)
+    {
+        return 0;
+    }
+
+
+    @Override
+    public AbstractFeature getCurrentFeatureOfInterest(String entityID)
+    {
+        return fois.get(entityID);
+    }
+
+
+    @Override
+    public Collection<AbstractFeature> getFeaturesOfInterest()
+    {
+        return Collections.unmodifiableCollection(fois.values());
+    }
+
+
+    @Override
+    public Collection<String> getFeaturesOfInterestIDs()
+    {
+        return Collections.unmodifiableCollection(foiIDs);
     }
 }

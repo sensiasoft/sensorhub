@@ -27,6 +27,7 @@ import org.sensorhub.api.persistence.IDataRecord;
 import org.sensorhub.api.persistence.IObsFilter;
 import org.sensorhub.api.persistence.IRecordInfo;
 import org.sensorhub.api.persistence.ObsFilter;
+import org.sensorhub.api.persistence.ObsKey;
 import org.sensorhub.api.sensor.SensorException;
 import org.vast.data.DataIterator;
 import org.vast.ogc.def.DefinitionRef;
@@ -59,7 +60,8 @@ public class StorageDataProvider implements ISOSDataProvider
     DataComponentFilter recordFilter;
     double replaySpeedFactor;
     double lastRecordTime = Double.NaN;
-    long lastSystemTime; 
+    long lastSystemTime;
+    String foiID;
     
     
     class StorageState
@@ -157,12 +159,22 @@ public class StorageDataProvider implements ISOSDataProvider
         
         // use same value for resultTime for now
         TimeExtent resultTime = new TimeExtent();
-        resultTime.setBaseTime(samplingTime);        
+        resultTime.setBaseTime(samplingTime);
+        
+        // observation property URI
+        String obsPropDef = result.getDefinition();
+        if (obsPropDef == null)
+            obsPropDef = SWEConstants.NIL_UNKNOWN;
+        
+        // FOI
+        String foiID = this.foiID;
+        if (foiID == null)
+            foiID = SWEConstants.NIL_UNKNOWN;
         
         // create observation object
         IObservation obs = new ObservationImpl();
-        obs.setFeatureOfInterest(new FeatureRef("http://TODO"));
-        obs.setObservedProperty(new DefinitionRef("http://TODO"));
+        obs.setFeatureOfInterest(new FeatureRef(foiID));
+        obs.setObservedProperty(new DefinitionRef(obsPropDef));
         obs.setProcedure(new ProcedureRef(storage.getLatestDataSourceDescription().getUniqueIdentifier()));
         obs.setPhenomenonTime(phenTime);
         obs.setResultTime(resultTime);
@@ -210,8 +222,13 @@ public class StorageDataProvider implements ISOSDataProvider
         
         // get datablock from selected data store 
         StorageState state = dataStoresStates.get(nextStorageIndex);
-        DataBlock datablk = state.nextRecord.getData();
+        IDataRecord nextRec = state.nextRecord;
+        DataBlock datablk = nextRec.getData();
         
+        // also save FOI ID if set
+        if (nextRec.getKey() instanceof ObsKey)
+            this.foiID = ((ObsKey)nextRec.getKey()).foiID;
+                
         // prefetch next record
         if (state.recordIterator.hasNext())
             state.nextRecord = state.recordIterator.next();

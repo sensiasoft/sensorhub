@@ -52,7 +52,7 @@ public class ObsSeriesImpl extends TimeSeriesImpl
     
     ObsSeriesImpl(Storage db, DataComponent recordDescription, DataEncoding recommendedEncoding)
     {
-        super(db,recordDescription, recommendedEncoding);
+        super(db, recordDescription, recommendedEncoding);
         this.foiTimesStore = new FoiTimesStoreImpl(db);
     }
     
@@ -85,7 +85,7 @@ public class ObsSeriesImpl extends TimeSeriesImpl
                         foiTime.timePeriod[1] = timeRange[1];
                                     
                     // case period is completely outside of time range
-                    if (foiTime.timePeriod[0] >= foiTime.timePeriod[1])
+                    if (foiTime.timePeriod[0] > foiTime.timePeriod[1])
                         it.remove();
                 }
             }
@@ -105,7 +105,7 @@ public class ObsSeriesImpl extends TimeSeriesImpl
             // FoI ID list
             final Set<FoiTimePeriod> foiTimePeriods = getFoiTimePeriods(filter);
                         
-            if (foiTimePeriods != null)
+            if (foiTimePeriods != null && !foiTimePeriods.isEmpty())
             {
                 // scan through each time range sequentially
                 // but wrap the proces with a single iterator
@@ -134,7 +134,6 @@ public class ObsSeriesImpl extends TimeSeriesImpl
                 
                     public final void remove()
                     {
-                        recordIt.remove();
                     }
                 };
             }
@@ -155,7 +154,7 @@ public class ObsSeriesImpl extends TimeSeriesImpl
             if (foiTimePeriods != null)
             {
                 // scan through each time range sequentially
-                // but wrap the proces with a single iterator
+                // but wrap the process with a single iterator
                 return new Iterator<DBRecord>()
                 {
                     Iterator<FoiTimePeriod> periodIt = foiTimePeriods.iterator();
@@ -164,7 +163,7 @@ public class ObsSeriesImpl extends TimeSeriesImpl
                                         
                     public final boolean hasNext()
                     {
-                        return periodIt.hasNext() || recordIt.hasNext();
+                        return periodIt.hasNext() || (recordIt != null && recordIt.hasNext());
                     }
         
                     public final DBRecord next()

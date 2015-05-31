@@ -67,6 +67,7 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
     protected final static String LOCATION_OUTPUT_NAME = "sensorLocation";
     protected final static String ERROR_NO_UPDATE = "Sensor Description update is not supported by driver ";
     protected final static String ERROR_NO_HISTORY = "History of sensor description is not supported by driver ";
+    protected final static String ERROR_NO_ENTITIES = "Multiple entities are not supported by driver ";
     
     private Map<String, ISensorDataInterface> obsOutputs = new LinkedHashMap<String, ISensorDataInterface>();  
     private Map<String, ISensorDataInterface> statusOutputs = new LinkedHashMap<String, ISensorDataInterface>();  
@@ -159,6 +160,13 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
     }
     
     
+    @Override
+    public double getLastDescriptionUpdate()
+    {
+        return lastUpdatedSensorDescription;
+    }
+    
+    
     /**
      * This method should be called whenever the sensor description needs to be regenerated.<br/>
      * This default implementation reads the base description from the SensorML file if provided
@@ -172,12 +180,13 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
         synchronized (sensorDescription)
         {
             // by default we return the static description provided in config
-            if (config.sensorML != null && config.sensorML.length() > 0)
+            String smlUrl = config.getSensorDescriptionURL();
+            if (smlUrl != null && smlUrl.length() > 0)
             {
                 try
                 {
                     SMLUtils utils = new SMLUtils(SMLUtils.V2_0);
-                    InputStream is = new URL(config.sensorML).openStream();
+                    InputStream is = new URL(smlUrl).openStream();
                     sensorDescription = (AbstractPhysicalProcess)utils.readProcess(is);
                 }
                 catch (IOException e)
@@ -344,30 +353,23 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
 
 
     @Override
-    public double getLastDescriptionUpdate()
+    public AbstractProcess getSensorDescription(double time)
     {
-        return lastUpdatedSensorDescription;
+        throw new UnsupportedOperationException(ERROR_NO_HISTORY + MsgUtils.moduleClassAndId(this));
     }
 
 
     @Override
-    public AbstractProcess getSensorDescription(double time) throws SensorException
+    public List<AbstractProcess> getSensorDescriptionHistory()
     {
-        throw new SensorException(ERROR_NO_HISTORY + MsgUtils.moduleClassAndId(this));
-    }
-
-
-    @Override
-    public List<AbstractProcess> getSensorDescriptionHistory() throws SensorException
-    {
-        throw new SensorException(ERROR_NO_HISTORY + MsgUtils.moduleClassAndId(this));
+        throw new UnsupportedOperationException(ERROR_NO_HISTORY + MsgUtils.moduleClassAndId(this));
     }
 
 
     @Override
     public void updateSensorDescription(AbstractProcess systemDesc, boolean recordHistory) throws SensorException
     {
-        throw new SensorException(ERROR_NO_UPDATE + MsgUtils.moduleClassAndId(this));
+        throw new UnsupportedOperationException(ERROR_NO_UPDATE + MsgUtils.moduleClassAndId(this));
     }
 
 
@@ -403,8 +405,8 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
     
     
     @Override
-    public List<AbstractFeature> getFeaturesOfInterest()
+    public AbstractFeature getCurrentFeatureOfInterest()
     {
-        return Collections.EMPTY_LIST;
+        return null;
     }
 }

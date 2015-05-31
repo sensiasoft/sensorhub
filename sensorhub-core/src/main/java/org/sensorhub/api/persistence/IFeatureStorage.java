@@ -15,6 +15,7 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 package org.sensorhub.api.persistence;
 
 import java.util.Iterator;
+import org.vast.util.Bbox;
 import net.opengis.gml.v32.AbstractFeature;
 
 
@@ -30,15 +31,25 @@ import net.opengis.gml.v32.AbstractFeature;
 public interface IFeatureStorage
 {
     
-    
-    public int getNumFeatures();
+    /**
+     * @param filter filtering parameters
+     * @return Number of features matching the filter
+     */
+    public int getNumMatchingFeatures(IFeatureFilter filter);
     
     
     /**
-     * @param uid unique ID of feature
-     * @return Feature object or null if none was found
+     * @return Bounding rectangle of all features contained in this storage
      */
-    public AbstractFeature getFeatureById(String uid);
+    public Bbox getFeaturesSpatialExtent();
+    
+    
+    /**
+     * Gets IDs of features matching the given filter
+     * @param filter filtering parameters
+     * @return an iterator over IDs of all matching features
+     */
+    public Iterator<String> getFeatureIDs(IFeatureFilter filter);
     
     
     /**
@@ -46,5 +57,5 @@ public interface IFeatureStorage
      * @param filter filtering parameters
      * @return an iterator over features matching the filter, sorted by ID
      */
-    public Iterator<AbstractFeature> getFeatureIterator(IFeatureFilter filter);
+    public Iterator<AbstractFeature> getFeatures(IFeatureFilter filter);
 }

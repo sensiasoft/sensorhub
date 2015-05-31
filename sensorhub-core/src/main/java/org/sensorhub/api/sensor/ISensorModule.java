@@ -66,17 +66,15 @@ public interface ISensorModule<ConfigType extends SensorConfig> extends IDataPro
      * Retrieves historic sensor description valid at time t
      * @param time julian time (1970) at which description is valid
      * @return SMLSytem object containing sensor metadata valid at time t
-     * @throws SensorException 
      */
-    public AbstractProcess getSensorDescription(double time) throws SensorException;
+    public AbstractProcess getSensorDescription(double time);
     
     
     /**
      * Gets the whole history of sensor descriptions
      * @return list of process descriptions (with disjoint time validity periods)
-     * @throws SensorException
      */
-    public List<AbstractProcess> getSensorDescriptionHistory() throws SensorException;
+    public List<AbstractProcess> getSensorDescriptionHistory();
 
 
     /**

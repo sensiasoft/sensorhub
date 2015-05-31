@@ -14,6 +14,8 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.impl.service.sos;
 
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -29,8 +31,9 @@ import org.sensorhub.api.common.Event;
 import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.data.IDataProducerModule;
+import org.sensorhub.api.data.IMultiSourceDataProducer;
 import org.sensorhub.api.data.IStreamingDataInterface;
-import org.sensorhub.api.persistence.IFeatureFilter;
+import org.sensorhub.api.persistence.IFoiFilter;
 import org.sensorhub.api.service.ServiceException;
 import org.sensorhub.utils.MsgUtils;
 import org.vast.data.DataIterator;
@@ -98,8 +101,6 @@ public abstract class StreamDataProviderFactory<ProducerType extends IDataProduc
             Set<String> sensorOutputDefs = getObservablePropertiesFromProducer();
             caps.getObservableProperties().addAll(sensorOutputDefs);
             
-            // observed area ??
-            
             // phenomenon time
             TimeExtent phenTime = new TimeExtent();
             phenTime.setBaseAtNow(true);
@@ -113,7 +114,27 @@ public abstract class StreamDataProviderFactory<ProducerType extends IDataProduc
             caps.getResponseFormats().add(SWESOfferingCapabilities.FORMAT_OM2);
             caps.getProcedureFormats().add(SWESOfferingCapabilities.FORMAT_SML2);
             
-            // TODO foi types
+            // FOI IDs
+            if (producer instanceof IMultiSourceDataProducer)
+            {
+                Collection<String> foiIDs = ((IMultiSourceDataProducer) producer).getFeaturesOfInterestIDs();
+                if (foiIDs.size() < config.maxFois)
+                {
+                    for (String uid: foiIDs)
+                        caps.getRelatedFeatures().add(uid);
+                }
+            }
+            else
+            {
+                AbstractFeature foi = producer.getCurrentFeatureOfInterest();
+                if (foi != null)
+                    caps.getRelatedFeatures().add(foi.getUniqueIdentifier());
+            }
+            
+            // FOI area
+            /*Bbox bbox = ((IObsStorage) storage).getFoisSpatialExtent();
+            if (bbox != null)
+                caps.getObservedAreas().add(bbox);*/
             
             // obs types
             Set<String> obsTypes = getObservationTypesFromProducer();
@@ -218,16 +239,20 @@ public abstract class StreamDataProviderFactory<ProducerType extends IDataProduc
     
     
     @Override
-    public Iterator<AbstractFeature> getFoiIterator(final IFeatureFilter filter) throws Exception
+    public Iterator<AbstractFeature> getFoiIterator(final IFoiFilter filter) throws Exception
     {
         checkEnabled();
         
-        // get all fois advertised by producer
-        final Iterator<AbstractFeature> allFois = producer.getFeaturesOfInterest().iterator();
+        // get all fois from producer
+        final Iterator<? extends AbstractFeature> allFois;        
+        if (producer instanceof IMultiSourceDataProducer)
+            allFois = ((IMultiSourceDataProducer)producer).getFeaturesOfInterest().iterator();
+        else
+            allFois = Arrays.asList(producer.getCurrentFeatureOfInterest()).iterator();
         
         // return all features if no filter is used
         if (filter.getFeatureIDs() == null && filter.getRoi() == null)
-            return allFois;
+            return (Iterator<AbstractFeature>)allFois;
         
         // otherwise apply filter
         return new Iterator<AbstractFeature>()

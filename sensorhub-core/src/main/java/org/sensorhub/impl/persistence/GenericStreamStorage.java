@@ -35,9 +35,12 @@ import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.data.DataEvent;
 import org.sensorhub.api.data.FoiEvent;
 import org.sensorhub.api.data.IDataProducerModule;
+import org.sensorhub.api.data.IMultiSourceDataProducer;
 import org.sensorhub.api.data.IStreamingDataInterface;
 import org.sensorhub.api.persistence.DataKey;
-import org.sensorhub.api.persistence.IFeatureFilter;
+import org.sensorhub.api.persistence.IBasicStorage;
+import org.sensorhub.api.persistence.IFoiFilter;
+import org.sensorhub.api.persistence.IMultiSourceStorage;
 import org.sensorhub.api.persistence.IObsStorage;
 import org.sensorhub.api.persistence.IRecordStorageModule;
 import org.sensorhub.api.persistence.IDataFilter;
@@ -57,6 +60,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vast.swe.SWEHelper;
 import org.vast.swe.ScalarIndexer;
+import org.vast.util.Bbox;
 
 
 /**
@@ -77,6 +81,7 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
     IRecordStorageModule<StorageConfig> storage;
     WeakReference<IDataProducerModule<?>> dataSourceRef;
     Map<String, ScalarIndexer> timeStampIndexers = new HashMap<String, ScalarIndexer>();
+    Map<String, String> currentFoiMap = new HashMap<String, String>();
     String currentFoi;
     
     
@@ -114,7 +119,7 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
     public void start() throws SensorHubException
     {
         // start the underlying storage
-        storage.start();        
+        storage.start();
         
         IDataProducerModule<?> dataSource = dataSourceRef.get();
         if (dataSource != null)
@@ -126,6 +131,23 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
             // otherwise just get the latest sensor description in case we were down during the last update
             else
                 storage.storeDataSourceDescription(dataSource.getCurrentDescription());
+            
+            // also init current FOI
+            if (dataSource instanceof IMultiSourceDataProducer)
+            {
+                for (String entityID: ((IMultiSourceDataProducer)dataSource).getEntityIDs())
+                {
+                    AbstractFeature foi = ((IMultiSourceDataProducer)dataSource).getCurrentFeatureOfInterest(entityID);
+                    if (foi != null)
+                        currentFoiMap.put(entityID, foi.getUniqueIdentifier());
+                }
+            }
+            else
+            {
+                AbstractFeature foi = dataSource.getCurrentFeatureOfInterest();
+                if (foi != null)
+                    currentFoi = foi.getUniqueIdentifier();
+            }
             
             // register to data events
             if (config.selectedOutputs == null || config.selectedOutputs.length == 0)
@@ -144,38 +166,78 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
     }
     
     
-    protected void configureStorageForDataSource(IDataProducerModule<?> dataSource, IRecordStorageModule<?> storage) throws SensorHubException
+    protected void configureStorageForDataSource(IDataProducerModule<?> dataSource, IRecordStorageModule<?> storage) throws StorageException
     {
         if (storage.getRecordTypes().size() > 0)
             throw new RuntimeException("Storage " + MsgUtils.moduleString(storage) + " is already configured");
         
-        // copy sensor description history (if supported)
+        // copy sensor description (only current or full history if supported)
         if (dataSource instanceof ISensorModule<?> && ((ISensorModule<?>)dataSource).isSensorDescriptionHistorySupported())
         {
             ISensorModule<?> sensor = ((ISensorModule<?>)dataSource);
             for (AbstractProcess sensorDesc: sensor.getSensorDescriptionHistory())
                 storage.storeDataSourceDescription(sensorDesc);
         }
-        
-        // or only copy current description
+        else
+            storage.storeDataSourceDescription(dataSource.getCurrentDescription());
+            
+        // for multi-source producers, prepare data stores for all entities
+        if (dataSource instanceof IMultiSourceDataProducer)
+        {
+            for (String entityID: ((IMultiSourceDataProducer)dataSource).getEntityIDs())
+                addProducerInfo(entityID);
+        }
         else
         {
-            storage.storeDataSourceDescription(dataSource.getCurrentDescription());
+            // copy current feature of interest
+            if (storage instanceof IObsStorage)
+            {
+                String producerID = dataSource.getCurrentDescription().getUniqueIdentifier();
+                AbstractFeature foi = dataSource.getCurrentFeatureOfInterest();
+                if (foi != null)
+                    ((IObsStorage)storage).storeFoi(producerID, foi);
+            }
+            
+            // create one data store for each sensor output
+            for (Entry<String, ? extends IStreamingDataInterface> item: dataSource.getAllOutputs().entrySet())
+            {
+                String name = item.getKey();
+                IStreamingDataInterface output = item.getValue();
+                storage.addRecordType(name, output.getRecordDescription(), output.getRecommendedEncoding());
+            }
         }
-        
-        // create one data store for each sensor output
-        for (Entry<String, ? extends IStreamingDataInterface> item: dataSource.getAllOutputs().entrySet())
+    }
+    
+    
+    protected void addProducerInfo(String producerID)
+    {
+        if (storage instanceof IMultiSourceStorage)
         {
-            String name = item.getKey();
-            IStreamingDataInterface output = item.getValue();
-            storage.addRecordType(name, output.getRecordDescription(), output.getRecommendedEncoding());
-        }
-        
-        // copy features of interests
-        if (storage instanceof IObsStorage)
-        {
-            for (AbstractFeature foi: dataSource.getFeaturesOfInterest())
-                ((IObsStorage) storage).storeFoi(foi);
+            if (((IMultiSourceStorage<?>)storage).getProducerIDs().contains(producerID))
+                return;
+            
+            IDataProducerModule<?> dataSource = dataSourceRef.get();
+            if (dataSource != null && dataSource instanceof IMultiSourceDataProducer)
+            {
+                // create producer data store
+                IBasicStorage dataStore = ((IMultiSourceStorage<IBasicStorage>)storage).addDataStore(producerID);
+                
+                // save producer SensorML description
+                dataStore.storeDataSourceDescription(((IMultiSourceDataProducer) dataSource).getCurrentDescription(producerID));
+                
+                // save current FOI
+                AbstractFeature foi = ((IMultiSourceDataProducer) dataSource).getCurrentFeatureOfInterest(producerID);
+                if (foi != null)
+                    ((IObsStorage)storage).storeFoi(producerID, foi);
+                
+                // create one data store for each sensor output
+                for (Entry<String, ? extends IStreamingDataInterface> item: dataSource.getAllOutputs().entrySet())
+                {
+                    String name = item.getKey();
+                    IStreamingDataInterface output = item.getValue();
+                    dataStore.addRecordType(name, output.getRecordDescription(), output.getRecommendedEncoding());
+                }
+            }
         }
     }
     
@@ -194,7 +256,7 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
         }
     }
     
-    
+        
     @Override
     public void stop() throws SensorHubException
     {
@@ -243,12 +305,26 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
                 
                 for (DataBlock record: dataEvent.getRecords())
                 {
+                    // get time stamp
                     double time;
                     if (timeStampIndexer != null)
                         time = timeStampIndexer.getDoubleValue(record);
                     else
                         time = e.getTimeStamp() / 1000.;
-                    ObsKey key = new ObsKey(outputName, currentFoi, time);
+                    
+                    // get FOI ID
+                    String foiID;
+                    String entityID = dataEvent.getRelatedEntityID();
+                    if (entityID != null)
+                    {
+                        addProducerInfo(entityID); // to handle new producer
+                        foiID = currentFoiMap.get(entityID);
+                    }
+                    else
+                        foiID = currentFoi; 
+                    
+                    // store record with proper key
+                    ObsKey key = new ObsKey(outputName, entityID, foiID, time);                    
                     storage.storeRecord(key, record);
                     
                     if (log.isTraceEnabled())
@@ -259,62 +335,49 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
                 storage.setAutoCommit(saveAutoCommitState);
             }
             
-            else if (e instanceof FoiEvent)
-            {
-                FoiEvent foiEvent = (FoiEvent)e;
-                
-                // store feature object if specified
-                if (storage instanceof IObsStorage)
-                {
-                    if (foiEvent.getFoi() != null)
-                        ((IObsStorage) storage).storeFoi(foiEvent.getFoi());
-                }
-                
-                currentFoi = foiEvent.getFoiID();
-            }
-            
             else if (e instanceof SensorEvent)
             {
                 if (((SensorEvent) e).getType() == SensorEvent.Type.SENSOR_CHANGED)
                 {
-                    try
-                    {
-                        // TODO check that description was actually updated?
-                        // in the current state, the same description would be added at each restart
-                        // should we compare contents? if not, on what time tag can we rely on?
-                        // AbstractSensorModule implementation of getLastSensorDescriptionUpdate() is
-                        // only useful between restarts since it will be resetted to current time at startup...
-                        
-                        // TODO to manage this issue, first check that no other description is valid at the same time
-                        storage.storeDataSourceDescription(dataSourceRef.get().getCurrentDescription());
-                    }
-                    catch (SensorHubException ex)
-                    {
-                        log.error("Error while updating sensor description", ex);
-                    }
+                    // TODO check that description was actually updated?
+                    // in the current state, the same description would be added at each restart
+                    // should we compare contents? if not, on what time tag can we rely on?
+                    // AbstractSensorModule implementation of getLastSensorDescriptionUpdate() is
+                    // only useful between restarts since it will be resetted to current time at startup...
+                    
+                    // TODO to manage this issue, first check that no other description is valid at the same time
+                    storage.storeDataSourceDescription(dataSourceRef.get().getCurrentDescription());
                 }
+            }
+            
+            else if (e instanceof FoiEvent && storage instanceof IObsStorage)
+            {
+                FoiEvent foiEvent = (FoiEvent)e;
+                String producerID = ((FoiEvent) e).getRelatedEntityID();
+                
+                // store feature object if specified
+                if (foiEvent.getFoi() != null)
+                    ((IObsStorage) storage).storeFoi(producerID, foiEvent.getFoi());
+                
+                if (producerID != null)
+                    currentFoiMap.put(producerID, foiEvent.getFoiID());
+                else
+                    currentFoi = foiEvent.getFoiID();
             }
         }
     }
     
 
     @Override
-    public void addRecordType(String name, DataComponent recordStructure, DataEncoding recommendedEncoding) throws StorageException
+    public void addRecordType(String name, DataComponent recordStructure, DataEncoding recommendedEncoding)
     {
         // register new record type with underlying storage
         storage.addRecordType(name, recordStructure, recommendedEncoding);
         
         // prepare to receive events
-        try
-        {
-            IDataProducerModule<?> dataSource = dataSourceRef.get();
-            if (dataSource != null)
-                prepareToReceiveEvents(dataSource.getAllOutputs().get(name));
-        }
-        catch (Exception e)
-        {
-            throw new StorageException("Error when registering to new data stream " + name, e);
-        }
+        IDataProducerModule<?> dataSource = dataSourceRef.get();
+        if (dataSource != null)
+            prepareToReceiveEvents(dataSource.getAllOutputs().get(name));
     }
 
 
@@ -389,14 +452,14 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
 
 
     @Override
-    public void storeDataSourceDescription(AbstractProcess process) throws StorageException
+    public void storeDataSourceDescription(AbstractProcess process)
     {
         storage.storeDataSourceDescription(process);        
     }
 
 
     @Override
-    public void updateDataSourceDescription(AbstractProcess process) throws StorageException
+    public void updateDataSourceDescription(AbstractProcess process)
     {
         storage.updateDataSourceDescription(process);        
     }
@@ -493,37 +556,37 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
 
 
     @Override
-    public int getNumFois()
+    public int getNumFois(IFoiFilter filter)
     {
         if (storage instanceof IObsStorage)
-            return ((IObsStorage) storage).getNumFois();
+            return ((IObsStorage) storage).getNumFois(filter);
         
         return 0;
     }
-
-
+    
+    
     @Override
-    public Iterator<String> getFoiIDs()
+    public Bbox getFoisSpatialExtent()
     {
         if (storage instanceof IObsStorage)
-            return ((IObsStorage) storage).getFoiIDs();
-        
-        return Collections.EMPTY_LIST.iterator();
-    }
-
-
-    @Override
-    public AbstractFeature getFoi(String uid)
-    {
-        if (storage instanceof IObsStorage)
-            return ((IObsStorage) storage).getFoi(uid);
+            return ((IObsStorage) storage).getFoisSpatialExtent();
         
         return null;
     }
 
 
     @Override
-    public Iterator<AbstractFeature> getFois(IFeatureFilter filter)
+    public Iterator<String> getFoiIDs(IFoiFilter filter)
+    {
+        if (storage instanceof IObsStorage)
+            return ((IObsStorage) storage).getFoiIDs(filter);
+        
+        return Collections.EMPTY_LIST.iterator();
+    }
+
+
+    @Override
+    public Iterator<AbstractFeature> getFois(IFoiFilter filter)
     {
         if (storage instanceof IObsStorage)
             return ((IObsStorage) storage).getFois(filter);
@@ -533,9 +596,9 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
 
 
     @Override
-    public void storeFoi(AbstractFeature foi)
+    public void storeFoi(String producerID, AbstractFeature foi)
     {
         if (storage instanceof IObsStorage)
-            storeFoi(foi);        
+            storeFoi(producerID, foi);        
     }
 }

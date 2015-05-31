@@ -19,15 +19,16 @@ import net.opengis.gml.v32.AbstractFeature;
 import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataEncoding;
 import org.garret.perst.Storage;
-import org.sensorhub.api.persistence.IFeatureFilter;
+import org.sensorhub.api.persistence.IFoiFilter;
 import org.sensorhub.api.persistence.IObsStorage;
-import org.sensorhub.api.persistence.StorageException;
+import org.vast.util.Bbox;
 
 
 /**
  * <p>
  * PERST implementation of an observation storage fed by a single producer.<br/>
- * This adds information about feature of interests observation times.
+ * This also stores information about features of interest and their
+ * observation times.
  * </p>
  *
  * @author Alex Robin <alex.robin@sensiasoftware.com>
@@ -49,43 +50,50 @@ class ObsStorageRoot extends BasicStorageRoot implements IObsStorage
     }
     
     
-    @Override
-    public int getNumFois()
+    public ObsStorageRoot(Storage db, FeatureStoreImpl featureStore)
     {
-        return featureStore.getNumFeatures();
-    }
-
-
-    @Override
-    public Iterator<String> getFoiIDs()
-    {
-        return featureStore.getFeatureIDs();
-    }
-
-
-    @Override
-    public AbstractFeature getFoi(String uid)
-    {
-        return featureStore.getFeatureById(uid);
-    }
-
-
-    @Override
-    public Iterator<AbstractFeature> getFois(IFeatureFilter filter)
-    {
-        return featureStore.getFeatureIterator(filter);
+        this(db);
+        this.featureStore = featureStore;
     }
     
     
     @Override
-    public void storeFoi(AbstractFeature foi)
+    public int getNumFois(IFoiFilter filter)
+    {
+        return featureStore.getNumMatchingFeatures(filter);
+    }
+    
+    
+    @Override
+    public Bbox getFoisSpatialExtent()
+    {
+        return featureStore.getFeaturesSpatialExtent();
+    }
+
+
+    @Override
+    public Iterator<String> getFoiIDs(IFoiFilter filter)
+    {
+        return featureStore.getFeatureIDs(filter);
+    }
+
+
+    @Override
+    public Iterator<AbstractFeature> getFois(IFoiFilter filter)
+    {
+        return featureStore.getFeatures(filter);
+    }
+    
+    
+    @Override
+    public void storeFoi(String producerID, AbstractFeature foi)
     {
         featureStore.store(foi);
     }
 
 
     @Override
-    public void addRecordType(String name, DataComponent recordStructure, DataEncoding recommendedEncoding) throws StorageException
+    public void addRecordType(String name, DataComponent recordStructure, DataEncoding recommendedEncoding)
     {
         ObsSeriesImpl newTimeSeries = new ObsSeriesImpl(getStorage(), recordStructure, recommendedEncoding);
         dataStores.put(name, newTimeSeries);
