@@ -22,11 +22,25 @@ public class FakeGpsConfig extends SensorConfig
     
     public String googleApiUrl = "http://maps.googleapis.com/maps/api/directions/json";
     
+    public double vehicleSpeed = 40; // km/h
+
+    // Use these to add specific start and stop locations
+    
+    public double startLatitude = Double.NaN;  // in degrees
+    
+    public double stopLatitude;  // in degrees
+
+    public double startLongitude;  // in degrees
+
+    public double stopLongitude;  // in degrees
+
+    
+    // Use these if you want random start and stop locations
+    
     public double centerLatitude; // in deg
     
     public double centerLongitude; // in deg
     
     public double areaSize = 0.1; // in deg
     
-    public double vehicleSpeed = 40; // km/h
 }

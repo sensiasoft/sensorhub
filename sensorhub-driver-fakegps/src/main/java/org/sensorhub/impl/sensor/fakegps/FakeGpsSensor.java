@@ -20,7 +20,7 @@ import org.sensorhub.impl.sensor.AbstractSensorModule;
 
 /**
  * <p>
- * Driver implementation outputing simulated GPS data after
+ * Driver implementation outputting simulated GPS data after
  * requesting trajectories from Google Directions.
  * </p>
  *
@@ -48,7 +48,7 @@ public class FakeGpsSensor extends AbstractSensorModule<FakeGpsConfig>
             super.updateSensorDescription();
             sensorDescription.setId("GPS_SENSOR");
             sensorDescription.setUniqueIdentifier("urn:test:sensors:fakegps");
-            sensorDescription.setDescription("Fake GPS sensor generating data along random itineraries obtained using Google Direction API");
+            sensorDescription.setDescription("Simulated GPS sensor generating data along random itineraries obtained using Google Direction API");
         }
     }
 
