@@ -22,6 +22,8 @@ import java.util.LinkedHashSet;
 import java.util.Map.Entry;
 import java.util.Set;
 import net.opengis.gml.v32.AbstractFeature;
+import net.opengis.gml.v32.AbstractGeometry;
+import net.opengis.gml.v32.Envelope;
 import net.opengis.sensorml.v20.AbstractProcess;
 import net.opengis.swe.v20.DataArray;
 import net.opengis.swe.v20.DataComponent;
@@ -37,11 +39,13 @@ import org.sensorhub.api.persistence.IFoiFilter;
 import org.sensorhub.api.service.ServiceException;
 import org.sensorhub.utils.MsgUtils;
 import org.vast.data.DataIterator;
+import org.vast.ogc.gml.GMLUtils;
 import org.vast.ogc.gml.JTSUtils;
 import org.vast.ogc.om.IObservation;
 import org.vast.ows.sos.SOSOfferingCapabilities;
 import org.vast.ows.swe.SWESOfferingCapabilities;
 import org.vast.swe.SWEConstants;
+import org.vast.util.Bbox;
 import org.vast.util.TimeExtent;
 import com.vividsolutions.jts.geom.Geometry;
 
@@ -73,7 +77,7 @@ public abstract class StreamDataProviderFactory<ProducerType extends IDataProduc
     @Override
     public SOSOfferingCapabilities generateCapabilities() throws ServiceException
     {
-        checkEnabled();        
+        checkEnabled();
         
         try
         {
@@ -114,27 +118,44 @@ public abstract class StreamDataProviderFactory<ProducerType extends IDataProduc
             caps.getResponseFormats().add(SWESOfferingCapabilities.FORMAT_OM2);
             caps.getProcedureFormats().add(SWESOfferingCapabilities.FORMAT_SML2);
             
-            // FOI IDs
+            // FOI IDs and BBOX
             if (producer instanceof IMultiSourceDataProducer)
             {
-                Collection<String> foiIDs = ((IMultiSourceDataProducer) producer).getFeaturesOfInterestIDs();
-                if (foiIDs.size() < config.maxFois)
+                Collection<? extends AbstractFeature> fois = ((IMultiSourceDataProducer)producer).getFeaturesOfInterest();
+                int numFois = fois.size();
+                
+                Bbox boundingRect = new Bbox();
+                for (AbstractFeature foi: fois)
                 {
-                    for (String uid: foiIDs)
-                        caps.getRelatedFeatures().add(uid);
+                    if (numFois < config.maxFois)
+                        caps.getRelatedFeatures().add(foi.getUniqueIdentifier());
+                    
+                    AbstractGeometry geom = foi.getLocation();
+                    if (geom != null)
+                    {
+                        Envelope env = geom.getGeomEnvelope();
+                        boundingRect.add(GMLUtils.envelopeToBbox(env));
+                    }
                 }
+                
+                caps.getObservedAreas().add(boundingRect);
             }
             else
             {
                 AbstractFeature foi = producer.getCurrentFeatureOfInterest();
                 if (foi != null)
+                {
                     caps.getRelatedFeatures().add(foi.getUniqueIdentifier());
+                    
+                    AbstractGeometry geom = foi.getLocation();
+                    if (geom != null)
+                    {
+                        Envelope env = geom.getGeomEnvelope();
+                        Bbox bbox = GMLUtils.envelopeToBbox(env);
+                        caps.getObservedAreas().add(bbox);
+                    }
+                }
             }
-            
-            // FOI area
-            /*Bbox bbox = ((IObsStorage) storage).getFoisSpatialExtent();
-            if (bbox != null)
-                caps.getObservedAreas().add(bbox);*/
             
             // obs types
             Set<String> obsTypes = getObservationTypesFromProducer();
