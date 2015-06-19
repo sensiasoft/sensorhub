@@ -127,7 +127,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback
         
         TruPulseConfig trupulseConfig = new TruPulseConfig();
         trupulseConfig.id = "TruPulse";
-        trupulseConfig.name = "TruPulse Ranger";
+        trupulseConfig.name = "TruPulse Range Finder";
         trupulseConfig.enabled = true;
         BluetoothConfig btConf = new BluetoothConfig();
         btConf.providerClass = BluetoothCommProvider.class.getCanonicalName();
