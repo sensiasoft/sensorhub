@@ -20,6 +20,8 @@ import java.io.OutputStream;
 import org.sensorhub.api.comm.CommConfig;
 import org.sensorhub.api.comm.ICommProvider;
 import org.sensorhub.impl.comm.BluetoothConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import android.bluetooth.BluetoothSocket;
 
 
@@ -34,6 +36,7 @@ import android.bluetooth.BluetoothSocket;
  */
 public class BluetoothCommProvider implements ICommProvider
 {
+    static final Logger log = LoggerFactory.getLogger(BluetoothCommProvider.class);
     BluetoothSocket btSocket;
     
     
@@ -47,6 +50,7 @@ public class BluetoothCommProvider implements ICommProvider
         BluetoothConfig btConf = (BluetoothConfig)config;
         BluetoothManager btManager = new BluetoothManager();
         btSocket = btManager.connectToSerialDevice(btConf.deviceName);
+        log.info("Connected to Bluetooth SPP device {}", btSocket.getRemoteDevice().getName());
     }
     
     
