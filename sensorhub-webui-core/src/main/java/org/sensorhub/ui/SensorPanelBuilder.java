@@ -14,13 +14,14 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.ui;
 
-import org.sensorhub.api.module.IModule;
 import org.sensorhub.api.module.ModuleConfig;
+import org.sensorhub.api.sensor.ISensorDataInterface;
+import org.sensorhub.api.sensor.ISensorModule;
 import org.sensorhub.ui.api.IModuleConfigFormBuilder;
 import org.sensorhub.ui.api.IModulePanelBuilder;
 import org.sensorhub.ui.data.MyBeanItem;
-import com.vaadin.data.fieldgroup.FieldGroup;
 import com.vaadin.ui.Component;
+import com.vaadin.ui.Layout;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.VerticalLayout;
 
@@ -35,35 +36,49 @@ import com.vaadin.ui.VerticalLayout;
  * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @since 1.0
  */
-public class SensorPanelBuilder implements IModulePanelBuilder
+public class SensorPanelBuilder extends DefaultModulePanelBuilder<ISensorModule<?>> implements IModulePanelBuilder<ISensorModule<?>>
 {
     SWECommonFormBuilder sweFormBuilder = new SWECommonFormBuilder();
     
     
     @Override
-    public Component buildPanel(MyBeanItem<ModuleConfig> beanItem, IModule<?> module, IModuleConfigFormBuilder formBuilder)
+    public Component buildPanel(MyBeanItem<ModuleConfig> beanItem, ISensorModule<?> module, IModuleConfigFormBuilder formBuilder)
     {
-        ModuleConfig moduleConfig = beanItem.getBean();
+        Panel panel = (Panel)super.buildPanel(beanItem, module, formBuilder);       
         
-        // create panel with module name
-        String moduleName = beanItem.getBean().name + " (" + beanItem.getBean().moduleClass  + ")";
-        Panel panel = new Panel(moduleName);
-                
-        // add generated form
-        VerticalLayout layout = new VerticalLayout();
-        layout.setSizeUndefined();
-        layout.setMargin(true);
-        
-        Component form = formBuilder.buildForm(new FieldGroup(beanItem));
-        layout.addComponent(form);
-        
-        
-        // only if module is loaded and started
-        if (module != null && module.isEnabled())
+        // add I/O panel only if module is loaded and started
+        if (module != null)
         {
+            Panel ioPanel;
             
+            // measurement outputs
+            ioPanel = newPanel("Observation Outputs");
+            for (ISensorDataInterface output: module.getObservationOutputs().values())
+            {
+                Component form = sweFormBuilder.buildForm(output.getRecordDescription());
+                ((Layout)ioPanel.getContent()).addComponent(form);
+            }
+            ((Layout)panel.getContent()).addComponent(ioPanel);
+            
+            // status outputs
+            ioPanel = newPanel("Status Outputs");
+            for (ISensorDataInterface output: module.getStatusOutputs().values())
+            {
+                Component form = sweFormBuilder.buildForm(output.getRecordDescription());
+                ((Layout)ioPanel.getContent()).addComponent(form);
+            }           
+            ((Layout)panel.getContent()).addComponent(ioPanel);
         }
                 
+        return panel;
+    }
+    
+    
+    protected Panel newPanel(String title)
+    {
+        Panel panel = new Panel(title);
+        VerticalLayout layout = new VerticalLayout();
+        layout.setMargin(true);
         panel.setContent(layout);
         return panel;
     }

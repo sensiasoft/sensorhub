@@ -12,23 +12,21 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
  
 ******************************* END LICENSE BLOCK ***************************/
 
-package org.sensorhub.impl.sensor.drivers;
+package org.sensorhub.impl.comm;
 
-import org.sensorhub.api.sensor.SensorDriverConfig;
+import org.sensorhub.api.comm.CommConfig;
 
 
 /**
  * <p>
- * Driver configuration options for the USB hardware interface
+ * Driver configuration options for the Bluetooth hardware interface
  * </p>
  *
  * @author Alex Robin <alex.robin@sensiasoftware.com>
- * @since Nov 5, 2010
+ * @since June 18, 2015
  */
-public class USBDriverConfig extends SensorDriverConfig
-{
-	
-    public int deviceID;
-	
-	public int deviceClass;
+public class BluetoothConfig extends CommConfig
+{	
+    public String deviceName;
+    public String serviceUuid;
 }

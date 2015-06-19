@@ -95,7 +95,7 @@ class BasicStorageRoot extends Persistent implements IBasicStorage
 
 
     @Override
-    public synchronized void storeDataSourceDescription(AbstractProcess process)
+    public void storeDataSourceDescription(AbstractProcess process)
     {
         if (process.getNumValidTimes() > 0)
         {

@@ -211,6 +211,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
             module.getConfiguration().enabled = true;
             module.start();      
             eventHandler.publishEvent(new ModuleEvent(module, ModuleEvent.Type.ENABLED));
+            log.debug("Module " + MsgUtils.moduleString(module) +  " started");
         }
         
         return module;
@@ -241,6 +242,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
             }
             
             eventHandler.publishEvent(new ModuleEvent(module, ModuleEvent.Type.DISABLED));
+            log.debug("Module " + MsgUtils.moduleString(module) +  " stopped");
         }
     }
     
@@ -263,6 +265,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
         
         configRepos.remove(moduleID);        
         eventHandler.publishEvent(new ModuleEvent(module, ModuleEvent.Type.DELETED));
+        log.debug("Module " + MsgUtils.moduleString(module) +  " removed");
     }
     
     

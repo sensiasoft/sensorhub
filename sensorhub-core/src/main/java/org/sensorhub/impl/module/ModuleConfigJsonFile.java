@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import org.sensorhub.api.module.IModuleConfigRepository;
 import org.sensorhub.api.module.ModuleConfig;
 import com.google.gson.Gson;
@@ -209,8 +210,14 @@ public class ModuleConfigJsonFile implements IModuleConfigRepository
         readJSON();
         
         for (ModuleConfig config: configList)
+        {
+            // generate a new ID if non was provided
+            if (config.id == null)
+                config.id = UUID.randomUUID().toString();
+            
             configMap.put(config.id, config); 
-                
+        }
+        
         writeJSON();
     }
     

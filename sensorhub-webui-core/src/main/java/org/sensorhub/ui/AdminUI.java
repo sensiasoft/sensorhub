@@ -27,6 +27,7 @@ import org.sensorhub.api.processing.ProcessConfig;
 import org.sensorhub.api.sensor.SensorConfig;
 import org.sensorhub.api.service.ServiceConfig;
 import org.sensorhub.impl.SensorHub;
+import org.sensorhub.impl.persistence.StreamStorageConfig;
 import org.sensorhub.impl.service.HttpServer;
 import org.sensorhub.ui.api.IModuleConfigFormBuilder;
 import org.sensorhub.ui.api.IModulePanelBuilder;
@@ -54,6 +55,7 @@ import com.vaadin.ui.Window.CloseListener;
 
 //@Theme("reindeer")
 @Theme("runo")
+//@Theme("valo")
 public class AdminUI extends com.vaadin.ui.UI
 {
     private static final long serialVersionUID = 4069325051233125115L;
@@ -67,13 +69,16 @@ public class AdminUI extends com.vaadin.ui.UI
     VerticalLayout configArea;
     AdminUIConfig uiConfig;
     
-    Map<String, IModulePanelBuilder> customPanels = new HashMap<String, IModulePanelBuilder>();
+    Map<Class<?>, MyBeanItemContainer<ModuleConfig>> moduleConfigLists = new HashMap<Class<?>, MyBeanItemContainer<ModuleConfig>>();
+    Map<String, IModulePanelBuilder<?>> customPanels = new HashMap<String, IModulePanelBuilder<?>>();
     Map<String, IModuleConfigFormBuilder> customForms = new HashMap<String, IModuleConfigFormBuilder>();
     
     
     @Override
     protected void init(VaadinRequest request)
     {
+        String configClass = null;
+        
         // retrieve module config
         try
         {
@@ -86,37 +91,47 @@ public class AdminUI extends com.vaadin.ui.UI
             throw new RuntimeException("Cannot get UI module configuration", e);
         }
         
-        // prepare custom form builders
-        for (CustomPanelConfig customForm: uiConfig.customForms)
+        try
         {
-            try
+            // load default form builders        
+            configClass = StreamStorageConfig.class.getCanonicalName();
+            customForms.put(configClass, GenericStorageConfigForm.class.newInstance());
+        
+            // load custom form builders defined in config
+            for (CustomPanelConfig customForm: uiConfig.customForms)
             {
+                configClass = customForm.configClass;
                 Class<?> clazz = Class.forName(customForm.builderClass);
                 IModuleConfigFormBuilder formBuilder = (IModuleConfigFormBuilder)clazz.newInstance();
-                customForms.put(customForm.configClass, formBuilder);
-                log.debug("Loaded custom form for " + customForm.configClass);
-            }
-            catch (Exception e)
-            {
-                log.error("Error while instantiating form builder for config class " + customForm.configClass, e);
+                customForms.put(configClass, formBuilder);
+                log.debug("Loaded custom form for " + configClass);            
             }
         }
-        
-        // prepare custom panel builders
-        for (CustomPanelConfig customPanel: uiConfig.customPanels)
+        catch (Exception e)
         {
-            try
+            log.error("Error while instantiating form builder for config class " + configClass, e);
+        }
+        
+        try
+        {
+            // load default panel builders
+            configClass = SensorConfig.class.getCanonicalName();
+            customPanels.put(configClass, SensorPanelBuilder.class.newInstance());        
+        
+            // load custom panel builders defined in config
+            for (CustomPanelConfig customPanel: uiConfig.customPanels)
             {
+                configClass = customPanel.configClass;
                 Class<?> clazz = Class.forName(customPanel.builderClass);
-                IModulePanelBuilder panelBuilder = (IModulePanelBuilder)clazz.newInstance();
-                customPanels.put(customPanel.configClass, panelBuilder);
-                log.debug("Loaded custom panel for " + customPanel.configClass);
-            }
-            catch (Exception e)
-            {
-                log.error("Error while instantiating panel builder for config class " + customPanel.configClass, e);
-            }
-        } 
+                IModulePanelBuilder<?> panelBuilder = (IModulePanelBuilder<?>)clazz.newInstance();
+                customPanels.put(configClass, panelBuilder);
+                log.debug("Loaded custom panel for " + configClass);
+            } 
+        }
+        catch (Exception e)
+        {
+            log.error("Error while instantiating panel builder for config class " + configClass, e);
+        }
         
         // init main panels
         HorizontalSplitPanel splitPanel = new HorizontalSplitPanel();
@@ -181,6 +196,7 @@ public class AdminUI extends com.vaadin.ui.UI
                 container.addBean(config);
         }
         
+        moduleConfigLists.put(configType, container);
         displayModuleList(layout, container, configType);
     }
     
@@ -192,10 +208,11 @@ public class AdminUI extends com.vaadin.ui.UI
         final Table table = new Table();
         table.setSizeFull();
         table.setSelectable(true);
+        table.setImmediate(true);
         table.setColumnReorderingAllowed(false);
         table.setContainerDataSource(container);
-        table.setVisibleColumns(new Object[] {"name", "id", "enabled"});
-        table.setColumnHeaders(new String[] {"Module Name", "UUID", "Enabled"});
+        table.setVisibleColumns(new Object[] {"name", "enabled"});
+        table.setColumnHeaders(new String[] {"Module Name", "Enabled"});
         
         // item click listener to display selected module settings
         table.addItemClickListener(new ItemClickListener()
@@ -235,91 +252,96 @@ public class AdminUI extends com.vaadin.ui.UI
             @Override
             public void handleAction(Action action, Object sender, Object target)
             {
-                final ModuleConfig selectedModule = (ModuleConfig)table.getValue();
-                if (selectedModule == null)
-                    return;
-                final Item item = table.getItem(selectedModule);
-                final String moduleId = selectedModule.id;
-                
+                final Object selectedId = table.getValue();
+                                
                 if (action == ADD_MODULE_ACTION)
                 {
                     // show popup to select among available module types
-                    ModuleTypeSelectionPopup popup = new ModuleTypeSelectionPopup(configType);
+                    ModuleTypeSelectionPopup popup = new ModuleTypeSelectionPopup(AdminUI.this,  configType);
                     popup.setModal(true);
-                    AdminUI.this.addWindow(popup);
+                    addWindow(popup);
                 }
-                else if (action == REMOVE_MODULE_ACTION)
+                
+                else if (selectedId != null)
                 {
-                    final ConfirmDialog popup = new ConfirmDialog("Are you sure you want to remove module " + selectedModule.name + "?</br>All settings will be lost.");
-                    popup.addCloseListener(new CloseListener() {
-                        @Override
-                        public void windowClose(CloseEvent e)
-                        {
-                            if (popup.isConfirmed())
-                            {                    
-                                try
-                                {
-                                    SensorHub.getInstance().getModuleRegistry().destroyModule(moduleId);
-                                    table.removeItem(selectedModule);
-                                }
-                                catch (SensorHubException ex)
-                                {                        
-                                    Notification.show("Error", "The module could not be removed", Notification.Type.ERROR_MESSAGE);
-                                }
-                            }
-                        }                        
-                    });                    
+                    // possible actions when a module is selected
+                    final Item item = table.getItem(selectedId);
+                    final String moduleId = (String)item.getItemProperty("id").getValue();
+                    final String moduleName = (String)item.getItemProperty("name").getValue();
                     
-                    AdminUI.this.addWindow(popup);
-                                       
-                }
-                else if (action == ENABLE_MODULE_ACTION)
-                {
-                    final ConfirmDialog popup = new ConfirmDialog("Are you sure you want to enable module " + selectedModule.name + "?");
-                    popup.addCloseListener(new CloseListener() {
-                        @Override
-                        public void windowClose(CloseEvent e)
-                        {
-                            if (popup.isConfirmed())
-                            {                    
-                                try 
-                                {
-                                    SensorHub.getInstance().getModuleRegistry().enableModule(moduleId);
-                                    item.getItemProperty("enabled").setValue(true);
+                    if (action == REMOVE_MODULE_ACTION)
+                    {
+                        final ConfirmDialog popup = new ConfirmDialog("Are you sure you want to remove module " + moduleName + "?</br>All settings will be lost.");
+                        popup.addCloseListener(new CloseListener() {
+                            @Override
+                            public void windowClose(CloseEvent e)
+                            {
+                                if (popup.isConfirmed())
+                                {                    
+                                    try
+                                    {
+                                        SensorHub.getInstance().getModuleRegistry().destroyModule(moduleId);
+                                        table.removeItem(selectedId);
+                                    }
+                                    catch (SensorHubException ex)
+                                    {                        
+                                        Notification.show("Error", "The module could not be removed", Notification.Type.ERROR_MESSAGE);
+                                    }
                                 }
-                                catch (SensorHubException ex)
-                                {
-                                    Notification.show("Error", "The module could not be enabled", Notification.Type.ERROR_MESSAGE);
+                            }                        
+                        });                    
+                        
+                        addWindow(popup);
+                                           
+                    }
+                    else if (action == ENABLE_MODULE_ACTION)
+                    {
+                        final ConfirmDialog popup = new ConfirmDialog("Are you sure you want to enable module " + moduleName + "?");
+                        popup.addCloseListener(new CloseListener() {
+                            @Override
+                            public void windowClose(CloseEvent e)
+                            {
+                                if (popup.isConfirmed())
+                                {                    
+                                    try 
+                                    {
+                                        SensorHub.getInstance().getModuleRegistry().enableModule(moduleId);
+                                        item.getItemProperty("enabled").setValue(true);
+                                    }
+                                    catch (SensorHubException ex)
+                                    {
+                                        Notification.show("Error", "The module could not be enabled", Notification.Type.ERROR_MESSAGE);
+                                    }
                                 }
-                            }
-                        }                        
-                    });                    
-                    
-                    AdminUI.this.addWindow(popup);
-                }
-                else if (action == DISABLE_MODULE_ACTION)
-                {
-                    final ConfirmDialog popup = new ConfirmDialog("Are you sure you want to disable module " + selectedModule.name + "?");
-                    popup.addCloseListener(new CloseListener() {
-                        @Override
-                        public void windowClose(CloseEvent e)
-                        {
-                            if (popup.isConfirmed())
-                            {                    
-                                try 
-                                {
-                                    SensorHub.getInstance().getModuleRegistry().disableModule(moduleId);
-                                    item.getItemProperty("enabled").setValue(false);
+                            }                        
+                        });                    
+                        
+                        addWindow(popup);
+                    }
+                    else if (action == DISABLE_MODULE_ACTION)
+                    {
+                        final ConfirmDialog popup = new ConfirmDialog("Are you sure you want to disable module " + moduleName + "?");
+                        popup.addCloseListener(new CloseListener() {
+                            @Override
+                            public void windowClose(CloseEvent e)
+                            {
+                                if (popup.isConfirmed())
+                                {                    
+                                    try 
+                                    {
+                                        SensorHub.getInstance().getModuleRegistry().disableModule(moduleId);
+                                        item.getItemProperty("enabled").setValue(false);
+                                    }
+                                    catch (SensorHubException ex)
+                                    {
+                                        Notification.show("Error", "The module could not be disabled", Notification.Type.ERROR_MESSAGE);
+                                    }
                                 }
-                                catch (SensorHubException ex)
-                                {
-                                    Notification.show("Error", "The module could not be disabled", Notification.Type.ERROR_MESSAGE);
-                                }
-                            }
-                        }                        
-                    });                    
-                    
-                    AdminUI.this.addWindow(popup);
+                            }                        
+                        });                    
+                        
+                        addWindow(popup);
+                    }
                 }
             }
         });
@@ -353,18 +375,26 @@ public class AdminUI extends com.vaadin.ui.UI
             formBuilder = new GenericConfigFormBuilder();
         
         // check if there is a custom panel registered, if not use default
-        IModulePanelBuilder panelBuilder = null;
+        IModulePanelBuilder<IModule<?>> panelBuilder = null;
         clazz = configClass;
         while (panelBuilder == null && clazz != null)
         {
-            panelBuilder = customPanels.get(clazz.getCanonicalName());
+            panelBuilder = (IModulePanelBuilder<IModule<?>>)customPanels.get(clazz.getCanonicalName());
             clazz = clazz.getSuperclass();
         }
         if (panelBuilder == null)
-            panelBuilder = new DefaultModulePanelBuilder();
+            panelBuilder = new DefaultModulePanelBuilder<IModule<?>>();
         
         // generate module admin panel
         Component panel = panelBuilder.buildPanel(beanItem, module, formBuilder);
         configArea.addComponent(panel);
+    }
+    
+    
+    protected void addNewConfig(Class<?> moduleType, ModuleConfig config)
+    {
+        MyBeanItemContainer<ModuleConfig> container = moduleConfigLists.get(moduleType);
+        MyBeanItem<ModuleConfig> newBeanItem = container.addBean(config);
+        openModuleInfo(newBeanItem);
     }
 }

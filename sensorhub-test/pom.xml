@@ -64,6 +64,11 @@
         <type>bundle</type>
      </dependency>
      <dependency>
+        <groupId>org.sensorhub</groupId>
+        <artifactId>sensorhub-driver-trupulse</artifactId>
+        <version>0.1</version>
+     </dependency>
+     <dependency>
         <groupId>org.vast.opengis</groupId>
         <artifactId>swe-common-video</artifactId>
         <version>1.0</version>

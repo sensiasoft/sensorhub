@@ -33,13 +33,14 @@ import com.vaadin.ui.VerticalLayout;
  * </p>
  *
  * @author Alex Robin <alex.robin@sensiasoftware.com>
+ * @param <ModuleType> Type of module supported by this panel builder
  * @since 0.5
  */
-public class DefaultModulePanelBuilder implements IModulePanelBuilder
+public class DefaultModulePanelBuilder<ModuleType extends IModule<? extends ModuleConfig>> implements IModulePanelBuilder<ModuleType>
 {
 
     @Override
-    public Component buildPanel(MyBeanItem<ModuleConfig> beanItem, IModule<?> module, IModuleConfigFormBuilder formBuilder)
+    public Component buildPanel(MyBeanItem<ModuleConfig> beanItem, ModuleType module, IModuleConfigFormBuilder formBuilder)
     {
         // create panel with module name
         String moduleType = formBuilder.getTitle(beanItem.getBean());

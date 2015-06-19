@@ -42,9 +42,13 @@ public class MyBeanItemContainer<BeanType> extends AbstractInMemoryContainer<Obj
     }
     
     
-    public void addBean(BeanType bean)
+    public MyBeanItem<BeanType> addBean(BeanType bean)
     {
-        this.internalAddItemAtEnd((Integer)bean.hashCode(), new MyBeanItem<BeanType>(bean), false);
+        MyBeanItem<BeanType> newItem = new MyBeanItem<BeanType>(bean);
+        Integer newItemId = (Integer)bean.hashCode();
+        this.internalAddItemAtEnd(newItemId, newItem, false);
+        this.fireItemAdded(indexOfId(newItem), newItemId, newItem);
+        return newItem;
     }
 
 

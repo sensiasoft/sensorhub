@@ -15,7 +15,6 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 package org.sensorhub.api.sensor;
 
 import java.net.URL;
-import java.util.List;
 import org.sensorhub.api.config.DisplayInfo;
 import org.sensorhub.api.module.ModuleConfig;
 
@@ -54,13 +53,6 @@ public class SensorConfig extends ModuleConfig
      * Allows hiding some of the sensor interfaces
      */
     public String[] hiddenIO;
-    
-        
-    /**
-     * Driver configuration groups (potentially one for each layer of a protocol stack)
-     * Can be included in SensorML v2.0
-     */
-    public List<SensorDriverConfig> driverConfigs;
     
     
     /**

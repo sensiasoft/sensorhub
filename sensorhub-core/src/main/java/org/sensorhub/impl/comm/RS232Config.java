@@ -12,26 +12,34 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
  
 ******************************* END LICENSE BLOCK ***************************/
 
-package org.sensorhub.impl.sensor.drivers;
+package org.sensorhub.impl.comm;
 
-import java.net.InetAddress;
-import org.sensorhub.api.sensor.SensorDriverConfig;
+import org.sensorhub.api.comm.CommConfig;
 
 
 /**
  * <p>
- * Driver configuration options for the TCP/IP network protocol
+ * Driver configuration options for the RS232 hardware interface
  * </p>
  *
  * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @since Nov 5, 2010
  */
-public class TCPDriverConfig extends SensorDriverConfig
+public class RS232Config extends CommConfig
 {
 	
-    public InetAddress networkAddress;
+    /**
+	 * Try to detect newly connected device by polling
+	 */
+    public boolean autodetect;
 	
-	public int port;
+	public int autodetectInterval;
 	
-	public boolean discoverAddress;
+	public String portNumber;
+	
+	public int baudRate;
+	
+	public int numberOfBits;
+	
+	public boolean parity;
 }

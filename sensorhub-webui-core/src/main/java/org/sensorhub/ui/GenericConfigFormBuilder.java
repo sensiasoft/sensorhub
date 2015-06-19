@@ -46,8 +46,8 @@ import com.vaadin.ui.Button.ClickEvent;
  */
 public class GenericConfigFormBuilder implements IModuleConfigFormBuilder
 {
-    public static String PROP_ID = "id";
-    public static String PROP_MODULECLASS = "moduleClass";
+    public final static String PROP_ID = "id";
+    public final static String PROP_MODULECLASS = "moduleClass";
     
     List<Field<?>> labels = new ArrayList<Field<?>>();
     List<Field<?>> textBoxes = new ArrayList<Field<?>>();
@@ -57,7 +57,12 @@ public class GenericConfigFormBuilder implements IModuleConfigFormBuilder
     
     public String getTitle(ModuleConfig config)
     {
-        return getPrettyName(config.getClass().getSimpleName());
+        StringBuilder buf = new StringBuilder();
+        buf.append(config.name);
+        buf.append(" (");
+        buf.append(config.getClass().getSimpleName());
+        buf.append(')');
+        return buf.toString();
     }
     
     
@@ -77,7 +82,7 @@ public class GenericConfigFormBuilder implements IModuleConfigFormBuilder
             {
                 String label = ((ContainerProperty)prop).getLabel();
                 if (label == null)
-                    label = getPrettyName((String)propId);
+                    label = DisplayUtils.getPrettyName((String)propId);
                 
                 /*Table table = new Table();
                 table.setCaption(label);
@@ -111,7 +116,7 @@ public class GenericConfigFormBuilder implements IModuleConfigFormBuilder
                     if (prop instanceof FieldProperty)
                         label = ((FieldProperty)prop).getLabel();
                     if (label == null)
-                        label = getPrettyName((String)propId);
+                        label = DisplayUtils.getPrettyName((String)propId);
                     field = fieldGroup.buildAndBind(label, propId);
                 }
                 catch (Exception e)
@@ -197,8 +202,8 @@ public class GenericConfigFormBuilder implements IModuleConfigFormBuilder
     {
         if (propId.equals(PROP_ID))
             field.setReadOnly(true);
-        else if (propId.equals(PROP_MODULECLASS))
-            field.setVisible(false);
+        else if (propId.endsWith(PROP_MODULECLASS))
+            field.setReadOnly(true);
         
         if (prop.getType().equals(String.class))
             field.setWidth(250, Unit.PIXELS);
@@ -208,31 +213,7 @@ public class GenericConfigFormBuilder implements IModuleConfigFormBuilder
             field.setWidth(50, Unit.PIXELS);
         else if (prop.getType().equals(double.class) || prop.getType().equals(Double.class))
             field.setWidth(50, Unit.PIXELS);
-    }
-    
-    
-    protected String getPrettyName(String text)
-    {
-        StringBuilder buf = new StringBuilder(text.substring(text.lastIndexOf('.')+1));
-        for (int i=0; i<buf.length()-1; i++)
-        {
-            char c = buf.charAt(i);
-            
-            if (i == 0)
-            {
-                char newcar = Character.toUpperCase(c);
-                buf.setCharAt(i, newcar);
-            }
-                    
-            else if (Character.isUpperCase(c) && Character.isLowerCase(buf.charAt(i+1)))
-            {
-                buf.insert(i, ' ');
-                i++;
-            }
-        }
-        
-        return buf.toString();
-    }
+    }    
     
     
     protected void reset()

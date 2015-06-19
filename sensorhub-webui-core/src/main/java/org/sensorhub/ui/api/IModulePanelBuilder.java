@@ -26,9 +26,10 @@ import com.vaadin.ui.Component;
  * </p>
  *
  * @author Alex Robin <alex.robin@sensiasoftware.com>
+ * @param <ModuleType> Type of module supported by this panel builder
  * @since 0.5
  */
-public interface IModulePanelBuilder
+public interface IModulePanelBuilder<ModuleType extends IModule<? extends ModuleConfig>>
 { 
     
     /**
@@ -38,6 +39,6 @@ public interface IModulePanelBuilder
      * @param formBuilder 
      * @return Vaadin component containing all widgets for interacting with the module
      */
-    public Component buildPanel(MyBeanItem<ModuleConfig> beanItem, IModule<?> module, IModuleConfigFormBuilder formBuilder);
+    public Component buildPanel(MyBeanItem<ModuleConfig> beanItem, ModuleType module, IModuleConfigFormBuilder formBuilder);
     
 }
