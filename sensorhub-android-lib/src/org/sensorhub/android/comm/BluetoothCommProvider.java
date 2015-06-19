@@ -36,7 +36,7 @@ import android.bluetooth.BluetoothSocket;
  */
 public class BluetoothCommProvider implements ICommProvider
 {
-    static final Logger log = LoggerFactory.getLogger(BluetoothCommProvider.class);
+    static final Logger log = LoggerFactory.getLogger(BluetoothCommProvider.class.getSimpleName());
     BluetoothSocket btSocket;
     
     

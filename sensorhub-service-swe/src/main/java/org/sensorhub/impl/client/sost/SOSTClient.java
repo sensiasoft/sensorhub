@@ -96,8 +96,13 @@ public class SOSTClient extends AbstractModule<SOSTClientConfig> implements IEve
     @Override
     public void start() throws SensorHubException
     {
-        this.sensor = SensorHub.getInstance().getSensorManager().getModuleById(config.sensorID);
-                
+        sensor = SensorHub.getInstance().getSensorManager().getModuleById(config.sensorID);
+        if (!sensor.isConnected())
+        {
+            log.info("Sensor {} is not connected. Not connecting to SOS", MsgUtils.moduleString(sensor) );
+            return;
+        }
+        
         try
         {
             // register sensor

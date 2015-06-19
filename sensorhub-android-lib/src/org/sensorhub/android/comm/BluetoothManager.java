@@ -106,11 +106,12 @@ public class BluetoothManager
     
     
     /**
-     * Returns the first bonded device whose name matches the given pattern
+     * Returns the first paired device whose name matches the given pattern
      * @param deviceNameRegex regular expression to match device names
-     * @return first matching device or null if non was found
+     * @return first matching device
+     * @throws IOException if a paired device with a matching name cannot be found
      */
-    public BluetoothDevice findDevice(String deviceNameRegex)
+    public BluetoothDevice findDevice(String deviceNameRegex) throws IOException
     {
         BluetoothAdapter btAdapter = BluetoothAdapter.getDefaultAdapter();
         for (BluetoothDevice dev: btAdapter.getBondedDevices())
@@ -119,7 +120,7 @@ public class BluetoothManager
                 return dev;
         }
         
-        return null;
+        throw new IOException("Cannot find device " + deviceNameRegex);
     }
     
     
