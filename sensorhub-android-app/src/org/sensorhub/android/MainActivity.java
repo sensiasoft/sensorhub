@@ -153,7 +153,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback
 
         try
         {
-            return (SOSTClient) boundService.getSensorHub().getModuleRegistry().getModuleById("SOST_CLIENT");
+            return (SOSTClient) boundService.getSensorHub().getModuleRegistry().getModuleById("SOST_CLIENT1");
         }
         catch (SensorHubException e)
         {
