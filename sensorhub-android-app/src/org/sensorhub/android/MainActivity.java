@@ -136,7 +136,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback
         sensorhubConfig.add(trupulseConfig);
         
         SOSTClientConfig sosConfig2 = new SOSTClientConfig();
-        sosConfig2.id = "SOST_CLIENT1";
+        sosConfig2.id = "SOST_CLIENT2";
         sosConfig2.name = "SOS-T Client for TruPulse Sensor";
         sosConfig2.enabled = true;
         sosConfig2.sensorID = trupulseConfig.id;
