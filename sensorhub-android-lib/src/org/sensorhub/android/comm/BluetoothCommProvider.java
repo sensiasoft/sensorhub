@@ -50,6 +50,7 @@ public class BluetoothCommProvider implements ICommProvider
         BluetoothConfig btConf = (BluetoothConfig)config;
         BluetoothManager btManager = new BluetoothManager();
         btSocket = btManager.connectToSerialDevice(btConf.deviceName);
+        btSocket.connect();
         log.info("Connected to Bluetooth SPP device {}", btSocket.getRemoteDevice().getName());
     }
     
