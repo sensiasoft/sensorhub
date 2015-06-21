@@ -14,14 +14,17 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.impl.sensor.sost;
 
+import net.opengis.gml.v32.AbstractFeature;
 import net.opengis.swe.v20.BinaryEncoding;
 import net.opengis.swe.v20.ByteEncoding;
 import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataEncoding;
+import org.sensorhub.api.data.FoiEvent;
 import org.sensorhub.api.sensor.SensorDataEvent;
 import org.sensorhub.api.sensor.SensorException;
 import org.sensorhub.impl.sensor.AbstractSensorOutput;
+import org.vast.ogc.gml.FeatureRef;
 
 
 public class SOSVirtualSensorOutput extends AbstractSensorOutput<SOSVirtualSensor>
@@ -90,6 +93,35 @@ public class SOSVirtualSensorOutput extends AbstractSensorOutput<SOSVirtualSenso
         latestRecord = dataBlock;
         latestRecordTime = now;
         eventHandler.publishEvent(new SensorDataEvent(latestRecordTime, this, dataBlock));
+    }
+    
+    
+    public void publishNewFeatureOfInterest(AbstractFeature foi)
+    {
+        if (foi != null)
+        {            
+            long now = System.currentTimeMillis();
+            FoiEvent e = null;
+            
+            if (foi instanceof FeatureRef)
+            {
+                try
+                {
+                    foi = ((FeatureRef) foi).getTarget();
+                    e = new FoiEvent(now, getParentModule(), foi, now/1000.0);
+                }
+                catch (Exception e1)
+                {
+                    e = new FoiEvent(now, getParentModule(), ((FeatureRef) foi).getHref(), now/1000.0);
+                }                    
+            }
+            else
+            {
+                e = new FoiEvent(now, getParentModule(), foi, now/1000.0);
+            }
+
+            eventHandler.publishEvent(e);
+        }
     }
     
     

@@ -64,7 +64,8 @@ public abstract class StreamDataProviderFactory<ProducerType extends IDataProduc
     final StreamDataProviderConfig config;
     final String producerType;
     final ProducerType producer;    
-   
+    SOSOfferingCapabilities caps;
+    
     
     protected StreamDataProviderFactory(StreamDataProviderConfig config, ProducerType producer, String producerType) throws SensorHubException
     {
@@ -81,7 +82,7 @@ public abstract class StreamDataProviderFactory<ProducerType extends IDataProduc
         
         try
         {
-            SOSOfferingCapabilities caps = new SOSOfferingCapabilities();
+            caps = new SOSOfferingCapabilities();
             
             // identifier
             if (config.uri != null)
@@ -89,17 +90,8 @@ public abstract class StreamDataProviderFactory<ProducerType extends IDataProduc
             else
                 caps.setIdentifier("baseURL#" + producer.getLocalID()); // TODO obtain baseURL
             
-            // name
-            if (config.name != null)
-                caps.setTitle(config.name);
-            else
-                caps.setTitle(producer.getName());
-            
-            // description
-            if (config.description != null)
-                caps.setDescription(config.description);
-            else
-                caps.setDescription("Data produced by " + producer.getName());
+            // name + description
+            updateNameAndDescription();
             
             // observable properties
             Set<String> sensorOutputDefs = getObservablePropertiesFromProducer();
@@ -119,43 +111,7 @@ public abstract class StreamDataProviderFactory<ProducerType extends IDataProduc
             caps.getProcedureFormats().add(SWESOfferingCapabilities.FORMAT_SML2);
             
             // FOI IDs and BBOX
-            if (producer instanceof IMultiSourceDataProducer)
-            {
-                Collection<? extends AbstractFeature> fois = ((IMultiSourceDataProducer)producer).getFeaturesOfInterest();
-                int numFois = fois.size();
-                
-                Bbox boundingRect = new Bbox();
-                for (AbstractFeature foi: fois)
-                {
-                    if (numFois < config.maxFois)
-                        caps.getRelatedFeatures().add(foi.getUniqueIdentifier());
-                    
-                    AbstractGeometry geom = foi.getLocation();
-                    if (geom != null)
-                    {
-                        Envelope env = geom.getGeomEnvelope();
-                        boundingRect.add(GMLUtils.envelopeToBbox(env));
-                    }
-                }
-                
-                caps.getObservedAreas().add(boundingRect);
-            }
-            else
-            {
-                AbstractFeature foi = producer.getCurrentFeatureOfInterest();
-                if (foi != null)
-                {
-                    caps.getRelatedFeatures().add(foi.getUniqueIdentifier());
-                    
-                    AbstractGeometry geom = foi.getLocation();
-                    if (geom != null)
-                    {
-                        Envelope env = geom.getGeomEnvelope();
-                        Bbox bbox = GMLUtils.envelopeToBbox(env);
-                        caps.getObservedAreas().add(bbox);
-                    }
-                }
-            }
+            updateFois();
             
             // obs types
             Set<String> obsTypes = getObservationTypesFromProducer();
@@ -170,10 +126,72 @@ public abstract class StreamDataProviderFactory<ProducerType extends IDataProduc
     }
     
     
-    @Override
-    public void updateCapabilities() throws Exception
+    protected void updateNameAndDescription()
     {
+        // name
+        if (config.name != null)
+            caps.setTitle(config.name);
+        else
+            caps.setTitle(producer.getName());
         
+        // description
+        if (config.description != null)
+            caps.setDescription(config.description);
+        else
+            caps.setDescription("Data produced by " + producer.getName());
+    }
+    
+    
+    protected void updateFois()
+    {
+        caps.getRelatedFeatures().clear();
+        caps.getObservedAreas().clear();        
+        
+        if (producer instanceof IMultiSourceDataProducer)
+        {
+            Collection<? extends AbstractFeature> fois = ((IMultiSourceDataProducer)producer).getFeaturesOfInterest();
+            int numFois = fois.size();
+            
+            Bbox boundingRect = new Bbox();
+            for (AbstractFeature foi: fois)
+            {
+                if (numFois < config.maxFois)
+                    caps.getRelatedFeatures().add(foi.getUniqueIdentifier());
+                
+                AbstractGeometry geom = foi.getLocation();
+                if (geom != null)
+                {
+                    Envelope env = geom.getGeomEnvelope();
+                    boundingRect.add(GMLUtils.envelopeToBbox(env));
+                }
+            }
+            
+            caps.getObservedAreas().add(boundingRect);
+        }
+        else
+        {
+            AbstractFeature foi = producer.getCurrentFeatureOfInterest();
+            if (foi != null)
+            {
+                caps.getRelatedFeatures().add(foi.getUniqueIdentifier());
+                
+                AbstractGeometry geom = foi.getLocation();
+                if (geom != null)
+                {
+                    Envelope env = geom.getGeomEnvelope();
+                    Bbox bbox = GMLUtils.envelopeToBbox(env);
+                    caps.getObservedAreas().add(bbox);
+                }
+            }
+        }
+    }
+    
+    
+    @Override
+    public synchronized void updateCapabilities() throws Exception
+    {
+        updateNameAndDescription();
+        updateFois();
     }
 
 
@@ -272,7 +290,7 @@ public abstract class StreamDataProviderFactory<ProducerType extends IDataProduc
             allFois = Arrays.asList(producer.getCurrentFeatureOfInterest()).iterator();
         
         // return all features if no filter is used
-        if (filter.getFeatureIDs() == null && filter.getRoi() == null)
+        if ((filter.getFeatureIDs() == null || filter.getFeatureIDs().isEmpty()) && filter.getRoi() == null)
             return (Iterator<AbstractFeature>)allFois;
         
         // otherwise apply filter

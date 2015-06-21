@@ -62,6 +62,8 @@ public class SensorWithStorageConsumer extends SensorDataConsumer implements ISO
         if (!storage.getRecordTypes().containsKey(templateID))
             storage.addRecordType(templateID, component, encoding);
         
+        // publish new feature of interest
+        sensor.newFeatureOfInterest(templateID, obsTemplate);        
         return templateID;
     }
 }

@@ -102,15 +102,17 @@ public class SensorHubService extends Service
     
     public void stopSensorHub()
     {
-        if (sensorhub != null)
+        if (bgThread != null)
         {
             sensorhub.stop();
+            SensorHub.clearInstance();
             Log.i("SensorHub", "SensorHub stopped...");
+            sensorhub = null;
+            
+            bgLooper.quit();
+            bgLooper = null;
+            bgThread = null;
         }
-        
-        bgLooper.quit();
-        bgLooper = null;
-        bgThread = null;
     }    
     
 

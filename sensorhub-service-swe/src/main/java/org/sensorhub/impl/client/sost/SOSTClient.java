@@ -25,6 +25,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import net.opengis.gml.v32.AbstractFeature;
 import net.opengis.swe.v20.DataBlock;
 import org.sensorhub.api.common.Event;
 import org.sensorhub.api.common.IEventListener;
@@ -206,14 +207,22 @@ public class SOSTClient extends AbstractModule<SOSTClientConfig> implements IEve
      */
     protected void registerDataStream(ISensorDataInterface sensorOutput) throws OWSException
     {
-        // send insert result template
+        // generate insert result template
         InsertResultTemplateRequest req = new InsertResultTemplateRequest();
         req.setPostServer(config.sosEndpointUrl);
         req.setVersion("2.0");
         req.setOffering(offering);
         req.setResultStructure(sensorOutput.getRecordDescription());
         req.setResultEncoding(sensorOutput.getRecommendedEncoding());
-        req.setObservationTemplate(new ObservationImpl());
+        ObservationImpl obsTemplate = new ObservationImpl();
+        
+        // set FOI if known
+        AbstractFeature foi = sensorOutput.getParentModule().getCurrentFeatureOfInterest();
+        if (foi != null)
+            obsTemplate.setFeatureOfInterest(foi);
+        req.setObservationTemplate(obsTemplate);
+        
+        // send request
         InsertResultTemplateResponse resp = (InsertResultTemplateResponse)sosUtils.sendRequest(req, false);
         
         // add stream info to map

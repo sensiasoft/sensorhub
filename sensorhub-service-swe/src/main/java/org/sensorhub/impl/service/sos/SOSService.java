@@ -741,6 +741,13 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
                 offeringCaps.put(offCaps.getIdentifier(), offCaps);
                 procedureToOfferingMap.put(sensorUID, offering);
             }
+            else
+            {
+                // disable update for now because descriptions are stored even if unchanged!!
+//                // get consumer and update
+//                ISOSDataConsumer consumer = getDataConsumerBySensorID(sensorUID);                
+//                consumer.updateSensor(request.getProcedureDescription());
+            }
             
             // build and send response
             InsertSensorResponse resp = new InsertSensorResponse();

@@ -72,6 +72,12 @@ public class SensorHub
     }
     
     
+    public static void clearInstance()
+    {
+        instance = null;
+    }
+    
+    
     private SensorHub(IGlobalConfig config)
     {
         this.config = config;        

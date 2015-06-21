@@ -64,7 +64,9 @@ public class SensorDataConsumer implements ISOSDataConsumer
     @Override
     public String newResultTemplate(DataComponent component, DataEncoding encoding, IObservation obsTemplate) throws Exception
     {
-        return sensor.newResultTemplate(component, encoding, obsTemplate);
+        String templateID = sensor.newResultTemplate(component, encoding, obsTemplate);
+        sensor.newFeatureOfInterest(templateID, obsTemplate);
+        return templateID;
     }
 
 

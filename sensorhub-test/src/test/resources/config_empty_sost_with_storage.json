@@ -5,8 +5,8 @@
     "servletsRootUrl": "/sensorhub",
     "staticDocRootUrl": "web",
     "id": "5cb05c9c-9e08-4fa1-8731-ffaa5846bdc1",
-    "name": "HTTP Server",
     "moduleClass": "org.sensorhub.impl.service.HttpServer",
+    "name": "HTTP Server",
     "enabled": true
   },
   {
@@ -14,8 +14,8 @@
     "customPanels": [],
     "customForms": [],
     "id": "5cb05c9c-9123-4fa1-8731-ffaa51489678",
-    "name": "Admin UI",
     "moduleClass": "org.sensorhub.ui.AdminUIModule",
+    "name": "Admin UI",
     "enabled": true
   },
   {
@@ -24,30 +24,11 @@
     "newStorageConfig": {
       "objClass": "org.sensorhub.impl.persistence.perst.BasicStorageConfig",
       "memoryCacheSize": 10240,
-      "moduleClass": "org.sensorhub.impl.persistence.perst.BasicStorageImpl",
+      "moduleClass": "org.sensorhub.impl.persistence.perst.ObsStorageImpl",
       "enabled": true
     },
-    "dataProviders": [
-      {
-        "objClass": "org.sensorhub.impl.service.sos.SensorDataProviderConfig",
-        "sensorID": "a8f88588-c7af-4564-b3ec-5e06c63738d7",
-        "storageID": "b431d55a-9414-408a-b757-c88527f96143",
-        "hiddenOutputs": [],
-        "activateNotifications": false,
-        "liveDataTimeout": 10.0,
-        "enabled": true,
-        "uri": "urn:android:device:060693280a28e015-sos"
-      }
-    ],
-    "dataConsumers": [
-      {
-        "objClass": "org.sensorhub.impl.service.sos.SensorConsumerConfig",
-        "sensorID": "a8f88588-c7af-4564-b3ec-5e06c63738d7",
-        "storageID": "b431d55a-9414-408a-b757-c88527f96143",
-        "enabled": true,
-        "offering": "urn:android:device:060693280a28e015-sos"
-      }
-    ],
+    "dataProviders": [],
+    "dataConsumers": [],
     "ogcCapabilitiesInfo": {
       "objClass": "org.sensorhub.impl.service.ogc.OGCServiceConfig$CapabilitiesInfo",
       "title": "Test SOS-T Service",
@@ -78,34 +59,33 @@
     "enableSOAP": true,
     "endPoint": "/sos",
     "id": "5cb05c9c-9e08-4fa1-8731-ff41e246bdc1",
-    "name": "SOS Service",
     "moduleClass": "org.sensorhub.impl.service.sos.SOSService",
+    "name": "SOS Service",
     "enabled": true
   },
   {
     "objClass": "org.sensorhub.impl.sensor.sost.SOSVirtualSensorConfig",
-    "sensorUID": "urn:android:device:060693280a28e015",
+    "sensorUID": "urn:android:device:a0e0eac2fea3f614",
     "autoActivate": true,
     "enableHistory": true,
-    "id": "a8f88588-c7af-4564-b3ec-5e06c63738d7",
-    "name": "ANDROID_SENSORS",
+    "id": "130ee10b-d7f0-458c-9893-b2af34a64e91",
     "moduleClass": "org.sensorhub.impl.sensor.sost.SOSVirtualSensor",
+    "name": "Alex's Phone Sensors",
     "enabled": true
   },
   {
     "objClass": "org.sensorhub.impl.persistence.StreamStorageConfig",
     "storageConfig": {
       "objClass": "org.sensorhub.impl.persistence.perst.BasicStorageConfig",
-      "storagePath": "urn:android:device:060693280a28e015.dat",
       "memoryCacheSize": 10240,
-      "moduleClass": "org.sensorhub.impl.persistence.perst.BasicStorageImpl",
+      "storagePath": "urn:android:device:a0e0eac2fea3f614.dat",
+      "moduleClass": "org.sensorhub.impl.persistence.perst.ObsStorageImpl",
       "enabled": true
     },
-    "dataSourceID": "a8f88588-c7af-4564-b3ec-5e06c63738d7",
-    "memoryCacheSize": 0,
-    "id": "b431d55a-9414-408a-b757-c88527f96143",
-    "name": "ANDROID_SENSORS Storage",
+    "dataSourceID": "130ee10b-d7f0-458c-9893-b2af34a64e91",
+    "id": "d3b37757-f42f-47e4-9fed-59736f0a3faa",
     "moduleClass": "org.sensorhub.impl.persistence.GenericStreamStorage",
+    "name": "Alex's Phone Sensors Storage",
     "enabled": true
   }
 ]

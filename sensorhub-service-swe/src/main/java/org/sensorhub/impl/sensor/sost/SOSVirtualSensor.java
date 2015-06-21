@@ -16,6 +16,7 @@ package org.sensorhub.impl.sensor.sost;
 
 import java.util.HashMap;
 import java.util.Map;
+import net.opengis.gml.v32.AbstractFeature;
 import net.opengis.sensorml.v20.AbstractProcess;
 import net.opengis.sensorml.v20.DataInterface;
 import net.opengis.swe.v20.AbstractSWEIdentifiable;
@@ -28,7 +29,6 @@ import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataEncoding;
 import net.opengis.swe.v20.DataStream;
 import org.sensorhub.api.common.SensorHubException;
-import org.sensorhub.api.data.FoiEvent;
 import org.sensorhub.api.sensor.SensorEvent;
 import org.sensorhub.api.sensor.SensorException;
 import org.sensorhub.impl.sensor.AbstractSensorModule;
@@ -36,8 +36,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vast.data.BinaryComponentImpl;
 import org.vast.data.DataIterator;
-import org.vast.ogc.gml.FeatureRef;
-import org.vast.ogc.gml.GenericFeature;
 import org.vast.ogc.om.IObservation;
 
 
@@ -54,6 +52,7 @@ public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfi
     protected static final Logger log = LoggerFactory.getLogger(SOSVirtualSensor.class);
     
     Map<DataStructureHash, String> structureToOutputMap = new HashMap<DataStructureHash, String>();
+    AbstractFeature currentFoi;
     
     
     // utility class to compute data component hashcode
@@ -84,6 +83,23 @@ public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfi
     
     public SOSVirtualSensor()
     {
+    }
+    
+    
+    @Override
+    public String getName()
+    {
+        if (sensorDescription.getName() != null)
+            return sensorDescription.getName();
+        
+        return config.name;
+    }
+    
+    
+    @Override
+    public AbstractFeature getCurrentFeatureOfInterest()
+    {
+        return currentFoi;
     }
 
 
@@ -118,41 +134,21 @@ public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfi
             component.setName(templateID);
             addOutput(newOutput, false);
             structureToOutputMap.put(hashObj, templateID);
-        }
-        
-        // process feature of interest
-        if (obsTemplate != null)
-            newFeatureOfInterest(obsTemplate.getFeatureOfInterest());
+        }        
         
         return templateID;
     }
     
     
-    public void newFeatureOfInterest(GenericFeature foi)
+    public void newFeatureOfInterest(String templateID, IObservation obsTemplate)
     {
-        if (foi != null)
-        {            
-            long now = System.currentTimeMillis();
-            FoiEvent e = null;
-            
-            if (foi instanceof FeatureRef)
-            {
-                try
-                {
-                    foi = ((FeatureRef) foi).getTarget();
-                    e = new FoiEvent(now, this, foi, now/1000.0);
-                }
-                catch (Exception e1)
-                {
-                    e = new FoiEvent(now, this, ((FeatureRef) foi).getHref(), now/1000.0);
-                }                    
-            }
-            else
-            {
-                e = new FoiEvent(now, this, foi, now/1000.0);
-            }
-
-            eventHandler.publishEvent(e);
+        // process feature of interest
+        if (obsTemplate != null)
+        {
+            SOSVirtualSensorOutput output = (SOSVirtualSensorOutput)getAllOutputs().get(templateID);
+            currentFoi = obsTemplate.getFeatureOfInterest();
+            if (currentFoi != null)
+                output.publishNewFeatureOfInterest(currentFoi);
         }
     }
     

@@ -14,6 +14,9 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.android;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Timer;
@@ -31,8 +34,10 @@ import org.sensorhub.impl.sensor.android.AndroidSensorsConfig;
 import org.sensorhub.impl.sensor.trupulse.TruPulseConfig;
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
@@ -46,11 +51,15 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.widget.EditText;
 import android.widget.TextView;
 
 
 public class MainActivity extends Activity implements SurfaceHolder.Callback
 {
+    private final static String ANDROID_SENSORS_ID = "ANDROID_SENSORS";
+    private final static String ANDROID_SENSORS_SOST_ID = "SOST_CLIENT1";
+    
     TextView textArea;
     SensorHubService boundService;
     IModuleConfigRepository sensorhubConfig;
@@ -59,12 +68,13 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback
     StringBuilder displayText = new StringBuilder();
     SurfaceHolder camPreviewSurfaceHolder;
 
+    
     private ServiceConnection sConn = new ServiceConnection()
     {
         public void onServiceConnected(ComponentName className, IBinder service)
         {
             boundService = ((SensorHubService.LocalBinder) service).getService();
-            boundService.startSensorHub(sensorhubConfig);
+            //boundService.startSensorHub(sensorhubConfig);
             startStatusDisplay();
         }
 
@@ -96,13 +106,16 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback
     }
 
 
-    protected void updateConfig(SharedPreferences prefs)
+    protected void updateConfig(SharedPreferences prefs, String runName)
     {
-        sensorhubConfig.close();
+        sensorhubConfig = new InMemoryConfigDb();
         
         AndroidSensorsConfig sensorsConfig = new AndroidSensorsConfig();
-        sensorsConfig.id = "ANDROID_SENSORS";
-        sensorsConfig.name = "Android Sensors";
+        sensorsConfig.id = ANDROID_SENSORS_ID;
+        String deviceName = prefs.getString("device_name", null);
+        if (deviceName == null || deviceName.length() < 2)
+            deviceName = "Android";
+        sensorsConfig.name = deviceName + " Sensors";
         sensorsConfig.enabled = true;
         sensorsConfig.activateAccelerometer = prefs.getBoolean("accel_enabled", false);
         sensorsConfig.activateGyrometer = prefs.getBoolean("gyro_enabled", false);
@@ -114,10 +127,11 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback
         sensorsConfig.activateBackCamera = prefs.getBoolean("cam_enabled", false);
         sensorsConfig.androidContext = this.getApplicationContext();
         sensorsConfig.camPreviewSurfaceHolder = this.camPreviewSurfaceHolder;
+        sensorsConfig.runName = runName;
         sensorhubConfig.add(sensorsConfig);
         
         SOSTClientConfig sosConfig1 = new SOSTClientConfig();
-        sosConfig1.id = "SOST_CLIENT1";
+        sosConfig1.id = ANDROID_SENSORS_SOST_ID;
         sosConfig1.name = "SOS-T Client for Android Sensors";
         sosConfig1.enabled = true;
         sosConfig1.sensorID = sensorsConfig.id;
@@ -153,7 +167,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback
 
         try
         {
-            return (SOSTClient) boundService.getSensorHub().getModuleRegistry().getModuleById("SOST_CLIENT1");
+            return (SOSTClient) boundService.getSensorHub().getModuleRegistry().getModuleById(ANDROID_SENSORS_SOST_ID);
         }
         catch (SensorHubException e)
         {
@@ -169,47 +183,55 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback
         {
             public void run()
             {
-                displayText.setLength(0);
-
-                if (boundService == null || boundService.getSensorHub() == null)
+                try
                 {
-                    displayText.append("Waiting for SensorHub service to start...");
-                }
-                else if (getSosClient() == null || !getSosClient().isConnected())
-                {
-                    displayText.append("<font color='red'><b>Cannot connect to SOS-T</b></font><br/>");
-                    displayText.append("Please check your settings...");
-                }
-                else
-                {
-                    Map<ISensorDataInterface, StreamInfo> dataStreams = getSosClient().getDataStreams();
-                    if (dataStreams.size() > 0)
-                        displayText.append("<p>Registered with SOS-T</p><p>");
-
-                    long now = System.currentTimeMillis();
-                    for (Entry<ISensorDataInterface, StreamInfo> stream : dataStreams.entrySet())
+                    displayText.setLength(0);
+                    
+                    if (boundService == null || boundService.getSensorHub() == null)
                     {
-                        displayText.append("<b>" + stream.getKey().getName() + " : </b>");
+                        displayText.append("Waiting for SensorHub service to start...");
+                    }
+                    else if (getSosClient() == null || !getSosClient().isConnected())
+                    {
+                        displayText.append("<font color='red'><b>Cannot connect to SOS-T</b></font><br/>");
+                        displayText.append("Please check your settings...");
+                    }
+                    else
+                    {
+                        Map<ISensorDataInterface, StreamInfo> dataStreams = getSosClient().getDataStreams();
+                        if (dataStreams.size() > 0)
+                            displayText.append("<p>Registered with SOS-T</p><p>");
 
-                        if (now - stream.getValue().lastEventTime > 2000)
-                            displayText.append("<font color='red'>NOK</font>");
-                        else
-                            displayText.append("<font color='green'>OK</font>");
-
-                        if (stream.getValue().errorCount > 0)
+                        long now = System.currentTimeMillis();
+                        for (Entry<ISensorDataInterface, StreamInfo> stream : dataStreams.entrySet())
                         {
-                            displayText.append("<font color='red'> (");
-                            displayText.append(stream.getValue().errorCount);
-                            displayText.append(")</font>");
+                            displayText.append("<b>" + stream.getKey().getName() + " : </b>");
+
+                            if (now - stream.getValue().lastEventTime > 2000)
+                                displayText.append("<font color='red'>NOK</font>");
+                            else
+                                displayText.append("<font color='green'>OK</font>");
+
+                            if (stream.getValue().errorCount > 0)
+                            {
+                                displayText.append("<font color='red'> (");
+                                displayText.append(stream.getValue().errorCount);
+                                displayText.append(")</font>");
+                            }
+
+                            displayText.append("<br/>");
                         }
 
-                        displayText.append("<br/>");
+                        displayText.append("</p>");
                     }
 
-                    displayText.append("</p>");
+                    displayHandler.obtainMessage(1).sendToTarget();
                 }
-
-                displayHandler.obtainMessage(1).sendToTarget();
+                catch (Exception e)
+                {
+                    // some exceptions happen due to multithreading issues but we don't care
+                    // just keep looping
+                }
             }
         }, 0, 1000L);
     }
@@ -220,8 +242,8 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback
         if (statusTimer != null)
             statusTimer.cancel();
     }
-
-
+    
+    
     @Override
     public boolean onCreateOptionsMenu(Menu menu)
     {
@@ -243,18 +265,56 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback
             startActivity(new Intent(this, UserSettingsActivity.class));
             return true;
         }
-        else if (id == R.id.action_restart)
+        else if (id == R.id.action_start)
         {
             if (boundService != null)
             {
                 boundService.stopSensorHub();
-                updateConfig(PreferenceManager.getDefaultSharedPreferences(this));
-                boundService.startSensorHub(sensorhubConfig);
+                showRunNamePopup();
             }
+            return true;
+        }
+        else if (id == R.id.action_stop)
+        {
+            if (boundService != null)
+                boundService.stopSensorHub();
             return true;
         }
 
         return super.onOptionsItemSelected(item);
+    }
+    
+    
+    protected void showRunNamePopup()
+    {
+        AlertDialog.Builder alert = new AlertDialog.Builder(this);
+
+        alert.setTitle("Run Name");
+        alert.setMessage("Please enter the name for this run");
+        
+        // Set an EditText view to get user input
+        final EditText input = new EditText(this);
+        input.getText().append("Run-");
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMdd-HHmmss", Locale.US);
+        input.getText().append(formatter.format(new Date()));
+        alert.setView(input);
+
+        alert.setPositiveButton("Ok", new DialogInterface.OnClickListener()
+        {
+            public void onClick(DialogInterface dialog, int whichButton)
+            {
+                String runName = input.getText().toString();
+                updateConfig(PreferenceManager.getDefaultSharedPreferences(MainActivity.this), runName);
+                boundService.startSensorHub(sensorhubConfig);
+            }
+        });
+
+        alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+          public void onClick(DialogInterface dialog, int whichButton) {
+          }
+        });
+
+        alert.show();
     }
 
 
@@ -293,10 +353,6 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback
         editor.clear();
         editor.commit();
         PreferenceManager.setDefaultValues(this, R.xml.pref_general, true);*/
-
-        // update config from user settings
-        sensorhubConfig = new InMemoryConfigDb();
-        updateConfig(prefs);
 
         // start SensorHub service
         Context context = this.getApplicationContext();
