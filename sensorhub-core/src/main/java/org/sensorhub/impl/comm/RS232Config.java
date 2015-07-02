@@ -19,7 +19,7 @@ import org.sensorhub.api.comm.CommConfig;
 
 /**
  * <p>
- * Driver configuration options for the RS232 hardware interface
+ * Driver configuration options for RS232 hardware interface
  * </p>
  *
  * @author Alex Robin <alex.robin@sensiasoftware.com>
@@ -28,18 +28,17 @@ import org.sensorhub.api.comm.CommConfig;
 public class RS232Config extends CommConfig
 {
 	
-    /**
-	 * Try to detect newly connected device by polling
-	 */
     public boolean autodetect;
 	
 	public int autodetectInterval;
 	
-	public String portNumber;
+	public String portName;
 	
-	public int baudRate;
+	public int baudRate = 9600;
 	
-	public int numberOfBits;
+	public byte dataBits = 8;
 	
-	public boolean parity;
+	public byte stopBits = 1;
+	
+	public boolean parity = false;
 }

@@ -15,6 +15,7 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 package org.sensorhub.impl.comm;
 
 import org.sensorhub.api.comm.CommConfig;
+import org.sensorhub.api.comm.ICommProvider;
 
 
 /**
@@ -33,4 +34,15 @@ public class TCPConfig extends CommConfig
 	public int remotePort;
 	
 	public boolean discoverAddress;
+	
+
+    @Override
+    public ICommProvider getProvider()
+    {
+        if (providerClass != null)
+            return super.getProvider();
+        
+        try { return TCPCommProvider.class.newInstance(); }
+        catch (Exception e) { return null; }
+    }
 }
