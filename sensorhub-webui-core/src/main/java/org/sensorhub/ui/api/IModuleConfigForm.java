@@ -14,35 +14,40 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.ui.api;
 
-import org.sensorhub.api.module.ModuleConfig;
-import com.vaadin.data.fieldgroup.FieldGroup;
-import com.vaadin.ui.Component;
+import org.sensorhub.ui.data.MyBeanItem;
+import com.vaadin.data.fieldgroup.FieldGroup.CommitException;
+import com.vaadin.ui.ComponentContainer;
 
 
 /**
  * <p>
- * Interface for all form panel used to configure modules
+ * Interface for all UI forms used to configure modules
  * </p>
  *
  * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @since 0.5
  */
-public interface IModuleConfigFormBuilder
+public interface IModuleConfigForm extends ComponentContainer
 {
     
     /**
-     * Gets the title of the form
-     * @param config instance
-     * @return title string
+     * Builds the whole form for a given config object.
+     * @param title title of the form
+     * @param beanItem object to render a form for
      */
-    public String getTitle(ModuleConfig config);
+    public void build(String title,  MyBeanItem<? extends Object> beanItem);
     
     
     /**
-     * Builds the whole form for a given config object.
-     * @param fieldGroup
-     * @return root component of the generated form
+     * @return true if the whole object editable by this form can be changed
      */
-    public Component buildForm(FieldGroup fieldGroup);
+    public boolean canUpdateInstance();
+    
+    
+    /**
+     * Commit all changes made in the UI values to the underlying bean object
+     * @throws CommitException if data cannot be committed
+     */
+    public void commit() throws CommitException;
     
 }

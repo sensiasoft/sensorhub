@@ -14,12 +14,12 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.ui;
 
-import org.sensorhub.ui.api.IModuleConfigFormBuilder;
+import org.sensorhub.ui.api.IModuleConfigForm;
 import com.vaadin.data.Property;
 import com.vaadin.ui.Field;
 
 
-public class GenericStorageConfigForm extends GenericConfigFormBuilder implements IModuleConfigFormBuilder
+public class GenericStorageConfigForm extends GenericConfigForm implements IModuleConfigForm
 {
 
     @Override

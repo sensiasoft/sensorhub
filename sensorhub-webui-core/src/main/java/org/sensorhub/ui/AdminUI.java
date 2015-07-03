@@ -17,8 +17,10 @@ package org.sensorhub.ui;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
+import org.sensorhub.api.comm.CommConfig;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.module.IModule;
 import org.sensorhub.api.module.ModuleConfig;
@@ -27,51 +29,87 @@ import org.sensorhub.api.processing.ProcessConfig;
 import org.sensorhub.api.sensor.SensorConfig;
 import org.sensorhub.api.service.ServiceConfig;
 import org.sensorhub.impl.SensorHub;
+import org.sensorhub.impl.module.ModuleRegistry;
 import org.sensorhub.impl.persistence.StreamStorageConfig;
 import org.sensorhub.impl.service.HttpServer;
-import org.sensorhub.ui.api.IModuleConfigFormBuilder;
-import org.sensorhub.ui.api.IModulePanelBuilder;
+import org.sensorhub.ui.ModuleTypeSelectionPopup.ModuleTypeSelectionCallback;
+import org.sensorhub.ui.api.IModuleConfigForm;
+import org.sensorhub.ui.api.IModuleAdminPanel;
 import org.sensorhub.ui.data.MyBeanItem;
 import org.sensorhub.ui.data.MyBeanItemContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.vaadin.annotations.Theme;
 import com.vaadin.data.Item;
+import com.vaadin.data.util.converter.Converter;
 import com.vaadin.event.Action;
 import com.vaadin.event.Action.Handler;
 import com.vaadin.event.ItemClickEvent;
 import com.vaadin.event.ItemClickEvent.ItemClickListener;
 import com.vaadin.server.ClassResource;
+import com.vaadin.server.Resource;
+import com.vaadin.server.ThemeResource;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.ui.Accordion;
-import com.vaadin.ui.Component;
+import com.vaadin.ui.Alignment;
+import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.HorizontalSplitPanel;
+import com.vaadin.ui.Image;
+import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
+import com.vaadin.ui.TabSheet.Tab;
 import com.vaadin.ui.Table;
+import com.vaadin.ui.Table.CellStyleGenerator;
+import com.vaadin.ui.Table.ColumnHeaderMode;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window.CloseEvent;
 import com.vaadin.ui.Window.CloseListener;
 
 
 //@Theme("reindeer")
-@Theme("runo")
+//@Theme("runo")
 //@Theme("valo")
+@Theme("sensorhub")
 public class AdminUI extends com.vaadin.ui.UI
 {
     private static final long serialVersionUID = 4069325051233125115L;
-    private static Action ADD_MODULE_ACTION = new Action("Add Module", new ClassResource("/icons/module_add.png"));
-    private static Action REMOVE_MODULE_ACTION = new Action("Remove Module", new ClassResource("/icons/module_delete.png"));
-    private static Action ENABLE_MODULE_ACTION = new Action("Enable", new ClassResource("/icons/enable.png"));
-    private static Action DISABLE_MODULE_ACTION = new Action("Disable", new ClassResource("/icons/disable.gif"));
+    private static Action ADD_MODULE_ACTION = new Action("Add Module", new ThemeResource("icons/module_add.png"));
+    private static Action REMOVE_MODULE_ACTION = new Action("Remove Module", new ThemeResource("icons/module_delete.png"));
+    private static Action ENABLE_MODULE_ACTION = new Action("Enable", new ThemeResource("icons/enable.png"));
+    private static Action DISABLE_MODULE_ACTION = new Action("Disable", new ThemeResource("icons/disable.gif"));
+    private static Resource LOGO_ICON = new ClassResource("/sensorhub_logo_128.png");
+    private static Resource ACC_TAB_ICON = new ThemeResource("icons/enable.png");
+    
+    protected final static String STYLE_H1 = "h1";
+    protected final static String STYLE_H2 = "h2";
+    protected final static String STYLE_H3 = "h3";
+    protected final static String STYLE_COLORED = "colored";
+    protected final static String STYLE_QUIET = "quiet";
+    protected final static String STYLE_SECTION_BUTTONS = "section-buttons";
+    protected final static String STYLE_LOGO = "logo";
     
     private static final Logger log = LoggerFactory.getLogger(AdminUI.class);
+    private static AdminUI singleton;
+    
     
     VerticalLayout configArea;
     AdminUIConfig uiConfig;
     
-    Map<Class<?>, MyBeanItemContainer<ModuleConfig>> moduleConfigLists = new HashMap<Class<?>, MyBeanItemContainer<ModuleConfig>>();
-    Map<String, IModulePanelBuilder<?>> customPanels = new HashMap<String, IModulePanelBuilder<?>>();
-    Map<String, IModuleConfigFormBuilder> customForms = new HashMap<String, IModuleConfigFormBuilder>();
+    protected Map<Class<?>, MyBeanItemContainer<ModuleConfig>> moduleConfigLists = new HashMap<Class<?>, MyBeanItemContainer<ModuleConfig>>();
+    protected Map<String, Class<? extends IModuleAdminPanel<?>>> customPanels = new HashMap<String, Class<? extends IModuleAdminPanel<?>>>();
+    protected Map<String, Class<? extends IModuleConfigForm>> customForms = new HashMap<String, Class<? extends IModuleConfigForm>>();
+    
+    
+    public static AdminUI getInstance()
+    {
+        return singleton;
+    }
+    
+    
+    public AdminUI()
+    {
+        singleton = this;
+    }
     
     
     @Override
@@ -93,17 +131,18 @@ public class AdminUI extends com.vaadin.ui.UI
         
         try
         {
-            // load default form builders        
+            // load default form builders
             configClass = StreamStorageConfig.class.getCanonicalName();
-            customForms.put(configClass, GenericStorageConfigForm.class.newInstance());
-        
+            customForms.put(configClass, GenericStorageConfigForm.class);
+            configClass = CommConfig.class.getCanonicalName();
+            customForms.put(configClass, CommConfigForm.class);
+            
             // load custom form builders defined in config
-            for (CustomPanelConfig customForm: uiConfig.customForms)
+            for (CustomUIConfig customForm: uiConfig.customForms)
             {
                 configClass = customForm.configClass;
-                Class<?> clazz = Class.forName(customForm.builderClass);
-                IModuleConfigFormBuilder formBuilder = (IModuleConfigFormBuilder)clazz.newInstance();
-                customForms.put(configClass, formBuilder);
+                Class<?> clazz = Class.forName(customForm.uiClass);
+                customForms.put(configClass, (Class<IModuleConfigForm>)clazz);
                 log.debug("Loaded custom form for " + configClass);            
             }
         }
@@ -116,15 +155,14 @@ public class AdminUI extends com.vaadin.ui.UI
         {
             // load default panel builders
             configClass = SensorConfig.class.getCanonicalName();
-            customPanels.put(configClass, SensorPanelBuilder.class.newInstance());        
+            customPanels.put(configClass, SensorAdminPanel.class);        
         
             // load custom panel builders defined in config
-            for (CustomPanelConfig customPanel: uiConfig.customPanels)
+            for (CustomUIConfig customPanel: uiConfig.customPanels)
             {
                 configClass = customPanel.configClass;
-                Class<?> clazz = Class.forName(customPanel.builderClass);
-                IModulePanelBuilder<?> panelBuilder = (IModulePanelBuilder<?>)clazz.newInstance();
-                customPanels.put(configClass, panelBuilder);
+                Class<?> clazz = Class.forName(customPanel.uiClass);
+                customPanels.put(configClass, (Class<IModuleAdminPanel<?>>)clazz);
                 log.debug("Loaded custom panel for " + configClass);
             } 
         }
@@ -136,37 +174,72 @@ public class AdminUI extends com.vaadin.ui.UI
         // init main panels
         HorizontalSplitPanel splitPanel = new HorizontalSplitPanel();
         splitPanel.setMinSplitPosition(300.0f, Unit.PIXELS);
-        splitPanel.setMaxSplitPosition(80.0f, Unit.PERCENTAGE);
-        splitPanel.setSplitPosition(500.0f, Unit.PIXELS);
+        splitPanel.setMaxSplitPosition(30.0f, Unit.PERCENTAGE);
+        splitPanel.setSplitPosition(450.0f, Unit.PIXELS);
         setContent(splitPanel);
         
-        // build left stack
+        // build left pane
+        VerticalLayout leftPane = new VerticalLayout();
+        leftPane.setSizeFull();
+        
+        // header image and title
+        HorizontalLayout header = new HorizontalLayout();
+        header.setMargin(false);
+        header.setHeight(100.0f, Unit.PIXELS);
+        header.setWidth(100.0f, Unit.PERCENTAGE);
+        Image img = new Image(null, LOGO_ICON);
+        img.setHeight(90, Unit.PIXELS);
+        img.setStyleName(STYLE_LOGO);
+        header.addComponent(img);
+        Label title = new Label("SensorHub");
+        title.addStyleName(STYLE_H1);
+        title.addStyleName(STYLE_LOGO);
+        title.setWidth(null);
+        header.addComponent(title);
+        header.setExpandRatio(img, 0);
+        header.setExpandRatio(title, 1);
+        header.setComponentAlignment(img, Alignment.MIDDLE_LEFT);
+        header.setComponentAlignment(title, Alignment.MIDDLE_RIGHT);
+        leftPane.addComponent(header);
+            
+        // accordion with several sections
         Accordion stack = new Accordion();
-        stack.setHeight(100.0f, Unit.PERCENTAGE);
+        stack.setSizeFull();
+        Tab tab;
         
         VerticalLayout layout = new VerticalLayout();
-        stack.addTab(layout, "General");
+        tab = stack.addTab(layout, "General");
+        tab.setIcon(ACC_TAB_ICON);
         buildGeneralConfig(layout);
         
         layout = new VerticalLayout();
-        stack.addTab(layout, "Sensors");
+        tab = stack.addTab(layout, "Sensors");
+        tab.setIcon(ACC_TAB_ICON);
         buildModuleList(layout, SensorConfig.class);
         
         layout = new VerticalLayout();
-        stack.addTab(layout, "Storage");
+        tab = stack.addTab(layout, "Storage");
+        tab.setIcon(ACC_TAB_ICON);
         buildModuleList(layout, StorageConfig.class);
         
         layout = new VerticalLayout();
-        stack.addTab(layout, "Services");
+        tab = stack.addTab(layout, "Services");
+        tab.setIcon(ACC_TAB_ICON);
         buildModuleList(layout, ServiceConfig.class);
         
         layout = new VerticalLayout();
-        stack.addTab(layout, "Processing");
+        tab = stack.addTab(layout, "Processing");
+        tab.setIcon(ACC_TAB_ICON);
         buildModuleList(layout, ProcessConfig.class);
         
         layout = new VerticalLayout();
-        stack.addTab(layout, "Network");
-        splitPanel.addComponent(stack);
+        tab = stack.addTab(layout, "Network");
+        tab.setIcon(ACC_TAB_ICON);
+        
+        leftPane.addComponent(stack);
+        leftPane.setExpandRatio(header, 0);
+        leftPane.setExpandRatio(stack, 1);
+        splitPanel.addComponent(leftPane);
         
         // init config area
         configArea = new VerticalLayout();
@@ -202,7 +275,7 @@ public class AdminUI extends com.vaadin.ui.UI
     
     
     @SuppressWarnings("serial")
-    protected void displayModuleList(VerticalLayout layout, MyBeanItemContainer<ModuleConfig> container, final Class<?> configType)
+    protected void displayModuleList(VerticalLayout layout, final MyBeanItemContainer<ModuleConfig> container, final Class<?> configType)
     {
         // create table to display module list
         final Table table = new Table();
@@ -211,8 +284,52 @@ public class AdminUI extends com.vaadin.ui.UI
         table.setImmediate(true);
         table.setColumnReorderingAllowed(false);
         table.setContainerDataSource(container);
-        table.setVisibleColumns(new Object[] {"name", "enabled"});
-        table.setColumnHeaders(new String[] {"Module Name", "Enabled"});
+        table.setVisibleColumns(new Object[] {GenericConfigForm.PROP_NAME, GenericConfigForm.PROP_ENABLED});
+        table.setColumnHeaderMode(ColumnHeaderMode.HIDDEN);
+        
+        // value converter for enabled field
+        table.setConverter(GenericConfigForm.PROP_ENABLED, new Converter<String, Boolean>() {
+            @Override
+            public Boolean convertToModel(String value, Class<? extends Boolean> targetType, Locale locale) throws com.vaadin.data.util.converter.Converter.ConversionException
+            {
+                return (value != null && value.equals("enabled"));
+            }
+
+            @Override
+            public String convertToPresentation(Boolean value, Class<? extends String> targetType, Locale locale) throws com.vaadin.data.util.converter.Converter.ConversionException
+            {
+                return value ? "enabled" : "disabled";
+            }
+
+            @Override
+            public Class<Boolean> getModelType()
+            {
+                return boolean.class;
+            }
+
+            @Override
+            public Class<String> getPresentationType()
+            {
+                return String.class;
+            }
+        });
+        
+        table.setCellStyleGenerator(new CellStyleGenerator() {
+            @Override
+            public String getStyle(Table source, Object itemId, Object propertyId)
+            {
+                if (propertyId != null && propertyId.equals(GenericConfigForm.PROP_ENABLED))
+                {
+                    boolean val = (boolean)table.getItem(itemId).getItemProperty(propertyId).getValue();
+                    if (val == true)
+                        return "green";
+                    else
+                        return "red";
+                }
+                
+                return null;
+            }
+        });
         
         // item click listener to display selected module settings
         table.addItemClickListener(new ItemClickListener()
@@ -257,7 +374,24 @@ public class AdminUI extends com.vaadin.ui.UI
                 if (action == ADD_MODULE_ACTION)
                 {
                     // show popup to select among available module types
-                    ModuleTypeSelectionPopup popup = new ModuleTypeSelectionPopup(AdminUI.this,  configType);
+                    ModuleTypeSelectionPopup popup = new ModuleTypeSelectionPopup(configType, new ModuleTypeSelectionCallback() {
+                        public void newConfig(Class<?> moduleType, ModuleConfig config)
+                        {
+                            try
+                            {
+                                // add to main config
+                                ModuleRegistry reg = SensorHub.getInstance().getModuleRegistry();
+                                reg.loadModule(config);
+                            }
+                            catch (Exception e)
+                            {
+                                Notification.show(e.getMessage(), null, Notification.Type.ERROR_MESSAGE);
+                            }
+                            
+                            MyBeanItem<ModuleConfig> newBeanItem = container.addBean(config);
+                            openModuleInfo(newBeanItem);
+                        }
+                    });
                     popup.setModal(true);
                     addWindow(popup);
                 }
@@ -266,8 +400,8 @@ public class AdminUI extends com.vaadin.ui.UI
                 {
                     // possible actions when a module is selected
                     final Item item = table.getItem(selectedId);
-                    final String moduleId = (String)item.getItemProperty("id").getValue();
-                    final String moduleName = (String)item.getItemProperty("name").getValue();
+                    final String moduleId = (String)item.getItemProperty(GenericConfigForm.PROP_ID).getValue();
+                    final String moduleName = (String)item.getItemProperty(GenericConfigForm.PROP_NAME).getValue();
                     
                     if (action == REMOVE_MODULE_ACTION)
                     {
@@ -281,7 +415,7 @@ public class AdminUI extends com.vaadin.ui.UI
                                     try
                                     {
                                         SensorHub.getInstance().getModuleRegistry().destroyModule(moduleId);
-                                        table.removeItem(selectedId);
+                                        container.removeItem(selectedId);
                                     }
                                     catch (SensorHubException ex)
                                     {                        
@@ -306,7 +440,7 @@ public class AdminUI extends com.vaadin.ui.UI
                                     try 
                                     {
                                         SensorHub.getInstance().getModuleRegistry().enableModule(moduleId);
-                                        item.getItemProperty("enabled").setValue(true);
+                                        item.getItemProperty(GenericConfigForm.PROP_ENABLED).setValue(true);
                                     }
                                     catch (SensorHubException ex)
                                     {
@@ -330,7 +464,7 @@ public class AdminUI extends com.vaadin.ui.UI
                                     try 
                                     {
                                         SensorHub.getInstance().getModuleRegistry().disableModule(moduleId);
-                                        item.getItemProperty("enabled").setValue(false);
+                                        item.getItemProperty(GenericConfigForm.PROP_ENABLED).setValue(false);
                                     }
                                     catch (SensorHubException ex)
                                     {
@@ -348,14 +482,11 @@ public class AdminUI extends com.vaadin.ui.UI
         
         layout.setSizeFull();
     }
-    
+        
     
     protected void openModuleInfo(MyBeanItem<ModuleConfig> beanItem)
     {
         configArea.removeAllComponents();
-        
-        Class<?> configClass = beanItem.getBean().getClass();
-        Class<?> clazz;
         
         // TODO: do something different because getModuleById will load the module if not loaded yet
         // but here we don't necessarily need to load the module automatically
@@ -363,38 +494,61 @@ public class AdminUI extends com.vaadin.ui.UI
         try { module = SensorHub.getInstance().getModuleRegistry().getModuleById(beanItem.getBean().id); }
         catch (Exception e) {}
         
-        // check if there is a custom form registered, if not use default        
-        IModuleConfigFormBuilder formBuilder = null;
-        clazz = configClass;
-        while (formBuilder == null && clazz != null)
-        {
-            formBuilder = customForms.get(clazz.getCanonicalName());
-            clazz = clazz.getSuperclass();
-        }
-        if (formBuilder == null)
-            formBuilder = new GenericConfigFormBuilder();
+        // get panel for this config object        
+        Class<?> configClass = beanItem.getBean().getClass();
+        IModuleAdminPanel<IModule<?>> panel = generatePanel(configClass);
+        panel.build(beanItem, module);
         
-        // check if there is a custom panel registered, if not use default
-        IModulePanelBuilder<IModule<?>> panelBuilder = null;
-        clazz = configClass;
-        while (panelBuilder == null && clazz != null)
-        {
-            panelBuilder = (IModulePanelBuilder<IModule<?>>)customPanels.get(clazz.getCanonicalName());
-            clazz = clazz.getSuperclass();
-        }
-        if (panelBuilder == null)
-            panelBuilder = new DefaultModulePanelBuilder<IModule<?>>();
-        
-        // generate module admin panel
-        Component panel = panelBuilder.buildPanel(beanItem, module, formBuilder);
+        // generate module admin panel        
         configArea.addComponent(panel);
     }
     
     
-    protected void addNewConfig(Class<?> moduleType, ModuleConfig config)
+    protected IModuleAdminPanel<IModule<?>> generatePanel(Class<?> clazz)
     {
-        MyBeanItemContainer<ModuleConfig> container = moduleConfigLists.get(moduleType);
-        MyBeanItem<ModuleConfig> newBeanItem = container.addBean(config);
-        openModuleInfo(newBeanItem);
+        try
+        {
+            // check if there is a custom panel registered, if not use default
+            Class<IModuleAdminPanel<IModule<?>>> uiClass = null;
+            while (uiClass == null && clazz != null)
+            {
+                uiClass = (Class<IModuleAdminPanel<IModule<?>>>)customPanels.get(clazz.getCanonicalName());
+                clazz = clazz.getSuperclass();
+            }
+            
+            if (uiClass == null)
+                return new DefaultModulePanel<IModule<?>>();
+            
+            return uiClass.newInstance();
+        }
+        catch (Exception e)
+        {
+            throw new RuntimeException("Cannot instantiate UI class", e);
+        }
     }
+    
+    
+    protected IModuleConfigForm generateForm(Class<?> clazz)
+    {
+        try
+        {
+            // check if there is a custom form registered, if not use default        
+            Class<IModuleConfigForm> uiClass = null;
+            while (uiClass == null && clazz != null)
+            {
+                uiClass = (Class<IModuleConfigForm>)customForms.get(clazz.getCanonicalName());
+                clazz = clazz.getSuperclass();
+            }
+            
+            if (uiClass == null)
+                return new GenericConfigForm();
+            
+            return uiClass.newInstance();
+        }
+        catch (Exception e)
+        {
+            throw new RuntimeException("Cannot instantiate UI class", e);
+        }
+    }
+
 }

@@ -44,7 +44,7 @@ public class AdminUIModule extends AbstractModule<AdminUIConfig>
         initParams.put(SERVLET_PARAM_MODULE_ID, getLocalID());
         if (config.widgetSet != null)
             initParams.put(WIDGETSET, config.widgetSet);
-        initParams.put("productionMode", "true");        
+        //initParams.put("productionMode", "true");        
         HttpServer.getInstance().deployServlet("/*", vaadinServlet, initParams);        
     }
     

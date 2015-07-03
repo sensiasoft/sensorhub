@@ -17,7 +17,7 @@ package org.sensorhub.ui.api;
 import org.sensorhub.api.module.IModule;
 import org.sensorhub.api.module.ModuleConfig;
 import org.sensorhub.ui.data.MyBeanItem;
-import com.vaadin.ui.Component;
+import com.vaadin.ui.ComponentContainer;
 
 
 /**
@@ -29,16 +29,14 @@ import com.vaadin.ui.Component;
  * @param <ModuleType> Type of module supported by this panel builder
  * @since 0.5
  */
-public interface IModulePanelBuilder<ModuleType extends IModule<? extends ModuleConfig>>
+public interface IModuleAdminPanel<ModuleType extends IModule<? extends ModuleConfig>> extends ComponentContainer
 { 
     
     /**
      * Builds the whole panel allowing interaction with a module
      * @param beanItem bean item associated to the configuration properties
      * @param module module instance or null if module hasn't been loaded
-     * @param formBuilder 
-     * @return Vaadin component containing all widgets for interacting with the module
      */
-    public Component buildPanel(MyBeanItem<ModuleConfig> beanItem, ModuleType module, IModuleConfigFormBuilder formBuilder);
+    public void build(MyBeanItem<ModuleConfig> beanItem, ModuleType module);
     
 }

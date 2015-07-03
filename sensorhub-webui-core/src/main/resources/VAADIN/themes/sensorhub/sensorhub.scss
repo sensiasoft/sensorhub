@@ -1,0 +1,73 @@
+// Modify the base color of the theme
+//$v-background-color: hsl(200, 50%, 50%);
+$v-layout-margin-top: 25px;
+
+// Import valo after setting the parameters
+@import "../valo/valo";
+
+
+.sensorhub {   
+   @include valo;
+   
+   .v-verticallayout > .v-slot:first-child .v-label-h1,
+   .v-verticallayout > .v-slot:first-child h1,
+   .v-verticallayout > div > .v-slot:first-child .v-label-h1,
+   .v-verticallayout > div > .v-slot:first-child h1,
+   .v-verticallayout > .v-slot:first-child .v-label-h2,
+   .v-verticallayout > .v-slot:first-child h2,
+   .v-verticallayout > div > .v-slot:first-child .v-label-h2,
+   .v-verticallayout > div > .v-slot:first-child h2,
+   .v-verticallayout > .v-slot:first-child .v-label-h3,
+   .v-verticallayout > .v-slot:first-child h3,
+   .v-verticallayout > div > .v-slot:first-child .v-label-h3,
+   .v-verticallayout > div > .v-slot:first-child h3 {
+      margin-top: 0;
+      margin-bottom: 0;
+   }
+   
+   .v-verticallayout > .v-slot:first-child .section-buttons {
+      position: float;
+      top: 0px;
+      right: 100%;
+   }
+   
+   .v-formlayout-contentcell > .v-label-h3 {
+      top: 18px;
+   }
+   
+   .v-formlayout-firstrow {
+      height: 40px;
+   }
+   
+   .v-accordion-item-caption > .v-caption {
+      font-size: 18px;
+   }
+   
+   .v-table .v-table-cell-content-green {
+      background-image: url("icons/enabled.gif");
+      background-repeat: no-repeat;
+      background-position: 5px;
+      text-indent: 20px;
+   }
+   
+   .v-table .v-table-cell-content-red {
+      background-image: url("icons/disable.gif");
+      background-repeat: no-repeat;
+      background-position: 5px;
+      text-indent: 20px;
+   }
+   
+   img.logo {
+      margin-left: 10px;
+   }
+   
+   .logo.h1 {
+      margin-bottom: 16px;
+      margin-right: 20px;
+      text-shadow: 1px 1px 0 rgba(50, 50, 50, 0.5);
+   }
+   
+   img.v-icon {
+      margin-bottom: 3px;
+   }
+}

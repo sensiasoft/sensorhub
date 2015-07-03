@@ -20,7 +20,7 @@ import com.vaadin.server.Sizeable.Unit;
 import com.vaadin.ui.Field;
 
 
-public class HttpServerConfigForm extends GenericConfigFormBuilder
+public class HttpServerConfigForm extends GenericConfigForm
 {
     
     

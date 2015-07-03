@@ -25,10 +25,10 @@ public class AdminUIConfig extends ModuleConfig
     public String widgetSet;
     
     
-    public List<CustomPanelConfig> customPanels = new ArrayList<CustomPanelConfig>();
+    public List<CustomUIConfig> customPanels = new ArrayList<CustomUIConfig>();
     
     
-    public List<CustomPanelConfig> customForms = new ArrayList<CustomPanelConfig>();
+    public List<CustomUIConfig> customForms = new ArrayList<CustomUIConfig>();
     
     
     public AdminUIConfig()

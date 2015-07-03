@@ -15,9 +15,9 @@
     "enabled": true,
     "customPanels": [
         {
-            "objClass": "org.sensorhub.ui.CustomPanelConfig",
+            "objClass": "org.sensorhub.ui.CustomUIConfig",
             "configClass": "org.sensorhub.api.sensor.SensorConfig",
-            "builderClass": "org.sensorhub.ui.SensorPanelBuilder"
+            "uiClass": "org.sensorhub.ui.SensorAdminPanel"
         }
     ]
   },

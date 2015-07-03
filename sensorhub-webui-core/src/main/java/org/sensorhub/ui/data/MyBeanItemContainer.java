@@ -46,8 +46,8 @@ public class MyBeanItemContainer<BeanType> extends AbstractInMemoryContainer<Obj
     {
         MyBeanItem<BeanType> newItem = new MyBeanItem<BeanType>(bean);
         Integer newItemId = (Integer)bean.hashCode();
-        this.internalAddItemAtEnd(newItemId, newItem, false);
-        this.fireItemAdded(indexOfId(newItem), newItemId, newItem);
+        internalAddItemAtEnd(newItemId, newItem, false);
+        fireItemAdded(indexOfId(newItem), newItemId, newItem);
         return newItem;
     }
 
@@ -102,8 +102,9 @@ public class MyBeanItemContainer<BeanType> extends AbstractInMemoryContainer<Obj
     @Override
     public boolean removeItem(Object itemId) throws UnsupportedOperationException
     {
-        boolean ret = super.internalRemoveItem(itemId);
+        boolean ret = internalRemoveItem(itemId);
         itemIdToItem.remove(itemId);
+        fireItemRemoved(indexOfId(itemId), itemId);
         return ret;
     }
 
@@ -113,6 +114,7 @@ public class MyBeanItemContainer<BeanType> extends AbstractInMemoryContainer<Obj
     {
         super.internalRemoveAllItems();
         itemIdToItem.clear();
+        this.fireItemsRemoved(0, firstItemId(), size());
         return true;
     }
     

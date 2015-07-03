@@ -17,10 +17,11 @@ package org.sensorhub.ui;
 import org.sensorhub.api.module.ModuleConfig;
 import org.sensorhub.api.sensor.ISensorDataInterface;
 import org.sensorhub.api.sensor.ISensorModule;
-import org.sensorhub.ui.api.IModuleConfigFormBuilder;
-import org.sensorhub.ui.api.IModulePanelBuilder;
+import org.sensorhub.ui.api.IModuleAdminPanel;
 import org.sensorhub.ui.data.MyBeanItem;
 import com.vaadin.ui.Component;
+import com.vaadin.ui.GridLayout;
+import com.vaadin.ui.Label;
 import com.vaadin.ui.Layout;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.VerticalLayout;
@@ -28,56 +29,71 @@ import com.vaadin.ui.VerticalLayout;
 
 /**
  * <p>
- * Builder for sensor module panels.<br/>
- * This builder adds a section to browse structure of inputs and outputs,
+ * Admin panel for sensor modules.<br/>
+ * This adds a section to view structure of inputs and outputs,
  * and allows the user to send commands and view output data values.
  * </p>
  *
  * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @since 1.0
  */
-public class SensorPanelBuilder extends DefaultModulePanelBuilder<ISensorModule<?>> implements IModulePanelBuilder<ISensorModule<?>>
+public class SensorAdminPanel extends DefaultModulePanel<ISensorModule<?>> implements IModuleAdminPanel<ISensorModule<?>>
 {
-    SWECommonFormBuilder sweFormBuilder = new SWECommonFormBuilder();
+    private static final long serialVersionUID = 9206002459600214988L;
     
     
     @Override
-    public Component buildPanel(MyBeanItem<ModuleConfig> beanItem, ISensorModule<?> module, IModuleConfigFormBuilder formBuilder)
+    public void build(MyBeanItem<ModuleConfig> beanItem, ISensorModule<?> module)
     {
-        Panel panel = (Panel)super.buildPanel(beanItem, module, formBuilder);       
+        super.build(beanItem, module);       
+        
+        // add section label
+        VerticalLayout form = new VerticalLayout();
+        form.setWidth(100.0f, Unit.PERCENTAGE);
+        form.setMargin(false);
+        form.setSpacing(true);
+        Label sectionLabel = new Label("Inputs/Outputs");
+        sectionLabel.addStyleName(AdminUI.STYLE_H3);
+        sectionLabel.addStyleName(AdminUI.STYLE_COLORED);
+        form.addComponent(sectionLabel);
         
         // add I/O panel only if module is loaded and started
         if (module != null)
         {
             Panel ioPanel;
+            SWECommonFormBuilder sweFormBuilder = new SWECommonFormBuilder();
             
             // measurement outputs
             ioPanel = newPanel("Observation Outputs");
             for (ISensorDataInterface output: module.getObservationOutputs().values())
             {
-                Component form = sweFormBuilder.buildForm(output.getRecordDescription());
-                ((Layout)ioPanel.getContent()).addComponent(form);
+                Component sweForm = sweFormBuilder.buildForm(output.getRecordDescription());
+                ((Layout)ioPanel.getContent()).addComponent(sweForm);
             }
-            ((Layout)panel.getContent()).addComponent(ioPanel);
+            form.addComponent(ioPanel);
             
             // status outputs
             ioPanel = newPanel("Status Outputs");
             for (ISensorDataInterface output: module.getStatusOutputs().values())
             {
-                Component form = sweFormBuilder.buildForm(output.getRecordDescription());
-                ((Layout)ioPanel.getContent()).addComponent(form);
+                Component sweForm = sweFormBuilder.buildForm(output.getRecordDescription());
+                ((Layout)ioPanel.getContent()).addComponent(sweForm);
             }           
-            ((Layout)panel.getContent()).addComponent(ioPanel);
+            form.addComponent(ioPanel);
+        }
+        else
+        {
+            
         }
                 
-        return panel;
+        addComponent(form);
     }
     
     
     protected Panel newPanel(String title)
     {
         Panel panel = new Panel(title);
-        VerticalLayout layout = new VerticalLayout();
+        GridLayout layout = new GridLayout(2, 10);
         layout.setMargin(true);
         panel.setContent(layout);
         return panel;

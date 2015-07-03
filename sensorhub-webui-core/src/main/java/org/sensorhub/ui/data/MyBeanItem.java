@@ -49,7 +49,15 @@ public class MyBeanItem<BeanType> implements Item
     
     public MyBeanItem(BeanType bean)
     {
-        this(bean, new String[0]);
+        this.bean = bean;
+        addProperties("", bean);
+    }
+    
+    
+    public MyBeanItem(BeanType bean, String prefix)
+    {
+        this.bean = bean;
+        addProperties(prefix, bean);
     }
 
 
@@ -130,7 +138,10 @@ public class MyBeanItem<BeanType> implements Item
                 {
                     Object complexVal = f.get(bean);
                     if (complexVal != null)
-                        addProperties(fullName + ".", complexVal);
+                    {
+                        MyBeanItem<Object> beanItem = new MyBeanItem<Object>(complexVal, fullName + ".");
+                        addItemProperty(fullName, new ComplexProperty(bean, f, beanItem));
+                    }
                 }
                 catch (Exception e)
                 {

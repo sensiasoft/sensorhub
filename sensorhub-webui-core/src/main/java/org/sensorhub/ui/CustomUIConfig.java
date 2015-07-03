@@ -25,20 +25,20 @@ import org.sensorhub.api.config.DisplayInfo;
  * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @since Feb 13, 2015
  */
-public class CustomPanelConfig
+public class CustomUIConfig
 {
     
     @DisplayInfo(label="Config Class", desc="Type of module config class for which a custom panel must be generated")
     public String configClass;
     
     
-    @DisplayInfo(label="Builder Class", desc="Fully qualified name of class implementing IModulePanelBuilder")
-    public String builderClass;
+    @DisplayInfo(label="UI Class", desc="Fully qualified name of class implementing IModuleAdminPanel")
+    public String uiClass;
     
     
-    public CustomPanelConfig(String configClass, String builderClass)
+    public CustomUIConfig(String configClass, String uiClass)
     {
         this.configClass = configClass;
-        this.builderClass = builderClass;
+        this.uiClass = uiClass;
     }
 }
