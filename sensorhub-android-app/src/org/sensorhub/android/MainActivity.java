@@ -144,7 +144,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback
         trupulseConfig.name = "TruPulse Range Finder";
         trupulseConfig.enabled = true;
         BluetoothConfig btConf = new BluetoothConfig();
-        btConf.providerClass = BluetoothCommProvider.class.getCanonicalName();
+        btConf.moduleClass = BluetoothCommProvider.class.getCanonicalName();
         btConf.deviceName = "TP360RB.*";
         trupulseConfig.commSettings = btConf;
         sensorhubConfig.add(trupulseConfig);

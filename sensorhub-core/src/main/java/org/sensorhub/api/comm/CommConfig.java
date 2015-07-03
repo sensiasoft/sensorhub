@@ -14,22 +14,25 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.api.comm;
 
+import org.sensorhub.api.module.ModuleConfig;
 
-public abstract class CommConfig
+
+public abstract class CommConfig extends ModuleConfig
 {
-    public String providerClass;
-    
-    
+       
+    @SuppressWarnings("rawtypes")
     public ICommProvider getProvider()
     {
         try
         {
-            Class<?> clazz = Class.forName(providerClass);
-            return (ICommProvider)clazz.newInstance();
+            Class<?> clazz = Class.forName(moduleClass);
+            ICommProvider commProvider = (ICommProvider)clazz.newInstance();
+            commProvider.init(this);  
+            return commProvider;
         }
         catch (Exception e)
         {
-            throw new RuntimeException("", e);
+            throw new RuntimeException("Cannot load module " + moduleClass, e);
         }
     }
 }

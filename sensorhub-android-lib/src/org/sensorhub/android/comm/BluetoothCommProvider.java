@@ -17,9 +17,10 @@ package org.sensorhub.android.comm;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import org.sensorhub.api.comm.CommConfig;
 import org.sensorhub.api.comm.ICommProvider;
+import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.impl.comm.BluetoothConfig;
+import org.sensorhub.impl.module.AbstractModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import android.bluetooth.BluetoothSocket;
@@ -34,7 +35,7 @@ import android.bluetooth.BluetoothSocket;
  * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @since Jun 18, 2015
  */
-public class BluetoothCommProvider implements ICommProvider
+public class BluetoothCommProvider extends AbstractModule<BluetoothConfig> implements ICommProvider<BluetoothConfig>
 {
     static final Logger log = LoggerFactory.getLogger(BluetoothCommProvider.class.getSimpleName());
     BluetoothSocket btSocket;
@@ -42,16 +43,6 @@ public class BluetoothCommProvider implements ICommProvider
     
     public BluetoothCommProvider() 
     {
-    }
-    
-    
-    public void init(CommConfig config) throws IOException
-    {
-        BluetoothConfig btConf = (BluetoothConfig)config;
-        BluetoothManager btManager = new BluetoothManager();
-        btSocket = btManager.connectToSerialDevice(btConf.deviceName);
-        btSocket.connect();
-        log.info("Connected to Bluetooth SPP device {}", btSocket.getRemoteDevice().getName());
     }
     
     
@@ -70,7 +61,24 @@ public class BluetoothCommProvider implements ICommProvider
 
 
     @Override
-    public void close()
+    public void start() throws SensorHubException
+    {
+        try
+        {
+            BluetoothManager btManager = new BluetoothManager();
+            btSocket = btManager.connectToSerialDevice(config.deviceName);
+            btSocket.connect();
+            log.info("Connected to Bluetooth SPP device {}", btSocket.getRemoteDevice().getName());
+        }
+        catch (IOException e)
+        {
+            throw new SensorHubException("Cannot connect to BT device", e);
+        }        
+    }
+
+
+    @Override
+    public void stop() throws SensorHubException
     {
         try
         {
@@ -79,7 +87,13 @@ public class BluetoothCommProvider implements ICommProvider
         catch (IOException e)
         {
             e.printStackTrace();
-        }        
+        }
+    }
+
+
+    @Override
+    public void cleanup() throws SensorHubException
+    {       
     }
 
 }

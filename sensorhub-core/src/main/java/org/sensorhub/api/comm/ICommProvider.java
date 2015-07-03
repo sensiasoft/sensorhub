@@ -17,6 +17,7 @@ package org.sensorhub.api.comm;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import org.sensorhub.api.module.IModule;
 
 
 /**
@@ -26,20 +27,15 @@ import java.io.OutputStream;
  * </p>
  *
  * @author Alex Robin <alex.robin@sensiasoftware.com>
+ * @param <ConfigType> Comm module config type
  * @since Jun 19, 2015
  */
-public interface ICommProvider
+public interface ICommProvider<ConfigType extends CommConfig> extends IModule<ConfigType>
 {
-    
-    public void init(CommConfig config) throws IOException;
-    
     
     public InputStream getInputStream() throws IOException;
     
     
     public OutputStream getOutputStream() throws IOException;
-    
-    
-    public void close();
     
 }

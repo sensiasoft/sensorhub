@@ -36,10 +36,11 @@ public class TCPConfig extends CommConfig
 	public boolean discoverAddress;
 	
 
+    @SuppressWarnings("rawtypes")
     @Override
     public ICommProvider getProvider()
     {
-        if (providerClass != null)
+        if (moduleClass != null)
             return super.getProvider();
         
         try { return TCPCommProvider.class.newInstance(); }

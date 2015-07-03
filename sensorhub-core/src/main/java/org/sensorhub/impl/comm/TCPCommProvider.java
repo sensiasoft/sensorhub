@@ -21,8 +21,9 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketAddress;
-import org.sensorhub.api.comm.CommConfig;
 import org.sensorhub.api.comm.ICommProvider;
+import org.sensorhub.api.common.SensorHubException;
+import org.sensorhub.impl.module.AbstractModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,7 +36,7 @@ import org.slf4j.LoggerFactory;
  * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @since July 2, 2015
  */
-public class TCPCommProvider implements ICommProvider
+public class TCPCommProvider extends AbstractModule<TCPConfig> implements ICommProvider<TCPConfig>
 {
     static final Logger log = LoggerFactory.getLogger(TCPCommProvider.class.getSimpleName());
     
@@ -46,26 +47,6 @@ public class TCPCommProvider implements ICommProvider
     
     public TCPCommProvider() 
     {
-    }
-    
-    
-    public void init(CommConfig config) throws IOException
-    {
-        TCPConfig tcpConf = (TCPConfig)config;
-        
-        try
-        {
-            socket = new Socket();
-            InetAddress addr = InetAddress.getByName(tcpConf.remoteHost);
-            SocketAddress endpoint = new InetSocketAddress(addr, tcpConf.remotePort);
-            socket.connect(endpoint, 1000);
-            is = socket.getInputStream();
-            os = socket.getOutputStream();
-        }
-        catch (IOException e)
-        {
-            throw new IOException("Invalid serial port configuration");
-        }
     }
     
     
@@ -84,9 +65,36 @@ public class TCPCommProvider implements ICommProvider
 
 
     @Override
-    public void close()
+    public void start() throws SensorHubException
+    {        
+        try
+        {
+            InetAddress addr = InetAddress.getByName(config.remoteHost);
+            SocketAddress endpoint = new InetSocketAddress(addr, config.remotePort);
+                
+            socket = new Socket();
+            socket.connect(endpoint, 1000);
+            is = socket.getInputStream();
+            os = socket.getOutputStream();
+        }
+        catch (IOException e)
+        {
+            throw new SensorHubException("Cannot connect to remote host "
+                                         + config.remoteHost + ":" + config.remotePort + " via TCP");
+        }
+    }
+
+
+    @Override
+    public void stop() throws SensorHubException
     {
         try { socket.close(); }
-        catch (IOException e) { }
+        catch (IOException e) { }        
+    }
+
+
+    @Override
+    public void cleanup() throws SensorHubException
+    {        
     }
 }

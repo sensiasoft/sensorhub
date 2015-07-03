@@ -62,30 +62,5 @@
     "moduleClass": "org.sensorhub.impl.service.sos.SOSService",
     "name": "SOS Service",
     "enabled": true
-  },
-  {
-    "objClass": "org.sensorhub.impl.sensor.sost.SOSVirtualSensorConfig",
-    "sensorUID": "urn:android:device:a0e0eac2fea3f614",
-    "autoActivate": true,
-    "enableHistory": true,
-    "id": "130ee10b-d7f0-458c-9893-b2af34a64e91",
-    "moduleClass": "org.sensorhub.impl.sensor.sost.SOSVirtualSensor",
-    "name": "Alex's Phone Sensors",
-    "enabled": true
-  },
-  {
-    "objClass": "org.sensorhub.impl.persistence.StreamStorageConfig",
-    "storageConfig": {
-      "objClass": "org.sensorhub.impl.persistence.perst.BasicStorageConfig",
-      "memoryCacheSize": 10240,
-      "storagePath": "urn:android:device:a0e0eac2fea3f614.dat",
-      "moduleClass": "org.sensorhub.impl.persistence.perst.ObsStorageImpl",
-      "enabled": true
-    },
-    "dataSourceID": "130ee10b-d7f0-458c-9893-b2af34a64e91",
-    "id": "d3b37757-f42f-47e4-9fed-59736f0a3faa",
-    "moduleClass": "org.sensorhub.impl.persistence.GenericStreamStorage",
-    "name": "Alex's Phone Sensors Storage",
-    "enabled": true
   }
 ]

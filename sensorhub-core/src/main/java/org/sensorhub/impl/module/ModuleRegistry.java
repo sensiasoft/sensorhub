@@ -194,27 +194,35 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
     @SuppressWarnings("rawtypes")
     public synchronized IModule<?> enableModule(String moduleID) throws SensorHubException
     {
-        checkID(moduleID);        
-        IModule module = loadedModules.get(moduleID);
-        
-        // load module if not already loaded
-        if (module == null)
+        try
         {
-            ModuleConfig config = configRepos.get(moduleID);
-            config.enabled = true;
-            module = loadModule(config);
+            checkID(moduleID);        
+            IModule module = loadedModules.get(moduleID);
+            
+            // load module if not already loaded
+            if (module == null)
+            {
+                ModuleConfig config = configRepos.get(moduleID);
+                config.enabled = true;
+                module = loadModule(config);
+            }
+            
+            // otherwise just start it
+            else
+            {
+                module.getConfiguration().enabled = true;
+                module.start();      
+                eventHandler.publishEvent(new ModuleEvent(module, ModuleEvent.Type.ENABLED));
+                log.debug("Module " + MsgUtils.moduleString(module) +  " started");
+            }
+            
+            return module;
         }
-        
-        // otherwise just start it
-        else
+        catch (Exception e)
         {
-            module.getConfiguration().enabled = true;
-            module.start();      
-            eventHandler.publishEvent(new ModuleEvent(module, ModuleEvent.Type.ENABLED));
-            log.debug("Module " + MsgUtils.moduleString(module) +  " started");
+            log.error("Error while starting module " + moduleID, e);
+            throw e;
         }
-        
-        return module;
     }
     
     
