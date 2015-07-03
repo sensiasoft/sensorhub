@@ -235,8 +235,8 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
     {
         checkID(moduleID);
                 
-        // unload and stop module if it was loaded
-        IModule<?> module = loadedModules.remove(moduleID);
+        // stop module if it was loaded
+        IModule<?> module = loadedModules.get(moduleID);
         if (module != null)
         {
             try
@@ -271,7 +271,10 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
             module.cleanup();
         }
         
-        configRepos.remove(moduleID);        
+        // remove conf from repo if it was saved 
+        if (configRepos.contains(moduleID))
+            configRepos.remove(moduleID);
+        
         eventHandler.publishEvent(new ModuleEvent(module, ModuleEvent.Type.DELETED));
         log.debug("Module " + MsgUtils.moduleString(module) +  " removed");
     }
@@ -425,6 +428,8 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
                 log.error("Error during shutdown", e);
             }
         }
+        
+        loadedModules.clear();
         
         // make sure to clear all listeners in case some modules failed to unregister themselves
         eventHandler.clearAllListeners();
