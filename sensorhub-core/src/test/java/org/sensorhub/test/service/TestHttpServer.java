@@ -63,7 +63,7 @@ public class TestHttpServer
         final String testText = "Deploying hot servlet in SensorHub works";
         
         // deploy new servlet dynamically
-        server.deployServlet("/junit", new HttpServlet() {
+        server.deployServlet(new HttpServlet() {
             private static final long serialVersionUID = 1L;
             protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException
             {
@@ -77,7 +77,7 @@ public class TestHttpServer
                     throw new ServletException(e);
                 }
             }
-        });
+        }, "/junit");
         
         // connect to servlet and check response
         URL url = new URL("http://localhost:" + config.httpPort + config.servletsRootUrl + "/junit");

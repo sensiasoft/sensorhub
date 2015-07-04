@@ -167,18 +167,24 @@ public class HttpServer extends AbstractModule<HttpServerConfig>
     }
     
     
-    public void deployServlet(String path, HttpServlet servlet)
+    public void deployServlet(HttpServlet servlet, String path)
     {
-        deployServlet(path, servlet, null);
+        deployServlet(servlet, null, path);
     }
     
     
-    public synchronized void deployServlet(String path, HttpServlet servlet, Map<String, String> initParams)
+    public synchronized void deployServlet(HttpServlet servlet, Map<String, String> initParams, String... paths)
     {
-        ServletHolder servletHolder = new ServletHolder(servlet);
+        ServletHolder holder = new ServletHolder(servlet);
         if (initParams != null)
-            servletHolder.setInitParameters(initParams);
-        servletHandler.addServlet(servletHolder, path);
+            holder.setInitParameters(initParams);
+        
+        ServletMapping mapping = new ServletMapping();
+        mapping.setServletName(holder.getName());
+        mapping.setPathSpecs(paths);
+        
+        servletHandler.getServletHandler().addServlet(holder);
+        servletHandler.getServletHandler().addServletMapping(mapping);
     }
     
     

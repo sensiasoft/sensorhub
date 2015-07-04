@@ -212,7 +212,7 @@ public class SPSService extends OWSServlet implements IServiceModule<SPSServiceC
             return;
         
         // deploy ourself to HTTP server
-        HttpServer.getInstance().deployServlet(config.endPoint, this);
+        HttpServer.getInstance().deployServlet(this, config.endPoint);
     }
     
     
