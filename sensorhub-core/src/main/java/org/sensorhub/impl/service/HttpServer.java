@@ -15,7 +15,9 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 package org.sensorhub.impl.service;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Map;
 import javax.servlet.DispatcherType;
 import javax.servlet.ServletException;
@@ -27,7 +29,9 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.HandlerList;
 import org.eclipse.jetty.server.handler.ResourceHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.servlet.ServletHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.servlet.ServletMapping;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.impl.module.AbstractModule;
 import org.slf4j.Logger;
@@ -169,7 +173,7 @@ public class HttpServer extends AbstractModule<HttpServerConfig>
     }
     
     
-    public void deployServlet(String path, HttpServlet servlet, Map<String, String> initParams)
+    public synchronized void deployServlet(String path, HttpServlet servlet, Map<String, String> initParams)
     {
         ServletHolder servletHolder = new ServletHolder(servlet);
         if (initParams != null)
@@ -178,9 +182,43 @@ public class HttpServer extends AbstractModule<HttpServerConfig>
     }
     
     
-    public void undeployServlet(HttpServlet servlet)
+    public synchronized void undeployServlet(HttpServlet servlet)
     {
-        servletHandler.removeBean(servlet);
+        try
+        {
+            // there is no removeServlet method so we need to do it manually
+            ServletHandler handler = servletHandler.getServletHandler();
+            
+            // first collect servlets we want to keep
+            List<ServletHolder> servlets = new ArrayList<ServletHolder>();
+            String nameToRemove = null;
+            for( ServletHolder holder : handler.getServlets() )
+            {
+                if (holder.getServlet() != servlet)
+                    servlets.add(holder);
+                else
+                    nameToRemove = holder.getName();
+            }
+
+            if (nameToRemove == null)
+                return;
+            
+            // also update servlet path mappings
+            List<ServletMapping> mappings = new ArrayList<ServletMapping>();
+            for (ServletMapping mapping : handler.getServletMappings())
+            {
+                if (!nameToRemove.contains(mapping.getServletName()))
+                    mappings.add(mapping);
+            }
+
+            // set the new configuration
+            handler.setServletMappings( mappings.toArray(new ServletMapping[0]) );
+            handler.setServlets( servlets.toArray(new ServletHolder[0]) );
+        }
+        catch (ServletException e)
+        {
+            log.error("Error while undeploying servlet", e);
+        }       
     }
 
 
