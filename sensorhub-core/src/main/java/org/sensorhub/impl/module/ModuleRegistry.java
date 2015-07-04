@@ -210,15 +210,15 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
             // otherwise just start it
             else
             {
-                module.getConfiguration().enabled = true;
                 module.start();      
+                module.getConfiguration().enabled = true;
                 eventHandler.publishEvent(new ModuleEvent(module, ModuleEvent.Type.ENABLED));
                 log.debug("Module " + MsgUtils.moduleString(module) +  " started");
             }
             
             return module;
         }
-        catch (Exception e)
+        catch (SensorHubException e)
         {
             log.error("Error while starting module " + moduleID, e);
             throw e;
@@ -233,24 +233,32 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
      */
     public synchronized void disableModule(String moduleID) throws SensorHubException
     {
-        checkID(moduleID);
-                
-        // stop module if it was loaded
-        IModule<?> module = loadedModules.get(moduleID);
-        if (module != null)
+        try
         {
-            try
+            checkID(moduleID);
+                    
+            // stop module if it was loaded
+            IModule<?> module = loadedModules.get(moduleID);
+            if (module != null)
             {
-                module.stop();
-                module.getConfiguration().enabled = false;
+                try
+                {
+                    module.stop();
+                    module.getConfiguration().enabled = false;
+                }
+                catch (Exception e)
+                {
+                    throw new SensorHubException("Error while stopping module " + MsgUtils.moduleString(module), e);
+                }
+                
+                eventHandler.publishEvent(new ModuleEvent(module, ModuleEvent.Type.DISABLED));
+                log.debug("Module " + MsgUtils.moduleString(module) +  " stopped");
             }
-            catch (Exception e)
-            {
-                throw new SensorHubException("Error while stopping module " + MsgUtils.moduleString(module), e);
-            }
-            
-            eventHandler.publishEvent(new ModuleEvent(module, ModuleEvent.Type.DISABLED));
-            log.debug("Module " + MsgUtils.moduleString(module) +  " stopped");
+        }
+        catch (SensorHubException e)
+        {
+            log.error("Error while stopping module " + moduleID, e);
+            throw e;
         }
     }
     
