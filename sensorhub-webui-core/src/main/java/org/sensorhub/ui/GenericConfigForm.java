@@ -228,6 +228,7 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
                         public void newConfig(Class<?> moduleType, ModuleConfig config)
                         {
                             config.id = null;
+                            config.name = null;
                             MyBeanItem<Object> newItem = new MyBeanItem<Object>(config, propId + ".");
                             prop.setValue(newItem);
                             IModuleConfigForm newForm = AdminUI.getInstance().generateForm(config.getClass());

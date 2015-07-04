@@ -89,6 +89,7 @@ public class DefaultModulePanel<ModuleType extends IModule<? extends ModuleConfi
                 try
                 {
                     form.commit();
+                    // TODO call module.updateConfig()
                 }
                 catch (CommitException e)
                 {

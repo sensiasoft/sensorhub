@@ -47,5 +47,7 @@ public class CommConfigForm extends GenericConfigForm
             field.setVisible(false);
         else if (propId.endsWith(PROP_NAME))
             field.setVisible(false);
+        else if (propId.endsWith(PROP_ENABLED))
+            field.setVisible(false);
     }
 }

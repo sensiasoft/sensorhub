@@ -285,6 +285,7 @@ public class AdminUI extends com.vaadin.ui.UI
         table.setColumnReorderingAllowed(false);
         table.setContainerDataSource(container);
         table.setVisibleColumns(new Object[] {GenericConfigForm.PROP_NAME, GenericConfigForm.PROP_ENABLED});
+        table.setColumnWidth(GenericConfigForm.PROP_ENABLED, 100);
         table.setColumnHeaderMode(ColumnHeaderMode.HIDDEN);
         
         // value converter for enabled field
@@ -444,7 +445,7 @@ public class AdminUI extends com.vaadin.ui.UI
                                     }
                                     catch (SensorHubException ex)
                                     {
-                                        Notification.show("Error", "The module could not be enabled", Notification.Type.ERROR_MESSAGE);
+                                        Notification.show("Error", "The module could not be enabled\n" + ex.getMessage(), Notification.Type.ERROR_MESSAGE);
                                     }
                                 }
                             }                        
@@ -468,7 +469,7 @@ public class AdminUI extends com.vaadin.ui.UI
                                     }
                                     catch (SensorHubException ex)
                                     {
-                                        Notification.show("Error", "The module could not be disabled", Notification.Type.ERROR_MESSAGE);
+                                        Notification.show("Error", "The module could not be disabled" + ex.getMessage(), Notification.Type.ERROR_MESSAGE);
                                     }
                                 }
                             }                        
