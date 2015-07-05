@@ -14,7 +14,7 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.ui.api;
 
-import java.util.List;
+import java.util.Map;
 import org.sensorhub.ui.data.MyBeanItem;
 import com.vaadin.data.fieldgroup.FieldGroup.CommitException;
 import com.vaadin.ui.ComponentContainer;
@@ -48,9 +48,9 @@ public interface IModuleConfigForm extends ComponentContainer
     /**
      * Return possible object types for the given property ID
      * @param propId property ID
-     * @return list of class types assignable to that property
+     * @return map of names to types assignable to that property
      */
-    public List<Class<?>> getPossibleTypes(Object propId);
+    public Map<String, Class<?>> getPossibleTypes(Object propId);
     
     
     /**

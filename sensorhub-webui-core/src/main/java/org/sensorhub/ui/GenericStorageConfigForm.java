@@ -21,26 +21,17 @@ import com.vaadin.ui.Field;
 
 public class GenericStorageConfigForm extends GenericConfigForm implements IModuleConfigForm
 {
+    private static final long serialVersionUID = 4462720978742325333L;
 
-    @Override
-    protected void customizeField(String propId, Property<?> prop, Field<?> field)
+    
+    protected Field<?> buildAndBindField(String label, String propId, Property<?> prop)
     {
-        super.customizeField(propId, prop, field);
+        Field<?> field = super.buildAndBindField(label, propId, prop);
         
         if (propId.equals("storagePath"))
             field.setVisible(false);
         
-        else if (propId.equals("storageConfig.id"))
-            field.setVisible(false);
-        
-        else if (propId.equals("storageConfig.name"))
-            field.setVisible(false);
-        
-        else if (propId.equals("storageConfig.enabled"))
-            field.setVisible(false);
-        
-        else if (propId.equals("storageConfig.moduleClass"))
-            field.setVisible(false);
+        return field;
     }
 
 }

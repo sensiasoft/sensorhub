@@ -14,6 +14,7 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.ui;
 
+import org.sensorhub.ui.api.UIConstants;
 import org.sensorhub.ui.data.MyBeanItem;
 import com.vaadin.data.Property;
 import com.vaadin.ui.Field;
@@ -39,15 +40,17 @@ public class CommConfigForm extends GenericConfigForm
     
     
     @Override
-    protected void customizeField(String propId, Property<?> prop, Field<?> field)
+    protected Field<?> buildAndBindField(String label, String propId, Property<?> prop)
     {
-        super.customizeField(propId, prop, field);
+        Field<?> field = super.buildAndBindField(label, propId, prop);
         
-        if (propId.endsWith(PROP_ID))
+        if (propId.endsWith(UIConstants.PROP_ID))
             field.setVisible(false);
-        else if (propId.endsWith(PROP_NAME))
+        else if (propId.endsWith(UIConstants.PROP_NAME))
             field.setVisible(false);
-        else if (propId.endsWith(PROP_ENABLED))
+        else if (propId.endsWith(UIConstants.PROP_ENABLED))
             field.setVisible(false);
+        
+        return field;
     }
 }

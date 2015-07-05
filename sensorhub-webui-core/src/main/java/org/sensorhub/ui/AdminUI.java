@@ -32,9 +32,11 @@ import org.sensorhub.impl.SensorHub;
 import org.sensorhub.impl.module.ModuleRegistry;
 import org.sensorhub.impl.persistence.StreamStorageConfig;
 import org.sensorhub.impl.service.HttpServer;
+import org.sensorhub.impl.service.HttpServerConfig;
 import org.sensorhub.ui.ModuleTypeSelectionPopup.ModuleTypeSelectionCallback;
 import org.sensorhub.ui.api.IModuleConfigForm;
 import org.sensorhub.ui.api.IModuleAdminPanel;
+import org.sensorhub.ui.api.UIConstants;
 import org.sensorhub.ui.data.MyBeanItem;
 import org.sensorhub.ui.data.MyBeanItemContainer;
 import org.slf4j.Logger;
@@ -80,11 +82,6 @@ public class AdminUI extends com.vaadin.ui.UI
     private static Resource LOGO_ICON = new ClassResource("/sensorhub_logo_128.png");
     private static Resource ACC_TAB_ICON = new ThemeResource("icons/enable.png");
     
-    protected final static String STYLE_H1 = "h1";
-    protected final static String STYLE_H2 = "h2";
-    protected final static String STYLE_H3 = "h3";
-    protected final static String STYLE_COLORED = "colored";
-    protected final static String STYLE_QUIET = "quiet";
     protected final static String STYLE_SECTION_BUTTONS = "section-buttons";
     protected final static String STYLE_LOGO = "logo";
     
@@ -132,9 +129,11 @@ public class AdminUI extends com.vaadin.ui.UI
         try
         {
             // load default form builders
+            customForms.put(HttpServerConfig.class.getCanonicalName(), HttpServerConfigForm.class);
             customForms.put(StreamStorageConfig.class.getCanonicalName(), GenericStorageConfigForm.class);
             customForms.put(CommConfig.class.getCanonicalName(), CommConfigForm.class);
-            customForms.put("org.sensorhub.impl.service.sos.SOSServiceConfig", SOSConfigForm.class);
+            customForms.put(SOSConfigForm.SOS_PACKAGE + "SOSServiceConfig", SOSConfigForm.class);
+            customForms.put(SOSConfigForm.SOS_PACKAGE + "SOSProviderConfig", SOSConfigForm.class);
             
             // load custom form builders defined in config
             for (CustomUIConfig customForm: uiConfig.customForms)
@@ -174,7 +173,7 @@ public class AdminUI extends com.vaadin.ui.UI
         HorizontalSplitPanel splitPanel = new HorizontalSplitPanel();
         splitPanel.setMinSplitPosition(300.0f, Unit.PIXELS);
         splitPanel.setMaxSplitPosition(30.0f, Unit.PERCENTAGE);
-        splitPanel.setSplitPosition(450.0f, Unit.PIXELS);
+        splitPanel.setSplitPosition(350.0f, Unit.PIXELS);
         setContent(splitPanel);
         
         // build left pane
@@ -191,7 +190,7 @@ public class AdminUI extends com.vaadin.ui.UI
         img.setStyleName(STYLE_LOGO);
         header.addComponent(img);
         Label title = new Label("SensorHub");
-        title.addStyleName(STYLE_H1);
+        title.addStyleName(UIConstants.STYLE_H1);
         title.addStyleName(STYLE_LOGO);
         title.setWidth(null);
         header.addComponent(title);
@@ -283,12 +282,12 @@ public class AdminUI extends com.vaadin.ui.UI
         table.setImmediate(true);
         table.setColumnReorderingAllowed(false);
         table.setContainerDataSource(container);
-        table.setVisibleColumns(new Object[] {GenericConfigForm.PROP_NAME, GenericConfigForm.PROP_ENABLED});
-        table.setColumnWidth(GenericConfigForm.PROP_ENABLED, 100);
+        table.setVisibleColumns(new Object[] {UIConstants.PROP_NAME, UIConstants.PROP_ENABLED});
+        table.setColumnWidth(UIConstants.PROP_ENABLED, 100);
         table.setColumnHeaderMode(ColumnHeaderMode.HIDDEN);
         
         // value converter for enabled field
-        table.setConverter(GenericConfigForm.PROP_ENABLED, new Converter<String, Boolean>() {
+        table.setConverter(UIConstants.PROP_ENABLED, new Converter<String, Boolean>() {
             @Override
             public Boolean convertToModel(String value, Class<? extends Boolean> targetType, Locale locale) throws com.vaadin.data.util.converter.Converter.ConversionException
             {
@@ -318,7 +317,7 @@ public class AdminUI extends com.vaadin.ui.UI
             @Override
             public String getStyle(Table source, Object itemId, Object propertyId)
             {
-                if (propertyId != null && propertyId.equals(GenericConfigForm.PROP_ENABLED))
+                if (propertyId != null && propertyId.equals(UIConstants.PROP_ENABLED))
                 {
                     boolean val = (boolean)table.getItem(itemId).getItemProperty(propertyId).getValue();
                     if (val == true)
@@ -375,7 +374,7 @@ public class AdminUI extends com.vaadin.ui.UI
                 {
                     // show popup to select among available module types
                     ModuleTypeSelectionPopup popup = new ModuleTypeSelectionPopup(configType, new ModuleTypeSelectionCallback() {
-                        public void newConfig(Class<?> moduleType, ModuleConfig config)
+                        public void configSelected(Class<?> moduleType, ModuleConfig config)
                         {
                             try
                             {
@@ -400,8 +399,8 @@ public class AdminUI extends com.vaadin.ui.UI
                 {
                     // possible actions when a module is selected
                     final Item item = table.getItem(selectedId);
-                    final String moduleId = (String)item.getItemProperty(GenericConfigForm.PROP_ID).getValue();
-                    final String moduleName = (String)item.getItemProperty(GenericConfigForm.PROP_NAME).getValue();
+                    final String moduleId = (String)item.getItemProperty(UIConstants.PROP_ID).getValue();
+                    final String moduleName = (String)item.getItemProperty(UIConstants.PROP_NAME).getValue();
                     
                     if (action == REMOVE_MODULE_ACTION)
                     {
@@ -440,7 +439,7 @@ public class AdminUI extends com.vaadin.ui.UI
                                     try 
                                     {
                                         SensorHub.getInstance().getModuleRegistry().enableModule(moduleId);
-                                        item.getItemProperty(GenericConfigForm.PROP_ENABLED).setValue(true);
+                                        item.getItemProperty(UIConstants.PROP_ENABLED).setValue(true);
                                         openModuleInfo((MyBeanItem<ModuleConfig>)item);
                                     }
                                     catch (SensorHubException ex)
@@ -465,7 +464,7 @@ public class AdminUI extends com.vaadin.ui.UI
                                     try 
                                     {
                                         SensorHub.getInstance().getModuleRegistry().disableModule(moduleId);
-                                        item.getItemProperty(GenericConfigForm.PROP_ENABLED).setValue(false);
+                                        item.getItemProperty(UIConstants.PROP_ENABLED).setValue(false);
                                     }
                                     catch (SensorHubException ex)
                                     {

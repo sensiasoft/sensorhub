@@ -44,7 +44,13 @@ public class MyBeanItemContainer<BeanType> extends AbstractInMemoryContainer<Obj
     
     public MyBeanItem<BeanType> addBean(BeanType bean)
     {
-        MyBeanItem<BeanType> newItem = new MyBeanItem<BeanType>(bean);
+        return addBean(bean, MyBeanItem.NO_PREFIX);
+    }
+    
+    
+    public MyBeanItem<BeanType> addBean(BeanType bean, String prefix)
+    {
+        MyBeanItem<BeanType> newItem = new MyBeanItem<BeanType>(bean, prefix);
         Integer newItemId = (Integer)bean.hashCode();
         internalAddItemAtEnd(newItemId, newItem, false);
         fireItemAdded(indexOfId(newItem), newItemId, newItem);

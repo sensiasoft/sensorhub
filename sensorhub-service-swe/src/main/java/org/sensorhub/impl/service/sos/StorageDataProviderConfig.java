@@ -45,6 +45,11 @@ public class StorageDataProviderConfig extends SOSProviderConfig
     public List<String> hiddenOutputs = new ArrayList<String>();
     
 
+    public StorageDataProviderConfig()
+    {        
+    }
+    
+    
     /*
      * Copy constructor to configure storage from streaming data provider info
      */

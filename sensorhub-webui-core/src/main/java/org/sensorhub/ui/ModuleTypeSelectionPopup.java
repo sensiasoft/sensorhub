@@ -32,13 +32,13 @@ import com.vaadin.ui.Button.ClickEvent;
 public class ModuleTypeSelectionPopup extends Window
 {
     private static final long serialVersionUID = -5368554789542357015L;
-    private final static String PROP_NAME = "name";
-    private final static String PROP_VERSION = "version";
+    private static final String PROP_NAME = "name";
+    private static final String PROP_VERSION = "version";
     
     
     protected interface ModuleTypeSelectionCallback
     {
-        public void newConfig(Class<?> moduleType, ModuleConfig config);
+        public void configSelected(Class<?> moduleType, ModuleConfig config);
     }
     
     
@@ -57,7 +57,7 @@ public class ModuleTypeSelectionPopup extends Window
         table.addContainerProperty("desc", String.class, null);
         table.addContainerProperty("author", String.class, null);
         table.setColumnHeaders(new String[] {"Module Type", "Version", "Description", "Author"});
-        table.setPageLength(20);
+        table.setPageLength(10);
         table.setMultiSelect(false);
         
         final Map<Object, IModuleProvider> providerMap = new HashMap<Object, IModuleProvider>();
@@ -103,7 +103,7 @@ public class ModuleTypeSelectionPopup extends Window
                         config.enabled = false;
                         
                         // send back new config object
-                        callback.newConfig(moduleType, config); 
+                        callback.configSelected(moduleType, config); 
                     }
                 }
                 catch (Exception e)

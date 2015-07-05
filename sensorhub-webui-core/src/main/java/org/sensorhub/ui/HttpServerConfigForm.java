@@ -16,22 +16,29 @@ package org.sensorhub.ui;
 
 import com.vaadin.data.Property;
 import com.vaadin.data.Validator;
-import com.vaadin.server.Sizeable.Unit;
+import com.vaadin.data.validator.StringLengthValidator;
 import com.vaadin.ui.Field;
 
 
 public class HttpServerConfigForm extends GenericConfigForm
 {
+    private static final long serialVersionUID = 3934416218769947436L;
+    protected static final String PROP_SERVLET_ROOT = "servletsRootUrl";
+    protected static final String PROP_HTTP_PORT = "httpPort";
     
     
     @Override
-    protected void customizeField(String propId, Property<?> prop, Field<?> field)
+    protected Field<?> buildAndBindField(String label, String propId, Property<?> prop)
     {
-        super.customizeField(propId, prop, field);
+        Field<?> field = super.buildAndBindField(label, propId, prop);
         
-        if (propId.equals("httpPort"))
+        if (propId.equals(PROP_SERVLET_ROOT))
         {
-            field.setWidth(50, Unit.PIXELS);
+            field.addValidator(new StringLengthValidator(MSG_REQUIRED_FIELD, 2, 256, false));
+        }
+        else if (propId.equals(PROP_HTTP_PORT))
+        {
+            field.setWidth(100, Unit.PIXELS);
             //((TextField)field).getConverter().
             field.addValidator(new Validator() {
                 private static final long serialVersionUID = 1L;
@@ -43,5 +50,7 @@ public class HttpServerConfigForm extends GenericConfigForm
                 }
             });
         }
+        
+        return field;
     }
 }

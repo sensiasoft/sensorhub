@@ -18,6 +18,7 @@ import org.sensorhub.api.module.IModule;
 import org.sensorhub.api.module.ModuleConfig;
 import org.sensorhub.ui.api.IModuleConfigForm;
 import org.sensorhub.ui.api.IModuleAdminPanel;
+import org.sensorhub.ui.api.UIConstants;
 import org.sensorhub.ui.data.MyBeanItem;
 import com.vaadin.server.Resource;
 import com.vaadin.server.ThemeResource;
@@ -63,7 +64,7 @@ public class DefaultModulePanel<ModuleType extends IModule<? extends ModuleConfi
         // create label with module name
         String moduleName = getTitle(beanItem.getBean());
         Label title = new Label(moduleName);
-        title.setStyleName(AdminUI.STYLE_H2);
+        title.setStyleName(UIConstants.STYLE_H2);
         titleBar.addComponent(title);
         
         // apply changes button

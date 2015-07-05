@@ -43,6 +43,9 @@ import com.vaadin.data.util.MethodProperty;
 @SuppressWarnings("serial")
 public class MyBeanItem<BeanType> implements Item
 {
+    public static final String NO_PREFIX = "";
+    public static final char PROP_SEPARATOR = '.';
+    
     BeanType bean;
     Map<Object, Property<?>> properties = new LinkedHashMap<Object, Property<?>>();
     
@@ -50,7 +53,7 @@ public class MyBeanItem<BeanType> implements Item
     public MyBeanItem(BeanType bean)
     {
         this.bean = bean;
-        addProperties("", bean);
+        addProperties(NO_PREFIX, bean);
     }
     
     
@@ -66,7 +69,7 @@ public class MyBeanItem<BeanType> implements Item
         this.bean = bean;
         
         // use reflection to generate properties from class attributes
-        addProperties("", bean);
+        addProperties(NO_PREFIX, bean);
     }
     
     
@@ -102,7 +105,7 @@ public class MyBeanItem<BeanType> implements Item
                     if (listObj != null)
                     {
                         for (Object o: listObj)
-                            container.addBean(o);
+                            container.addBean(o, fullName + PROP_SEPARATOR);
                     }
                     
                     addItemProperty(fullName, new ContainerProperty(bean, f, container));
@@ -139,7 +142,7 @@ public class MyBeanItem<BeanType> implements Item
                     Object complexVal = f.get(bean);
                     if (complexVal != null)
                     {
-                        MyBeanItem<Object> beanItem = new MyBeanItem<Object>(complexVal, fullName + ".");
+                        MyBeanItem<Object> beanItem = new MyBeanItem<Object>(complexVal, fullName + PROP_SEPARATOR);
                         addItemProperty(fullName, new ComplexProperty(bean, f, beanItem));
                     }
                 }

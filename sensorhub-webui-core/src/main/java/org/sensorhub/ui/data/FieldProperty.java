@@ -119,4 +119,14 @@ public class FieldProperty extends AbstractProperty<Object>
         else
             return null;
     }
+    
+    
+    public String getDescription()
+    {
+        DisplayInfo ann = f.getAnnotation(DisplayInfo.class);
+        if (ann != null)
+            return ann.desc();
+        else
+            return null;
+    }
 }

@@ -21,6 +21,7 @@ import org.sensorhub.api.sensor.ISensorControlInterface;
 import org.sensorhub.api.sensor.ISensorDataInterface;
 import org.sensorhub.api.sensor.ISensorModule;
 import org.sensorhub.ui.api.IModuleAdminPanel;
+import org.sensorhub.ui.api.UIConstants;
 import org.sensorhub.ui.data.MyBeanItem;
 import com.vaadin.server.Resource;
 import com.vaadin.server.ThemeResource;
@@ -50,7 +51,7 @@ import com.vaadin.ui.VerticalLayout;
 public class SensorAdminPanel extends DefaultModulePanel<ISensorModule<?>> implements IModuleAdminPanel<ISensorModule<?>>
 {
     private static final long serialVersionUID = 9206002459600214988L;
-    private static final Resource REFRESH_ICON = new ThemeResource("icons/refresh_nav.gif");
+    private static final Resource REFRESH_ICON = new ThemeResource("icons/refresh.gif");
     Panel obsPanel, statusPanel, commandsPanel;
     
     
@@ -70,16 +71,18 @@ public class SensorAdminPanel extends DefaultModulePanel<ISensorModule<?>> imple
         HorizontalLayout titleBar = new HorizontalLayout();
         titleBar.setSpacing(true);
         Label sectionLabel = new Label("Inputs/Outputs");
-        sectionLabel.addStyleName(AdminUI.STYLE_H3);
-        sectionLabel.addStyleName(AdminUI.STYLE_COLORED);
-        titleBar.addComponent(sectionLabel);        
+        sectionLabel.addStyleName(UIConstants.STYLE_H3);
+        sectionLabel.addStyleName(UIConstants.STYLE_COLORED);
+        titleBar.addComponent(sectionLabel);
+        titleBar.setComponentAlignment(sectionLabel, Alignment.MIDDLE_LEFT);
         
         // refresh button to show latest record
         Button refreshButton = new Button();
         refreshButton.setDescription("Refresh Data");
         refreshButton.setIcon(REFRESH_ICON);
-        refreshButton.addStyleName(AdminUI.STYLE_QUIET);
+        refreshButton.addStyleName(UIConstants.STYLE_QUIET);
         titleBar.addComponent(refreshButton);
+        titleBar.setComponentAlignment(refreshButton, Alignment.MIDDLE_LEFT);
         refreshButton.addClickListener(new ClickListener() {
             private static final long serialVersionUID = 1L;
             @Override
@@ -88,9 +91,7 @@ public class SensorAdminPanel extends DefaultModulePanel<ISensorModule<?>> imple
                 rebuildSwePanels(form, module);
             }
         });
-        
-        titleBar.setComponentAlignment(sectionLabel, Alignment.MIDDLE_LEFT);
-        titleBar.setComponentAlignment(refreshButton, Alignment.MIDDLE_LEFT);
+                
         form.addComponent(titleBar);
         
         // add I/O panel only if module is loaded
