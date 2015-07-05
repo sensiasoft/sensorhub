@@ -19,7 +19,6 @@ import org.sensorhub.api.module.ModuleConfig;
 import org.sensorhub.ui.api.IModuleConfigForm;
 import org.sensorhub.ui.api.IModuleAdminPanel;
 import org.sensorhub.ui.data.MyBeanItem;
-import com.vaadin.data.fieldgroup.FieldGroup.CommitException;
 import com.vaadin.server.Resource;
 import com.vaadin.server.ThemeResource;
 import com.vaadin.ui.Alignment;
@@ -49,7 +48,7 @@ public class DefaultModulePanel<ModuleType extends IModule<? extends ModuleConfi
     
     @Override
     @SuppressWarnings("serial")
-    public void build(MyBeanItem<ModuleConfig> beanItem, ModuleType module)
+    public void build(final MyBeanItem<ModuleConfig> beanItem, final ModuleType module)
     {
         setSizeUndefined();
         setWidth(100.0f, Unit.PERCENTAGE);
@@ -89,9 +88,10 @@ public class DefaultModulePanel<ModuleType extends IModule<? extends ModuleConfi
                 try
                 {
                     form.commit();
-                    // TODO call module.updateConfig()
+                    if (module != null)
+                        ((IModule<ModuleConfig>)module).updateConfig(beanItem.getBean());
                 }
-                catch (CommitException e)
+                catch (Exception e)
                 {
                     Notification.show("Error", e.getMessage(), Notification.Type.ERROR_MESSAGE);
                 }
@@ -113,7 +113,7 @@ public class DefaultModulePanel<ModuleType extends IModule<? extends ModuleConfi
     
     protected IModuleConfigForm getConfigForm(MyBeanItem<ModuleConfig> beanItem, ModuleType module)
     {
-        IModuleConfigForm form = AdminUI.getInstance().generateForm(module.getClass());
+        IModuleConfigForm form = AdminUI.getInstance().generateForm(beanItem.getBean().getClass());//module.getClass());
         form.build("Main Settings", beanItem);
         return form;
     }

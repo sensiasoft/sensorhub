@@ -14,7 +14,10 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.ui;
 
+import org.vast.data.DataValue;
+import org.vast.swe.SWEDataTypeUtils;
 import net.opengis.swe.v20.DataArray;
+import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataChoice;
 import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataRecord;
@@ -25,13 +28,16 @@ import net.opengis.swe.v20.Time;
 import net.opengis.swe.v20.UnitReference;
 import net.opengis.swe.v20.Vector;
 import com.vaadin.shared.ui.MarginInfo;
+import com.vaadin.shared.ui.label.ContentMode;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.VerticalLayout;
 
 
-public class SWECommonFormBuilder
+public class SWECommonForm extends VerticalLayout
 {
+    private static final long serialVersionUID = 8590941544560086101L;
+    SWEDataTypeUtils sweUtils = new SWEDataTypeUtils();
     boolean showArrayTable;
     
     
@@ -48,6 +54,7 @@ public class SWECommonFormBuilder
             VerticalLayout layout = new VerticalLayout();
             
             Label l = new Label();
+            l.setContentMode(ContentMode.HTML);
             l.setValue(getCaption(dataComponent));
             l.setDescription(getTooltip(dataComponent));
             layout.addComponent(l);
@@ -73,6 +80,7 @@ public class SWECommonFormBuilder
             VerticalLayout layout = new VerticalLayout();
             
             Label l = new Label();
+            l.setContentMode(ContentMode.HTML);
             l.setValue(getCaption(dataComponent));
             l.setDescription(getTooltip(dataComponent));
             layout.addComponent(l);
@@ -92,6 +100,7 @@ public class SWECommonFormBuilder
             VerticalLayout layout = new VerticalLayout();
             
             Label l = new Label();
+            l.setContentMode(ContentMode.HTML);
             l.setValue(getCaption(dataComponent));
             l.setDescription(getTooltip(dataComponent));
             layout.addComponent(l);
@@ -101,10 +110,11 @@ public class SWECommonFormBuilder
         
         else if (dataComponent instanceof SimpleComponent)
         {
-            Label c = new Label();
-            c.setValue(getCaption(dataComponent));
-            c.setDescription(getTooltip(dataComponent));
-            return c;
+            Label l = new Label();
+            l.setContentMode(ContentMode.HTML);
+            l.setValue(getCaption(dataComponent));
+            l.setDescription(getTooltip(dataComponent));
+            return l;
         }
         
         return null;
@@ -114,29 +124,39 @@ public class SWECommonFormBuilder
     protected String getCaption(DataComponent dataComponent)
     {
         StringBuffer caption = new StringBuffer();
-        caption.append(getPrettyName(dataComponent));
+        caption.append("<b>").append(getPrettyName(dataComponent)).append("</b>");
         
-        // uom code
-        String uom = null;
-        if (dataComponent instanceof HasUom)
+        if (dataComponent instanceof SimpleComponent)
         {
-            UnitReference unit = ((HasUom) dataComponent).getUom();
-              
-            if (unit.hasHref() && unit.getHref().equals(Time.ISO_TIME_UNIT))
-                uom = "ISO 8601";
-            else
-                uom = unit.getCode();          
-                
-            if (uom != null)
+            // uom code
+            String uom = null;
+            if (dataComponent instanceof HasUom)
             {
-                caption.append(" (");
-                caption.append(uom);
-                caption.append(')');
+                UnitReference unit = ((HasUom) dataComponent).getUom();
+                if (unit.isSetCode())
+                    uom = unit.getCode();
+                if (uom != null && uom.equals("1"))
+                    uom = null;
+            }
+            
+            DataBlock data = dataComponent.getData();
+            if (data != null)
+            {
+                caption.append(" = ");
+                caption.append(sweUtils.getStringValue((DataValue)dataComponent));
+                caption.append(' ');
+                if (uom != null)
+                    caption.append(uom);
+            }
+            else
+            {
+                if (uom != null)
+                    caption.append(" (").append(uom).append(')');
             }
         }
         
         // array size
-        if (dataComponent instanceof DataArray)
+        else if (dataComponent instanceof DataArray)
         {
             caption.append(" [");
             caption.append(((DataArray)dataComponent).getComponentCount());
@@ -152,22 +172,41 @@ public class SWECommonFormBuilder
         StringBuffer tooltip = new StringBuffer();
         
         if (dataComponent.getDescription() != null)
-            tooltip.append("<p><b>Description:</b> ").append(dataComponent.getDescription()).append("</p>");
+            tooltip.append("<p><b>Description: </b>").append(dataComponent.getDescription()).append("</p>");
         
         String def = dataComponent.getDefinition();
         if (def != null)
-            tooltip.append("<p><b>Definition:</b><a target='_blank' href='").append(def).append("'/>").append(def).append("</p>");
+            tooltip.append("<p><b>Definition: </b><a target='_blank' href='").append(def).append("'/>").append(def).append("</a></p>");
+        
+        if (dataComponent instanceof HasUom)
+        {
+            UnitReference unit = ((HasUom) dataComponent).getUom();
+            String uom = null;
+            
+            if (unit.isSetCode())
+                uom = unit.getCode();
+            else if (unit.hasHref())
+            {
+                if (unit.getHref().equals(Time.ISO_TIME_UNIT))
+                    uom = "ISO 8601";
+                else
+                    uom = unit.getHref();
+            }  
+                
+            if (uom != null)
+                tooltip.append("<p><b>Unit: </b>").append(uom).append("</p>");
+        }
         
         if (dataComponent instanceof HasRefFrames)
         {
             String refFrame = ((HasRefFrames) dataComponent).getReferenceFrame();
             if (refFrame != null)
-                tooltip.append("<p><b>Ref Frame:</b> ").append(refFrame).append("</p>");
+                tooltip.append("<p><b>Ref Frame: </b>").append(refFrame).append("</p>");
             
             String localFrame = ((HasRefFrames) dataComponent).getLocalFrame();
             if (localFrame != null)
-                tooltip.append("<p><b>Local Frame:</b> ").append(localFrame).append("</p>");
-        }        
+                tooltip.append("<p><b>Local Frame: </b>").append(localFrame).append("</p>");
+        }     
         
         return tooltip.toString();
     }

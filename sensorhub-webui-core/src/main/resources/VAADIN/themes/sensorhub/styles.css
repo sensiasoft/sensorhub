@@ -12441,6 +12441,11 @@ div.v-layout.v-horizontal.v-widget {
 	text-indent: 20px;
 }
 
+.sensorhub .v-tooltip {
+	background-color: rgba(255, 255, 255, 0.9);
+	color: black;
+}
+
 .sensorhub img.logo {
 	margin-left: 10px;
 }

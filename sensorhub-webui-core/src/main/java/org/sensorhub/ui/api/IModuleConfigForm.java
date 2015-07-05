@@ -14,6 +14,7 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.ui.api;
 
+import java.util.List;
 import org.sensorhub.ui.data.MyBeanItem;
 import com.vaadin.data.fieldgroup.FieldGroup.CommitException;
 import com.vaadin.ui.ComponentContainer;
@@ -42,6 +43,14 @@ public interface IModuleConfigForm extends ComponentContainer
      * @return true if the whole object editable by this form can be changed
      */
     public boolean canUpdateInstance();
+    
+    
+    /**
+     * Return possible object types for the given property ID
+     * @param propId property ID
+     * @return list of class types assignable to that property
+     */
+    public List<Class<?>> getPossibleTypes(Object propId);
     
     
     /**

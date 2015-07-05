@@ -132,10 +132,9 @@ public class AdminUI extends com.vaadin.ui.UI
         try
         {
             // load default form builders
-            configClass = StreamStorageConfig.class.getCanonicalName();
-            customForms.put(configClass, GenericStorageConfigForm.class);
-            configClass = CommConfig.class.getCanonicalName();
-            customForms.put(configClass, CommConfigForm.class);
+            customForms.put(StreamStorageConfig.class.getCanonicalName(), GenericStorageConfigForm.class);
+            customForms.put(CommConfig.class.getCanonicalName(), CommConfigForm.class);
+            customForms.put("org.sensorhub.impl.service.sos.SOSServiceConfig", SOSConfigForm.class);
             
             // load custom form builders defined in config
             for (CustomUIConfig customForm: uiConfig.customForms)
@@ -442,6 +441,7 @@ public class AdminUI extends com.vaadin.ui.UI
                                     {
                                         SensorHub.getInstance().getModuleRegistry().enableModule(moduleId);
                                         item.getItemProperty(GenericConfigForm.PROP_ENABLED).setValue(true);
+                                        openModuleInfo((MyBeanItem<ModuleConfig>)item);
                                     }
                                     catch (SensorHubException ex)
                                     {

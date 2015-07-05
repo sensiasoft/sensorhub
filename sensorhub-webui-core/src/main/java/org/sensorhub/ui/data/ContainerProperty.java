@@ -65,4 +65,10 @@ public class ContainerProperty extends AbstractProperty<Container>
         else
             return null;
     }
+
+
+    public Field getField()
+    {
+        return f;
+    }
 }

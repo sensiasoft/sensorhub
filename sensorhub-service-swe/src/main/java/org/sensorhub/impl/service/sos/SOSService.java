@@ -164,10 +164,9 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     @Override
     public void updateConfig(SOSServiceConfig config) throws SensorHubException
     {
-        // cleanup all previously instantiated providers        
-        
-        // rebuild everything
-
+        stop();
+        this.config = config;
+        start();
     }    
     
     
