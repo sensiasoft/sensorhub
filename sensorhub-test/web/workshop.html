@@ -1,0 +1,37 @@
+<html xmlns="http://www.w3.org/1999/xhtml"><head>
+<meta http-equiv="content-type" content="text/html; charset=windows-1252"></head><body style="font-family: verdana">
+
+    <h1>Links for FOSS4G workshop</h1>
+
+    <h3>Local Server</h3>    
+    <p><a href="http://localhost:8181/sensorhub/admin">SensorHub Web Admin</a></p>
+    <p><a href="http://localhost:8181/sensorhub/sos?service=SOS&amp;version=2.0&amp;request=GetCapabilities">Capabilities</a></p>
+    <p><a href="http://localhost:8181/sensorhub/sos?service=SOS&amp;version=2.0&amp;request=GetResultTemplate&amp;offering=urn:offering:imu&amp;observedProperty=http://sensorml.com/ont/swe/property/ImuData">GetResultTemplate IMU</a></p>
+    <p><a href="http://localhost:8181/sensorhub/sos?service=SOS&amp;version=2.0&amp;request=GetResult&amp;offering=urn:offering:imu&amp;observedProperty=http://sensorml.com/ont/swe/property/ImuData&amp;temporalFilter=phenomenonTime,now/2015-08-01">GetResult IMU</a></p>
+    <p><a href="imu-demo-3d.html">GetResult with websockets and view IMU orientation data with WebGL</a></p>
+    <p><a href="imu-demo-charts.html">GetResult with websockets and view IMU angular rates with HighCharts</a></p>
+
+    </p><p>&nbsp;</p>
+    <h3>Sensia-Demo (Amazon EC2 Ireland)</h3>
+    <p><a href="http://sensiasoft.net:8181/sensorhub/sos?service=SOS&amp;version=2.0&amp;request=GetCapabilities">Capabilities</a></p>
+
+    <h4>GPS</h4>
+    <p><a href="http://sensiasoft.net:8181/osm_client.html">Javascript Client with live simulated GPS (persistent HTTP GET)</a></p>
+    <p><a href="http://sensiasoft.net:8181/osm_client_websockets.html">Javascript Client with live simulated GPS (web sockets)</a></p>
+    <p><a href="http://sensiasoft.net:8181/sensorhub/sos?service=SOS&amp;version=2.0&amp;request=GetResult&amp;offering=urn:mysos:offering02&amp;observedProperty=http://sensorml.com/ont/swe/property/Location&amp;temporalFilter=phenomenonTime,2015-03-07T00:00:00Z/2015-03-07T02:00:00Z">GetResult Historical Simulated GPS</a></p>
+
+    <h4>Weather</h4>
+    <p><a href="http://sensiasoft.net:8181/sensorhub/sos?service=SOS&amp;version=2.0&amp;request=GetResult&amp;offering=urn:mysos:offering03&amp;observedProperty=http://sensorml.com/ont/swe/property/Weather&amp;temporalFilter=phenomenonTime,now">GetResult Latest Weather</a></p>
+    <p><a href="http://sensiasoft.net:8181/sensorhub/sos?service=SOS&amp;version=2.0&amp;request=GetResult&amp;offering=urn:mysos:offering03&amp;observedProperty=http://sensorml.com/ont/swe/property/Weather&amp;temporalFilter=phenomenonTime,2015-03-09T00:00:00Z/2015-03-09T02:00:00Z">GetResult Historical Weather</a></p>
+    <p><a href="http://sensiasoft.net:8181/sensorhub/sos?service=SOS&amp;version=2.0&amp;request=GetResultTemplate&amp;offering=urn:mysos:offering03&amp;observedProperty=http://sensorml.com/ont/swe/property/Weather">GetResultTemplate Weather</a></p>
+    <p><a href="http://sensiasoft.net:8181/sensorhub/sos?service=SOS&amp;version=2.0&amp;request=GetResult&amp;offering=urn:android:device:060693280a28e015-sos&amp;observedProperty=http://sensorml.com/ont/swe/property/VideoFrame&amp;temporalFilter=phenomenonTime,2015-03-10/now&amp;replaySpeed=1">GetResult Recorded Video (Phone 1) *</a></p>
+
+    <h4>Satellite Orbits</h4>
+    <p><a href="http://sensiasoft.net:8181/sensorhub/sos?service=SOS&amp;version=2.0&amp;request=GetResultTemplate&amp;offering=urn:mysos:offering:tle&amp;observedProperty=http://sensorml.com/ont/swe/property/TLEData">GetResultTemplate Satellite TLE</a></p>
+    <p><a href="http://sensiasoft.net:8181/sensorhub/sos?service=SOS&amp;version=2.0&amp;request=GetResultTemplate&amp;offering=urn:mysos:offering:currentState&amp;observedProperty=http://www.opengis.net/def/property/OGC/0/PlatformState">GetResultTemplate Satellite Position/Velocity</a></p>
+    <p><a href="http://sensiasoft.net:8181/sensorhub/sos?service=SOS&amp;version=2.0&amp;request=GetResult&amp;offering=urn:mysos:offering:tle&amp;observedProperty=http://sensorml.com/ont/swe/property/TLEData&amp;temporalFilter=phenomenonTime,2014-01-01/now">TLE Archive</a>
+    </p><p><a href="http://sensiasoft.net:8181/sensorhub/sos?service=SOS&amp;version=2.0&amp;request=GetResult&amp;offering=urn:mysos:offering:currentState&amp;observedProperty=http://www.opengis.net/def/property/OGC/0/PlatformState&amp;temporalFilter=phenTime,now">Current SPOT-7 Position</a>
+    </p><p><a href="http://sensiasoft.net:8181/sensorhub/sos?service=SOS&amp;version=2.0&amp;request=GetResult&amp;offering=urn:mysos:offering:predictedState&amp;observedProperty=http://www.opengis.net/def/property/OGC/0/PlatformState&amp;temporalFilter=phenTime,now/2055-01-01">Predicted SPOT-7 Position (next 3 days)</a>
+    </p><p><a href="http://sensiasoft.net:8181/satellitetracks/satellitetracks.htm">View Predicted SPOT-7 Position on Map</a>
+    
+</body></html>

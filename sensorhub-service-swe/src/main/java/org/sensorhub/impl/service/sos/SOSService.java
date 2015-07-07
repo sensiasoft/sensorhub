@@ -316,6 +316,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
         this.offeringCaps = new HashMap<String, SOSOfferingCapabilities>();
         
         // pre-generate capabilities
+        endpointUrl = null;
         this.capabilitiesCache = generateCapabilities();
                 
         // subscribe to server lifecycle events

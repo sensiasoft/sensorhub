@@ -1,0 +1,85 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>Example getting IMU data through websockets and rendering with WebGL</title>
+    <style>
+      body {
+        margin: 0px;
+        padding: 0px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="text" style="background-color: black; color: white; padding: 10px"></div>
+    <div id="container"></div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r71/three.min.js"></script>
+    <script defer="defer">
+
+      // renderer
+      var renderer = new THREE.WebGLRenderer();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      document.body.appendChild(renderer.domElement);
+ 
+      // camera
+      var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 1000);
+      camera.position.z = 500;
+ 
+      // scene
+      var scene = new THREE.Scene();
+
+      // cube and axes
+      function buildAxis( src, dst, colorHex, dashed ) {
+         var geom = new THREE.Geometry();
+         var mat;
+
+         if (dashed)
+            mat = new THREE.LineDashedMaterial({ linewidth: 3, color: colorHex, dashSize: 3, gapSize: 3 });
+         else
+            mat = new THREE.LineBasicMaterial({ linewidth: 3, color: colorHex });
+
+         geom.vertices.push( src.clone() );
+         geom.vertices.push( dst.clone() );
+         geom.computeLineDistances(); // This one is SUPER important, otherwise dashed lines will appear as simple plain lines
+
+         var axis = new THREE.Line( geom, mat, THREE.LinePieces );
+         return axis;
+      }
+                
+      var imuObj = new THREE.Object3D();
+      imuObj.add( buildAxis( new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( 100, 0, 0 ), 0xFF0000, false ) ); // +X
+      imuObj.add( buildAxis( new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( 0, 100, 0 ), 0x00FF00, false ) ); // +Y
+      imuObj.add( buildAxis( new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( 0, 0, 100 ), 0x0000FF, false ) ); // +Z
+      var cube = new THREE.Mesh(new THREE.BoxGeometry(50, 50, 50), new THREE.MeshNormalMaterial());
+      cube.overdraw = true;
+      imuObj.add(cube);
+      scene.add(imuObj);
+      
+      // query IMU stream from SOS using websockets
+      var timems = (new Date()).getTime();
+      var currentUrl = window.location;
+      ws = new WebSocket("ws://" + currentUrl.host + "/sensorhub/sos?service=SOS&version=2.0&request=GetResult&offering=urn:offering:imu&observedProperty=http://sensorml.com/ont/swe/property/ImuData&temporalFilter=phenomenonTime,now/2055-01-01");
+      ws.binaryType = 'arraybuffer';
+      ws.onmessage = function (event) {
+          
+          var rec = String.fromCharCode.apply(null, new Uint8Array(event.data));
+          //console.log(rec);
+          
+          var tokens = rec.trim().split(",");
+          imuObj.quaternion.w = parseFloat(tokens[7]);
+          imuObj.quaternion.y = parseFloat(tokens[8]);
+          imuObj.quaternion.x = -parseFloat(tokens[9]);
+          imuObj.quaternion.z = parseFloat(tokens[10]);
+
+          document.getElementById("text").innerHTML = "time = " + tokens[0];
+
+          requestAnimationFrame(function(){
+              renderer.render(scene, camera);
+          });
+      }
+      ws.onerror = function (event) {
+          ws.close();
+      }
+
+    </script>
+  </body>
+</html> 

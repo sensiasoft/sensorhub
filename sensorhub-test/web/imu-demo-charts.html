@@ -1,0 +1,106 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>Example getting IMU data through websockets and rendering with HighCharts</title>
+    <style>
+      body {
+        margin: 0px;
+        padding: 0px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="text" style="background-color: black; color: white; padding: 10px"></div>
+    <div id="charts" style="height: 100%; background-color: black"></div>
+    <script src="HighchartsAdapter.js"></script>
+    <script src="http://code.highcharts.com/highcharts.js"></script>
+    <script src="http://code.highcharts.com/modules/exporting.js"></script>
+    <script defer="defer">
+
+        var charts = [];
+        var items = ["\u03A9x", "\u03A9y", "\u03A9z"];
+        var units = ["deg/s", "deg/s", "deg/s"]
+        for (i = 0; i < items.length; i++) {
+        
+           var newdiv = document.createElement('div');
+           document.getElementById("charts").appendChild(newdiv);
+           
+           charts[i] = new Highcharts.Chart({
+                chart: {
+                    type: 'spline',
+                    renderTo : newdiv,
+                    animation: Highcharts.svg, // don't animate in old IE
+                    height: 200,
+                    marginRight: 10,
+                    marginBottom: 10,
+                },
+                title: {
+                    text: items[i]
+                },
+                plotOptions: {
+                    spline: {
+                        marker: {enabled: false }
+                    }           
+                },
+                xAxis: {
+                    type: 'datetime',
+                    labels: {enabled: false}
+                },
+                yAxis: {
+                    minRange: 4,
+                    title: {
+                        text: units[i]
+                    },
+                    plotLines: [{
+                        value: 0,
+                        width: 1,
+                        color: '#808080'
+                    }]
+                },
+                legend: {
+                    enabled: false
+                },
+                tooltip: {
+                    enabled: false
+                },
+                exporting: {
+                    enabled: false
+                },
+                series: [
+                    {
+                        name: items[i],
+                        data: []
+                    }
+                ]
+            });
+         }
+      
+      // query IMU stream from SOS using websockets
+      var timems = (new Date()).getTime();
+      var currentUrl = window.location;
+      ws = new WebSocket("ws://" + currentUrl.host + "/sensorhub/sos?service=SOS&version=2.0&request=GetResult&offering=urn:offering:imu&observedProperty=http://sensorml.com/ont/swe/property/ImuData&temporalFilter=phenomenonTime,now/2055-01-01");
+      ws.binaryType = 'arraybuffer';
+      ws.onmessage = function (event) {
+          
+          var rec = String.fromCharCode.apply(null, new Uint8Array(event.data));
+          //console.log(rec);
+          
+          var tokens = rec.trim().split(",");
+          var gx = parseFloat(tokens[1]);
+          var gy = parseFloat(tokens[2]);
+          var gz = parseFloat(tokens[3]);
+
+          document.getElementById("text").innerHTML = "time = " + tokens[0];
+          var shift = (charts[0].series[0].data.length > 100); 
+          charts[0].series[0].addPoint([timems, gx], true, shift);
+          charts[1].series[0].addPoint([timems, gy], true, shift);
+          charts[2].series[0].addPoint([timems, gz], true, shift);
+          timems += 100;
+      }
+      ws.onerror = function (event) {
+          ws.close();
+      }
+
+    </script>
+  </body>
+</html> 
