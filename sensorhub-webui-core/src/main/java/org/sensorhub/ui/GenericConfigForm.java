@@ -366,7 +366,8 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
     }
     
     
-    protected Field<Object> makeModuleSelectField(Field<Object> field, final Class<? extends IModule<?>> moduleType)
+    @SuppressWarnings("rawtypes")
+    protected Field<Object> makeModuleSelectField(Field<Object> field, final Class<? extends IModule> moduleType)
     {
         field = new FieldWrapper<Object>(field) {
             private static final long serialVersionUID = -992750405944982226L;
@@ -391,7 +392,7 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
                     {
                         // show popup to select among available module types
                         ModuleInstanceSelectionPopup popup = new ModuleInstanceSelectionPopup(moduleType, new ModuleInstanceSelectionCallback() {
-                            public void moduleSelected(IModule<?> module)
+                            public void moduleSelected(IModule module)
                             {
                                 innerField.setReadOnly(false);
                                 innerField.setValue(module.getLocalID());

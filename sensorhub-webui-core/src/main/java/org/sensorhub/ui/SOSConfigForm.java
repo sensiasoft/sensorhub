@@ -16,7 +16,6 @@ package org.sensorhub.ui;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
-import org.sensorhub.api.module.IModule;
 import org.sensorhub.api.persistence.IStorageModule;
 import org.sensorhub.api.sensor.ISensorModule;
 import org.sensorhub.ui.data.MyBeanItem;
@@ -74,12 +73,12 @@ public class SOSConfigForm extends GenericConfigForm
         }
         else if (propId.endsWith(PROP_STORAGEID)) 
         {
-            field = makeModuleSelectField(field, (Class<? extends IModule<?>>)IStorageModule.class);
+            field = makeModuleSelectField(field, IStorageModule.class);
         }
         else if (propId.endsWith(PROP_SENSORID))
         {
             field.addValidator(new StringLengthValidator(MSG_REQUIRED_FIELD, 10, 256, false));
-            field = makeModuleSelectField(field, (Class<? extends IModule<?>>)ISensorModule.class);
+            field = makeModuleSelectField(field, ISensorModule.class);
         }
         else if (propId.endsWith(PROP_DATAPROVIDERS + PROP_SEP + PROP_NAME))
             field.setVisible(true);

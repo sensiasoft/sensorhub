@@ -32,13 +32,15 @@ public class ModuleInstanceSelectionPopup extends Window
     private static final long serialVersionUID = 8721813580001962705L;
     
     
+    @SuppressWarnings("rawtypes")
     protected interface ModuleInstanceSelectionCallback
     {
-        public void moduleSelected(IModule<?> module);
+        public void moduleSelected(IModule module);
     }
     
     
-    public ModuleInstanceSelectionPopup(final Class<? extends IModule<?>> moduleType, final ModuleInstanceSelectionCallback callback)
+    @SuppressWarnings("rawtypes")
+    public ModuleInstanceSelectionPopup(final Class<? extends IModule> moduleType, final ModuleInstanceSelectionCallback callback)
     {
         super("Select Module");
         VerticalLayout layout = new VerticalLayout();
