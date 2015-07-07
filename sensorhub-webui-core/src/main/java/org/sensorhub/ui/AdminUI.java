@@ -258,8 +258,18 @@ public class AdminUI extends com.vaadin.ui.UI
     
     protected void buildModuleList(VerticalLayout layout, final Class<?> configType)
     {
+        ModuleRegistry reg = SensorHub.getInstance().getModuleRegistry();
+        
         // add config objects to container
-        List<ModuleConfig> moduleConfigs = SensorHub.getInstance().getModuleRegistry().getAvailableModules();
+        List<ModuleConfig> moduleConfigs = reg.getAvailableModules();
+        for (IModule<?> module: reg.getLoadedModules())
+        {
+            ModuleConfig config = (ModuleConfig)module.getConfiguration();
+            if (!moduleConfigs.contains(config))
+                moduleConfigs.add(config);
+        }
+        
+        // build bean item
         MyBeanItemContainer<ModuleConfig> container = new MyBeanItemContainer<ModuleConfig>(ModuleConfig.class);
         for (ModuleConfig config: moduleConfigs)
         {
