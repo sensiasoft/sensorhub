@@ -182,7 +182,7 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
             storage.storeDataSourceDescription(dataSource.getCurrentDescription());
             
         // for multi-source producers, prepare data stores for all entities
-        if (dataSource instanceof IMultiSourceDataProducer)
+        if (dataSource instanceof IMultiSourceDataProducer && storage instanceof IMultiSourceStorage)
         {
             for (String entityID: ((IMultiSourceDataProducer)dataSource).getEntityIDs())
                 addProducerInfo(entityID);
@@ -215,7 +215,7 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
         {
             if (((IMultiSourceStorage<?>)storage).getProducerIDs().contains(producerID))
                 return;
-            
+        
             IDataProducerModule<?> dataSource = dataSourceRef.get();
             if (dataSource != null && dataSource instanceof IMultiSourceDataProducer)
             {
@@ -244,8 +244,6 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
     
     protected void prepareToReceiveEvents(IStreamingDataInterface output)
     {
-        output.registerListener(this);
-        
         // create time stamp indexer
         String outputName = output.getName();
         ScalarIndexer timeStampIndexer = timeStampIndexers.get(outputName);
@@ -254,6 +252,8 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
             timeStampIndexer = SWEHelper.getTimeStampIndexer(output.getRecordDescription());
             timeStampIndexers.put(outputName, timeStampIndexer);
         }
+        
+        output.registerListener(this);
     }
     
         

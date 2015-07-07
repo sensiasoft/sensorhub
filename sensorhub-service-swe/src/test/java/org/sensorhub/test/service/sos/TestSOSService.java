@@ -591,7 +591,7 @@ public class TestSOSService
             Thread.sleep(((long)SAMPLING_PERIOD*500));
         
         testGetFoisByProcedure(Arrays.asList(UID_SENSOR2), 1, 2, 3);
-        testGetFoisByProcedure(Arrays.asList(UID_SENSOR1));
+        testGetFoisByProcedure(Arrays.asList(UID_SENSOR1), 1, 2, 3);
         testGetFoisByProcedure(Arrays.asList(UID_SENSOR1, UID_SENSOR2), 1, 2, 3);
     }
     

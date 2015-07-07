@@ -21,6 +21,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -621,16 +622,23 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
         gmlBindings.writeNamespaces(xmlWriter);
         
         // scan offering corresponding to each selected procedure
+        boolean first = true;
+        HashSet<String> returnedFids = new HashSet<String>();
+        
         for (String procID: selectedProcedures)
         {
             IDataProviderFactory provider = getDataProviderFactoryBySensorID(procID);
             
             // output selected features
             Iterator<AbstractFeature> it2 = provider.getFoiIterator(filter);
-            boolean first = true;
             while (it2.hasNext())
             {
                 AbstractFeature f = it2.next();
+                
+                // make sure we don't send twice the same feature
+                if (returnedFids.contains(f.getUniqueIdentifier()))
+                    continue;
+                returnedFids.add(f.getUniqueIdentifier());
                 
                 // write namespace on root because in most cases it is common to all features
                 if (first)
