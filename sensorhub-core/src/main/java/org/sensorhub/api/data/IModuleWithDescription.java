@@ -37,7 +37,8 @@ public interface IModuleWithDescription
      * sensor network), this returns the description of the group as a whole.
      * Descriptions of individual entities within the group are retrived using
      * {@link IMultiSourceDataProducer#getCurrentDescription(String)}
-     * @return AbstractProcess SensorML description of the data producer
+     * @return AbstractProcess SensorML description of the data producer or
+     * null if none is available at the time of the call 
      */
     public AbstractProcess getCurrentDescription();
 
@@ -45,7 +46,8 @@ public interface IModuleWithDescription
     /**
      * Used to check when SensorML description was last updated.
      * This is useful to avoid requesting the object when it hasn't changed.
-     * @return Date/time of last description update as julian time (1970)
+     * @return Date/time of last description update as julian time (1970) or
+     * {@link Double#NEGATIVE_INFINITY} if description was never updated.
      */
     public double getLastDescriptionUpdate();
 

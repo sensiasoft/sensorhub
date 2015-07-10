@@ -94,7 +94,7 @@ public class SensorAdminPanel extends DefaultModulePanel<ISensorModule<?>> imple
                 
         form.addComponent(titleBar);
         
-        // add I/O panel only if module is loaded
+        // add I/O panel
         rebuildSwePanels(form, module);
         addComponent(form);
     }
@@ -162,7 +162,10 @@ public class SensorAdminPanel extends DefaultModulePanel<ISensorModule<?>> imple
     {
         Panel panel = new Panel(title);
         GridLayout layout = new GridLayout(2, 10);
+        layout.setSizeFull();
         layout.setMargin(true);
+        layout.setSpacing(true);
+        layout.setDefaultComponentAlignment(Alignment.TOP_LEFT);
         panel.setContent(layout);
         return panel;
     }

@@ -108,7 +108,7 @@ public class SensorHub
     
     public void stop()
     {
-        stop(false, false);
+        stop(false, true);
     }
     
     
@@ -172,12 +172,22 @@ public class SensorHub
             System.exit(1);
         }
         
-        // else only argument is config path pointing to module config path
+        // start sensorhub
         SensorHub instance = null;
         try
         {
             SensorHubConfig config = new SensorHubConfig(args[0], args[1]);
             instance = SensorHub.createInstance(config);
+                        
+            // register shutdown hook for a clean stop 
+            final SensorHub sh = instance;
+            Runtime.getRuntime().addShutdownHook(new Thread() {
+                public void run()
+                {
+                    sh.stop();
+                }            
+            });
+            
             instance.start();
         }
         catch (Exception e)

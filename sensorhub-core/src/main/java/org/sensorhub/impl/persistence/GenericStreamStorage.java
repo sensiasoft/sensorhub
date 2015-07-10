@@ -96,7 +96,7 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
         {
             storageConfig = (StorageConfig)config.storageConfig.clone();
             storageConfig.id = getLocalID();
-            storageConfig.name = getName();       
+            storageConfig.name = getName();
             Class<?> clazz = (Class<?>)Class.forName(storageConfig.moduleClass);
             storage = (IRecordStorageModule<StorageConfig>)clazz.newInstance();
             storage.init(storageConfig);
@@ -129,7 +129,7 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
                 configureStorageForDataSource(dataSource, storage);
             
             // otherwise just get the latest sensor description in case we were down during the last update
-            else
+            else if (dataSource.getLastDescriptionUpdate() != Double.NEGATIVE_INFINITY)
                 storage.storeDataSourceDescription(dataSource.getCurrentDescription());
             
             // also init current FOI
@@ -372,7 +372,8 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
     public void addRecordType(String name, DataComponent recordStructure, DataEncoding recommendedEncoding)
     {
         // register new record type with underlying storage
-        storage.addRecordType(name, recordStructure, recommendedEncoding);
+        if (!storage.getRecordTypes().containsKey(name))
+            storage.addRecordType(name, recordStructure, recommendedEncoding);
         
         // prepare to receive events
         IDataProducerModule<?> dataSource = dataSourceRef.get();

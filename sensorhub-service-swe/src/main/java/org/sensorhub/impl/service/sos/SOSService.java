@@ -144,7 +144,6 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     Map<String, String> templateToOfferingMap;
     Map<String, ISOSDataConsumer> dataConsumers;
         
-    SMLUtils smlUtils = new SMLUtils(SMLUtils.V2_0);
     boolean needCapabilitiesTimeUpdate = false;
 
     
@@ -208,6 +207,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
             capabilities.getPostServers().put("InsertSensor", config.endPoint);
             capabilities.getPostServers().put("InsertObservation", config.endPoint);
             capabilities.getPostServers().put("InsertResult", config.endPoint);
+            capabilities.getGetServers().put("InsertResult", config.endPoint);
         }
         
         FESFactory fac = new FESFactory();
@@ -520,7 +520,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
         
         // serialize and send SensorML description
         OutputStream os = new BufferedOutputStream(request.getResponseStream());
-        smlUtils.writeProcess(os, generateSensorML(sensorID, request.getTime()), true);
+        new SMLUtils(SMLUtils.V2_0).writeProcess(os, generateSensorML(sensorID, request.getTime()), true);
     }
     
     
@@ -682,7 +682,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
             if (offering == null)
             {
                 offering = sensorUID + "-sos";
-                ModuleRegistry moduleReg = SensorHub.getInstance().getModuleRegistry();           
+                ModuleRegistry moduleReg = SensorHub.getInstance().getModuleRegistry();
                 
                 // create and register new virtual sensor module
                 SOSVirtualSensorConfig sensorConfig = new SOSVirtualSensorConfig();
@@ -691,8 +691,8 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
                 sensorConfig.name = request.getProcedureDescription().getName();
                 if (sensorConfig.name == null)
                     sensorConfig.name = request.getProcedureDescription().getId();
-                SOSVirtualSensor virtualSensor = (SOSVirtualSensor)moduleReg.loadModule(sensorConfig);            
-                virtualSensor.updateSensorDescription(request.getProcedureDescription(), true);
+                SOSVirtualSensor virtualSensor = (SOSVirtualSensor)moduleReg.loadModule(sensorConfig);
+                virtualSensor.updateSensorDescription(request.getProcedureDescription(), false);
                 SensorHub.getInstance().getModuleRegistry().enableModule(virtualSensor.getLocalID());
                                 
                 // generate new provider and consumer config
@@ -856,8 +856,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
                     os.write(frameData);
                     os.flush();
                 }       
-                        
-                os.flush();
+
                 return true;
             }
         }
@@ -964,7 +963,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
             String templateID = consumer.newResultTemplate(request.getResultStructure(),
                                                            request.getResultEncoding(),
                                                            request.getObservationTemplate());
-            
+                        
             // only continue of template was not already registered
             if (!templateToOfferingMap.containsKey(templateID))
             {

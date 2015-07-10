@@ -18,7 +18,6 @@ import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataEncoding;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.persistence.IBasicStorage;
-import org.sensorhub.api.persistence.IRecordInfo;
 import org.sensorhub.impl.SensorHub;
 import org.sensorhub.impl.module.ModuleRegistry;
 import org.vast.ogc.om.IObservation;
@@ -43,13 +42,6 @@ public class SensorWithStorageConsumer extends SensorDataConsumer implements ISO
         super(config);
         ModuleRegistry moduleReg = SensorHub.getInstance().getModuleRegistry();
         this.storage = (IBasicStorage)moduleReg.getModuleById(config.storageID);
-        
-        // reassign current sensor description
-        this.sensor.setSensorDescription(storage.getLatestDataSourceDescription());
-        
-        // reassign existing templates
-        for (IRecordInfo recordType: storage.getRecordTypes().values())
-            sensor.newResultTemplate(recordType.getRecordDescription(), recordType.getRecommendedEncoding());
     }
 
 
@@ -57,13 +49,14 @@ public class SensorWithStorageConsumer extends SensorDataConsumer implements ISO
     public String newResultTemplate(DataComponent component, DataEncoding encoding, IObservation obsTemplate) throws Exception
     {
         String templateID = sensor.newResultTemplate(component, encoding, obsTemplate);
-        
+                
         // add additional datastore if not already there
-        if (!storage.getRecordTypes().containsKey(templateID))
-            storage.addRecordType(templateID, component, encoding);
+        String outputName = sensor.getOutputNameFromTemplateID(templateID);
+        if (!storage.getRecordTypes().containsKey(outputName))
+            storage.addRecordType(outputName, component, encoding);
         
         // publish new feature of interest
-        sensor.newFeatureOfInterest(templateID, obsTemplate);        
+        sensor.newFeatureOfInterest(templateID, obsTemplate);
         return templateID;
     }
 }

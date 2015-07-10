@@ -96,7 +96,7 @@ public class StreamWithStorageProviderFactory<ProducerType extends IDataProducer
             }
             
             // if latest record is not too old, enable real-time
-            if (now - lastRecordTime < liveDataTimeOut)
+            if (lastRecordTime != Long.MIN_VALUE && now - lastRecordTime < liveDataTimeOut)
                 caps.getPhenomenonTime().setEndNow(true);      
         }
     }

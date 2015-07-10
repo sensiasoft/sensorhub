@@ -110,7 +110,11 @@ class BasicStorageRoot extends Persistent implements IBasicStorage
                     time = ((TimePeriod) validTime).getBeginPosition().getDecimalValue();
                 
                 if (!Double.isNaN(time))
-                    descriptionTimeIndex.put(new Key(time), process);
+                {
+                    AbstractProcess oldProcess = descriptionTimeIndex.set(new Key(time), process);
+                    if (oldProcess != null)
+                        getStorage().deallocate(oldProcess);
+                }
             }
         }
         else

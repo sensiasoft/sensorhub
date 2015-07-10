@@ -113,6 +113,7 @@ public class AdminUI extends com.vaadin.ui.UI
     protected void init(VaadinRequest request)
     {
         String configClass = null;
+        moduleConfigLists.clear();
         
         // retrieve module config
         try

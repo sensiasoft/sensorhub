@@ -115,6 +115,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
             Class<IModule> clazz = (Class<IModule>)Class.forName(config.moduleClass);
             IModule module = clazz.newInstance();
             module.init(config);
+            module.loadState(null);
                         
             // keep track of what modules are loaded
             loadedModules.put(config.id, module);

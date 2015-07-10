@@ -43,11 +43,11 @@ public class SWECommonForm extends VerticalLayout
     
     public Component buildForm(DataComponent dataComponent)
     {
-        return buildWidget(dataComponent);
+        return buildWidget(dataComponent, true);
     }
     
     
-    protected Component buildWidget(DataComponent dataComponent)
+    protected Component buildWidget(DataComponent dataComponent, boolean showValues)
     {
         if (dataComponent instanceof DataRecord || dataComponent instanceof Vector)
         {
@@ -55,7 +55,7 @@ public class SWECommonForm extends VerticalLayout
             
             Label l = new Label();
             l.setContentMode(ContentMode.HTML);
-            l.setValue(getCaption(dataComponent));
+            l.setValue(getCaption(dataComponent, false));
             l.setDescription(getTooltip(dataComponent));
             layout.addComponent(l);
             
@@ -65,7 +65,7 @@ public class SWECommonForm extends VerticalLayout
             for (int i = 0; i < dataComponent.getComponentCount(); i++)
             {
                 DataComponent c = dataComponent.getComponent(i);
-                Component w = buildWidget(c);
+                Component w = buildWidget(c, showValues);
                 if (w != null)
                     form.addComponent(w);
             }
@@ -81,14 +81,14 @@ public class SWECommonForm extends VerticalLayout
             
             Label l = new Label();
             l.setContentMode(ContentMode.HTML);
-            l.setValue(getCaption(dataComponent));
+            l.setValue(getCaption(dataComponent, false));
             l.setDescription(getTooltip(dataComponent));
             layout.addComponent(l);
             
             VerticalLayout form = new VerticalLayout();
             form.setMargin(new MarginInfo(false, false, false, true));
             form.setSpacing(false);
-            form.addComponent(buildWidget(dataArray.getElementType()));
+            form.addComponent(buildWidget(dataArray.getElementType(), false));
             layout.addComponent(form);
             
             return layout;
@@ -101,7 +101,7 @@ public class SWECommonForm extends VerticalLayout
             
             Label l = new Label();
             l.setContentMode(ContentMode.HTML);
-            l.setValue(getCaption(dataComponent));
+            l.setValue(getCaption(dataComponent, false));
             l.setDescription(getTooltip(dataComponent));
             layout.addComponent(l);
             
@@ -112,7 +112,7 @@ public class SWECommonForm extends VerticalLayout
         {
             Label l = new Label();
             l.setContentMode(ContentMode.HTML);
-            l.setValue(getCaption(dataComponent));
+            l.setValue(getCaption(dataComponent, showValues));
             l.setDescription(getTooltip(dataComponent));
             return l;
         }
@@ -121,7 +121,7 @@ public class SWECommonForm extends VerticalLayout
     }
     
     
-    protected String getCaption(DataComponent dataComponent)
+    protected String getCaption(DataComponent dataComponent, boolean showValues)
     {
         StringBuffer caption = new StringBuffer();
         caption.append("<b>").append(getPrettyName(dataComponent)).append("</b>");
@@ -140,7 +140,7 @@ public class SWECommonForm extends VerticalLayout
             }
             
             DataBlock data = dataComponent.getData();
-            if (data != null)
+            if (showValues && data != null)
             {
                 caption.append(" = ");
                 caption.append(sweUtils.getStringValue((DataValue)dataComponent));
