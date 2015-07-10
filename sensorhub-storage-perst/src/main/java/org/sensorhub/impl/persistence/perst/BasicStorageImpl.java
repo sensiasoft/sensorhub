@@ -148,7 +148,10 @@ public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> impleme
     @Override
     public synchronized void commit()
     {
-        db.commit();
+        // better not to commit to keep up with high frequency streams
+        // apparently PERST does it on its own regularly
+        // we could still commit manually once in a while in case a crash occurs
+        //db.commit();
     }
 
 
@@ -162,8 +165,7 @@ public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> impleme
     @Override
     public void sync(IStorageModule<?> storage)
     {
-        // TODO Auto-generated method stub
-        
+        // TODO Auto-generated method stub        
     }
 
 
