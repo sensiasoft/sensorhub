@@ -101,8 +101,8 @@ public class SWECommonForm extends VerticalLayout
             
             Label l = new Label();
             l.setContentMode(ContentMode.HTML);
-            l.setValue(getCaption(dataComponent, false));
-            l.setDescription(getTooltip(dataComponent));
+            l.setValue(getCaption(dataChoice, false));
+            l.setDescription(getTooltip(dataChoice));
             layout.addComponent(l);
             
             return layout;

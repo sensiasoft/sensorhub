@@ -14,10 +14,12 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.ui;
 
+import org.sensorhub.api.data.IDataProducerModule;
 import org.sensorhub.api.persistence.StorageConfig;
 import org.sensorhub.ui.api.IModuleConfigForm;
 import org.sensorhub.ui.data.ComplexProperty;
 import com.vaadin.data.Property;
+import com.vaadin.data.validator.StringLengthValidator;
 import com.vaadin.ui.ComponentContainer;
 import com.vaadin.ui.Field;
 
@@ -27,14 +29,21 @@ public class GenericStorageConfigForm extends GenericConfigForm implements IModu
     private static final long serialVersionUID = 4462720978742325333L;
     public static final String PROP_STORAGE_PATH = "storagePath";
     public static final String PROP_STORAGE_CONFIG = "storageConfig";
+    public static final String PROP_DATASRC_ID = "dataSourceID";
     
     
     protected Field<?> buildAndBindField(String label, String propId, Property<?> prop)
     {
-        Field<?> field = super.buildAndBindField(label, propId, prop);
+        Field<Object> field = (Field<Object>)super.buildAndBindField(label, propId, prop);
         
         if (propId.equals(PROP_STORAGE_PATH))
             field.setVisible(false);
+        
+        else if (propId.equals(PROP_DATASRC_ID))
+        {
+            field = makeModuleSelectField(field, IDataProducerModule.class);
+            field.addValidator(new StringLengthValidator(MSG_REQUIRED_FIELD, 1, 256, false));
+        }
         
         return field;
     }

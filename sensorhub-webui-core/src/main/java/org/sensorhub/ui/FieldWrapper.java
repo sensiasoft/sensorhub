@@ -56,7 +56,7 @@ public abstract class FieldWrapper<T extends Object> extends CustomField<T>
 
 
     @Override
-    public T getValue()
+    protected T getInternalValue()
     {
         return innerField.getValue();
     }
@@ -66,12 +66,6 @@ public abstract class FieldWrapper<T extends Object> extends CustomField<T>
     public void setValue(T newFieldValue) throws com.vaadin.data.Property.ReadOnlyException, ConversionException
     {
         innerField.setValue(newFieldValue);
-    }
-
-
-    @Override
-    public void validate() throws InvalidValueException
-    {
-        innerField.validate();
+        markAsDirty();
     }
 }

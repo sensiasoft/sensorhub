@@ -119,10 +119,6 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
                 // sub objects with multiplicity > 1
                 if (prop instanceof ContainerProperty)
                 {
-                    String label = ((ContainerProperty)prop).getLabel();
-                    if (label == null)
-                        label = DisplayUtils.getPrettyName((String)propId);
-                    
                     if (!((ContainerProperty)prop).getValue().getItemIds().isEmpty())
                     {
                         Component subform = buildTabs(propId, (ContainerProperty)prop);
@@ -342,6 +338,7 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
             {
                 Component selectedTab = event.getTabSheet().getSelectedTab();
                 final Tab tab = tabs.getTab(selectedTab);
+                
                 if (tab.getCaption().equals(""))
                 {
                     try
@@ -403,6 +400,7 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
                 innerField.setReadOnly(true);
                 layout.addComponent(innerField);
                 layout.setComponentAlignment(innerField, Alignment.MIDDLE_LEFT);
+                final Field<Object> wrapper = this;
                 
                 // select module button
                 Button selectBtn = new Button(LINK_ICON);
@@ -418,7 +416,7 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
                             public void moduleSelected(IModule module)
                             {
                                 innerField.setReadOnly(false);
-                                innerField.setValue(module.getLocalID());
+                                wrapper.setValue(module.getLocalID());
                                 innerField.setReadOnly(true);
                             }
                         });

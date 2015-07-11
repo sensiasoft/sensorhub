@@ -85,6 +85,9 @@ public class MyBeanItem<BeanType> implements Item
     {
         for (Field f: getFields(bean.getClass(), Modifier.PUBLIC))
         {
+            if (Modifier.isStatic(f.getModifiers()))
+                continue;
+            
             String fullName = prefix + f.getName();
             Class<?> fieldType = f.getType();
             

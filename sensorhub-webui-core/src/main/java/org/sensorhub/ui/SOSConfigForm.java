@@ -59,26 +59,26 @@ public class SOSConfigForm extends GenericConfigForm
     {
         Field<Object> field = (Field<Object>)super.buildAndBindField(label, propId, prop);
         
-        if (propId.endsWith(PROP_ENDPOINT)) 
+        if (propId.endsWith(PROP_ENDPOINT))
         {
             field.addValidator(new StringLengthValidator(MSG_REQUIRED_FIELD, 1, 256, false));
         }
-        else if (propId.endsWith(PROP_ENABLED)) 
+        else if (propId.endsWith(PROP_ENABLED))
         {
             field.setVisible(true);
         }
-        else if (propId.endsWith(PROP_URI)) 
+        else if (propId.endsWith(PROP_URI))
         {
             field.addValidator(new StringLengthValidator(MSG_REQUIRED_FIELD, 1, 256, false));
         }
-        else if (propId.endsWith(PROP_STORAGEID)) 
+        else if (propId.endsWith(PROP_STORAGEID))
         {
             field = makeModuleSelectField(field, IStorageModule.class);
         }
         else if (propId.endsWith(PROP_SENSORID))
         {
-            field.addValidator(new StringLengthValidator(MSG_REQUIRED_FIELD, 10, 256, false));
             field = makeModuleSelectField(field, ISensorModule.class);
+            field.addValidator(new StringLengthValidator(MSG_REQUIRED_FIELD, 1, 256, false));
         }
         else if (propId.endsWith(PROP_DATAPROVIDERS + PROP_SEP + PROP_NAME))
             field.setVisible(true);

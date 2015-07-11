@@ -19,7 +19,6 @@ import java.util.List;
 import org.sensorhub.impl.service.ogc.OGCServiceConfig;
 
 
-@SuppressWarnings("serial")
 public class TestServiceConfig extends OGCServiceConfig
 {
     public class TestOption
