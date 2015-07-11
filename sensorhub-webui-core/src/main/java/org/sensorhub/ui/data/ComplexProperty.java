@@ -74,4 +74,10 @@ public class ComplexProperty extends AbstractProperty<MyBeanItem<Object>>
         else
             return null;
     }
+    
+    
+    public Class<?> getBeanType()
+    {
+        return f.getType();
+    }
 }

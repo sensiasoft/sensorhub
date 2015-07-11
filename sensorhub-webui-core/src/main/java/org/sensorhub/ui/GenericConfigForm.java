@@ -18,7 +18,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import org.sensorhub.api.comm.ICommProvider;
 import org.sensorhub.api.module.IModule;
 import org.sensorhub.api.module.ModuleConfig;
 import org.sensorhub.ui.ModuleInstanceSelectionPopup.ModuleInstanceSelectionCallback;
@@ -73,9 +72,14 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
     protected List<IModuleConfigForm> allForms = new ArrayList<IModuleConfigForm>();
     
     
-    public boolean canUpdateInstance()
+    @Override
+    public void build(String propId, ComplexProperty prop)
     {
-        return false;
+        String title = prop.getLabel();
+        if (title == null)
+            title = DisplayUtils.getPrettyName(propId);
+        
+        build(title, prop.getValue());
     }
     
     
@@ -105,75 +109,78 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
         }
         
         // add widget for each visible attribute
-        fieldGroup = new FieldGroup(beanItem);
-        for (Object propId: fieldGroup.getUnboundPropertyIds())
+        if (beanItem != null)
         {
-            Property<?> prop = fieldGroup.getItemDataSource().getItemProperty(propId);
-            
-            // sub objects with multiplicity > 1
-            if (prop instanceof ContainerProperty)
+            fieldGroup = new FieldGroup(beanItem);
+            for (Object propId: fieldGroup.getUnboundPropertyIds())
             {
-                String label = ((ContainerProperty)prop).getLabel();
-                if (label == null)
-                    label = DisplayUtils.getPrettyName((String)propId);
+                Property<?> prop = fieldGroup.getItemDataSource().getItemProperty(propId);
                 
-                if (!((ContainerProperty)prop).getValue().getItemIds().isEmpty())
+                // sub objects with multiplicity > 1
+                if (prop instanceof ContainerProperty)
                 {
-                    Component subform = buildTabs(propId, (ContainerProperty)prop);
-                    otherWidgets.add(subform);
-                }
-            }
-            
-            // sub object
-            else if (prop instanceof ComplexProperty)
-            {
-                Component subform = buildSubForm(propId, (ComplexProperty)prop);
-                otherWidgets.add(subform);
-            }
-            
-            // scalar field
-            else
-            {
-                Field<?> field = null;
-                
-                try
-                {
-                    String label = null;
-                    if (prop instanceof FieldProperty)
-                        label = ((FieldProperty)prop).getLabel();
+                    String label = ((ContainerProperty)prop).getLabel();
                     if (label == null)
                         label = DisplayUtils.getPrettyName((String)propId);
                     
-                    String desc = null;
-                    if (prop instanceof FieldProperty)
-                        desc = ((FieldProperty)prop).getDescription();
-                    
-                    field = buildAndBindField(label, (String)propId, prop);
-                    ((AbstractField<?>)field).setDescription(desc);                    
-                }
-                catch (Exception e)
-                {
-                    System.err.println("No UI generator for field " + propId);
-                    continue;
+                    if (!((ContainerProperty)prop).getValue().getItemIds().isEmpty())
+                    {
+                        Component subform = buildTabs(propId, (ContainerProperty)prop);
+                        otherWidgets.add(subform);
+                    }
                 }
                 
-                // add to one of the widget lists so we can order by widget type
-                if (field instanceof Label)
-                    labels.add(field);
-                else if (field instanceof TextField || field instanceof CustomField)
+                // sub object
+                else if (prop instanceof ComplexProperty)
                 {
-                    if (prop.getType().equals(String.class))
-                        textBoxes.add(field);
-                    else
-                        numberBoxes.add(field);
+                    Component subform = buildSubForm((String)propId, (ComplexProperty)prop);
+                    otherWidgets.add(subform);
                 }
-                else if (field instanceof CheckBox)
-                    checkBoxes.add(field);
+                
+                // scalar field
                 else
-                    otherWidgets.add(field);
+                {
+                    Field<?> field = null;
+                    
+                    try
+                    {
+                        String label = null;
+                        if (prop instanceof FieldProperty)
+                            label = ((FieldProperty)prop).getLabel();
+                        if (label == null)
+                            label = DisplayUtils.getPrettyName((String)propId);
+                        
+                        String desc = null;
+                        if (prop instanceof FieldProperty)
+                            desc = ((FieldProperty)prop).getDescription();
+                        
+                        field = buildAndBindField(label, (String)propId, prop);
+                        ((AbstractField<?>)field).setDescription(desc);                    
+                    }
+                    catch (Exception e)
+                    {
+                        System.err.println("No UI generator for field " + propId);
+                        continue;
+                    }
+                    
+                    // add to one of the widget lists so we can order by widget type
+                    if (field instanceof Label)
+                        labels.add(field);
+                    else if (field instanceof TextField || field instanceof CustomField)
+                    {
+                        if (prop.getType().equals(String.class))
+                            textBoxes.add(field);
+                        else
+                            numberBoxes.add(field);
+                    }
+                    else if (field instanceof CheckBox)
+                        checkBoxes.add(field);
+                    else
+                        otherWidgets.add(field);
+                }
             }
         }
-        
+            
         // main form
         for (Field<?> w: labels)
             form.addComponent(w);
@@ -187,7 +194,7 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
         
         // sub forms
         for (Component w: otherWidgets)
-            addComponent(w); 
+            addComponent(w);
     }
     
     
@@ -230,54 +237,70 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
     } 
     
     
-    protected ComponentContainer buildSubForm(final Object propId, final ComplexProperty prop)
+    protected ComponentContainer buildSubForm(final String propId, final ComplexProperty prop)
     {
-        String label = ((ComplexProperty)prop).getLabel();
-        if (label == null)
-            label = DisplayUtils.getPrettyName((String)propId);
-        final String title = label;
-        
-        MyBeanItem<Object> childBeanItem = ((ComplexProperty)prop).getValue();
-        IModuleConfigForm subform = AdminUI.getInstance().generateForm(childBeanItem.getBean().getClass());
-        subform.build(title, childBeanItem);
-        allForms.add(subform);
-        
-        if (subform.canUpdateInstance())
+        MyBeanItem<Object> childBeanItem = prop.getValue();
+        IModuleConfigForm subform;
+        if (childBeanItem != null)
+            subform = AdminUI.getInstance().generateForm(childBeanItem.getBean().getClass());
+        else
+            subform = new GenericConfigForm();
+        subform.build(propId, prop);
+                
+        // also add change button if sub object is null or type can be changed
+        if (childBeanItem == null)
         {
-            final Button chgButton = new Button("Change");
-            chgButton.addStyleName(STYLE_QUIET);
-            //chgButton.addStyleName(AdminUI.STYLE_SECTION_BUTTONS);
-            //chgButton.setIcon(APPLY_ICON);       
-            
-            chgButton.addClickListener(new ClickListener() {
-                private static final long serialVersionUID = 1L;
-                public void buttonClick(ClickEvent event)
-                {
-                    // show popup to select among available module types
-                    ModuleTypeSelectionPopup popup = new ModuleTypeSelectionPopup(ICommProvider.class, new ModuleTypeSelectionCallback() {
-                        public void configSelected(Class<?> moduleType, ModuleConfig config)
-                        {
-                            config.id = null;
-                            config.name = null;
-                            MyBeanItem<Object> newItem = new MyBeanItem<Object>(config, propId + ".");
-                            prop.setValue(newItem);
-                            IModuleConfigForm newForm = AdminUI.getInstance().generateForm(config.getClass());
-                            newForm.build(title, newItem);
-                            newForm.addComponent(chgButton);
-                            replaceComponent((Component)chgButton.getData(), newForm);
-                            allForms.remove((IModuleConfigForm)chgButton.getData());
-                            chgButton.setData(newForm);
-                        }
-                    });
-                    popup.setModal(true);
-                    AdminUI.getInstance().addWindow(popup);
-                }
-            });
-            chgButton.setData(subform);
-            subform.addComponent(chgButton);
+            addChangeButton(subform, propId, prop, prop.getBeanType());
+        }
+        else
+        {
+            Class<?> changeableBeanType = subform.getPolymorphicBeanParentType();
+            if (changeableBeanType != null)
+                addChangeButton(subform, propId, prop, changeableBeanType);
+            allForms.add(subform);
         }
         
         return subform;
+    }
+    
+    
+    protected void addChangeButton(final ComponentContainer parentForm, final String propId, final ComplexProperty prop, final Class<?> objectType)
+    {
+        final Button chgButton = new Button("Change");
+        chgButton.addStyleName(STYLE_QUIET);
+        //chgButton.addStyleName(AdminUI.STYLE_SECTION_BUTTONS);
+        //chgButton.setIcon(APPLY_ICON);       
+        
+        chgButton.addClickListener(new ClickListener() {
+            private static final long serialVersionUID = 1L;
+            public void buttonClick(ClickEvent event)
+            {
+                // show popup to select among available module types
+                ModuleTypeSelectionPopup popup = new ModuleTypeSelectionPopup(objectType, new ModuleTypeSelectionCallback() {
+                    public void configSelected(Class<?> moduleType, ModuleConfig config)
+                    {
+                        // regenerate form
+                        config.id = null;
+                        config.name = null;
+                        MyBeanItem<Object> newItem = new MyBeanItem<Object>(config, propId + ".");
+                        prop.setValue(newItem);
+                        IModuleConfigForm newForm = AdminUI.getInstance().generateForm(config.getClass());
+                        newForm.build(propId, prop);
+                        newForm.addComponent(chgButton);
+                                                
+                        // replace old form in UI
+                        allForms.add(newForm);
+                        allForms.remove((IModuleConfigForm)chgButton.getData());
+                        replaceComponent((Component)chgButton.getData(), newForm);
+                        chgButton.setData(newForm);
+                    }
+                });
+                popup.setModal(true);
+                AdminUI.getInstance().addWindow(popup);
+            }
+        });
+        chgButton.setData(parentForm);
+        parentForm.addComponent(chgButton);
     }
     
     
@@ -425,5 +448,12 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
     public Map<String, Class<?>> getPossibleTypes(Object propId)
     {
         return Collections.EMPTY_MAP;
+    }
+
+
+    @Override
+    public Class<?> getPolymorphicBeanParentType()
+    {
+        return null;
     }
 }

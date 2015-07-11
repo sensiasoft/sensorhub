@@ -108,9 +108,10 @@ public class MyBeanItemContainer<BeanType> extends AbstractInMemoryContainer<Obj
     @Override
     public boolean removeItem(Object itemId) throws UnsupportedOperationException
     {
+        int removePos = indexOfId(itemId);
         boolean ret = internalRemoveItem(itemId);
         itemIdToItem.remove(itemId);
-        fireItemRemoved(indexOfId(itemId), itemId);
+        fireItemRemoved(removePos, itemId);
         return ret;
     }
 

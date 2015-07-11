@@ -98,8 +98,11 @@ public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> impleme
     @Override
     public void stop() throws SensorHubException
     {
-        db.close();
-        db = null;
+        if (db != null) 
+        {
+            db.close();
+            db = null;
+        }
     }
 
 
@@ -111,9 +114,12 @@ public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> impleme
         
         // we just mark file as deleted by renaming it with .deleted suffix
         // storage will restart with an empty file but we don't loose any data
-        File dbFile = new File(config.storagePath);
-        File newFile = new File(config.storagePath + ".deleted");
-        dbFile.renameTo(newFile);
+        if (config.storagePath != null)
+        {
+            File dbFile = new File(config.storagePath);
+            File newFile = new File(config.storagePath + ".deleted");
+            dbFile.renameTo(newFile);
+        }
     }
     
     

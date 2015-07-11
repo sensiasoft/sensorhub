@@ -14,24 +14,41 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.ui;
 
+import org.sensorhub.api.persistence.StorageConfig;
 import org.sensorhub.ui.api.IModuleConfigForm;
+import org.sensorhub.ui.data.ComplexProperty;
 import com.vaadin.data.Property;
+import com.vaadin.ui.ComponentContainer;
 import com.vaadin.ui.Field;
 
 
 public class GenericStorageConfigForm extends GenericConfigForm implements IModuleConfigForm
 {
     private static final long serialVersionUID = 4462720978742325333L;
-
+    public static final String PROP_STORAGE_PATH = "storagePath";
+    public static final String PROP_STORAGE_CONFIG = "storageConfig";
+    
     
     protected Field<?> buildAndBindField(String label, String propId, Property<?> prop)
     {
         Field<?> field = super.buildAndBindField(label, propId, prop);
         
-        if (propId.equals("storagePath"))
+        if (propId.equals(PROP_STORAGE_PATH))
             field.setVisible(false);
         
         return field;
+    }
+
+
+    @Override
+    protected ComponentContainer buildSubForm(String propId, ComplexProperty prop)
+    {
+        ComponentContainer subform = super.buildSubForm(propId, prop);
+        
+        if (prop.getValue() != null && propId.equals(PROP_STORAGE_CONFIG))
+            addChangeButton(subform, propId, prop, StorageConfig.class);
+        
+        return subform;
     }
 
 }

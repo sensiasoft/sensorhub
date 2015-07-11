@@ -14,6 +14,7 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.ui;
 
+import org.sensorhub.api.comm.ICommProvider;
 import org.sensorhub.ui.api.UIConstants;
 import org.sensorhub.ui.data.MyBeanItem;
 import com.vaadin.data.Property;
@@ -26,9 +27,9 @@ public class CommConfigForm extends GenericConfigForm
 
 
     @Override
-    public boolean canUpdateInstance()
+    public Class<?> getPolymorphicBeanParentType()
     {
-        return true;
+        return ICommProvider.class;
     }
     
     

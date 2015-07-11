@@ -86,11 +86,18 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
     
     
     @Override
-    public void init(StreamStorageConfig config) throws SensorHubException
+    public void updateConfig(StreamStorageConfig config) throws SensorHubException
     {
-        super.init(config);
-        
-        // instantiate underlying storage
+        stop();
+        this.config = config;
+        start();
+    } 
+    
+    
+    @Override
+    public void start() throws SensorHubException
+    {
+        // instantiate and start underlying storage
         StorageConfig storageConfig = null;
         try
         {
@@ -100,6 +107,7 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
             Class<?> clazz = (Class<?>)Class.forName(storageConfig.moduleClass);
             storage = (IRecordStorageModule<StorageConfig>)clazz.newInstance();
             storage.init(storageConfig);
+            storage.start();
         }
         catch (Exception e)
         {
@@ -112,15 +120,8 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
         // retrieve reference to data source
         ModuleRegistry moduleReg = SensorHub.getInstance().getModuleRegistry();
         dataSourceRef = (WeakReference<IDataProducerModule<?>>)moduleReg.getModuleRef(config.dataSourceID);
-    }
-    
-    
-    @Override
-    public void start() throws SensorHubException
-    {
-        // start the underlying storage
-        storage.start();
         
+        // connect to data source to fetch initial info
         IDataProducerModule<?> dataSource = dataSourceRef.get();
         if (dataSource != null)
         {        
@@ -260,23 +261,28 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
     @Override
     public void stop() throws SensorHubException
     {
-        IDataProducerModule<?> dataSource = dataSourceRef.get();
-        if (dataSource != null)
-        {            
-            if (config.selectedOutputs == null || config.selectedOutputs.length == 0)
-            {
-                for (IStreamingDataInterface output: dataSource.getAllOutputs().values())
-                    output.unregisterListener(this);
+        if (dataSourceRef != null)
+        {
+            IDataProducerModule<?> dataSource = dataSourceRef.get();
+            if (dataSource != null)
+            {            
+                if (config.selectedOutputs == null || config.selectedOutputs.length == 0)
+                {
+                    for (IStreamingDataInterface output: dataSource.getAllOutputs().values())
+                        output.unregisterListener(this);
+                }
+                else
+                {
+                    for (String outputName: config.selectedOutputs)
+                        dataSource.getAllOutputs().get(outputName).unregisterListener(this);
+                }
             }
-            else
-            {
-                for (String outputName: config.selectedOutputs)
-                    dataSource.getAllOutputs().get(outputName).unregisterListener(this);
-            }
+            
+            dataSourceRef = null;
         }
 
-        storage.stop();
-        dataSourceRef = null;
+        if (storage != null)
+            storage.stop();        
     }
 
 

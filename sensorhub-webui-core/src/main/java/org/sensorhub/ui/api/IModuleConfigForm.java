@@ -15,6 +15,7 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 package org.sensorhub.ui.api;
 
 import java.util.Map;
+import org.sensorhub.ui.data.ComplexProperty;
 import org.sensorhub.ui.data.MyBeanItem;
 import com.vaadin.data.fieldgroup.FieldGroup.CommitException;
 import com.vaadin.ui.ComponentContainer;
@@ -32,17 +33,26 @@ public interface IModuleConfigForm extends ComponentContainer
 {
     
     /**
+     * Builds the whole form for a complex property (i.e. whose value is an object)
+     * @param propertyId
+     * @param prop
+     */
+    public void build(String propertyId, ComplexProperty prop);
+    
+    
+    /**
      * Builds the whole form for a given config object.
      * @param title title of the form
      * @param beanItem object to render a form for
      */
-    public void build(String title,  MyBeanItem<? extends Object> beanItem);
+    public void build(String title, MyBeanItem<? extends Object> beanItem);
     
     
     /**
-     * @return true if the whole object editable by this form can be changed
+     * Get the class whose allowed bean types should derive from
+     * @return parent type or null if the bean cannot be replaced by another type 
      */
-    public boolean canUpdateInstance();
+    public Class<?> getPolymorphicBeanParentType();
     
     
     /**

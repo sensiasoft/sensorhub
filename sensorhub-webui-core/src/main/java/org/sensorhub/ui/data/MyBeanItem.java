@@ -116,6 +116,12 @@ public class MyBeanItem<BeanType> implements Item
                 }
             }
             
+            // case of arrays
+            else if (fieldType.isArray())
+            {
+                
+            }
+            
             // case of maps
             /*else if (Map.class.isAssignableFrom(fieldType))
             {
@@ -140,11 +146,10 @@ public class MyBeanItem<BeanType> implements Item
                 try
                 {
                     Object complexVal = f.get(bean);
+                    MyBeanItem<Object> beanItem = null;
                     if (complexVal != null)
-                    {
-                        MyBeanItem<Object> beanItem = new MyBeanItem<Object>(complexVal, fullName + PROP_SEPARATOR);
-                        addItemProperty(fullName, new ComplexProperty(bean, f, beanItem));
-                    }
+                        beanItem = new MyBeanItem<Object>(complexVal, fullName + PROP_SEPARATOR);
+                    addItemProperty(fullName, new ComplexProperty(bean, f, beanItem));
                 }
                 catch (Exception e)
                 {

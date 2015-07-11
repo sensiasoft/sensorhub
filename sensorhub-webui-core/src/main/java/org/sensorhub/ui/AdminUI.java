@@ -395,7 +395,7 @@ public class AdminUI extends com.vaadin.ui.UI
                             }
                             catch (Exception e)
                             {
-                                Notification.show(e.getMessage(), null, Notification.Type.ERROR_MESSAGE);
+                                Notification.show("Error", "The module could not be initialized\n" + e.getMessage(), Notification.Type.ERROR_MESSAGE);
                             }
                             
                             MyBeanItem<ModuleConfig> newBeanItem = container.addBean(config);
@@ -499,8 +499,7 @@ public class AdminUI extends com.vaadin.ui.UI
     {
         configArea.removeAllComponents();
         
-        // TODO: do something different because getModuleById will load the module if not loaded yet
-        // but here we don't necessarily need to load the module automatically
+        // this will load the module (i.e. call init) if not already loaded
         IModule<?> module = null;                
         try { module = SensorHub.getInstance().getModuleRegistry().getModuleById(beanItem.getBean().id); }
         catch (Exception e) {}

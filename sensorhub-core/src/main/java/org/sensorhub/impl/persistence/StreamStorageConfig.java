@@ -21,7 +21,7 @@ import org.sensorhub.api.persistence.StorageConfig;
 public class StreamStorageConfig extends StorageConfig
 {
     
-    @DisplayInfo(label="Data Source ID", desc="Local ID of streaming data source which data will be stored.")
+    @DisplayInfo(label="Storage Config", desc="Configuration of underlying storage.")
     public StorageConfig storageConfig;
     
     

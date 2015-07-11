@@ -134,9 +134,14 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
             
             return module;
         }
+        catch (SensorHubException e)
+        {
+            log.error("Error while initializing module " + config.name, e);
+            throw e;
+        }
         catch (Exception e)
         {
-            throw new SensorHubException("Error while initializing module " + config.name, e);
+            throw new SensorHubException("Cannot instantiate module class", e);
         }
     }
     
