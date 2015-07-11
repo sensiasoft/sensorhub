@@ -166,7 +166,8 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     {
         stop();
         this.config = config;
-        start();
+        if (config.enabled)
+            start();
     }    
     
     
@@ -781,19 +782,25 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
             boolean useMP4 = false;
             boolean useMJPEG = false;
             List<BinaryMember> mbrList = ((BinaryEncoding)resultEncoding).getMemberList();
-            BinaryMember videoFrameSpec = null;
+            BinaryBlock videoFrameSpec = null;
             
-            if (mbrList.size() == 1) // case of no time tag
-                videoFrameSpec = mbrList.get(0);
-            else if (mbrList.size() == 2) // case of time tag + encoded frame
-                videoFrameSpec = mbrList.get(1);
-            else
-                throw new RuntimeException("Invalid binary encoding specs");
-            
-            if (videoFrameSpec instanceof BinaryBlock && ((BinaryBlock)videoFrameSpec).getCompression().equals("H264"))
-                useMP4 = true;            
-            else if (videoFrameSpec instanceof BinaryBlock && ((BinaryBlock)videoFrameSpec).getCompression().equals("JPEG"))
-                useMJPEG = true;            
+            // try to find binary block encoding def in list
+            for (BinaryMember spec: mbrList)
+            {
+                if (spec instanceof BinaryBlock)
+                {
+                    videoFrameSpec = (BinaryBlock)spec;
+                    break;
+                }
+            }
+                    
+            if (videoFrameSpec != null)
+            {            
+                if (videoFrameSpec.getCompression().equals("H264"))
+                    useMP4 = true;            
+                else if (videoFrameSpec.getCompression().equals("JPEG"))
+                    useMJPEG = true;            
+            }
             
             if (useMP4)
             {            

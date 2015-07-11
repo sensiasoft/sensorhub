@@ -90,7 +90,8 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
     {
         stop();
         this.config = config;
-        start();
+        if (config.enabled)
+            start();
     } 
     
     
