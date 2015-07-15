@@ -30,6 +30,7 @@ import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.data.DataEvent;
 import org.sensorhub.api.data.IDataProducerModule;
 import org.sensorhub.api.data.IStreamingDataInterface;
+import org.sensorhub.api.module.ModuleConfig;
 import org.sensorhub.api.processing.DataSourceConfig;
 import org.sensorhub.api.processing.DataSourceConfig.InputLinkConfig;
 import org.sensorhub.api.processing.IStreamProcessModule;
@@ -53,7 +54,7 @@ import org.vast.swe.SWEHelper;
  * Class providing default implementation of common stream processing API methods.
  * This can be used as the base for most stream process implementations.<br/>
  * Concrete process implementations generally need to override either
- * {@link #init(StreamProcessConfig)} or {@link #start()} in order to provide
+ * {@link #init(ModuleConfig)} or {@link #start()} in order to provide
  * actual process inputs, outputs and parameters.
  * </p>
  *
@@ -70,10 +71,9 @@ public abstract class AbstractStreamProcess<ConfigType extends StreamProcessConf
     protected Map<String, DataComponent> inputs = new LinkedHashMap<String, DataComponent>();
     protected Map<String, DataComponent> outputs = new LinkedHashMap<String, DataComponent>();
     protected Map<String, DataComponent> parameters = new LinkedHashMap<String, DataComponent>();
-    
-    protected Map<IStreamingDataInterface, InputData> streamSources = new WeakHashMap<IStreamingDataInterface, InputData>();
     protected Map<String, IStreamingDataInterface> outputInterfaces = new LinkedHashMap<String, IStreamingDataInterface>();  
     
+    protected Map<IStreamingDataInterface, InputData> streamSources;
     protected AbstractProcess processDescription;
     protected double lastUpdatedSensorDescription = Double.NEGATIVE_INFINITY;
     protected boolean paused = false;
@@ -200,18 +200,25 @@ public abstract class AbstractStreamProcess<ConfigType extends StreamProcessConf
     {
         return lastUpdatedSensorDescription;
     }
+    
+    
+    protected void connectInput(String inputName, String dataPath, DataQueue inputQueue) throws Exception
+    {        
+        DataComponent destData = inputs.get(inputName);
+        if (destData == null)
+            throw new ProcessException("Input " + inputName + " doesn't exist");
+        DataComponent dest = SWEHelper.findComponentByPath(destData, dataPath);
+        inputQueue.setDestinationComponent(dest);
+    }
 
 
-    /**
-     * Initializes the process by attempting to connect to specified sources.<br/>
-     * When overriding this method, super.init() generally has to be called.
-     */
     @Override
-    public void init(ConfigType config) throws SensorHubException
+    public void start() throws SensorHubException
     {
-        super.init(config);
+        errorCount = 0;
+        streamSources = new WeakHashMap<IStreamingDataInterface, InputData>();
         
-        // connect to all data sources
+        // attemp to connect to all configured data sources
         // we keep sources in WeakHashMaps so that source modules can be properly GCed when unloaded
         for (DataSourceConfig dataSource: config.dataSources)
         {
@@ -286,6 +293,7 @@ public abstract class AbstractStreamProcess<ConfigType extends StreamProcessConf
                     }
                     
                     inputData.dataQueues.add(inputQueue);
+                    streamInterface.registerListener(this);
                 }
             }
             
@@ -295,28 +303,7 @@ public abstract class AbstractStreamProcess<ConfigType extends StreamProcessConf
                 // TODO what do we do with storage input?
                 // should it be handled by the process impl directly?
             }
-        }
-    }
-    
-    
-    protected void connectInput(String inputName, String dataPath, DataQueue inputQueue) throws Exception
-    {        
-        DataComponent destData = inputs.get(inputName);
-        if (destData == null)
-            throw new ProcessException("Input " + inputName + " doesn't exist");
-        DataComponent dest = SWEHelper.findComponentByPath(destData, dataPath);
-        inputQueue.setDestinationComponent(dest);
-    }
-
-
-    @Override
-    public void start() throws SensorHubException
-    {
-        errorCount = 0;
-                
-        // register listeners with all streaming data sources
-        for (IStreamingDataInterface streamInterface: streamSources.keySet())
-            streamInterface.registerListener(this);
+        }            
     }
     
     
