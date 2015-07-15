@@ -17,6 +17,7 @@ package org.sensorhub.impl.persistence.perst;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import net.opengis.gml.v32.AbstractFeature;
 import net.opengis.swe.v20.DataBlock;
@@ -46,51 +47,6 @@ import org.vast.util.Bbox;
 class MultiEntityStorageRoot extends ObsStorageRoot implements IObsStorage, IMultiSourceStorage<IObsStorage>
 {
     Map<String, ObsStorageRoot> obsStores;
-    
-    
-    /* to delegate iteration to each producer data store in a list, sequentially */
-    abstract class MultiProducerIterator<ObjectType> implements Iterator<ObjectType>
-    {
-        Iterator<String> producerIt;
-        Iterator<ObjectType> subIt;
-        ObjectType nextObj;
-        
-        MultiProducerIterator(Iterator<String> producerIt)
-        {
-            this.producerIt = producerIt;
-            next();
-        }
-        
-        public final boolean hasNext()
-        {
-            return nextObj != null;
-        }
-
-        public final ObjectType next()
-        {
-            ObjectType obj = nextObj;
-            
-            while (subIt == null || !subIt.hasNext())
-            {
-                if (producerIt.hasNext())
-                    subIt = getSubIterator(producerIt.next());
-                else
-                {
-                    subIt = null;
-                    break;
-                }
-            }
-            
-            nextObj = (subIt == null) ? null : subIt.next();
-            return obj;
-        }
-        
-        protected abstract Iterator<ObjectType> getSubIterator(String producerID);
-    
-        public final void remove()
-        {
-        }
-    }
     
     
     /* to iterate through a list of producers records in parallel while sorting by time */
@@ -418,13 +374,16 @@ class MultiEntityStorageRoot extends ObsStorageRoot implements IObsStorage, IMul
         if (producerIDs == null || producerIDs.isEmpty())
             producerIDs = this.getProducerIDs();
         
-        return new MultiProducerIterator<String>(producerIDs.iterator())
+        // we're forced to temporarily hold the whole set in memory to remove duplicates
+        LinkedHashSet<String> foiIDs = new LinkedHashSet<String>();
+        for (String producerID: producerIDs)
         {
-            protected Iterator<String> getSubIterator(String producerID)
-            {
-                return getEntityStorage(producerID).getFoiIDs(filter);
-            }
-        };
+            Iterator<String> it = getEntityStorage(producerID).getFoiIDs(filter);
+            while (it.hasNext())
+                foiIDs.add(it.next());
+        }
+        
+        return foiIDs.iterator();
     }
 
 
@@ -436,13 +395,16 @@ class MultiEntityStorageRoot extends ObsStorageRoot implements IObsStorage, IMul
         if (producerIDs == null || producerIDs.isEmpty())
             producerIDs = this.getProducerIDs();
         
-        return new MultiProducerIterator<AbstractFeature>(producerIDs.iterator())
+        // we're forced to temporarily hold the whole set in memory to remove duplicates
+        LinkedHashSet<AbstractFeature> fois = new LinkedHashSet<AbstractFeature>();
+        for (String producerID: producerIDs)
         {
-            protected Iterator<AbstractFeature> getSubIterator(String producerID)
-            {
-                return getEntityStorage(producerID).getFois(filter);
-            }
-        };
+            Iterator<AbstractFeature> it = getEntityStorage(producerID).getFois(filter);
+            while (it.hasNext())
+                fois.add(it.next());
+        }
+        
+        return fois.iterator();
     }
 
 
