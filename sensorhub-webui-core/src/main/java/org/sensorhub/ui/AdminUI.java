@@ -204,12 +204,8 @@ public class AdminUI extends com.vaadin.ui.UI
         // accordion with several sections
         Accordion stack = new Accordion();
         stack.setSizeFull();
+        VerticalLayout layout;
         Tab tab;
-        
-        VerticalLayout layout = new VerticalLayout();
-        tab = stack.addTab(layout, "General");
-        tab.setIcon(ACC_TAB_ICON);
-        buildGeneralConfig(layout);
         
         layout = new VerticalLayout();
         tab = stack.addTab(layout, "Sensors");
@@ -234,6 +230,7 @@ public class AdminUI extends com.vaadin.ui.UI
         layout = new VerticalLayout();
         tab = stack.addTab(layout, "Network");
         tab.setIcon(ACC_TAB_ICON);
+        buildNetworkConfig(layout);
         
         leftPane.addComponent(stack);
         leftPane.setExpandRatio(header, 0);
@@ -247,12 +244,12 @@ public class AdminUI extends com.vaadin.ui.UI
     }
     
     
-    protected void buildGeneralConfig(VerticalLayout layout)
+    protected void buildNetworkConfig(VerticalLayout layout)
     {
         // add config objects to container
         MyBeanItemContainer<ModuleConfig> container = new MyBeanItemContainer<ModuleConfig>(ModuleConfig.class);
         container.addBean(HttpServer.getInstance().getConfiguration());
-        container.addBean(uiConfig); 
+        //container.addBean(uiConfig); 
         displayModuleList(layout, container, null);
     }
     
