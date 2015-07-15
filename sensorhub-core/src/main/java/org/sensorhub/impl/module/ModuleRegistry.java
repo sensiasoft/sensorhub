@@ -384,8 +384,15 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
         List<IModuleProvider> installedModules = new ArrayList<IModuleProvider>();
         
         ServiceLoader<IModuleProvider> sl = ServiceLoader.load(IModuleProvider.class);
-        for (IModuleProvider provider: sl)
-            installedModules.add(provider);
+        try
+        {
+            for (IModuleProvider provider: sl)
+                installedModules.add(provider);
+        }
+        catch (Throwable e)
+        {
+            log.error("Invalid reference to module descriptor");
+        }
         
         return installedModules;
     }
