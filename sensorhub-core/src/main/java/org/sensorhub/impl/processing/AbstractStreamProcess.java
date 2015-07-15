@@ -213,9 +213,9 @@ public abstract class AbstractStreamProcess<ConfigType extends StreamProcessConf
         
         // connect to all data sources
         // we keep sources in WeakHashMaps so that source modules can be properly GCed when unloaded
-        ModuleRegistry moduleReg = SensorHub.getInstance().getModuleRegistry();
         for (DataSourceConfig dataSource: config.dataSources)
         {
+            ModuleRegistry moduleReg = SensorHub.getInstance().getModuleRegistry();
             if (!isCompatibleDataSource(dataSource))
                 throw new ProcessException("Data source is not supported");
             
