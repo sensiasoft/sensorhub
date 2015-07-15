@@ -57,7 +57,9 @@ import org.vast.ows.OWSException;
 import org.vast.ows.OWSResponse;
 import org.vast.ows.OWSUtils;
 import org.vast.ows.sos.InsertObservationRequest;
+import org.vast.ows.sos.InsertResultTemplateRequest;
 import org.vast.ows.sos.InsertSensorRequest;
+import org.vast.ows.swe.InsertSensorResponse;
 import org.vast.ows.sos.SOSOfferingCapabilities;
 import org.vast.ows.sos.SOSServiceCapabilities;
 import org.vast.ows.sos.SOSUtils;
@@ -68,6 +70,7 @@ import org.vast.util.TimeExtent;
 
 public class TestSOSTService
 {
+    static final int SERVER_PORT = 8888;
     private static String SERVICE_ENDPOINT = "/sos";
     private static String SENSOR_UID = "urn:mycompany:mysensor:0001";
     File configFile;
@@ -83,6 +86,7 @@ public class TestSOSTService
         // start HTTP server
         HttpServer server = HttpServer.getInstance();
         HttpServerConfig config = new HttpServerConfig();
+        config.httpPort = SERVER_PORT;
         server.init(config);
         server.start();
     }
@@ -142,7 +146,7 @@ public class TestSOSTService
     
     protected String getSosEndpointUrl()
     {
-        return "http://localhost:8080/sensorhub" + SERVICE_ENDPOINT;
+        return "http://localhost:" + SERVER_PORT + "/sensorhub" + SERVICE_ENDPOINT;
     }
     
     
@@ -210,6 +214,21 @@ public class TestSOSTService
     }
     
     
+    protected InsertResultTemplateRequest buildInsertResultTemplate(DataStream output, InsertSensorResponse resp) throws Exception
+    {
+        // build insert sensor request
+        InsertResultTemplateRequest req = new InsertResultTemplateRequest();
+        req.setPostServer(getSosEndpointUrl());
+        req.setVersion("2.0");
+        req.setOffering(resp.getAssignedOffering());
+        req.setResultStructure(output.getElementType());
+        req.setResultEncoding(output.getEncoding());
+        req.setObservationTemplate(new ObservationImpl());
+        return req;
+    }
+    
+    
+    
     @Test
     public void testSetupService() throws Exception
     {
@@ -247,11 +266,9 @@ public class TestSOSTService
         utils.writeXMLResponse(System.out, caps);
         assertEquals(2, caps.getLayers().size());
         
-        // check offering has correct observable properties, foi types, etc.
+        // check offering has correct properties
         SOSOfferingCapabilities newOffering = (SOSOfferingCapabilities)caps.getLayers().get(1);
-        assertTrue("Observation types missing", newOffering.getObservationTypes().containsAll(req.getObservationTypes()));
-        assertTrue("Observed properties missing", newOffering.getObservableProperties().containsAll(req.getObservableProperties()));
-        assertTrue("Procedure format missing", newOffering.getProcedureFormats().contains(req.getProcedureDescriptionFormat()));
+        assertEquals(req.getProcedureDescription().getUniqueIdentifier(), newOffering.getProcedures().iterator().next());
     }
 
     
@@ -301,11 +318,37 @@ public class TestSOSTService
     }
     
     
-    //@Test
+    @Test
     public void testInsertResultTemplate() throws Exception
     {
-        // send insert template
+        setupFramework();
+        deployService(buildSensorProvider1());
+        OWSUtils utils = new OWSUtils();
         
+        // first register sensor
+        InsertSensorRequest req = buildInsertSensor();
+        InsertSensorResponse resp = (InsertSensorResponse)utils.sendRequest(req, false);
+        
+        // send insert template
+        DataStream output = (DataStream)req.getProcedureDescription().getOutputList().get(0);
+        utils.sendRequest(buildInsertResultTemplate(output, resp), false);
+        output = (DataStream)req.getProcedureDescription().getOutputList().get(1);
+        utils.sendRequest(buildInsertResultTemplate(output, resp), false);
+        
+        // get capabilities
+        GetCapabilitiesRequest getCap = new GetCapabilitiesRequest();
+        getCap.setService(SOSUtils.SOS);
+        getCap.setVersion("2.0");
+        getCap.setGetServer(getSosEndpointUrl());
+        SOSServiceCapabilities caps = (SOSServiceCapabilities)utils.sendRequest(getCap, false);
+        utils.writeXMLResponse(System.out, caps);
+        assertEquals(2, caps.getLayers().size());
+        
+        // check offering now has new observed properties
+        SOSOfferingCapabilities newOffering = (SOSOfferingCapabilities)caps.getLayers().get(1);
+        assertTrue("Observation types missing", newOffering.getObservationTypes().containsAll(req.getObservationTypes()));
+        assertTrue("Observed properties missing", newOffering.getObservableProperties().containsAll(req.getObservableProperties()));
+        assertTrue("Procedure format missing", newOffering.getProcedureFormats().contains(req.getProcedureDescriptionFormat()));
     }
 
     

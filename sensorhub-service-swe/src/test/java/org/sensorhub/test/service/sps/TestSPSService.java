@@ -59,8 +59,9 @@ import org.w3c.dom.NodeList;
 
 public class TestSPSService
 {
+    static final int SERVER_PORT = 8888;
     static String SERVICE_ENDPOINT = "/sps";
-    static String SERVER_URL = "http://localhost:8080/sensorhub" + SERVICE_ENDPOINT;    
+    static String SERVER_URL = "http://localhost:" + SERVER_PORT + "/sensorhub" + SERVICE_ENDPOINT;    
     static String NAME_INPUT1 = "command";
     static String URI_OFFERING1 = "urn:mysps:sensor1";
     static String URI_OFFERING2 = "urn:mysps:sensor2";
@@ -83,6 +84,7 @@ public class TestSPSService
         
         // start HTTP server
         HttpServerConfig httpConfig = new HttpServerConfig();
+        httpConfig.httpPort = SERVER_PORT;
         SensorHub.getInstance().getModuleRegistry().loadModule(httpConfig);
     }
     
