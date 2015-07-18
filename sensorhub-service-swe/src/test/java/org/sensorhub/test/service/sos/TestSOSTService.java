@@ -379,9 +379,18 @@ public class TestSOSTService
     {
         try
         {
-            configFile.delete();
-            SensorHub.getInstance().stop();
+            // stop and cleanup HTTP server
             HttpServer.getInstance().cleanup();
+            
+            // also make sure we cleanup all modules to remove all generated files
+            ModuleRegistry registry = SensorHub.getInstance().getModuleRegistry();
+            for (IModule<?> module: registry.getLoadedModules()) 
+            {
+                module.stop();
+                module.cleanup();
+            }
+            
+            configFile.delete();
         }
         catch (Exception e)
         {

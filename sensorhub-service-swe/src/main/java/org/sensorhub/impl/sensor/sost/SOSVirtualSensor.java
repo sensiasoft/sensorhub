@@ -277,22 +277,22 @@ public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfi
 
     @Override
     public void start() throws SensorHubException
-    {
-        
+    {        
     }
 
 
     @Override
     public void stop() throws SensorHubException
     {
-        // TODO Auto-generated method stub
     }
 
 
     @Override
     public void cleanup() throws SensorHubException
     {
-        // TODO Auto-generated method stub
+        File f = new File(this.getLocalID() + ".xml");
+        if (f.exists())
+            f.delete();
     }
 
 
