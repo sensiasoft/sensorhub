@@ -137,6 +137,18 @@ public class SensorHub
     }
     
     
+    public IGlobalConfig getConfig()
+    {
+        return config;
+    }
+
+
+    public void setConfig(IGlobalConfig config)
+    {
+        this.config = config;
+    }
+
+
     public ModuleRegistry getModuleRegistry()
     {
         return registry;
@@ -185,9 +197,11 @@ public class SensorHub
                 public void run()
                 {
                     sh.stop();
+                    System.out.println("SensorHub was cleanly stopped");
                 }            
             });
             
+            System.out.println("Starting SensorHub...");
             instance.start();
         }
         catch (Exception e)
