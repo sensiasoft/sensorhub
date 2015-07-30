@@ -310,14 +310,17 @@ public abstract class AbstractStreamProcess<ConfigType extends StreamProcessConf
     @Override
     public void stop()
     {
-        // unregister listeners from all streaming data sources
-        for (Entry<IStreamingDataInterface, InputData> streamSrc: streamSources.entrySet())
+        if (streamSources != null)
         {
-            streamSrc.getKey().unregisterListener(this);
-            
-            // clear input queues
-            for (DataQueue q: streamSrc.getValue().dataQueues)
-                q.clear();
+            // unregister listeners from all streaming data sources
+            for (Entry<IStreamingDataInterface, InputData> streamSrc: streamSources.entrySet())
+            {
+                streamSrc.getKey().unregisterListener(this);
+                
+                // clear input queues
+                for (DataQueue q: streamSrc.getValue().dataQueues)
+                    q.clear();
+            }
         }
     }
 
