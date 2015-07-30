@@ -34,7 +34,6 @@ import org.sensorhub.api.sensor.SensorConfig;
 import org.sensorhub.impl.SensorHub;
 import org.sensorhub.impl.SensorHubConfig;
 import org.sensorhub.impl.module.ModuleRegistry;
-import org.sensorhub.impl.service.HttpServer;
 import org.sensorhub.impl.service.HttpServerConfig;
 import org.sensorhub.impl.service.ogc.OGCServiceConfig.CapabilitiesInfo;
 import org.sensorhub.impl.service.sos.SOSProviderConfig;
@@ -84,11 +83,9 @@ public class TestSOSTService
         SensorHub.createInstance(new SensorHubConfig(configFile.getAbsolutePath(), configFile.getParent()));
         
         // start HTTP server
-        HttpServer server = HttpServer.getInstance();
-        HttpServerConfig config = new HttpServerConfig();
-        config.httpPort = SERVER_PORT;
-        server.init(config);
-        server.start();
+        HttpServerConfig httpConfig = new HttpServerConfig();
+        httpConfig.httpPort = SERVER_PORT;
+        SensorHub.getInstance().getModuleRegistry().loadModule(httpConfig);
     }
     
     
@@ -378,10 +375,7 @@ public class TestSOSTService
     public void cleanup()
     {
         try
-        {
-            // stop and cleanup HTTP server
-            HttpServer.getInstance().cleanup();
-            
+        {           
             // also make sure we cleanup all modules to remove all generated files
             ModuleRegistry registry = SensorHub.getInstance().getModuleRegistry();
             for (IModule<?> module: registry.getLoadedModules()) 
@@ -389,6 +383,7 @@ public class TestSOSTService
                 module.stop();
                 module.cleanup();
             }
+            registry.shutdown(false, false);
             
             configFile.delete();
         }

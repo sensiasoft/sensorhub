@@ -208,20 +208,25 @@ public class SPSService extends OWSServlet implements IServiceModule<SPSServiceC
     
     protected void deploy()
     {
-        if (!HttpServer.getInstance().isEnabled())
+        HttpServer httpServer = HttpServer.getInstance();
+        if (httpServer == null)
+            throw new RuntimeException("HTTP server must be started");
+        
+        if (!httpServer.isEnabled())
             return;
         
         // deploy ourself to HTTP server
-        HttpServer.getInstance().deployServlet(this, config.endPoint);
+        httpServer.deployServlet(this, config.endPoint);
     }
     
     
     protected void undeploy()
     {
-        if (!HttpServer.getInstance().isEnabled())
+        HttpServer httpServer = HttpServer.getInstance();        
+        if (httpServer == null || !httpServer.isEnabled())
             return;
         
-        HttpServer.getInstance().undeployServlet(this);
+        httpServer.undeployServlet(this);
     }
     
     

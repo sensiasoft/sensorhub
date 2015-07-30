@@ -86,9 +86,6 @@ public class HttpServer extends AbstractModule<HttpServerConfig>
     
     public static HttpServer getInstance()
     {
-        if (instance == null)
-            instance = new HttpServer();
-        
         return instance;
     }
     
@@ -231,7 +228,6 @@ public class HttpServer extends AbstractModule<HttpServerConfig>
     @Override
     public void cleanup() throws SensorHubException
     {
-        stop();
         server = null;
         instance = null;
     }

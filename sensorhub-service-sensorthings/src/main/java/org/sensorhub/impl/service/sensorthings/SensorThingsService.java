@@ -42,7 +42,11 @@ public class SensorThingsService extends AbstractModule<SensorThingsConfig>
     @Override
     public void start() throws SensorHubException
     {
-        if (!HttpServer.getInstance().isEnabled())
+        HttpServer httpServer = HttpServer.getInstance();
+        if (httpServer == null)
+            throw new RuntimeException("HTTP server must be started");
+        
+        if (!httpServer.isEnabled())
             return;
         
         if (servlet == null)
@@ -74,10 +78,11 @@ public class SensorThingsService extends AbstractModule<SensorThingsConfig>
     @Override
     public void stop() throws SensorHubException
     {
-        if (!HttpServer.getInstance().isEnabled())
+        HttpServer httpServer = HttpServer.getInstance();        
+        if (httpServer == null || !httpServer.isEnabled())
             return;
         
-        HttpServer.getInstance().undeployServlet(servlet);
+        httpServer.undeployServlet(servlet);
         servlet = null;
     }
     
