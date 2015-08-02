@@ -102,7 +102,7 @@ public interface IModule<ConfigType extends ModuleConfig> extends IEventProducer
      * @param saver
      * @throws SensorHubException 
      */
-    public void saveState(IModuleStateSaver saver) throws SensorHubException;
+    public void saveState(IModuleStateManager saver) throws SensorHubException;
     
     
     /**
@@ -110,7 +110,7 @@ public interface IModule<ConfigType extends ModuleConfig> extends IEventProducer
      * @param loader
      * @throws SensorHubException 
      */
-    public void loadState(IModuleStateLoader loader) throws SensorHubException;
+    public void loadState(IModuleStateManager loader) throws SensorHubException;
     
     
     /**

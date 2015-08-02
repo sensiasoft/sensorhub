@@ -29,6 +29,7 @@ import org.sensorhub.api.module.IModule;
 import org.sensorhub.api.module.IModuleConfigRepository;
 import org.sensorhub.api.module.IModuleManager;
 import org.sensorhub.api.module.IModuleProvider;
+import org.sensorhub.api.module.IModuleStateManager;
 import org.sensorhub.api.module.ModuleConfig;
 import org.sensorhub.api.module.ModuleEvent;
 import org.sensorhub.impl.common.BasicEventHandler;
@@ -115,7 +116,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
             Class<IModule> clazz = (Class<IModule>)Class.forName(config.moduleClass);
             IModule module = clazz.newInstance();
             module.init(config);
-            module.loadState(null);
+            module.loadState(getStateManager(config.id));
                         
             // keep track of what modules are loaded
             loadedModules.put(config.id, module);
@@ -134,6 +135,10 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
             
             return module;
         }
+        catch (ClassNotFoundException | IllegalAccessException | InstantiationException e)
+        {
+            throw new SensorHubException("Cannot instantiate module class", e);
+        }
         catch (SensorHubException e)
         {
             log.error("Error while initializing module " + config.name, e);
@@ -141,7 +146,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
         }
         catch (Exception e)
         {
-            throw new SensorHubException("Cannot instantiate module class", e);
+            throw new SensorHubException("Cannot load module " + config.name, e);
         }
     }
     
@@ -435,7 +440,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
                 // save state if requested
                 // TODO use state saver
                 if (saveState)
-                    module.saveState(null);
+                    module.saveState(getStateManager(module.getLocalID()));
                 
                 // save config if requested
                 if (saveConfig)
@@ -468,6 +473,12 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
         // moduleID can exist either in live table, in config repository or both
         if (!loadedModules.containsKey(moduleID) && !configRepos.contains(moduleID))
             throw new RuntimeException("Module with ID " + moduleID + " is not available");
+    }
+    
+    
+    private IModuleStateManager getStateManager(String localID)
+    {
+        return new DefaultModuleStateManager(localID);
     }
 
 

@@ -31,8 +31,7 @@ import org.sensorhub.api.common.Event;
 import org.sensorhub.api.common.IEventHandler;
 import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.common.SensorHubException;
-import org.sensorhub.api.module.IModuleStateLoader;
-import org.sensorhub.api.module.IModuleStateSaver;
+import org.sensorhub.api.module.IModuleStateManager;
 import org.sensorhub.api.module.ModuleEvent;
 import org.sensorhub.api.service.IServiceModule;
 import org.sensorhub.impl.SensorHub;
@@ -283,13 +282,13 @@ public class SPSService extends OWSServlet implements IServiceModule<SPSServiceC
     
 
     @Override
-    public void saveState(IModuleStateSaver saver) throws SensorHubException
+    public void saveState(IModuleStateManager saver) throws SensorHubException
     {
     }
 
 
     @Override
-    public void loadState(IModuleStateLoader loader) throws SensorHubException
+    public void loadState(IModuleStateManager loader) throws SensorHubException
     {
     }
 

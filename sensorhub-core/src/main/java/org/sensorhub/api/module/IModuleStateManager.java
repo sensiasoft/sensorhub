@@ -14,18 +14,33 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.api.module;
 
+import java.io.InputStream;
+import java.io.OutputStream;
 
-public interface IModuleStateSaver
-{
-    public void put(String key, Object value);
+
+public interface IModuleStateManager
+{   
+    public String getAsString(String key);
+    
+    public Float getAsFloat(String key);
+    
+    public Double getAsDouble(String key);
+    
+    public Integer getAsInt(String key);
+
+    public Long getAsLong(String key);
+    
+    public InputStream getAsInputStream(String key);
+    
+    public void put(String key, float value);
     
     public void put(String key, double value);
     
     public void put(String key, int value);
     
-    public void startGroup(String name);
+    public void put(String key, long value);
     
-    public void endGroup();
+    public OutputStream getOutputStream(String key);
     
-    public void close();
+    public void flush();
 }

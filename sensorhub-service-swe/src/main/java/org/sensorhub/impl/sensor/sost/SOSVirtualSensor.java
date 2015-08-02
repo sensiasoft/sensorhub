@@ -36,8 +36,7 @@ import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataEncoding;
 import net.opengis.swe.v20.DataStream;
 import org.sensorhub.api.common.SensorHubException;
-import org.sensorhub.api.module.IModuleStateLoader;
-import org.sensorhub.api.module.IModuleStateSaver;
+import org.sensorhub.api.module.IModuleStateManager;
 import org.sensorhub.api.sensor.SensorEvent;
 import org.sensorhub.api.sensor.SensorException;
 import org.sensorhub.impl.sensor.AbstractSensorModule;
@@ -363,7 +362,7 @@ public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfi
 
 
     @Override
-    public void saveState(IModuleStateSaver saver) throws SensorHubException
+    public void saveState(IModuleStateManager saver) throws SensorHubException
     {
         try
         {
@@ -379,7 +378,7 @@ public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfi
 
 
     @Override
-    public void loadState(IModuleStateLoader loader) throws SensorHubException
+    public void loadState(IModuleStateManager loader) throws SensorHubException
     {
         try
         {
