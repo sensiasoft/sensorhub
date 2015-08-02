@@ -327,7 +327,7 @@ public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfi
         }
         
         long unixTime = System.currentTimeMillis();
-        lastUpdatedSensorDescription = unixTime / 1000.;
+        lastUpdatedSensorDescription = unixTime;
         eventHandler.publishEvent(new SensorEvent(unixTime, this, SensorEvent.Type.SENSOR_CHANGED));
     }
     
@@ -339,7 +339,7 @@ public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfi
     {
         sensorDescription = systemDesc;
         long unixTime = System.currentTimeMillis();
-        lastUpdatedSensorDescription = unixTime / 1000.;
+        lastUpdatedSensorDescription = unixTime;
     }
 
 
@@ -390,7 +390,7 @@ public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfi
                 if (timeListSize > 0)
                 {
                     double begin = ((TimePeriod)sensorDescription.getValidTimeList().get(0)).getBeginPosition().getDecimalValue();
-                    lastUpdatedSensorDescription = begin;
+                    lastUpdatedSensorDescription = (long)(begin*1000);
                 }
                 
                 // generate output interfaces from description

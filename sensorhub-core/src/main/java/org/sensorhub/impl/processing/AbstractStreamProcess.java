@@ -75,7 +75,7 @@ public abstract class AbstractStreamProcess<ConfigType extends StreamProcessConf
     
     protected Map<IStreamingDataInterface, InputData> streamSources;
     protected AbstractProcess processDescription;
-    protected double lastUpdatedSensorDescription = Double.NEGATIVE_INFINITY;
+    protected long lastUpdatedSensorDescription = Long.MIN_VALUE;
     protected boolean paused = false;
     protected int errorCount = 0;
     
@@ -196,7 +196,7 @@ public abstract class AbstractStreamProcess<ConfigType extends StreamProcessConf
 
 
     @Override
-    public double getLastDescriptionUpdate()
+    public long getLastDescriptionUpdate()
     {
         return lastUpdatedSensorDescription;
     }

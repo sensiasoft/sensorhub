@@ -56,13 +56,6 @@ public interface ISensorModule<ConfigType extends SensorConfig> extends IDataPro
 
 
     /**
-     * Used to check when sensor description was last updated.
-     */
-    @Override
-    public double getLastDescriptionUpdate();
-
-
-    /**
      * Retrieves historic sensor description valid at time t
      * @param time julian time (1970) at which description is valid
      * @return SMLSytem object containing sensor metadata valid at time t

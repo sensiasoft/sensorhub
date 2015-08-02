@@ -35,6 +35,8 @@ import net.opengis.sensorml.v20.AbstractProcess;
 import net.opengis.sensorml.v20.SpatialFrame;
 import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.Vector;
+import org.sensorhub.api.common.SensorHubException;
+import org.sensorhub.api.module.IModuleStateManager;
 import org.sensorhub.api.sensor.ISensorControlInterface;
 import org.sensorhub.api.sensor.ISensorDataInterface;
 import org.sensorhub.api.sensor.ISensorModule;
@@ -68,13 +70,14 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
     protected final static String ERROR_NO_UPDATE = "Sensor Description update is not supported by driver ";
     protected final static String ERROR_NO_HISTORY = "History of sensor description is not supported by driver ";
     protected final static String ERROR_NO_ENTITIES = "Multiple entities are not supported by driver ";
+    protected final static String STATE_LAST_SML_UPDATE = "LastUpdatedSensorDescription";
     
-    private Map<String, ISensorDataInterface> obsOutputs = new LinkedHashMap<String, ISensorDataInterface>();  
-    private Map<String, ISensorDataInterface> statusOutputs = new LinkedHashMap<String, ISensorDataInterface>();  
+    private Map<String, ISensorDataInterface> obsOutputs = new LinkedHashMap<String, ISensorDataInterface>();
+    private Map<String, ISensorDataInterface> statusOutputs = new LinkedHashMap<String, ISensorDataInterface>();
     private Map<String, ISensorControlInterface> controlInputs = new LinkedHashMap<String, ISensorControlInterface>();
     protected DefaultLocationOutput<?> locationOutput;
     protected AbstractProcess sensorDescription = new PhysicalSystemImpl();
-    protected double lastUpdatedSensorDescription = Double.NEGATIVE_INFINITY;
+    protected long lastUpdatedSensorDescription = Long.MIN_VALUE;
     
     
     /**
@@ -152,7 +155,7 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
     {
         synchronized (sensorDescription)
         {
-            if (lastUpdatedSensorDescription == Double.NEGATIVE_INFINITY)
+            if (!sensorDescription.isSetIdentifier())
                 updateSensorDescription();
         
             return sensorDescription;
@@ -161,7 +164,7 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
     
     
     @Override
-    public double getLastDescriptionUpdate()
+    public long getLastDescriptionUpdate()
     {
         return lastUpdatedSensorDescription;
     }
@@ -203,8 +206,9 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
             //////////////////////////////////////////////////////////////
             // add stuffs if not already defined in static SensorML doc //
             //////////////////////////////////////////////////////////////
-            long unixTime = System.currentTimeMillis();
-            double newValidityTime = unixTime / 1000.;
+            if (lastUpdatedSensorDescription == Long.MIN_VALUE)
+                lastUpdatedSensorDescription = System.currentTimeMillis();
+            double newValidityTime = lastUpdatedSensorDescription / 1000.;
             
             // default IDs
             String gmlId = sensorDescription.getId();
@@ -265,12 +269,15 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
                     ((AbstractPhysicalProcess)sensorDescription).getPositionList().add(linkProp);
                 }
             }
-            
-            // send event
-            if (lastUpdatedSensorDescription != Double.NEGATIVE_INFINITY)
-                eventHandler.publishEvent(new SensorEvent(unixTime, this, SensorEvent.Type.SENSOR_CHANGED));
-            lastUpdatedSensorDescription = newValidityTime;
         }
+    }
+    
+    
+    protected void notifyNewDescription(long updateTime)
+    {
+        // send event
+        lastUpdatedSensorDescription = updateTime;
+        eventHandler.publishEvent(new SensorEvent(updateTime, this, SensorEvent.Type.SENSOR_CHANGED));
     }
     
     
@@ -336,8 +343,7 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
             
             // send sensorML changed event
             long now = System.currentTimeMillis();
-            lastUpdatedSensorDescription = now / 1000.;
-            eventHandler.publishEvent(new SensorEvent(now, this, SensorEvent.Type.SENSOR_CHANGED));
+            notifyNewDescription(now);
         }
     }
     
@@ -408,5 +414,36 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
     public AbstractFeature getCurrentFeatureOfInterest()
     {
         return null;
+    }
+
+
+    @Override
+    public void updateConfig(ConfigType config) throws SensorHubException
+    {
+        super.updateConfig(config);
+        if (config.sensorML != null)
+        {
+            updateSensorDescription();
+            notifyNewDescription(System.currentTimeMillis());
+        }
+    }
+
+    
+    @Override
+    public void loadState(IModuleStateManager loader) throws SensorHubException
+    {
+        super.loadState(loader);
+        Long lastUpdateTime = loader.getAsLong(STATE_LAST_SML_UPDATE);
+        if (lastUpdateTime != null)
+            this.lastUpdatedSensorDescription = lastUpdateTime;
+    }
+    
+    
+    @Override
+    public void saveState(IModuleStateManager saver) throws SensorHubException
+    {
+        super.saveState(saver);
+        saver.put(STATE_LAST_SML_UPDATE, this.lastUpdatedSensorDescription);
+        saver.flush();
     }
 }

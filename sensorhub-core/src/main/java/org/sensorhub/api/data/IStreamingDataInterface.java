@@ -87,7 +87,7 @@ public interface IStreamingDataInterface extends IEventProducer
      * equal the sampling time stamp that is often sent with the data.
      * <p><i>Note: this method is useful to know if a record has been produced since the
      * last call to {@link #getLatestRecord}.</i></p>
-     * @return time of last record as unix time (1970) or {@link Long#MIN_VALUE} if no record is available yet
+     * @return time of last record as unix time (ms since 1970) or {@link Long#MIN_VALUE} if no record is available yet
      */
     public long getLatestRecordTime();
     

@@ -46,9 +46,9 @@ public interface IModuleWithDescription
     /**
      * Used to check when SensorML description was last updated.
      * This is useful to avoid requesting the object when it hasn't changed.
-     * @return Date/time of last description update as julian time (1970) or
-     * {@link Double#NEGATIVE_INFINITY} if description was never updated.
+     * @return Date/time of last description update as unix time (ms since 1970) or
+     * {@link Long#MIN_VALUE} if description was never updated.
      */
-    public double getLastDescriptionUpdate();
+    public long getLastDescriptionUpdate();
 
 }
