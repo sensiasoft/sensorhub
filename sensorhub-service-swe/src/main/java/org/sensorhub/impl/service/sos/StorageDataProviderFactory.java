@@ -29,7 +29,7 @@ import org.sensorhub.api.persistence.FoiFilter;
 import org.sensorhub.api.persistence.IFoiFilter;
 import org.sensorhub.api.persistence.IObsStorage;
 import org.sensorhub.api.persistence.IRecordStorageModule;
-import org.sensorhub.api.persistence.IRecordInfo;
+import org.sensorhub.api.persistence.IRecordStoreInfo;
 import org.sensorhub.api.persistence.IStorageModule;
 import org.sensorhub.api.sensor.SensorException;
 import org.sensorhub.api.service.ServiceException;
@@ -181,7 +181,7 @@ public class StorageDataProviderFactory implements IDataProviderFactory
         TimeExtent timeExtent = new TimeExtent();
         
         // process outputs descriptions
-        for (Entry<String, ? extends IRecordInfo> entry: storage.getRecordTypes().entrySet())
+        for (Entry<String, ? extends IRecordStoreInfo> entry: storage.getRecordStores().entrySet())
         {
             // skip hidden outputs
             if (config.hiddenOutputs != null && config.hiddenOutputs.contains(entry.getKey()))
@@ -238,7 +238,7 @@ public class StorageDataProviderFactory implements IDataProviderFactory
     protected void getObservablePropertiesFromStorage(Set<String> observables)
     {
         // process outputs descriptions
-        for (Entry<String, ? extends IRecordInfo> entry: storage.getRecordTypes().entrySet())
+        for (Entry<String, ? extends IRecordStoreInfo> entry: storage.getRecordStores().entrySet())
         {
             // skip hidden outputs
             if (config.hiddenOutputs != null && config.hiddenOutputs.contains(entry.getKey()))
@@ -266,7 +266,7 @@ public class StorageDataProviderFactory implements IDataProviderFactory
         obsTypes.add(IObservation.OBS_TYPE_GENERIC);
         
         // process outputs descriptions
-        for (Entry<String, ? extends IRecordInfo> entry: storage.getRecordTypes().entrySet())
+        for (Entry<String, ? extends IRecordStoreInfo> entry: storage.getRecordStores().entrySet())
         {
             // skip hidden outputs
             if (config.hiddenOutputs != null && config.hiddenOutputs.contains(entry.getKey()))

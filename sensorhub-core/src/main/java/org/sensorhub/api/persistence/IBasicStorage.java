@@ -96,16 +96,16 @@ public interface IBasicStorage
      * Gets the list of available record types in this storage
      * @return map of name to data store instance
      */
-    public Map<String, ? extends IRecordInfo> getRecordTypes();
+    public Map<String, ? extends IRecordStoreInfo> getRecordStores();
     
     
     /**
-     * Adds a new record type in this storage
-     * @param name name of record stream (should match output name of the data source)
+     * Adds a data store for a new record type in this storage
+     * @param name name of record type (should match output name of the data source)
      * @param recordStructure SWE data component describing the record structure
      * @param recommendedEncoding recommended encoding for this record type
      */
-    public void addRecordType(String name, DataComponent recordStructure, DataEncoding recommendedEncoding);
+    public void addRecordStore(String name, DataComponent recordStructure, DataEncoding recommendedEncoding);
         
     
     /**
@@ -124,6 +124,15 @@ public interface IBasicStorage
      * if no records of this type are available
      */
     public double[] getRecordsTimeRange(String recordType);
+    
+    
+    /**
+     * Retrieves time boundaries of data clusters 
+     * (i.e. this allows to detect temporal holes in the data)
+     * @param recordType name of record type
+     * @return A read-only iterator among time periods delimiting clusters of data
+     */
+    public Iterator<double[]> getRecordsTimeClusters(String recordType);
     
     
     /**

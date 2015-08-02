@@ -34,7 +34,7 @@ import org.sensorhub.api.persistence.IBasicStorage;
 import org.sensorhub.api.persistence.IRecordStorageModule;
 import org.sensorhub.api.persistence.IDataFilter;
 import org.sensorhub.api.persistence.IDataRecord;
-import org.sensorhub.api.persistence.IRecordInfo;
+import org.sensorhub.api.persistence.IRecordStoreInfo;
 import org.sensorhub.api.persistence.IStorageModule;
 import org.sensorhub.api.persistence.StorageEvent;
 import org.sensorhub.api.persistence.StorageException;
@@ -154,10 +154,7 @@ public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> impleme
     @Override
     public synchronized void commit()
     {
-        // better not to commit to keep up with high frequency streams
-        // apparently PERST does it on its own regularly
-        // we could still commit manually once in a while in case a crash occurs
-        //db.commit();
+        db.commit();
     }
 
 
@@ -233,18 +230,18 @@ public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> impleme
     
     
     @Override
-    public synchronized void addRecordType(String name, DataComponent recordStructure, DataEncoding recommendedEncoding)
+    public synchronized void addRecordStore(String name, DataComponent recordStructure, DataEncoding recommendedEncoding)
     {
-        ((BasicStorageRoot)dbRoot).addRecordType(name, recordStructure, recommendedEncoding);
+        ((BasicStorageRoot)dbRoot).addRecordStore(name, recordStructure, recommendedEncoding);
         if (autoCommit)
             commit();
     }
     
     
     @Override
-    public Map<String, ? extends IRecordInfo> getRecordTypes()
+    public Map<String, ? extends IRecordStoreInfo> getRecordStores()
     {
-        return ((BasicStorageRoot)dbRoot).getRecordTypes();
+        return ((BasicStorageRoot)dbRoot).getRecordStores();
     }
 
 
@@ -259,6 +256,13 @@ public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> impleme
     public double[] getRecordsTimeRange(String recordType)
     {
         return ((BasicStorageRoot)dbRoot).getRecordsTimeRange(recordType);
+    }
+    
+    
+    @Override
+    public Iterator<double[]> getRecordsTimeClusters(String recordType)
+    {
+        return ((BasicStorageRoot)dbRoot).getRecordsTimeClusters(recordType);
     }
     
     

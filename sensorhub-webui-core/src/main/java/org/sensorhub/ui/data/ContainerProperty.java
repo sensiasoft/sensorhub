@@ -17,14 +17,12 @@ package org.sensorhub.ui.data;
 import java.lang.reflect.Field;
 import java.util.List;
 import org.sensorhub.api.config.DisplayInfo;
-import com.vaadin.data.util.AbstractProperty;
 
 
 @SuppressWarnings({ "serial", "rawtypes" })
-public class ContainerProperty extends AbstractProperty<MyBeanItemContainer>
+public class ContainerProperty extends BaseProperty<MyBeanItemContainer>
 {
     Object instance;
-    Field f;
     MyBeanItemContainer container;
     
 

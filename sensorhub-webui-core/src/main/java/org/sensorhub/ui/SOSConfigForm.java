@@ -88,7 +88,7 @@ public class SOSConfigForm extends GenericConfigForm
 
 
     @Override
-    public Map<String, Class<?>> getPossibleTypes(Object propId)
+    public Map<String, Class<?>> getPossibleTypes(String propId)
     {
         if (propId.equals(PROP_DATAPROVIDERS))
         {

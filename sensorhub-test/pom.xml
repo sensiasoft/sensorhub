@@ -100,5 +100,10 @@
         <artifactId>sensorhub-comm-rxtx</artifactId>
         <version>0.1</version>
      </dependency>
+     <dependency>
+        <groupId>org.sensorhub</groupId>
+        <artifactId>sensorhub-service-sensorthings</artifactId>
+        <version>0.1-SNAPSHOT</version>
+     </dependency>
   </dependencies>
 </project>

@@ -81,9 +81,9 @@ public class ObsStorageImpl extends BasicStorageImpl implements IObsStorageModul
 
 
     @Override
-    public synchronized void addRecordType(String name, DataComponent recordStructure, DataEncoding recommendedEncoding)
+    public synchronized void addRecordStore(String name, DataComponent recordStructure, DataEncoding recommendedEncoding)
     {
-        ((ObsStorageRoot)dbRoot).addRecordType(name, recordStructure, recommendedEncoding);
+        ((ObsStorageRoot)dbRoot).addRecordStore(name, recordStructure, recommendedEncoding);
         if (autoCommit)
             commit();
     }

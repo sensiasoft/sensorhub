@@ -34,7 +34,7 @@ import org.sensorhub.api.persistence.DataKey;
 import org.sensorhub.api.persistence.IBasicStorage;
 import org.sensorhub.api.persistence.IDataFilter;
 import org.sensorhub.api.persistence.IDataRecord;
-import org.sensorhub.api.persistence.IRecordInfo;
+import org.sensorhub.api.persistence.IRecordStoreInfo;
 
 
 /**
@@ -157,14 +157,27 @@ class BasicStorageRoot extends Persistent implements IBasicStorage
         while (it.hasNext())
         {
             AbstractProcess sml = it.next();
-            it.remove();
-            db.deallocate(sml);
+            
+            // get end of validity of process description
+            double endValidity = Double.NaN; 
+            AbstractTimeGeometricPrimitive validTime = sml.getValidTimeList().get(0);
+            if (validTime instanceof TimePeriod)
+                endValidity = ((TimePeriod) validTime).getEndPosition().getDecimalValue();
+            
+            // check that end of validity is also within time range
+            // if end of validity is now, endValidity will be NaN
+            // if this is the last description returned, don't remove it if end of validity is now
+            if (endValidity <= endTime || (Double.isNaN(endValidity) && it.hasNext()))
+            {
+                it.remove();
+                db.deallocate(sml);
+            }
         }
     }
     
     
     @Override
-    public void addRecordType(String name, DataComponent recordStructure, DataEncoding recommendedEncoding)
+    public void addRecordStore(String name, DataComponent recordStructure, DataEncoding recommendedEncoding)
     {
         recordStructure.setName(name);
         TimeSeriesImpl newTimeSeries = new TimeSeriesImpl(getStorage(), recordStructure, recommendedEncoding);
@@ -174,7 +187,7 @@ class BasicStorageRoot extends Persistent implements IBasicStorage
     
     
     @Override
-    public Map<String, ? extends IRecordInfo> getRecordTypes()
+    public Map<String, ? extends IRecordStoreInfo> getRecordStores()
     {
         return Collections.unmodifiableMap(dataStores);
     }
@@ -200,6 +213,13 @@ class BasicStorageRoot extends Persistent implements IBasicStorage
     public double[] getRecordsTimeRange(String recordType)
     {
         return getRecordStore(recordType).getDataTimeRange();
+    }
+    
+    
+    @Override
+    public Iterator<double[]> getRecordsTimeClusters(String recordType)
+    {
+        return getRecordStore(recordType).getRecordsTimeClusters(recordType);
     }
     
     

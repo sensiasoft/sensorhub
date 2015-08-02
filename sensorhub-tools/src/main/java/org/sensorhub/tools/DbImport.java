@@ -81,7 +81,7 @@ public class DbImport
             DataComponent recordStruct = sweUtils.readComponent(dom, resultStructElt);
             Element resultEncodingElt = dom.getElement(dataStoreElt, "encoding/*");
             DataEncoding recordEncoding = sweUtils.readEncoding(dom, resultEncodingElt);
-            db.addRecordType(recordType, recordStruct, recordEncoding);
+            db.addRecordStore(recordType, recordStruct, recordEncoding);
             db.commit();
             System.out.println("Imported metadata for data store " + recordType);
             System.out.println("Importing records...");

@@ -25,7 +25,7 @@ import net.opengis.swe.v20.TextEncoding;
 import org.sensorhub.api.persistence.DataFilter;
 import org.sensorhub.api.persistence.IDataFilter;
 import org.sensorhub.api.persistence.IDataRecord;
-import org.sensorhub.api.persistence.IRecordInfo;
+import org.sensorhub.api.persistence.IRecordStoreInfo;
 import org.sensorhub.impl.persistence.perst.BasicStorageConfig;
 import org.sensorhub.impl.persistence.perst.BasicStorageImpl;
 import org.vast.cdm.common.DataStreamWriter;
@@ -85,10 +85,10 @@ public class DbExport
             // export all datastores
             final double[] timePeriod = new double[] {Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY};
                         
-            for (Entry<String, ? extends IRecordInfo> entry: db.getRecordTypes().entrySet())
+            for (Entry<String, ? extends IRecordStoreInfo> entry: db.getRecordStores().entrySet())
             {
                 String recordType = entry.getKey();
-                IRecordInfo recordInfo = entry.getValue();
+                IRecordStoreInfo recordInfo = entry.getValue();
                 DataComponent recordStruct = recordInfo.getRecordDescription();
                 DataEncoding recordEncoding = recordInfo.getRecommendedEncoding();
                 

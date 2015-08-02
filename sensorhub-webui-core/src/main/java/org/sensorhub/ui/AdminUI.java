@@ -14,6 +14,7 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.ui;
 
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -44,6 +45,9 @@ import org.slf4j.LoggerFactory;
 import com.vaadin.annotations.Theme;
 import com.vaadin.data.Item;
 import com.vaadin.data.util.converter.Converter;
+import com.vaadin.data.util.converter.ConverterFactory;
+import com.vaadin.data.util.converter.DefaultConverterFactory;
+import com.vaadin.data.util.converter.StringToIntegerConverter;
 import com.vaadin.event.Action;
 import com.vaadin.event.Action.Handler;
 import com.vaadin.event.ItemClickEvent;
@@ -52,6 +56,7 @@ import com.vaadin.server.ClassResource;
 import com.vaadin.server.Resource;
 import com.vaadin.server.ThemeResource;
 import com.vaadin.server.VaadinRequest;
+import com.vaadin.server.VaadinSession;
 import com.vaadin.ui.Accordion;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.HorizontalLayout;
@@ -75,17 +80,16 @@ import com.vaadin.ui.Window.CloseListener;
 public class AdminUI extends com.vaadin.ui.UI
 {
     private static final long serialVersionUID = 4069325051233125115L;
-    private static Action ADD_MODULE_ACTION = new Action("Add Module", new ThemeResource("icons/module_add.png"));
-    private static Action REMOVE_MODULE_ACTION = new Action("Remove Module", new ThemeResource("icons/module_delete.png"));
-    private static Action ENABLE_MODULE_ACTION = new Action("Enable", new ThemeResource("icons/enable.png"));
-    private static Action DISABLE_MODULE_ACTION = new Action("Disable", new ThemeResource("icons/disable.gif"));
-    private static Resource LOGO_ICON = new ClassResource("/sensorhub_logo_128.png");
-    private static Resource ACC_TAB_ICON = new ThemeResource("icons/enable.png");
     
-    protected final static String STYLE_SECTION_BUTTONS = "section-buttons";
-    protected final static String STYLE_LOGO = "logo";
+    private static final Action ADD_MODULE_ACTION = new Action("Add Module", new ThemeResource("icons/module_add.png"));
+    private static final Action REMOVE_MODULE_ACTION = new Action("Remove Module", new ThemeResource("icons/module_delete.png"));
+    private static final Action ENABLE_MODULE_ACTION = new Action("Enable", new ThemeResource("icons/enable.png"));
+    private static final Action DISABLE_MODULE_ACTION = new Action("Disable", new ThemeResource("icons/disable.gif"));
+    private static final Resource LOGO_ICON = new ClassResource("/sensorhub_logo_128.png");
+    private static final Resource ACC_TAB_ICON = new ThemeResource("icons/enable.png");    
+    private static final String STYLE_LOGO = "logo";
     
-    private static final Logger log = LoggerFactory.getLogger(AdminUI.class);
+    protected static final Logger log = LoggerFactory.getLogger(AdminUI.class);
     private static AdminUI singleton;
     
     
@@ -153,9 +157,9 @@ public class AdminUI extends com.vaadin.ui.UI
         try
         {
             // load default panel builders
-            configClass = SensorConfig.class.getCanonicalName();
-            customPanels.put(configClass, SensorAdminPanel.class);        
-        
+            customPanels.put(SensorConfig.class.getCanonicalName(), SensorAdminPanel.class);        
+            customPanels.put(StorageConfig.class.getCanonicalName(), StorageAdminPanel.class);
+            
             // load custom panel builders defined in config
             for (CustomUIConfig customPanel: uiConfig.customPanels)
             {
@@ -169,6 +173,30 @@ public class AdminUI extends com.vaadin.ui.UI
         {
             log.error("Error while instantiating panel builder for config class " + configClass, e);
         }
+        
+        // register new field converter for interger numbers
+        @SuppressWarnings("serial")
+        ConverterFactory converterFactory = new DefaultConverterFactory() {
+            @Override
+            protected <PRESENTATION, MODEL> Converter<PRESENTATION, MODEL> findConverter(
+                    Class<PRESENTATION> presentationType, Class<MODEL> modelType) {
+                // Handle String <-> Integer/Short/Long
+                if (presentationType == String.class &&
+                   (modelType == Long.class || modelType == Integer.class || modelType == Short.class )) {
+                    return (Converter<PRESENTATION, MODEL>) new StringToIntegerConverter() {
+                        @Override
+                        protected NumberFormat getFormat(Locale locale) {
+                            NumberFormat format = super.getFormat(Locale.US);
+                            format.setGroupingUsed(false);
+                            return format;
+                        }
+                    };
+                }
+                // Let default factory handle the rest
+                return super.findConverter(presentationType, modelType);
+            }
+        };
+        VaadinSession.getCurrent().setConverterFactory(converterFactory);
         
         // init main panels
         HorizontalSplitPanel splitPanel = new HorizontalSplitPanel();

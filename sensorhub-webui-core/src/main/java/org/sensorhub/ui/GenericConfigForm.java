@@ -43,6 +43,7 @@ import com.vaadin.ui.ComponentContainer;
 import com.vaadin.ui.CustomField;
 import com.vaadin.ui.Field;
 import com.vaadin.ui.FormLayout;
+import com.vaadin.ui.GridLayout;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
@@ -121,7 +122,7 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
                 {
                     if (!((ContainerProperty)prop).getValue().getItemIds().isEmpty())
                     {
-                        Component subform = buildTabs(propId, (ContainerProperty)prop);
+                        Component subform = buildTabs((String)propId, (ContainerProperty)prop);
                         otherWidgets.add(subform);
                     }
                 }
@@ -219,13 +220,11 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
         
         if (prop.getType().equals(String.class))
             field.setWidth(500, Unit.PIXELS);
-        else if (prop.getType().equals(int.class) || prop.getType().equals(Integer.class))
-            field.setWidth(100, Unit.PIXELS);
-        else if (prop.getType().equals(float.class) || prop.getType().equals(Float.class))
-            field.setWidth(100, Unit.PIXELS);
-        else if (prop.getType().equals(double.class) || prop.getType().equals(Double.class))
-            field.setWidth(100, Unit.PIXELS);
-        
+        else if (prop.getType().equals(int.class) || prop.getType().equals(Integer.class) ||
+                prop.getType().equals(float.class) || prop.getType().equals(Float.class) ||
+                prop.getType().equals(double.class) || prop.getType().equals(Double.class))
+            field.setWidth(200, Unit.PIXELS);
+                
         if (field instanceof TextField)
             ((TextField)field).setNullRepresentation("");
         
@@ -235,37 +234,43 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
     
     protected ComponentContainer buildSubForm(final String propId, final ComplexProperty prop)
     {
+        Class<?> beanType = prop.getBeanType();
         MyBeanItem<Object> childBeanItem = prop.getValue();
+        
+        // generate custom form for this bean type
         IModuleConfigForm subform;
         if (childBeanItem != null)
             subform = AdminUI.getInstance().generateForm(childBeanItem.getBean().getClass());
         else
-            subform = new GenericConfigForm();
+            subform = AdminUI.getInstance().generateForm(beanType);
         subform.build(propId, prop);
-                
-        // also add change button if sub object is null or type can be changed
-        if (childBeanItem == null)
-        {
-            addChangeButton(subform, propId, prop, prop.getBeanType());
-        }
-        else
-        {
-            Class<?> changeableBeanType = subform.getPolymorphicBeanParentType();
-            if (changeableBeanType != null)
-                addChangeButton(subform, propId, prop, changeableBeanType);
+        
+        // add change button if property is changeable module config
+        Class<?> changeableBeanType = subform.getPolymorphicBeanParentType();
+        if (changeableBeanType != null)
+            addChangeModuleButton(subform, propId, prop, changeableBeanType);
+        else if (ModuleConfig.class.isAssignableFrom(beanType))
+            addChangeModuleButton(subform, propId, prop, beanType);
+        
+        // add change button if property can have multiple types
+        Map<String, Class<?>> possibleTypes = getPossibleTypes(propId);
+        if (!(possibleTypes == null || possibleTypes.isEmpty()))
+            addChangeObjectButton(subform, propId, prop, possibleTypes);
+        
+        if (childBeanItem != null)
             allForms.add(subform);
-        }
         
         return subform;
     }
     
     
-    protected void addChangeButton(final ComponentContainer parentForm, final String propId, final ComplexProperty prop, final Class<?> objectType)
+    protected void addChangeModuleButton(final ComponentContainer parentForm, final String propId, final ComplexProperty prop, final Class<?> objectType)
     {
-        final Button chgButton = new Button("Change");
-        chgButton.addStyleName(STYLE_QUIET);
-        //chgButton.addStyleName(AdminUI.STYLE_SECTION_BUTTONS);
-        //chgButton.setIcon(APPLY_ICON);       
+        final Button chgButton = new Button("Modify");
+        //chgButton.addStyleName(STYLE_QUIET);
+        chgButton.addStyleName(STYLE_SMALL);
+        chgButton.addStyleName(STYLE_SECTION_BUTTONS);
+        chgButton.setIcon(REFRESH_ICON);
         
         chgButton.addClickListener(new ClickListener() {
             private static final long serialVersionUID = 1L;
@@ -282,7 +287,7 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
                         prop.setValue(newItem);
                         IModuleConfigForm newForm = AdminUI.getInstance().generateForm(config.getClass());
                         newForm.build(propId, prop);
-                        newForm.addComponent(chgButton);
+                        ((VerticalLayout)newForm).addComponent(chgButton, 0);
                                                 
                         // replace old form in UI
                         allForms.add(newForm);
@@ -295,14 +300,62 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
                 AdminUI.getInstance().addWindow(popup);
             }
         });
+        
         chgButton.setData(parentForm);
-        parentForm.addComponent(chgButton);
+        ((VerticalLayout)parentForm).addComponent(chgButton, 0);
     }
     
     
-    protected Component buildTabs(final Object propId, final ContainerProperty prop)
+    protected void addChangeObjectButton(final ComponentContainer parentForm, final String propId, final ComplexProperty prop, final Map<String, Class<?>> typeList)
     {
-        VerticalLayout layout = new VerticalLayout();
+        final Button chgButton = new Button("Modify");
+        //chgButton.addStyleName(STYLE_QUIET);
+        chgButton.addStyleName(STYLE_SMALL);
+        chgButton.addStyleName(STYLE_SECTION_BUTTONS);
+        chgButton.setIcon(REFRESH_ICON);
+        
+        chgButton.addClickListener(new ClickListener() {
+            private static final long serialVersionUID = 1L;
+            public void buttonClick(ClickEvent event)
+            {
+                // show popup to select among available module types
+                ObjectTypeSelectionPopup popup = new ObjectTypeSelectionPopup("Select Type", typeList, new ObjectTypeSelectionCallback() {
+                    public void typeSelected(Class<?> objectType)
+                    {
+                        try
+                        {
+                            // regenerate form
+                            MyBeanItem<Object> newItem = new MyBeanItem<Object>(objectType.newInstance(), propId + ".");
+                            prop.setValue(newItem);
+                            IModuleConfigForm newForm = AdminUI.getInstance().generateForm(objectType);
+                            newForm.build(propId, prop);
+                            ((VerticalLayout)newForm).addComponent(chgButton, 0);
+                                                    
+                            // replace old form in UI
+                            allForms.add(newForm);
+                            allForms.remove((IModuleConfigForm)chgButton.getData());
+                            replaceComponent((Component)chgButton.getData(), newForm);
+                            chgButton.setData(newForm);
+                        }
+                        catch (Exception e)
+                        {
+                            Notification.show("Error", e.getMessage(), Notification.Type.ERROR_MESSAGE);
+                        }
+                    }
+                });
+                popup.setModal(true);
+                AdminUI.getInstance().addWindow(popup);
+            }
+        });
+        chgButton.setData(parentForm);
+        ((VerticalLayout)parentForm).addComponent(chgButton, 0);
+    }
+    
+    
+    protected Component buildTabs(final String propId, final ContainerProperty prop)
+    {
+        GridLayout layout = new GridLayout();
+        layout.setWidth(100.0f, Unit.PERCENTAGE);
         
         // title bar
         HorizontalLayout titleBar = new HorizontalLayout();
@@ -347,11 +400,11 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
                         String title = "Please select the desired option";
                         Map<String, Class<?>> typeList = GenericConfigForm.this.getPossibleTypes(propId);
                         ObjectTypeSelectionPopup popup = new ObjectTypeSelectionPopup(title, typeList, new ObjectTypeSelectionCallback() {
-                            public void typeSelected(Class<?> clazz)
+                            public void typeSelected(Class<?> objectType)
                             {
                                 try
                                 {
-                                    MyBeanItem<Object> childBeanItem = prop.getValue().addBean(clazz.newInstance(), ((String)propId) + PROP_SEP);
+                                    MyBeanItem<Object> childBeanItem = prop.getValue().addBean(objectType.newInstance(), ((String)propId) + PROP_SEP);
                                     prop.setValue(prop.getValue());
                                     IModuleConfigForm subform = AdminUI.getInstance().generateForm(childBeanItem.getBean().getClass());
                                     subform.build(null, childBeanItem);
@@ -381,7 +434,7 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
         // add icon on last tab
         tabs.addTab(new VerticalLayout(), "", UIConstants.ADD_ICON);
         
-        layout.addComponent(tabs);                
+        layout.addComponent(tabs);
         return layout;
     }
     
@@ -443,7 +496,7 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
 
 
     @Override
-    public Map<String, Class<?>> getPossibleTypes(Object propId)
+    public Map<String, Class<?>> getPossibleTypes(String propId)
     {
         return Collections.EMPTY_MAP;
     }

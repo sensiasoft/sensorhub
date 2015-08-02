@@ -22,7 +22,7 @@ import org.sensorhub.api.module.ModuleConfig;
 public class AdminUIConfig extends ModuleConfig
 {
     
-    public String widgetSet;
+    public String widgetSet = "org.sensorhub.ui.SensorHubWidgetSet";
     
     
     public List<CustomUIConfig> customPanels = new ArrayList<CustomUIConfig>();

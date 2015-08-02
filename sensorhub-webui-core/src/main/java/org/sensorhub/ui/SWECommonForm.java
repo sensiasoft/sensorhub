@@ -41,9 +41,9 @@ public class SWECommonForm extends VerticalLayout
     boolean showArrayTable;
     
     
-    public Component buildForm(DataComponent dataComponent)
+    public SWECommonForm(DataComponent dataComponent)
     {
-        return buildWidget(dataComponent, true);
+        addComponent(buildWidget(dataComponent, true));
     }
     
     
@@ -178,6 +178,17 @@ public class SWECommonForm extends VerticalLayout
         if (def != null)
             tooltip.append("<p><b>Definition: </b><a target='_blank' href='").append(def).append("'/>").append(def).append("</a></p>");
         
+        if (dataComponent instanceof HasRefFrames)
+        {
+            String refFrame = ((HasRefFrames) dataComponent).getReferenceFrame();
+            if (refFrame != null)
+                tooltip.append("<p><b>Ref Frame: </b><a target='_blank' href='").append(refFrame).append("'/>").append(refFrame).append("</a></p>");
+            
+            String localFrame = ((HasRefFrames) dataComponent).getLocalFrame();
+            if (localFrame != null)
+                tooltip.append("<p><b>Local Frame: </b><a target='_blank' href='").append(localFrame).append("'/>").append(localFrame).append("</a></p>");
+        }
+        
         if (dataComponent instanceof HasUom)
         {
             UnitReference unit = ((HasUom) dataComponent).getUom();
@@ -196,17 +207,6 @@ public class SWECommonForm extends VerticalLayout
             if (uom != null)
                 tooltip.append("<p><b>Unit: </b>").append(uom).append("</p>");
         }
-        
-        if (dataComponent instanceof HasRefFrames)
-        {
-            String refFrame = ((HasRefFrames) dataComponent).getReferenceFrame();
-            if (refFrame != null)
-                tooltip.append("<p><b>Ref Frame: </b>").append(refFrame).append("</p>");
-            
-            String localFrame = ((HasRefFrames) dataComponent).getLocalFrame();
-            if (localFrame != null)
-                tooltip.append("<p><b>Local Frame: </b>").append(localFrame).append("</p>");
-        }     
         
         return tooltip.toString();
     }

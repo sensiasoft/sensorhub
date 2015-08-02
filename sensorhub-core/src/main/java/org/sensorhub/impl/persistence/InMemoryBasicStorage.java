@@ -17,6 +17,7 @@ package org.sensorhub.impl.persistence;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -37,7 +38,7 @@ import org.sensorhub.api.persistence.DataKey;
 import org.sensorhub.api.persistence.IRecordStorageModule;
 import org.sensorhub.api.persistence.IDataFilter;
 import org.sensorhub.api.persistence.IDataRecord;
-import org.sensorhub.api.persistence.IRecordInfo;
+import org.sensorhub.api.persistence.IRecordStoreInfo;
 import org.sensorhub.api.persistence.IStorageModule;
 import org.sensorhub.api.persistence.StorageConfig;
 import org.sensorhub.api.persistence.StorageEvent;
@@ -177,14 +178,14 @@ public class InMemoryBasicStorage extends AbstractModule<StorageConfig> implemen
 
 
     @Override
-    public Map<String, ? extends IRecordInfo> getRecordTypes()
+    public Map<String, ? extends IRecordStoreInfo> getRecordStores()
     {
         return Collections.unmodifiableMap(dataStores);
     }
 
 
     @Override
-    public void addRecordType(String name, DataComponent recordStructure, DataEncoding recommendedEncoding)
+    public void addRecordStore(String name, DataComponent recordStructure, DataEncoding recommendedEncoding)
     {
         TimeSeriesImpl timeSeries = new TimeSeriesImpl(recordStructure.copy(), recommendedEncoding);
         dataStores.put(name, timeSeries);
@@ -307,6 +308,13 @@ public class InMemoryBasicStorage extends AbstractModule<StorageConfig> implemen
         return dataStore.getDataTimeRange();
     }
     
+    
+    @Override
+    public Iterator<double[]> getRecordsTimeClusters(String recordType)
+    {
+        return Arrays.asList(getRecordsTimeRange(recordType)).iterator();
+    }
+    
 
     @Override
     public void storeRecord(DataKey key, DataBlock data)
@@ -403,7 +411,7 @@ public class InMemoryBasicStorage extends AbstractModule<StorageConfig> implemen
     /*
      * Implementation of an individual time series data store
      */
-    public class TimeSeriesImpl implements IRecordInfo
+    public class TimeSeriesImpl implements IRecordStoreInfo
     {
         List<DBRecord> recordList = new LinkedList<DBRecord>();;
         DataComponent recordDescription;
@@ -416,7 +424,7 @@ public class InMemoryBasicStorage extends AbstractModule<StorageConfig> implemen
         }
         
         @Override
-        public String getRecordType()
+        public String getName()
         {
             return recordDescription.getName();
         }

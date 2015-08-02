@@ -25,11 +25,15 @@ public interface UIConstants
     public final static String STYLE_H2 = "h2";
     public final static String STYLE_H3 = "h3";
     public final static String STYLE_COLORED = "colored";
+    public final static String STYLE_SMALL = "small";
     public final static String STYLE_QUIET = "quiet";
+    public final static String STYLE_SECTION_BUTTONS = "section-buttons";
     
     // constants for icon resources
     public static final Resource ADD_ICON = new ThemeResource("icons/add.gif");
     public static final Resource LINK_ICON = new ThemeResource("icons/link.png");
+    public static final Resource APPLY_ICON = new ThemeResource("icons/save.png");
+    public static final Resource REFRESH_ICON = new ThemeResource("icons/refresh.gif");
     
     // constants for messages
     public static final String MSG_REQUIRED_FIELD = "Value is required";

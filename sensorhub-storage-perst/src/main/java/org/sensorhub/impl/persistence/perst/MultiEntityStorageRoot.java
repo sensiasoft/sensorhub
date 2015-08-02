@@ -30,7 +30,7 @@ import org.sensorhub.api.persistence.IDataRecord;
 import org.sensorhub.api.persistence.IFoiFilter;
 import org.sensorhub.api.persistence.IMultiSourceStorage;
 import org.sensorhub.api.persistence.IObsStorage;
-import org.sensorhub.api.persistence.IRecordInfo;
+import org.sensorhub.api.persistence.IRecordStoreInfo;
 import org.sensorhub.impl.persistence.perst.TimeSeriesImpl.DBRecord;
 import org.vast.util.Bbox;
 
@@ -180,22 +180,22 @@ class MultiEntityStorageRoot extends ObsStorageRoot implements IObsStorage, IMul
 
 
     @Override
-    public void addRecordType(String name, DataComponent recordStructure, DataEncoding recommendedEncoding)
+    public void addRecordStore(String name, DataComponent recordStructure, DataEncoding recommendedEncoding)
     {
-        super.addRecordType(name, recordStructure, recommendedEncoding);
+        super.addRecordStore(name, recordStructure, recommendedEncoding);
         
         // also add record type to all data stores
         for (ObsStorageRoot dataStore: obsStores.values())
-            dataStore.addRecordType(name, recordStructure, recommendedEncoding);
+            dataStore.addRecordStore(name, recordStructure, recommendedEncoding);
     }
 
 
     @Override
-    public Map<String, ? extends IRecordInfo> getRecordTypes()
+    public Map<String, ? extends IRecordStoreInfo> getRecordStores()
     {
         // for now just return the ones from the first data store
         for (ObsStorageRoot dataStore: obsStores.values())
-            return dataStore.getRecordTypes();
+            return dataStore.getRecordStores();
         
         return Collections.EMPTY_MAP;
     }
@@ -208,7 +208,7 @@ class MultiEntityStorageRoot extends ObsStorageRoot implements IObsStorage, IMul
         
         for (ObsStorageRoot dataStore: obsStores.values())
         {
-            if (dataStore.getRecordTypes().containsKey(recordType))
+            if (dataStore.getRecordStores().containsKey(recordType))
                 numRecords += dataStore.getNumRecords(recordType);
         }
         
@@ -223,7 +223,7 @@ class MultiEntityStorageRoot extends ObsStorageRoot implements IObsStorage, IMul
         
         for (ObsStorageRoot dataStore: obsStores.values())
         {
-            if (dataStore.getRecordTypes().containsKey(recordType))
+            if (dataStore.getRecordStores().containsKey(recordType))
             {
                 double[] storeTimeRange = dataStore.getRecordsTimeRange(recordType);
                 if (storeTimeRange[0] < timeRange[0])

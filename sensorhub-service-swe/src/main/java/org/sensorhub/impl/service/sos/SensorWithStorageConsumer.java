@@ -52,8 +52,8 @@ public class SensorWithStorageConsumer extends SensorDataConsumer implements ISO
                 
         // add additional datastore if not already there
         String outputName = sensor.getOutputNameFromTemplateID(templateID);
-        if (!storage.getRecordTypes().containsKey(outputName))
-            storage.addRecordType(outputName, component, encoding);
+        if (!storage.getRecordStores().containsKey(outputName))
+            storage.addRecordStore(outputName, component, encoding);
         
         // publish new feature of interest
         sensor.newFeatureOfInterest(templateID, obsTemplate);

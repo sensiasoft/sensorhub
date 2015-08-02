@@ -16,15 +16,13 @@ package org.sensorhub.ui.data;
 
 import java.lang.reflect.Field;
 import org.sensorhub.api.config.DisplayInfo;
-import com.vaadin.data.util.AbstractProperty;
 
 
 @SuppressWarnings("serial")
-public class ComplexProperty extends AbstractProperty<MyBeanItem<Object>>
+public class ComplexProperty extends BaseProperty<MyBeanItem<Object>>
 {
     Object parentObj;
     MyBeanItem<Object> item;
-    Field f;
     
 
     public ComplexProperty(Object parentObj, Field f, MyBeanItem<Object> item)

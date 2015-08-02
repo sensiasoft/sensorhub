@@ -34,7 +34,7 @@ public class ObjectTypeSelectionPopup extends Window
 
     protected interface ObjectTypeSelectionCallback
     {
-        public void typeSelected(Class<?> clazz);
+        public void typeSelected(Class<?> objectType);
     }
     
     

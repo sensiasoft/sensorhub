@@ -18,12 +18,15 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
+import java.util.Timer;
+import java.util.TimerTask;
 import net.opengis.gml.v32.AbstractFeature;
 import net.opengis.sensorml.v20.AbstractProcess;
 import net.opengis.swe.v20.DataBlock;
@@ -46,7 +49,7 @@ import org.sensorhub.api.persistence.IRecordStorageModule;
 import org.sensorhub.api.persistence.IDataFilter;
 import org.sensorhub.api.persistence.IDataRecord;
 import org.sensorhub.api.persistence.IStorageModule;
-import org.sensorhub.api.persistence.IRecordInfo;
+import org.sensorhub.api.persistence.IRecordStoreInfo;
 import org.sensorhub.api.persistence.ObsKey;
 import org.sensorhub.api.persistence.StorageConfig;
 import org.sensorhub.api.persistence.StorageException;
@@ -82,17 +85,10 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
     WeakReference<IDataProducerModule<?>> dataSourceRef;
     Map<String, ScalarIndexer> timeStampIndexers = new HashMap<String, ScalarIndexer>();
     Map<String, String> currentFoiMap = new HashMap<String, String>();
+    
+    long lastCommitTime = Long.MIN_VALUE;
     String currentFoi;
-    
-    
-    @Override
-    public void updateConfig(StreamStorageConfig config) throws SensorHubException
-    {
-        stop();
-        this.config = config;
-        if (config.enabled)
-            start();
-    } 
+    Timer autoPurgeTimer;
     
     
     @Override
@@ -131,7 +127,7 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
                 configureStorageForDataSource(dataSource, storage);
             
             // otherwise just get the latest sensor description in case we were down during the last update
-            else if (dataSource.getLastDescriptionUpdate() != Double.NEGATIVE_INFINITY)
+            else if (dataSource.getLastDescriptionUpdate() != Long.MIN_VALUE)
                 storage.storeDataSourceDescription(dataSource.getCurrentDescription());
             
             // also init current FOI
@@ -152,25 +148,37 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
             }
             
             // register to data events
-            if (config.selectedOutputs == null || config.selectedOutputs.length == 0)
-            {
-                for (IStreamingDataInterface output: dataSource.getAllOutputs().values())
-                    prepareToReceiveEvents(output);
-            }
-            else
-            {
-                for (String outputName: config.selectedOutputs)
-                    prepareToReceiveEvents(dataSource.getAllOutputs().get(outputName));
-            }
+            for (IStreamingDataInterface output: getSelectedOutputs(dataSource))
+                prepareToReceiveEvents(output);
+            
+            // register to datasource change events
+            dataSource.registerListener(this);
         }
         else
             log.warn("Data source is unavailable for stream storage " + MsgUtils.moduleString(this));
+        
+        // start auto-purge timer thread if policy is specified and enabled
+        if (config.autoPurgeConfig != null && config.autoPurgeConfig.enabled)
+        {
+            final IStorageAutoPurgePolicy policy = config.autoPurgeConfig.getPolicy();
+            autoPurgeTimer = new Timer();
+            TimerTask task = new TimerTask() {
+                public void run()
+                {
+                    policy.trimStorage(storage);
+                }
+            };            
+            autoPurgeTimer.schedule(task, 0, (long)(config.autoPurgeConfig.purgePeriod*1000)); 
+        }
     }
     
     
+    /*
+     * Initializes storage by loading initial sensor description and FOI, and creating appropriate record stores
+     */
     protected void configureStorageForDataSource(IDataProducerModule<?> dataSource, IRecordStorageModule<?> storage) throws StorageException
     {
-        if (storage.getRecordTypes().size() > 0)
+        if (storage.getRecordStores().size() > 0)
             throw new RuntimeException("Storage " + MsgUtils.moduleString(storage) + " is already configured");
         
         // copy sensor description (only current or full history if supported)
@@ -201,12 +209,28 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
             }
             
             // create one data store for each sensor output
-            for (Entry<String, ? extends IStreamingDataInterface> item: dataSource.getAllOutputs().entrySet())
-            {
-                String name = item.getKey();
-                IStreamingDataInterface output = item.getValue();
-                storage.addRecordType(name, output.getRecordDescription(), output.getRecommendedEncoding());
-            }
+            for (IStreamingDataInterface output: getSelectedOutputs(dataSource))
+                storage.addRecordStore(output.getName(), output.getRecordDescription(), output.getRecommendedEncoding());
+        }
+    }
+    
+    
+    /*
+     * Gets the list of selected outputs (i.e. a subset of all data source outputs)
+     */
+    protected Collection<? extends IStreamingDataInterface> getSelectedOutputs(IDataProducerModule<?> dataSource)
+    {
+        if (config.selectedOutputs == null || config.selectedOutputs.length == 0)
+        {
+            return dataSource.getAllOutputs().values();
+        }
+        else
+        {
+            int numOutputs = config.selectedOutputs.length;
+            List <IStreamingDataInterface> selectedOutputs = new ArrayList<IStreamingDataInterface>(numOutputs);
+            for (String outputName: config.selectedOutputs)
+                selectedOutputs.add(dataSource.getAllOutputs().get(outputName));
+            return selectedOutputs;
         }
     }
     
@@ -233,12 +257,8 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
                     ((IObsStorage)storage).storeFoi(producerID, foi);
                 
                 // create one data store for each sensor output
-                for (Entry<String, ? extends IStreamingDataInterface> item: dataSource.getAllOutputs().entrySet())
-                {
-                    String name = item.getKey();
-                    IStreamingDataInterface output = item.getValue();
-                    dataStore.addRecordType(name, output.getRecordDescription(), output.getRecommendedEncoding());
-                }
+                for (IStreamingDataInterface output: getSelectedOutputs(dataSource))
+                    dataStore.addRecordStore(output.getName(), output.getRecordDescription(), output.getRecommendedEncoding());
             }
         }
     }
@@ -267,23 +287,18 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
             IDataProducerModule<?> dataSource = dataSourceRef.get();
             if (dataSource != null)
             {            
-                if (config.selectedOutputs == null || config.selectedOutputs.length == 0)
-                {
-                    for (IStreamingDataInterface output: dataSource.getAllOutputs().values())
-                        output.unregisterListener(this);
-                }
-                else
-                {
-                    for (String outputName: config.selectedOutputs)
-                        dataSource.getAllOutputs().get(outputName).unregisterListener(this);
-                }
+                for (IStreamingDataInterface output: getSelectedOutputs(dataSource))
+                    output.unregisterListener(this);
             }
             
             dataSourceRef = null;
         }
+        
+        if (autoPurgeTimer != null)
+            autoPurgeTimer.cancel();
 
         if (storage != null)
-            storage.stop();        
+            storage.stop();
     }
 
 
@@ -338,7 +353,14 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
                         log.trace("Storing record " + key.timeStamp + " for output " + outputName);
                 }
                 
-                storage.commit();
+                // commit only when necessary
+                long now = System.currentTimeMillis();
+                if (lastCommitTime == Long.MIN_VALUE || (now - lastCommitTime) > config.minCommitPeriod)
+                {
+                    storage.commit();
+                    lastCommitTime = now;
+                }
+                
                 storage.setAutoCommit(saveAutoCommitState);
             }
             
@@ -376,11 +398,11 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
     
 
     @Override
-    public void addRecordType(String name, DataComponent recordStructure, DataEncoding recommendedEncoding)
+    public void addRecordStore(String name, DataComponent recordStructure, DataEncoding recommendedEncoding)
     {
         // register new record type with underlying storage
-        if (!storage.getRecordTypes().containsKey(name))
-            storage.addRecordType(name, recordStructure, recommendedEncoding);
+        if (!storage.getRecordStores().containsKey(name))
+            storage.addRecordStore(name, recordStructure, recommendedEncoding);
         
         // prepare to receive events
         IDataProducerModule<?> dataSource = dataSourceRef.get();
@@ -488,9 +510,9 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
 
 
     @Override
-    public Map<String, ? extends IRecordInfo> getRecordTypes()
+    public Map<String, ? extends IRecordStoreInfo> getRecordStores()
     {
-        return storage.getRecordTypes();
+        return storage.getRecordStores();
     }
 
 
@@ -532,6 +554,13 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
     public double[] getRecordsTimeRange(String recordType)
     {
         return storage.getRecordsTimeRange(recordType);
+    }
+    
+    
+    @Override
+    public Iterator<double[]> getRecordsTimeClusters(String recordType)
+    {
+        return storage.getRecordsTimeClusters(recordType);
     }
 
 

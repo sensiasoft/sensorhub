@@ -25,7 +25,7 @@ import net.opengis.swe.v20.DataEncoding;
 import org.sensorhub.api.persistence.IBasicStorage;
 import org.sensorhub.api.persistence.IDataRecord;
 import org.sensorhub.api.persistence.IObsFilter;
-import org.sensorhub.api.persistence.IRecordInfo;
+import org.sensorhub.api.persistence.IRecordStoreInfo;
 import org.sensorhub.api.persistence.ObsFilter;
 import org.sensorhub.api.persistence.ObsKey;
 import org.sensorhub.api.sensor.SensorException;
@@ -66,7 +66,7 @@ public class StorageDataProvider implements ISOSDataProvider
     
     class StorageState
     {
-        IRecordInfo recordInfo;
+        IRecordStoreInfo recordInfo;
         Iterator<? extends IDataRecord> recordIterator;
         IDataRecord nextRecord;
     }
@@ -92,14 +92,14 @@ public class StorageDataProvider implements ISOSDataProvider
             timePeriod = null;
         
         // loop through all outputs and connect to the ones containing observables we need
-        for (Entry<String, ? extends IRecordInfo> dsEntry: storage.getRecordTypes().entrySet())
+        for (Entry<String, ? extends IRecordStoreInfo> dsEntry: storage.getRecordStores().entrySet())
         {
             // skip hidden outputs
             if (config.hiddenOutputs != null && config.hiddenOutputs.contains(dsEntry.getKey()))
                 continue;
             
-            IRecordInfo recordInfo = dsEntry.getValue();
-            String recordType = recordInfo.getRecordType();
+            IRecordStoreInfo recordInfo = dsEntry.getValue();
+            String recordType = recordInfo.getName();
             
             // keep it if we can find one of the observables
             DataIterator it = new DataIterator(recordInfo.getRecordDescription());

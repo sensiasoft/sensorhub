@@ -36,7 +36,7 @@ import org.sensorhub.api.persistence.DataKey;
 import org.sensorhub.api.persistence.IRecordStorageModule;
 import org.sensorhub.api.persistence.IDataFilter;
 import org.sensorhub.api.persistence.IDataRecord;
-import org.sensorhub.api.persistence.IRecordInfo;
+import org.sensorhub.api.persistence.IRecordStoreInfo;
 import org.sensorhub.test.TestUtils;
 import org.vast.data.BinaryEncodingImpl;
 import org.vast.data.CountImpl;
@@ -76,7 +76,7 @@ public abstract class AbstractTestBasicStorage<StorageType extends IRecordStorag
     {
         DataComponent recordDesc = new QuantityImpl();
         recordDesc.setName("ds1");
-        storage.addRecordType(recordDesc.getName(), recordDesc, new TextEncodingImpl());
+        storage.addRecordStore(recordDesc.getName(), recordDesc, new TextEncodingImpl());
         return recordDesc;
     }
     
@@ -92,7 +92,7 @@ public abstract class AbstractTestBasicStorage<StorageType extends IRecordStorag
         recordDesc.addComponent("c1", q);
         recordDesc.addComponent("c2", new CountImpl());
         recordDesc.addComponent("c3", new TextImpl());
-        storage.addRecordType(recordDesc.getName(), recordDesc, new TextEncodingImpl());
+        storage.addRecordStore(recordDesc.getName(), recordDesc, new TextEncodingImpl());
         return recordDesc;
     }
     
@@ -103,7 +103,7 @@ public abstract class AbstractTestBasicStorage<StorageType extends IRecordStorag
         recordDesc.setName("ds3");
         recordDesc.setDefinition("urn:auth:blabla:array-stuff");
         ((DataArray)recordDesc).setElementType("elt", nestedRec);
-        storage.addRecordType(recordDesc.getName(), recordDesc, new BinaryEncodingImpl());
+        storage.addRecordStore(recordDesc.getName(), recordDesc, new BinaryEncodingImpl());
         return recordDesc;
     }
     
@@ -111,18 +111,18 @@ public abstract class AbstractTestBasicStorage<StorageType extends IRecordStorag
     @Test
     public void testCreateDataStores() throws Exception
     {
-        Map<String, ? extends IRecordInfo> recordTypes;
+        Map<String, ? extends IRecordStoreInfo> recordTypes;
         
         DataComponent recordDs1 = createDs1();
-        recordTypes = storage.getRecordTypes();
+        recordTypes = storage.getRecordStores();
         assertEquals(1, recordTypes.size());
         
         DataComponent recordDs2 = createDs2();
-        recordTypes = storage.getRecordTypes();        
+        recordTypes = storage.getRecordStores();        
         assertEquals(2, recordTypes.size());  
         
         forceReadBackFromStorage();
-        recordTypes = storage.getRecordTypes();
+        recordTypes = storage.getRecordStores();
         TestUtils.assertEquals(recordDs1, recordTypes.get(recordDs1.getName()).getRecordDescription());
         assertEquals(TextEncodingImpl.class, recordTypes.get(recordDs1.getName()).getRecommendedEncoding().getClass());
         
@@ -131,7 +131,7 @@ public abstract class AbstractTestBasicStorage<StorageType extends IRecordStorag
         
         DataComponent recordDs3 = createDs3(recordDs2);
         forceReadBackFromStorage();
-        recordTypes = storage.getRecordTypes();
+        recordTypes = storage.getRecordStores();
         assertEquals(3, recordTypes.size());        
         TestUtils.assertEquals(recordDs3, recordTypes.get(recordDs3.getName()).getRecordDescription());
         assertEquals(BinaryEncodingImpl.class, recordTypes.get(recordDs3.getName()).getRecommendedEncoding().getClass());

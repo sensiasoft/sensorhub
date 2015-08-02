@@ -20,11 +20,7 @@ import org.sensorhub.ui.api.IModuleConfigForm;
 import org.sensorhub.ui.api.IModuleAdminPanel;
 import org.sensorhub.ui.api.UIConstants;
 import org.sensorhub.ui.data.MyBeanItem;
-import com.vaadin.server.Resource;
-import com.vaadin.server.ThemeResource;
-import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
-import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.VerticalLayout;
@@ -41,10 +37,9 @@ import com.vaadin.ui.Button.ClickEvent;
  * @param <ModuleType> Type of module supported by this panel builder
  * @since 0.5
  */
-public class DefaultModulePanel<ModuleType extends IModule<? extends ModuleConfig>> extends VerticalLayout implements IModuleAdminPanel<ModuleType>
+public class DefaultModulePanel<ModuleType extends IModule<? extends ModuleConfig>> extends VerticalLayout implements IModuleAdminPanel<ModuleType>, UIConstants
 {
     private static final long serialVersionUID = -3391035886386668911L;
-    private static final Resource APPLY_ICON = new ThemeResource("icons/save.png");
     
     
     @Override
@@ -56,26 +51,17 @@ public class DefaultModulePanel<ModuleType extends IModule<? extends ModuleConfi
         setMargin(false);
         setSpacing(true);
         
-        // title bar with save button
-        HorizontalLayout titleBar = new HorizontalLayout();
-        titleBar.setSizeFull();
-        titleBar.setSpacing(true);
-        
-        // create label with module name
+        // label with module name
         String moduleName = getTitle(beanItem.getBean());
         Label title = new Label(moduleName);
-        title.setStyleName(UIConstants.STYLE_H2);
-        titleBar.addComponent(title);
+        title.setStyleName(STYLE_H2);
+        addComponent(title);
         
         // apply changes button
         Button applyButton = new Button("Apply Changes");
         applyButton.setIcon(APPLY_ICON);
-        titleBar.addComponent(applyButton);
-        titleBar.setComponentAlignment(title, Alignment.MIDDLE_LEFT);
-        titleBar.setComponentAlignment(applyButton, Alignment.MIDDLE_RIGHT);
-        titleBar.setExpandRatio(title, 0.8f);
-        titleBar.setExpandRatio(applyButton, 0.2f);
-        addComponent(titleBar);
+        applyButton.addStyleName("apply-button");
+        addComponent(applyButton);
         
         // config form
         final IModuleConfigForm form = getConfigForm(beanItem, module);
@@ -94,6 +80,7 @@ public class DefaultModulePanel<ModuleType extends IModule<? extends ModuleConfi
                 }
                 catch (Exception e)
                 {
+                    AdminUI.log.error("Error while updating module configuration", e);
                     Notification.show("Error", e.getMessage(), Notification.Type.ERROR_MESSAGE);
                 }
             }

@@ -30,6 +30,6 @@ public class ObsStorageConfig extends StorageConfig
 	 * ID of external feature storage where the actual feature descriptions
 	 * are stored. If null, features are stored in the observation storage.
 	 */
-	public String externalFeatureStorageID;
+	//public String externalFeatureStorageID;
 
 }

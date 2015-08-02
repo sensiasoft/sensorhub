@@ -35,7 +35,7 @@
     "name": "Fake Weather Sensor",
     "enabled": true,
     "moduleClass": "org.sensorhub.impl.sensor.fakeweather.FakeWeatherSensor",
-    "sensorML": null,
+    "sensorML": "base_description.xml",
     "autoActivate": true,
     "enableHistory": false,
     "hiddenIO": null

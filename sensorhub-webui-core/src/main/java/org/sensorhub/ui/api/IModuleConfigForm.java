@@ -60,7 +60,7 @@ public interface IModuleConfigForm extends ComponentContainer
      * @param propId property ID
      * @return map of names to types assignable to that property
      */
-    public Map<String, Class<?>> getPossibleTypes(Object propId);
+    public Map<String, Class<?>> getPossibleTypes(String propId);
     
     
     /**

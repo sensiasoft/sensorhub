@@ -12,29 +12,29 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
  
 ******************************* END LICENSE BLOCK ***************************/
 
-package org.sensorhub.api.persistence;
+package org.sensorhub.impl.persistence;
 
-import net.opengis.swe.v20.DataComponent;
-import net.opengis.swe.v20.DataEncoding;
+import org.sensorhub.api.config.DisplayInfo;
 
 
-public interface IRecordInfo
+/**
+ * <p>
+ * Base configuration for automatic storage purge policies
+ * </p>
+ *
+ * @author Alex Robin <alex.robin@sensiasoftware.com>
+ * @since Jul 25, 2015
+ */
+public abstract class StorageAutoPurgeConfig
 {
     
-    /**
-     * @return Name of record type
-     */
-    public String getRecordType();
+    @DisplayInfo(desc="Uncheck to disable auto-purge temporarily")
+    public boolean enabled = true;
     
     
-    /**
-     * @return Description of data blocks persisted in this data store
-     */
-    public DataComponent getRecordDescription();
+    @DisplayInfo(label="Purge Execution Period", desc="Execution period of the purge policy (in seconds)")
+    public double purgePeriod = 3600.0;
+
     
-    
-    /**
-     * @return Recommended encoding for records contained in this data store
-     */
-    public DataEncoding getRecommendedEncoding();
+    public abstract IStorageAutoPurgePolicy getPolicy();
 }

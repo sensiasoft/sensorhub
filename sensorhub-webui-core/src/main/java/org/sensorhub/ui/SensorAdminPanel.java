@@ -21,10 +21,7 @@ import org.sensorhub.api.sensor.ISensorControlInterface;
 import org.sensorhub.api.sensor.ISensorDataInterface;
 import org.sensorhub.api.sensor.ISensorModule;
 import org.sensorhub.ui.api.IModuleAdminPanel;
-import org.sensorhub.ui.api.UIConstants;
 import org.sensorhub.ui.data.MyBeanItem;
-import com.vaadin.server.Resource;
-import com.vaadin.server.ThemeResource;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
@@ -51,7 +48,6 @@ import com.vaadin.ui.VerticalLayout;
 public class SensorAdminPanel extends DefaultModulePanel<ISensorModule<?>> implements IModuleAdminPanel<ISensorModule<?>>
 {
     private static final long serialVersionUID = 9206002459600214988L;
-    private static final Resource REFRESH_ICON = new ThemeResource("icons/refresh.gif");
     Panel obsPanel, statusPanel, commandsPanel;
     
     
@@ -61,7 +57,7 @@ public class SensorAdminPanel extends DefaultModulePanel<ISensorModule<?>> imple
         super.build(beanItem, module);       
         
         // add section label
-        final VerticalLayout form = new VerticalLayout();
+        final GridLayout form = new GridLayout();
         form.setWidth(100.0f, Unit.PERCENTAGE);
         form.setMargin(false);
         form.setSpacing(true);
@@ -71,16 +67,16 @@ public class SensorAdminPanel extends DefaultModulePanel<ISensorModule<?>> imple
         HorizontalLayout titleBar = new HorizontalLayout();
         titleBar.setSpacing(true);
         Label sectionLabel = new Label("Inputs/Outputs");
-        sectionLabel.addStyleName(UIConstants.STYLE_H3);
-        sectionLabel.addStyleName(UIConstants.STYLE_COLORED);
+        sectionLabel.addStyleName(STYLE_H3);
+        sectionLabel.addStyleName(STYLE_COLORED);
         titleBar.addComponent(sectionLabel);
         titleBar.setComponentAlignment(sectionLabel, Alignment.MIDDLE_LEFT);
         
         // refresh button to show latest record
-        Button refreshButton = new Button();
-        refreshButton.setDescription("Refresh Data");
+        Button refreshButton = new Button("Refresh");
+        refreshButton.setDescription("Load latest data from sensor");
         refreshButton.setIcon(REFRESH_ICON);
-        refreshButton.addStyleName(UIConstants.STYLE_QUIET);
+        refreshButton.addStyleName(STYLE_QUIET);
         titleBar.addComponent(refreshButton);
         titleBar.setComponentAlignment(refreshButton, Alignment.MIDDLE_LEFT);
         refreshButton.addClickListener(new ClickListener() {
@@ -100,11 +96,10 @@ public class SensorAdminPanel extends DefaultModulePanel<ISensorModule<?>> imple
     }
     
     
-    protected void rebuildSwePanels(VerticalLayout form, ISensorModule<?> module)
+    protected void rebuildSwePanels(GridLayout form, ISensorModule<?> module)
     {
         if (module != null)
         {
-            SWECommonForm sweFormBuilder = new SWECommonForm();
             Panel oldPanel;
             
             // measurement outputs
@@ -118,7 +113,7 @@ public class SensorAdminPanel extends DefaultModulePanel<ISensorModule<?>> imple
                     dataStruct.setData(latestRecord);
                 
                 // data structure
-                Component sweForm = sweFormBuilder.buildForm(dataStruct);
+                Component sweForm = new SWECommonForm(dataStruct);
                 ((Layout)obsPanel.getContent()).addComponent(sweForm);
             }  
             
@@ -132,7 +127,7 @@ public class SensorAdminPanel extends DefaultModulePanel<ISensorModule<?>> imple
             statusPanel = newPanel("Status Outputs");
             for (ISensorDataInterface output: module.getStatusOutputs().values())
             {
-                Component sweForm = sweFormBuilder.buildForm(output.getRecordDescription());
+                Component sweForm = new SWECommonForm(output.getRecordDescription());
                 ((Layout)statusPanel.getContent()).addComponent(sweForm);
             }           
 
@@ -146,7 +141,7 @@ public class SensorAdminPanel extends DefaultModulePanel<ISensorModule<?>> imple
             commandsPanel = newPanel("Command Inputs");
             for (ISensorControlInterface input: module.getCommandInputs().values())
             {
-                Component sweForm = sweFormBuilder.buildForm(input.getCommandDescription());
+                Component sweForm = new SWECommonForm(input.getCommandDescription());
                 ((Layout)commandsPanel.getContent()).addComponent(sweForm);
             }           
 
@@ -161,7 +156,7 @@ public class SensorAdminPanel extends DefaultModulePanel<ISensorModule<?>> imple
     protected Panel newPanel(String title)
     {
         Panel panel = new Panel(title);
-        GridLayout layout = new GridLayout(2, 10);
+        VerticalLayout layout = new VerticalLayout();
         layout.setSizeFull();
         layout.setMargin(true);
         layout.setSpacing(true);

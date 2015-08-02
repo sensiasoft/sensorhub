@@ -15,15 +15,12 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 package org.sensorhub.ui.data;
 
 import java.lang.reflect.Field;
-import org.sensorhub.api.config.DisplayInfo;
-import com.vaadin.data.util.AbstractProperty;
 
 
 @SuppressWarnings("serial")
-public class FieldProperty extends AbstractProperty<Object>
+public class FieldProperty extends BaseProperty<Object>
 {
     Object instance;
-    Field f;
 
 
     public FieldProperty(Object instance, Field f)
@@ -108,25 +105,5 @@ public class FieldProperty extends AbstractProperty<Object>
         }
         
         return type;
-    }
-    
-    
-    public String getLabel()
-    {
-        DisplayInfo ann = f.getAnnotation(DisplayInfo.class);
-        if (ann != null)
-            return ann.label();
-        else
-            return null;
-    }
-    
-    
-    public String getDescription()
-    {
-        DisplayInfo ann = f.getAnnotation(DisplayInfo.class);
-        if (ann != null)
-            return ann.desc();
-        else
-            return null;
     }
 }

@@ -29,7 +29,7 @@ import org.garret.perst.Storage;
 import org.sensorhub.api.persistence.DataKey;
 import org.sensorhub.api.persistence.IDataFilter;
 import org.sensorhub.api.persistence.IDataRecord;
-import org.sensorhub.api.persistence.IRecordInfo;
+import org.sensorhub.api.persistence.IRecordStoreInfo;
 
 
 /**
@@ -40,7 +40,7 @@ import org.sensorhub.api.persistence.IRecordInfo;
  * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @since Jan 7, 2015
  */
-class TimeSeriesImpl extends Persistent implements IRecordInfo
+class TimeSeriesImpl extends Persistent implements IRecordStoreInfo
 {
     static Key KEY_DATA_START_ALL_TIME = new Key(Double.NEGATIVE_INFINITY);
     static Key KEY_DATA_END_ALL_TIME = new Key(Double.POSITIVE_INFINITY);
@@ -95,7 +95,7 @@ class TimeSeriesImpl extends Persistent implements IRecordInfo
 
 
     @Override
-    public String getRecordType()
+    public String getName()
     {
         return recordDescription.getName();
     }
@@ -145,8 +145,10 @@ class TimeSeriesImpl extends Persistent implements IRecordInfo
 
     Iterator<DataBlock> getDataBlockIterator(IDataFilter filter)
     {
-        Key keyFirst = new Key(filter.getTimeStampRange()[0]);
-        Key keyLast = new Key(filter.getTimeStampRange()[1]);
+        double[] timeRange = filter.getTimeStampRange();
+        Key keyFirst = new Key(timeRange == null ? Double.NEGATIVE_INFINITY : timeRange[0]);
+        Key keyLast = new Key(timeRange == null ? Double.POSITIVE_INFINITY : timeRange[1]);
+        
         return recordIndex.iterator(keyFirst, keyLast, Index.ASCENT_ORDER);
     }
 
@@ -160,8 +162,10 @@ class TimeSeriesImpl extends Persistent implements IRecordInfo
 
     Iterator<DBRecord> getRecordIterator(IDataFilter filter)
     {
-        Key keyFirst = new Key(filter.getTimeStampRange()[0]);
-        Key keyLast = new Key(filter.getTimeStampRange()[1]);
+        double[] timeRange = filter.getTimeStampRange();
+        Key keyFirst = new Key(timeRange == null ? Double.NEGATIVE_INFINITY : timeRange[0]);
+        Key keyLast = new Key(timeRange == null ? Double.POSITIVE_INFINITY : timeRange[1]);
+        
         final IterableIterator<Entry<Object, DataBlock>> it = recordIndex.entryIterator(keyFirst, keyLast, Index.ASCENT_ORDER);
         return new Iterator<DBRecord>()
         {
@@ -216,8 +220,8 @@ class TimeSeriesImpl extends Persistent implements IRecordInfo
         while (it.hasNext())
         {
             DataBlock oldData = it.next();
-            getStorage().deallocate(oldData);
             it.remove();
+            getStorage().deallocate(oldData);
         }
 
         return count;
@@ -236,5 +240,55 @@ class TimeSeriesImpl extends Persistent implements IRecordInfo
         Entry<Object, DataBlock> last = it.next();
 
         return new double[] { (double)first.getKey(), (double)last.getKey() };
+    }
+    
+    
+    public Iterator<double[]> getRecordsTimeClusters(String recordType)
+    {
+        final IterableIterator<Entry<Object, DataBlock>> it;
+        it = recordIndex.entryIterator(KEY_DATA_START_ALL_TIME, KEY_DATA_END_ALL_TIME, Index.ASCENT_ORDER);
+        
+        return new Iterator<double[]>()
+        {
+            double lastTime = Double.NaN;
+            
+            public boolean hasNext()
+            {
+                return it.hasNext();
+            }
+
+            public double[] next()
+            {
+                double[] clusterTimeRange = new double[2];
+                clusterTimeRange[0] = lastTime;
+                
+                while (it.hasNext())
+                {
+                    // PERST doesn't load object from disk until getValue() is called so we're good here
+                    double recTime = (double)it.next().getKey();
+                    
+                    if (Double.isNaN(lastTime))
+                    {
+                        clusterTimeRange[0] = recTime;
+                        lastTime = recTime;
+                    }
+                    else
+                    {
+                        double dt = recTime - lastTime;
+                        lastTime = recTime;
+                        if (dt > 60.0)
+                            break;
+                    }
+                    
+                    clusterTimeRange[1] = recTime;
+                }
+                
+                return clusterTimeRange;
+            }
+
+            public void remove()
+            {               
+            }    
+        };
     }
 }

@@ -9,7 +9,13 @@
    <artifactId>sensorhub-webui-core</artifactId>
    <name>SensorHub Web UI Core</name>
    <description>Web based user interface for SensorHub</description>
-   <dependencies>
+   <repositories>
+     <repository>
+        <id>vaadin-addons</id>
+        <url>http://maven.vaadin.com/vaadin-addons</url>
+     </repository>
+  </repositories>
+  <dependencies>
       <dependency>
          <groupId>org.sensorhub</groupId>
          <artifactId>sensorhub-core</artifactId>
@@ -42,6 +48,18 @@
          <groupId>com.vaadin</groupId>
          <artifactId>vaadin-themes</artifactId>
          <version>7.4.0</version>
+      </dependency>
+      <dependency>
+         <groupId>org.tltv.gantt</groupId>
+         <artifactId>gantt-addon</artifactId>
+         <version>0.9.0</version>
+      </dependency>
+      <dependency>
+         <groupId>org.sensorhub</groupId>
+         <artifactId>sensorhub-widgetset</artifactId>
+         <version>7.4.0</version>
+         <scope>system</scope>
+         <systemPath>${project.basedir}/widgetset/sensorhub-widgetset/target/sensorhub-widgetset-7.4.0.jar</systemPath>
       </dependency>
    </dependencies>
    <build>

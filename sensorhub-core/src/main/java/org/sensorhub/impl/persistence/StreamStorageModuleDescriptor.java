@@ -25,7 +25,7 @@ public class StreamStorageModuleDescriptor implements IModuleProvider
     @Override
     public String getModuleName()
     {
-        return "Generic Stream Storage";
+        return "Data Stream Storage";
     }
 
     @Override

@@ -14,13 +14,13 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.ui;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
 import org.sensorhub.api.data.IDataProducerModule;
-import org.sensorhub.api.persistence.StorageConfig;
+import org.sensorhub.impl.persistence.MaxAgeAutoPurgeConfig;
 import org.sensorhub.ui.api.IModuleConfigForm;
-import org.sensorhub.ui.data.ComplexProperty;
 import com.vaadin.data.Property;
 import com.vaadin.data.validator.StringLengthValidator;
-import com.vaadin.ui.ComponentContainer;
 import com.vaadin.ui.Field;
 
 
@@ -29,6 +29,7 @@ public class GenericStorageConfigForm extends GenericConfigForm implements IModu
     private static final long serialVersionUID = 4462720978742325333L;
     public static final String PROP_STORAGE_PATH = "storagePath";
     public static final String PROP_STORAGE_CONFIG = "storageConfig";
+    public static final String PROP_AUTOPURGE = "autoPurgeConfig";
     public static final String PROP_DATASRC_ID = "dataSourceID";
     
     
@@ -47,17 +48,19 @@ public class GenericStorageConfigForm extends GenericConfigForm implements IModu
         
         return field;
     }
-
-
+    
+    
     @Override
-    protected ComponentContainer buildSubForm(String propId, ComplexProperty prop)
+    public Map<String, Class<?>> getPossibleTypes(String propId)
     {
-        ComponentContainer subform = super.buildSubForm(propId, prop);
+        if (propId.equals(PROP_AUTOPURGE))
+        {
+            Map<String, Class<?>> classList = new LinkedHashMap<String, Class<?>>();
+            classList.put("Auto Purge by Maximum Age", MaxAgeAutoPurgeConfig.class);
+            return classList;
+        }
         
-        if (prop.getValue() != null && propId.equals(PROP_STORAGE_CONFIG))
-            addChangeButton(subform, propId, prop, StorageConfig.class);
-        
-        return subform;
+        return super.getPossibleTypes(propId);
     }
 
 }

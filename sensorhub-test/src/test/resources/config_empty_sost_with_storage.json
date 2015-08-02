@@ -27,8 +27,28 @@
       "moduleClass": "org.sensorhub.impl.persistence.perst.ObsStorageImpl",
       "enabled": true
     },
-    "dataProviders": [],
-    "dataConsumers": [],
+    "dataProviders": [
+      {
+        "objClass": "org.sensorhub.impl.service.sos.SensorDataProviderConfig",
+        "sensorID": "6eef751c-dbed-4105-a545-3916061847b0",
+        "storageID": "4596f121-d4ff-4544-ae35-b7d5cdd3038c",
+        "hiddenOutputs": [],
+        "activateNotifications": false,
+        "liveDataTimeout": 10.0,
+        "enabled": true,
+        "uri": "urn:android:device:a0e0eac2fea3f614-sos",
+        "maxFois": 10
+      }
+    ],
+    "dataConsumers": [
+      {
+        "objClass": "org.sensorhub.impl.service.sos.SensorConsumerConfig",
+        "sensorID": "6eef751c-dbed-4105-a545-3916061847b0",
+        "storageID": "4596f121-d4ff-4544-ae35-b7d5cdd3038c",
+        "enabled": true,
+        "offering": "urn:android:device:a0e0eac2fea3f614-sos"
+      }
+    ],
     "ogcCapabilitiesInfo": {
       "objClass": "org.sensorhub.impl.service.ogc.OGCServiceConfig$CapabilitiesInfo",
       "title": "Test SOS-T Service",
@@ -61,6 +81,31 @@
     "id": "5cb05c9c-9e08-4fa1-8731-ff41e246bdc1",
     "moduleClass": "org.sensorhub.impl.service.sos.SOSService",
     "name": "SOS Service",
+    "enabled": true
+  },
+  {
+    "objClass": "org.sensorhub.impl.sensor.sost.SOSVirtualSensorConfig",
+    "sensorUID": "urn:android:device:a0e0eac2fea3f614",
+    "autoActivate": true,
+    "enableHistory": true,
+    "id": "6eef751c-dbed-4105-a545-3916061847b0",
+    "moduleClass": "org.sensorhub.impl.sensor.sost.SOSVirtualSensor",
+    "name": "Alex's Phone Sensors",
+    "enabled": true
+  },
+  {
+    "objClass": "org.sensorhub.impl.persistence.StreamStorageConfig",
+    "storageConfig": {
+      "objClass": "org.sensorhub.impl.persistence.perst.BasicStorageConfig",
+      "memoryCacheSize": 10240,
+      "storagePath": "urn:android:device:a0e0eac2fea3f614.dat",
+      "moduleClass": "org.sensorhub.impl.persistence.perst.ObsStorageImpl",
+      "enabled": true
+    },
+    "dataSourceID": "6eef751c-dbed-4105-a545-3916061847b0",
+    "id": "4596f121-d4ff-4544-ae35-b7d5cdd3038c",
+    "moduleClass": "org.sensorhub.impl.persistence.GenericStreamStorage",
+    "name": "Alex's Phone Sensors Storage",
     "enabled": true
   }
 ]
