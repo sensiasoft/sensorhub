@@ -12,20 +12,16 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * <p>Title: NexradUtil.java</p>
- * <p>Description:  Put general nexrad stuff in here that does not belong in UCAR_Util</p>
+ * <p>Description:  Some stuff for accessing site info and scan start times.  Probably will move this around for SensorHub project</p>
  * @author Tony Cook
  * @since Jul 15, 2011
- * 	TODO: adapt some of the other Decoder stuff from WCT for reading and util functions.
- *        - FIX DATA_TYPE for BR0,1,2,3, and other supported types- watch for unexpected effects in NexradImageBuilder and Anim classes
  */
 
 public class NexradUtil
 {	
-	public static enum DATA_TYPE { BR, DVIL, VIL };
+//	public static enum DATA_TYPE { BR, DVIL, VIL };
 	private static NexradTable nexradTable;
-	public static String LEVEL3_DVIL_STR = "DS.p134il/";  
-	public static String LEVEL3_BR_STR = "DS.p94r0/";  
-	public static String LEVEL3_ET_STR = "DS.p135et/";  
+//	public static String LEVEL3_DVIL_STR = "DS.p134il/";  
 
 	private NexradUtil() {
 	}
@@ -34,7 +30,7 @@ public class NexradUtil
 		if(!ensureTable())
 			return null;
 		if(id.length() == 3) {
-			id = "K" + id;
+			id = "K" + id;  // Hawaii radars start with P, so thiss is really a bad assumption.  Could just force clients to use 4 character id
 		}
 		return nexradTable.getSite(id);
 	}
@@ -56,18 +52,6 @@ public class NexradUtil
 		}
 
 		return true;
-	}
-
-	public static boolean is88D(String siteId) {
-		NexradSite site = getSite(siteId);
-		if(site == null)
-			return false;
-		return true;
-	}
-
-	public static boolean isTwdr(String siteId) {
-		// todo
-		return false;
 	}
 
 	//  A more reliable way to get startTime than what UcarUtil provides.  Specifically, 

@@ -68,6 +68,11 @@
         <artifactId>jcodec</artifactId>
         <version>0.1.5</version>
      </dependency>
+     <dependency>
+     	<groupId>org.sensorhub</groupId>
+     	<artifactId>sensorhub-driver-weatherStation</artifactId>
+     	<version>0.1</version>
+     </dependency>
   </dependencies>
   <parent>
      <groupId>org.sensorhub</groupId>

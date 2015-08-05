@@ -41,6 +41,20 @@
     "hiddenIO": null
   }, 
   {
+    "objClass": "org.sensorhub.impl.sensor.station.StationConfig",
+    "sensorML": null,
+    "autoActivate": true,
+    "enableHistory": true,
+    "hiddenIO": null,
+    "id": "d136b6ea-3950-4691-bf56-c84ec7d89d75",
+    "name": "Weather Station",
+    "moduleClass": "org.sensorhub.impl.sensor.station.metar.MetarSensor",
+    "enabled": true,
+    "lat": 34.6502,
+    "lon": -86.7830,
+    "elevationMeters": 917
+  },
+  {
     "objClass": "org.sensorhub.impl.processing.SMLStreamProcessConfig",
     "id": "5cb05c9c-9e08-4fa1-8731-ffade895bdc1",
     "name": "Weather Processing",
@@ -107,6 +121,14 @@
       "storagePath": "processed_weather.dat"
     }
   },
+   {
+    "objClass": "org.sensorhub.impl.persistence.perst.BasicStorageConfig",
+    "id": "5cb05c9c-9e08-4fa1-8731-ff4ff948bdc2",
+    "name": "Weather Data Storage",
+    "moduleClass": "org.sensorhub.impl.persistence.perst.BasicStorageImpl",
+    "enabled": true,
+    "storagePath": "weather_obs.dat"
+  },
   {
     "objClass": "org.sensorhub.impl.service.sos.SOSServiceConfig",
     "id": "5cb05c9c-9e08-4fa1-8731-ff41e246bdc1",
@@ -145,6 +167,14 @@
            "uri": "urn:mysos:offering04",
            "processID": "5cb05c9c-9e08-4fa1-8731-ffade895bdc1",           
            "storageID": "5cb05c9c-9e08-4fa1-8731-ff4ff948bdc3"
+       },
+        {
+           "objClass": "org.sensorhub.impl.service.sos.SensorDataProviderConfig",
+           "enabled": true,
+           "name": "Weather Station",
+           "description": "Metar Weather Station",
+           "uri": "urn:mysos:offering05",
+           "sensorID": "d136b6ea-3950-4691-bf56-c84ec7d89d75"
        }
     ],
     "ogcCapabilitiesInfo": 

@@ -1,10 +1,7 @@
 package org.sensorhub.impl.sensor.nexrad;
 
-import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
-import java.util.TreeSet;
 
 /**
  * <p>Title: Sweep.java</p>
@@ -18,18 +15,11 @@ import java.util.TreeSet;
 public class Sweep
 {
 	protected List<Radial> radials = new ArrayList<>();
-	protected double binSpacing; // 1000 vs. 999
-	protected int numBins;
+	protected double gateSpacing; // 1000 vs. 999
+	protected double rangeToFirstGate;
+	protected int numGates;
 	protected long startTimeMs;
 	String utcTimeStr;  
-	
-//	protected LatLon location;
-	@Deprecated //  use BboxXY
-	protected Rectangle2D.Double boundsr2d;  // 
-//	protected BboxXY bbox;
-	
-	public Sweep() {		// TODO Auto-generated constructor stub
-	}
 	
 	public void addRadial(Radial radial) {
 		radials.add(radial);
@@ -49,7 +39,7 @@ public class Sweep
 	
 	// ASSumes all radials have same number of bins- ok  4 now
 	public int getNumBins() {
-		return radials.get(0).numBins;
+		return radials.get(0).numGates;
 	}
 
 //	public BboxXY getBbox() {
@@ -76,18 +66,26 @@ public class Sweep
 	public Radial [] getRadialArray() {
 		return radials.toArray(new Radial[] {});
 	}
-	
-	protected Radial[] getAziumthSortedRadials() {
-		TreeSet<Radial> sortedRadials = new TreeSet<Radial>(new Comparator<Radial>() {
-			@Override
-			public int compare(Radial r1, Radial r2) {
-				return (r1.azimuth > r2.azimuth) ? 1 : -1;  // should never be equal
-			}
-		}); 
+
+	public double getRangeToFirstBin() {
+		return rangeToFirstGate;
+	}
+
+	public void setRangeToFirstBin(double rangeToFirstBin) {
+		this.rangeToFirstGate = rangeToFirstBin;
+	}
+
+	@Override
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+		sb.append("Sweep info:\n");
+		sb.append("\tsweepStartTime: " + startTimeMs + "\n");
+		sb.append("\tnumRadials: " + radials.size() + "\n");
+		sb.append("\tnumBins: " + numGates + "\n");
+		sb.append("\tbinSpacing: " + gateSpacing + "\n");
+		sb.append("\trangeToFirstBin: " + rangeToFirstGate + "\n");
 		
-		sortedRadials.addAll(radials);
-		
-		return sortedRadials.toArray(new Radial [] {});
+		return sb.toString();
 	}
 
 }
