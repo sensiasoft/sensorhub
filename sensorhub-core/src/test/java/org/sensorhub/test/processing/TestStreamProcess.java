@@ -256,7 +256,7 @@ public class TestStreamProcess implements IEventListener
         {
             if (configFile != null)
                 configFile.delete();
-            SensorHub.getInstance().stop();
+            SensorHub.getInstance().getModuleRegistry().shutdown(false, false);
         }
         catch (Exception e)
         {

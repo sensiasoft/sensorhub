@@ -385,7 +385,8 @@ public class TestSOSTService
             }
             registry.shutdown(false, false);
             
-            configFile.delete();
+            if (configFile != null)
+                configFile.delete();
         }
         catch (Exception e)
         {
