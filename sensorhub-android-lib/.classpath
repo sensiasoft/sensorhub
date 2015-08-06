@@ -13,5 +13,6 @@
 	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/sensorml-core"/>
 	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/swe-common-core"/>
 	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/swe-common-om"/>
+	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/sensorhub-driver-trupulse"/>
 	<classpathentry kind="output" path="bin/classes"/>
 </classpath>

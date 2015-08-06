@@ -17,6 +17,7 @@ package org.sensorhub.impl.persistence;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -34,11 +35,11 @@ import net.opengis.swe.v20.DataEncoding;
 import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.persistence.DataKey;
-import org.sensorhub.api.persistence.IBasicStorage;
+import org.sensorhub.api.persistence.IRecordStorageModule;
 import org.sensorhub.api.persistence.IDataFilter;
 import org.sensorhub.api.persistence.IDataRecord;
+import org.sensorhub.api.persistence.IRecordStoreInfo;
 import org.sensorhub.api.persistence.IStorageModule;
-import org.sensorhub.api.persistence.ITimeSeriesDataStore;
 import org.sensorhub.api.persistence.StorageConfig;
 import org.sensorhub.api.persistence.StorageEvent;
 import org.sensorhub.api.persistence.StorageEvent.Type;
@@ -57,14 +58,16 @@ import org.sensorhub.impl.module.AbstractModule;
  * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @since Nov 8, 2013
  */
-public class InMemoryBasicStorage extends AbstractModule<StorageConfig> implements IBasicStorage<StorageConfig>
+public class InMemoryBasicStorage extends AbstractModule<StorageConfig> implements IRecordStorageModule<StorageConfig>
 {
     Map<String, TimeSeriesImpl> dataStores = new LinkedHashMap<String, TimeSeriesImpl>();
     List<AbstractProcess> dataSourceDescriptions = new ArrayList<AbstractProcess>();
+    BasicEventHandler eventHandler;
     
     
     public InMemoryBasicStorage()
     {
+        this.eventHandler = new BasicEventHandler();
     }
     
     
@@ -175,18 +178,17 @@ public class InMemoryBasicStorage extends AbstractModule<StorageConfig> implemen
 
 
     @Override
-    public Map<String, ? extends ITimeSeriesDataStore<IDataFilter>> getDataStores()
+    public Map<String, ? extends IRecordStoreInfo> getRecordStores()
     {
         return Collections.unmodifiableMap(dataStores);
     }
 
 
     @Override
-    public ITimeSeriesDataStore<IDataFilter> addNewDataStore(String name, DataComponent recordStructure, DataEncoding recommendedEncoding)
+    public void addRecordStore(String name, DataComponent recordStructure, DataEncoding recommendedEncoding)
     {
         TimeSeriesImpl timeSeries = new TimeSeriesImpl(recordStructure.copy(), recommendedEncoding);
         dataStores.put(name, timeSeries);
-        return timeSeries;
     }
 
 
@@ -238,13 +240,138 @@ public class InMemoryBasicStorage extends AbstractModule<StorageConfig> implemen
     {
         dataStores.clear();
         dataSourceDescriptions.clear();
-    }    
+    }
+    
+    
+    @Override
+    public DataBlock getDataBlock(DataKey key)
+    {
+        TimeSeriesImpl dataStore = dataStores.get(key.recordType);
+        if (dataStore == null)
+            return null;
+        
+        return dataStore.getDataBlock(key);
+    }
+
+
+    @Override
+    public Iterator<DataBlock> getDataBlockIterator(IDataFilter filter)
+    {
+        TimeSeriesImpl dataStore = dataStores.get(filter.getRecordType());
+        if (dataStore == null)
+            return null;
+        
+        return dataStore.getDataBlockIterator(filter);
+    }
+
+
+    @Override
+    public Iterator<? extends IDataRecord> getRecordIterator(IDataFilter filter)
+    {
+        TimeSeriesImpl dataStore = dataStores.get(filter.getRecordType());
+        if (dataStore == null)
+            return null;
+        
+        return dataStore.getRecordIterator(filter);
+    }
+
+
+    @Override
+    public int getNumMatchingRecords(IDataFilter filter)
+    {
+        TimeSeriesImpl dataStore = dataStores.get(filter.getRecordType());
+        if (dataStore == null)
+            return 0;
+        
+        return dataStore.getNumMatchingRecords(filter);
+    }
+
+
+    @Override
+    public int getNumRecords(String recordType)
+    {
+        TimeSeriesImpl dataStore = dataStores.get(recordType);
+        if (dataStore == null)
+            return 0;
+        
+        return dataStore.getNumRecords();
+    }
+
+    
+    @Override
+    public double[] getRecordsTimeRange(String recordType)
+    {
+        TimeSeriesImpl dataStore = dataStores.get(recordType);
+        if (dataStore == null)
+            return new double[] {Double.NaN, Double.NaN};
+        
+        return dataStore.getDataTimeRange();
+    }
+    
+    
+    @Override
+    public Iterator<double[]> getRecordsTimeClusters(String recordType)
+    {
+        return Arrays.asList(getRecordsTimeRange(recordType)).iterator();
+    }
+    
+
+    @Override
+    public void storeRecord(DataKey key, DataBlock data)
+    {
+        TimeSeriesImpl dataStore = dataStores.get(key.recordType);
+        if (dataStore != null)
+            dataStore.store(key, data);
+    }
+
+
+    @Override
+    public void updateRecord(DataKey key, DataBlock data)
+    {
+        TimeSeriesImpl dataStore = dataStores.get(key.recordType);
+        if (dataStore != null)
+            dataStore.update(key, data);        
+    }
+
+
+    @Override
+    public void removeRecord(DataKey key)
+    {
+        TimeSeriesImpl dataStore = dataStores.get(key.recordType);
+        if (dataStore == null)
+            return;
+        
+        dataStore.remove(key);
+    }
+
+
+    @Override
+    public int removeRecords(IDataFilter filter)
+    {
+        TimeSeriesImpl dataStore = dataStores.get(filter.getRecordType());
+        if (dataStore == null)
+            return 0;
+        
+        return dataStore.remove(filter);
+    }
+    
+    
+    public void registerListener(IEventListener listener)
+    {
+        eventHandler.registerListener(listener);
+    }
+    
+
+    public void unregisterListener(IEventListener listener)
+    {
+        eventHandler.unregisterListener(listener);
+    }
 
 
     /*
      * Implementation of individual time series {key,record} pair
      */
-    private class DBRecord implements IDataRecord<DataKey>
+    private class DBRecord implements IDataRecord
     {
         DataKey key;
         DataBlock data;
@@ -275,7 +402,7 @@ public class InMemoryBasicStorage extends AbstractModule<StorageConfig> implemen
         
         protected final boolean matches(IDataFilter filter)
         {
-            return ( (filter.getProducerID() == null || filter.getProducerID().equals(this.key.producerID)) &&
+            return ( (filter.getProducerIDs() == null || filter.getProducerIDs().contains(this.key.producerID)) &&
                  (filter.getTimeStampRange() == null || (filter.getTimeStampRange()[0] <= this.key.timeStamp && filter.getTimeStampRange()[1] >= this.key.timeStamp)) );
         }
     }
@@ -284,31 +411,23 @@ public class InMemoryBasicStorage extends AbstractModule<StorageConfig> implemen
     /*
      * Implementation of an individual time series data store
      */
-    public class TimeSeriesImpl implements ITimeSeriesDataStore<IDataFilter>
+    public class TimeSeriesImpl implements IRecordStoreInfo
     {
         List<DBRecord> recordList = new LinkedList<DBRecord>();;
         DataComponent recordDescription;
         DataEncoding recommendedEncoding;
-        BasicEventHandler eventHandler;
         
         TimeSeriesImpl(DataComponent recordDescription, DataEncoding recommendedEncoding)
         {
             this.recordDescription = recordDescription;
             this.recommendedEncoding = recommendedEncoding;
-            this.eventHandler = new BasicEventHandler();
         }
         
         @Override
-        public IStorageModule<?> getParentStorage()
+        public String getName()
         {
-            return InMemoryBasicStorage.this;
+            return recordDescription.getName();
         }
-
-        @Override
-        public int getNumRecords()
-        {
-            return recordList.size();
-        }        
         
         @Override
         public DataComponent getRecordDescription()
@@ -322,14 +441,17 @@ public class InMemoryBasicStorage extends AbstractModule<StorageConfig> implemen
             return recommendedEncoding;
         }
         
-        @Override
+        public int getNumRecords()
+        {
+            return recordList.size();
+        }
+
         public DataBlock getDataBlock(DataKey key)
         {
-            IDataRecord<?> rec = getRecord(key);
+            IDataRecord rec = getRecord(key);
             return rec.getData();
         }
 
-        @Override
         public Iterator<DataBlock> getDataBlockIterator(IDataFilter filter)
         {
             final Iterator<DBRecord> it = getRecordIterator(filter);
@@ -352,8 +474,7 @@ public class InMemoryBasicStorage extends AbstractModule<StorageConfig> implemen
             };
         }
 
-        @Override
-        public IDataRecord<DataKey> getRecord(DataKey key)
+        public IDataRecord getRecord(DataKey key)
         {
             Iterator<DBRecord> it = recordList.iterator();
             while (it.hasNext())
@@ -366,7 +487,6 @@ public class InMemoryBasicStorage extends AbstractModule<StorageConfig> implemen
             return null;
         }
 
-        @Override
         public int getNumMatchingRecords(IDataFilter filter)
         {
             final Iterator<DBRecord> it = getRecordIterator(filter);
@@ -379,7 +499,6 @@ public class InMemoryBasicStorage extends AbstractModule<StorageConfig> implemen
             return matchCount;
         }
         
-        @Override
         public Iterator<DBRecord> getRecordIterator(final IDataFilter filter)
         {
             final Iterator<DBRecord> it = recordList.iterator();
@@ -424,15 +543,13 @@ public class InMemoryBasicStorage extends AbstractModule<StorageConfig> implemen
             };
         }
 
-        @Override
         public DataKey store(DataKey key, DataBlock data)
         {
             recordList.add(new DBRecord(key, data));
-            eventHandler.publishEvent(new StorageEvent(System.currentTimeMillis(), this, Type.STORE));
+            eventHandler.publishEvent(new StorageEvent(System.currentTimeMillis(), InMemoryBasicStorage.this, key.recordType, Type.STORE));
             return key;
         }
 
-        @Override
         public void update(DataKey key, DataBlock data)
         {
             ListIterator<DBRecord> it = recordList.listIterator();
@@ -444,7 +561,6 @@ public class InMemoryBasicStorage extends AbstractModule<StorageConfig> implemen
             }
         }
 
-        @Override
         public void remove(DataKey key)
         {
             ListIterator<DBRecord> it = recordList.listIterator();
@@ -456,7 +572,6 @@ public class InMemoryBasicStorage extends AbstractModule<StorageConfig> implemen
             }
         }
 
-        @Override
         public int remove(IDataFilter filter)
         {
             ListIterator<DBRecord> it = recordList.listIterator();
@@ -474,7 +589,6 @@ public class InMemoryBasicStorage extends AbstractModule<StorageConfig> implemen
             return count;
         }
         
-        @Override
         public double[] getDataTimeRange()
         {
             double[] period = new double[] { Double.MAX_VALUE, Double.MIN_VALUE};
@@ -490,18 +604,6 @@ public class InMemoryBasicStorage extends AbstractModule<StorageConfig> implemen
             }
             
             return period;
-        }
-
-        @Override
-        public void registerListener(IEventListener listener)
-        {
-            eventHandler.registerListener(listener);
-        }
-
-        @Override
-        public void unregisterListener(IEventListener listener)
-        {
-            eventHandler.unregisterListener(listener);
         }
     }
 }

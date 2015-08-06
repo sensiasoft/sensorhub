@@ -80,16 +80,18 @@ public interface IModule<ConfigType extends ModuleConfig> extends IEventProducer
     
     
     /**
-     * Starts the module with the current configuration
+     * Starts the module with the current configuration.<br/>
+     * init() should always be called before start().
      * @throws SensorHubException
      */
     public void start() throws SensorHubException;
     
     
     /**
-     * Stops the module
+     * Stops the module.<br/>
      * All temporary resources created by the module should be cleaned
-     * when this is called (ex: memory, files, connections, etc.)
+     * when this is called (ex: memory, files, connections, etc.)<br/>
+     * stop() can be called right after init() even if start() hasn't been called.
      * @throws SensorHubException
      */
     public void stop() throws SensorHubException;
@@ -100,7 +102,7 @@ public interface IModule<ConfigType extends ModuleConfig> extends IEventProducer
      * @param saver
      * @throws SensorHubException 
      */
-    public void saveState(IModuleStateSaver saver) throws SensorHubException;
+    public void saveState(IModuleStateManager saver) throws SensorHubException;
     
     
     /**
@@ -108,7 +110,7 @@ public interface IModule<ConfigType extends ModuleConfig> extends IEventProducer
      * @param loader
      * @throws SensorHubException 
      */
-    public void loadState(IModuleStateLoader loader) throws SensorHubException;
+    public void loadState(IModuleStateManager loader) throws SensorHubException;
     
     
     /**

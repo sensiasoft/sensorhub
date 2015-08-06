@@ -26,6 +26,7 @@ public class TestPerstBasicStorage extends AbstractTestBasicStorage<BasicStorage
 {
     File dbFile;
     
+    
     @Before
     public void init() throws Exception
     {

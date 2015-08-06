@@ -15,7 +15,6 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 package org.sensorhub.impl.sensor.fakegps;
 
 import java.io.BufferedInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
@@ -26,17 +25,14 @@ import java.util.TimerTask;
 import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataEncoding;
-import net.opengis.swe.v20.Quantity;
-import net.opengis.swe.v20.Time;
+import net.opengis.swe.v20.Vector;
 import org.sensorhub.api.sensor.SensorDataEvent;
 import org.sensorhub.impl.sensor.AbstractSensorOutput;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.vast.data.DataRecordImpl;
-import org.vast.data.QuantityImpl;
-import org.vast.data.TextEncodingImpl;
-import org.vast.data.TimeImpl;
 import org.vast.swe.SWEConstants;
+import org.vast.swe.SWEHelper;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 
@@ -45,7 +41,7 @@ public class FakeGpsOutput extends AbstractSensorOutput<FakeGpsSensor>
 {
     private static final Logger log = LoggerFactory.getLogger(FakeGpsOutput.class);
     DataComponent posDataStruct;
-    DataBlock latestRecord;
+    DataEncoding posDataEncoding;
     List<double[]> trajPoints;
     boolean sendData;
     Timer timer;
@@ -69,37 +65,20 @@ public class FakeGpsOutput extends AbstractSensorOutput<FakeGpsSensor>
     @Override
     protected void init()
     {
-        // SWE Common data structure
-        posDataStruct = new DataRecordImpl(3);
-        posDataStruct.setName(getName());
-        posDataStruct.setDefinition("http://sensorml.com/ont/swe/property/Location");
+        SWEHelper fac = new SWEHelper();
         
-        Time c1 = new TimeImpl();
-        c1.getUom().setHref(Time.ISO_TIME_UNIT);
-        c1.setDefinition(SWEConstants.DEF_SAMPLING_TIME);
-        posDataStruct.addComponent("time", c1);
-
-        Quantity c;
-        c = new QuantityImpl();
-        c.getUom().setCode("deg");
-        c.setDefinition("http://sensorml.com/ont/swe/property/Latitude");
-        c.setReferenceFrame("http://www.opengis.net/def/crs/EPSG/0/4979");
-        c.setAxisID("Lat");
-        posDataStruct.addComponent("lat",c);
-
-        c = new QuantityImpl();
-        c.getUom().setCode("deg");
-        c.setDefinition("http://sensorml.com/ont/swe/property/Longitude");
-        c.setReferenceFrame("http://www.opengis.net/def/crs/EPSG/0/4979");
-        c.setAxisID("Long");
-        posDataStruct.addComponent("lon", c);
-
-        c = new QuantityImpl();
-        c.getUom().setCode("m");
-        c.setDefinition("http://sensorml.com/ont/swe/property/Altitude");
-        c.setReferenceFrame("http://www.opengis.net/def/crs/EPSG/0/4979");
-        c.setAxisID("h");
-        posDataStruct.addComponent("alt", c);        
+        // SWE Common data structure
+        posDataStruct = fac.newDataRecord(3);
+        posDataStruct.setName(getName());
+                
+        posDataStruct.addComponent("time", fac.newTimeStampIsoGPS());
+        
+        Vector locVector = fac.newLocationVectorLLA(SWEConstants.DEF_SENSOR_LOC);
+        locVector.setLabel("Location");
+        locVector.setDescription("Location measured by GPS device");
+        posDataStruct.addComponent("location", locVector);
+        
+        posDataEncoding = fac.newTextEncoding(",", "\n");
     }
 
 
@@ -129,7 +108,7 @@ public class FakeGpsOutput extends AbstractSensorOutput<FakeGpsSensor>
         {
             // request directions using Google API
             URL dirRequest = new URL(config.googleApiUrl + "?origin=" + startLat + "," + startLong +
-                    "&destination=" + endLat + "," + endLong);
+                    "&destination=" + endLat + "," + endLong + ((config.walkingMode) ? "&mode=walking" : ""));
             log.debug("Google API request: " + dirRequest);
             InputStream is = new BufferedInputStream(dirRequest.openStream());
             
@@ -137,7 +116,11 @@ public class FakeGpsOutput extends AbstractSensorOutput<FakeGpsSensor>
             JsonParser reader = new JsonParser();
             JsonElement root = reader.parse(new InputStreamReader(is));
             //System.out.println(root);
-            JsonElement polyline = root.getAsJsonObject().get("routes").getAsJsonArray().get(0).getAsJsonObject().get("overview_polyline");
+            JsonArray routes = root.getAsJsonObject().get("routes").getAsJsonArray();
+            if (routes.size() == 0)
+                throw new Exception("No route available");
+            
+            JsonElement polyline = routes.get(0).getAsJsonObject().get("overview_polyline");
             String encodedData = polyline.getAsJsonObject().get("points").getAsString();
             
             // decode polyline data
@@ -145,9 +128,12 @@ public class FakeGpsOutput extends AbstractSensorOutput<FakeGpsSensor>
             currentTrackPos = 0.0;
             return true;
         }
-        catch (IOException e)
+        catch (Exception e)
         {
-            e.printStackTrace();
+            log.error("Error while retrieving Google directions", e);
+            trajPoints.clear();
+            try { Thread.sleep(60000L); }
+            catch (InterruptedException e1) {}
             return false;
         }
     }
@@ -196,6 +182,13 @@ public class FakeGpsOutput extends AbstractSensorOutput<FakeGpsSensor>
         {
             if (!generateRandomTrajectory())
                 return;
+            
+            // skip if generated traj is too small
+            if (trajPoints.size() < 2)
+            {
+                trajPoints.clear();
+                return;
+            }
             //for (double[] p: trajPoints)
             //     System.out.println(Arrays.toString(p));
         }
@@ -225,7 +218,8 @@ public class FakeGpsOutput extends AbstractSensorOutput<FakeGpsSensor>
         
         // update latest record and send event
         latestRecord = dataBlock;
-        eventHandler.publishEvent(new SensorDataEvent(time, FakeGpsOutput.this, dataBlock));
+        latestRecordTime = System.currentTimeMillis();
+        eventHandler.publishEvent(new SensorDataEvent(latestRecordTime, FakeGpsOutput.this, dataBlock));
         
         currentTrackPos += speed / dist;
     }
@@ -276,24 +270,7 @@ public class FakeGpsOutput extends AbstractSensorOutput<FakeGpsSensor>
     @Override
     public DataEncoding getRecommendedEncoding()
     {
-        return new TextEncodingImpl(",", "\n");
-    }
-
-
-    @Override
-    public DataBlock getLatestRecord()
-    {
-        return latestRecord;
-    }
-    
-    
-    @Override
-    public double getLatestRecordTime()
-    {
-        if (latestRecord != null)
-            return latestRecord.getDoubleValue(0);
-        
-        return Double.NaN;
+        return posDataEncoding;
     }
 
 }

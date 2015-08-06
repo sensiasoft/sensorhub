@@ -25,6 +25,6 @@ import java.lang.annotation.ElementType;
 
 public @interface DisplayInfo
 {
-    public String label();
+    public String label() default "";
     public String desc() default "";
 }

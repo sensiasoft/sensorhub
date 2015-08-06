@@ -44,20 +44,20 @@ public class V4LCameraDriver extends AbstractSensorModule<V4LCameraConfig>
     public V4LCameraDriver()
     {
         this.dataInterface = new V4LCameraOutput(this);
-        addOutput(dataInterface, false);
-        
         this.controlInterface = new V4LCameraControl(this);
-        addControlInput(controlInterface);
     }
 
 
     @Override
     public void updateConfig(V4LCameraConfig config) throws SensorHubException
     {
-        // cleanup previously used device and restart
+        // cleanup previously used device
         stop();
         init(config);
-        start();
+        
+        // restart if enabled
+        if (config.enabled)
+            start();
     }
     
     
@@ -79,7 +79,9 @@ public class V4LCameraDriver extends AbstractSensorModule<V4LCameraConfig>
         
         // init data and control interfaces
         dataInterface.init();
+        addOutput(dataInterface, false);
         controlInterface.init();
+        addControlInput(controlInterface);
     }
     
     
@@ -110,7 +112,7 @@ public class V4LCameraDriver extends AbstractSensorModule<V4LCameraConfig>
     
     
     @Override
-    protected void updateSensorDescription() throws SensorException
+    protected void updateSensorDescription()
     {
         synchronized (sensorDescription)
         {

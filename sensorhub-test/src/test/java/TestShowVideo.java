@@ -1,4 +1,3 @@
-import java.awt.Dimension;
 import java.awt.Point;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
@@ -11,13 +10,9 @@ import java.net.URLConnection;
 import java.nio.ByteBuffer;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import javax.media.Buffer;
-import javax.media.format.RGBFormat;
-import javax.media.format.VideoFormat;
 import javax.swing.JFrame;
 import net.opengis.swe.v20.DataArray;
 import net.opengis.swe.v20.DataBlock;
-import net.sourceforge.jffmpeg.VideoDecoder;
 import org.jcodec.codecs.h264.H264Decoder;
 import org.jcodec.common.model.ColorSpace;
 import org.jcodec.common.model.Picture;
@@ -25,6 +20,7 @@ import org.jcodec.scale.AWTUtil;
 import org.jcodec.scale.Transform;
 import org.jcodec.scale.Yuv420pToRgb;
 import org.vast.cdm.common.DataStreamParser;
+import org.vast.data.DataBlockMixed;
 import org.vast.ows.OWSUtils;
 import org.vast.ows.sos.GetResultRequest;
 import org.vast.ows.sos.GetResultTemplateRequest;
@@ -48,27 +44,34 @@ public class TestShowVideo
     public static void main(String[] args) throws Exception
     {
         final OWSUtils utils = new OWSUtils();
-        String offering = "urn:android:device:060693280a28e015-sos";
+        String endPoint = "http://localhost:8181/sensorhub/sos";
+        //String offering = "urn:android:device:060693280a28e015-sos";
+        String offering = "urn:offering:cam";
+        String obsProp = "http://sensorml.com/ont/swe/property/VideoFrame";        
         
         // GetResultTemplate
         GetResultTemplateRequest gtr = new GetResultTemplateRequest();
-        gtr.setGetServer("http://localhost:8080/sensorhub/sos");
+        gtr.setGetServer(endPoint);
         gtr.setOffering(offering);
-        gtr.getObservables().add("http://sensorml.com/ont/swe/property/VideoFrame");
+        gtr.getObservables().add(obsProp);
         gtr.setVersion("2.0");       
         URLConnection conn = utils.sendGetRequest(gtr);
         final GetResultTemplateResponse grtResp = (GetResultTemplateResponse)utils.readXMLResponse(conn.getInputStream(), OWSUtils.SOS, "GetResultTemplateResponse");
-        final DataArray imgArray = (DataArray)grtResp.getResultStructure().getComponent("videoFrame");
+        final DataArray imgArray;
+        if (grtResp.getResultStructure() instanceof DataArray)
+            imgArray = (DataArray)grtResp.getResultStructure();
+        else
+            imgArray = (DataArray)grtResp.getResultStructure().getComponent("videoFrame");
         final int height = imgArray.getComponentCount();
         final int width = imgArray.getElementType().getComponentCount();
         utils.writeXMLResponse(System.out, grtResp);
         
         // get video data, parse it and display it
         final GetResultRequest gt = new GetResultRequest();
-        gt.setGetServer("http://localhost:8080/sensorhub/sos");
+        gt.setGetServer(endPoint);
         gt.setOffering(offering);
-        gt.getObservables().add("http://sensorml.com/ont/swe/property/VideoFrame");
-        gt.setTime(TimeExtent.getNowToFutureDatePeriod(System.currentTimeMillis()/1000. + 3600.));
+        gt.getObservables().add(obsProp);
+        gt.setTime(TimeExtent.getPeriodStartingNow(System.currentTimeMillis()/1000. + 3600.));
         gt.setVersion("2.0");
         
         Runnable job = new Runnable() {
@@ -77,6 +80,8 @@ public class TestShowVideo
             {
                 try
                 {
+                    boolean decode = false;
+                    
                     // prepare decoder
                     /*VideoFormat inputFormat = new VideoFormat("MP42", new Dimension(width, height), -1, byte[].class, -1);
                     VideoDecoder h264Decoder = new VideoDecoder();
@@ -84,13 +89,13 @@ public class TestShowVideo
                     h264Decoder.setOutputFormat(new RGBFormat());   
                     Buffer inputBuf = new Buffer();
                     Buffer outputBuf = new Buffer();*/
+                    
                     H264Decoder h264Decoder = new H264Decoder();
                     Transform transform = new Yuv420pToRgb(0, 0);
                     Picture yuv = Picture.create((width + 15) & ~0xf, (height + 15) & ~0xf, ColorSpace.YUV420);
                     Picture rgb = Picture.create(width, height, ColorSpace.RGB);
                     ByteBuffer inputBuf = ByteBuffer.allocate(256);
-                    boolean decode = true;
-                    
+                                        
                     // give SPS header to decoder                    
                     String header = "00 00 00 01 67 42 80 1F DA 03 20 4D F9 60 1B 42 84 D4 00 00 00 01 68 CE 06 E2";
                     for (String val: header.split(" ")) {
@@ -100,7 +105,8 @@ public class TestShowVideo
                     
                     // open window
                     JFrame f = new JFrame("Video");
-                    f.setSize(width, height);
+                    f.getContentPane().setSize(width, height);
+                    f.setLocation(100, 100);
                     f.setVisible(true);
                     BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
                     
@@ -122,11 +128,15 @@ public class TestShowVideo
                                  
                     DataBlock data;
                     WritableRaster raster = null;
-                    //long t0 = System.currentTimeMillis();
+                    long t0 = System.currentTimeMillis();
                     while ((data = parser.parseNextBlock()) != null)
                     {
                         byte[] decodedData = null;
-                        DataBlock imgData = ((DataBlock[])data.getUnderlyingObject())[1];
+                        DataBlock imgData;
+                        if (data instanceof DataBlockMixed)
+                            imgData = ((DataBlock[])data.getUnderlyingObject())[1];
+                        else
+                            imgData = data;
                         
                         // decode frame
                         if (decode)
@@ -169,9 +179,9 @@ public class TestShowVideo
                         
                         // draw image in JFrame
                         f.getContentPane().getGraphics().drawImage(img, 0, 0, null);
-                        //long t1 = System.currentTimeMillis();
-                        //System.out.println(t1 - t0);
-                        //t0 = t1;
+                        long t1 = System.currentTimeMillis();
+                        System.out.println(t1 - t0);
+                        t0 = t1;
                         //System.out.println(Runtime.getRuntime().freeMemory());
                     }
                     

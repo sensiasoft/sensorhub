@@ -43,13 +43,24 @@ import com.vaadin.data.util.MethodProperty;
 @SuppressWarnings("serial")
 public class MyBeanItem<BeanType> implements Item
 {
+    public static final String NO_PREFIX = "";
+    public static final char PROP_SEPARATOR = '.';
+    
     BeanType bean;
     Map<Object, Property<?>> properties = new LinkedHashMap<Object, Property<?>>();
     
     
     public MyBeanItem(BeanType bean)
     {
-        this(bean, new String[0]);
+        this.bean = bean;
+        addProperties(NO_PREFIX, bean);
+    }
+    
+    
+    public MyBeanItem(BeanType bean, String prefix)
+    {
+        this.bean = bean;
+        addProperties(prefix, bean);
     }
 
 
@@ -58,7 +69,7 @@ public class MyBeanItem<BeanType> implements Item
         this.bean = bean;
         
         // use reflection to generate properties from class attributes
-        addProperties("", bean);
+        addProperties(NO_PREFIX, bean);
     }
     
     
@@ -74,6 +85,9 @@ public class MyBeanItem<BeanType> implements Item
     {
         for (Field f: getFields(bean.getClass(), Modifier.PUBLIC))
         {
+            if (Modifier.isStatic(f.getModifiers()))
+                continue;
+            
             String fullName = prefix + f.getName();
             Class<?> fieldType = f.getType();
             
@@ -94,7 +108,7 @@ public class MyBeanItem<BeanType> implements Item
                     if (listObj != null)
                     {
                         for (Object o: listObj)
-                            container.addBean(o);
+                            container.addBean(o, fullName + PROP_SEPARATOR);
                     }
                     
                     addItemProperty(fullName, new ContainerProperty(bean, f, container));
@@ -103,6 +117,12 @@ public class MyBeanItem<BeanType> implements Item
                 {
                     e.printStackTrace();
                 }
+            }
+            
+            // case of arrays
+            else if (fieldType.isArray())
+            {
+                
             }
             
             // case of maps
@@ -129,8 +149,10 @@ public class MyBeanItem<BeanType> implements Item
                 try
                 {
                     Object complexVal = f.get(bean);
+                    MyBeanItem<Object> beanItem = null;
                     if (complexVal != null)
-                        addProperties(fullName + ".", complexVal);
+                        beanItem = new MyBeanItem<Object>(complexVal, fullName + PROP_SEPARATOR);
+                    addItemProperty(fullName, new ComplexProperty(bean, f, beanItem));
                 }
                 catch (Exception e)
                 {

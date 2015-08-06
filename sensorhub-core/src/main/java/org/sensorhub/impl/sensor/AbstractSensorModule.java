@@ -22,11 +22,21 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import net.opengis.OgcProperty;
+import net.opengis.OgcPropertyList;
+import net.opengis.gml.v32.AbstractFeature;
+import net.opengis.gml.v32.AbstractGeometry;
+import net.opengis.gml.v32.Point;
 import net.opengis.gml.v32.TimeIndeterminateValue;
 import net.opengis.gml.v32.TimePosition;
 import net.opengis.gml.v32.impl.GMLFactory;
+import net.opengis.sensorml.v20.AbstractPhysicalProcess;
 import net.opengis.sensorml.v20.AbstractProcess;
+import net.opengis.sensorml.v20.SpatialFrame;
 import net.opengis.swe.v20.DataComponent;
+import net.opengis.swe.v20.Vector;
+import org.sensorhub.api.common.SensorHubException;
+import org.sensorhub.api.module.IModuleStateManager;
 import org.sensorhub.api.sensor.ISensorControlInterface;
 import org.sensorhub.api.sensor.ISensorDataInterface;
 import org.sensorhub.api.sensor.ISensorModule;
@@ -37,6 +47,8 @@ import org.sensorhub.impl.module.AbstractModule;
 import org.sensorhub.utils.MsgUtils;
 import org.vast.sensorML.PhysicalSystemImpl;
 import org.vast.sensorML.SMLUtils;
+import org.vast.swe.SWEConstants;
+import org.vast.swe.SWEHelper;
 
 
 /**
@@ -53,14 +65,19 @@ import org.vast.sensorML.SMLUtils;
 public abstract class AbstractSensorModule<ConfigType extends SensorConfig> extends AbstractModule<ConfigType> implements ISensorModule<ConfigType>
 {
     public final static String DEFAULT_ID = "SENSOR_DESC";
+    protected final static String LOCATION_OUTPUT_ID = "SENSOR_LOCATION";
+    protected final static String LOCATION_OUTPUT_NAME = "sensorLocation";
     protected final static String ERROR_NO_UPDATE = "Sensor Description update is not supported by driver ";
     protected final static String ERROR_NO_HISTORY = "History of sensor description is not supported by driver ";
+    protected final static String ERROR_NO_ENTITIES = "Multiple entities are not supported by driver ";
+    protected final static String STATE_LAST_SML_UPDATE = "LastUpdatedSensorDescription";
     
-    private Map<String, ISensorDataInterface> obsOutputs = new LinkedHashMap<String, ISensorDataInterface>();  
-    private Map<String, ISensorDataInterface> statusOutputs = new LinkedHashMap<String, ISensorDataInterface>();  
-    private Map<String, ISensorControlInterface> controlInputs = new LinkedHashMap<String, ISensorControlInterface>();  
+    private Map<String, ISensorDataInterface> obsOutputs = new LinkedHashMap<String, ISensorDataInterface>();
+    private Map<String, ISensorDataInterface> statusOutputs = new LinkedHashMap<String, ISensorDataInterface>();
+    private Map<String, ISensorControlInterface> controlInputs = new LinkedHashMap<String, ISensorControlInterface>();
+    protected DefaultLocationOutput<?> locationOutput;
     protected AbstractProcess sensorDescription = new PhysicalSystemImpl();
-    protected double lastUpdatedSensorDescription = Double.NEGATIVE_INFINITY;
+    protected long lastUpdatedSensorDescription = Long.MIN_VALUE;
     
     
     /**
@@ -74,6 +91,19 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
             statusOutputs.put(dataInterface.getName(), dataInterface);
         else
             obsOutputs.put(dataInterface.getName(), dataInterface);
+    }
+    
+    
+    /**
+     * Helper method to add a location output so that all sensors can update their location
+     * in a consistent manner.
+     * @param updatePeriod estimated location update period or NaN if sensor is mostly static
+     */
+    protected void addLocationOutput(double updatePeriod)
+    {
+        // TODO deal with other CRS than 4979
+        locationOutput = new DefaultLocationOutputLLA<AbstractSensorModule<?>>(this, updatePeriod);
+        addOutput(locationOutput, true);
     }
     
     
@@ -121,15 +151,22 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
 
 
     @Override
-    public AbstractProcess getCurrentDescription() throws SensorException
+    public AbstractProcess getCurrentDescription()
     {
         synchronized (sensorDescription)
         {
-            if (lastUpdatedSensorDescription == Double.NEGATIVE_INFINITY)
+            if (!sensorDescription.isSetIdentifier())
                 updateSensorDescription();
         
             return sensorDescription;
         }
+    }
+    
+    
+    @Override
+    public long getLastDescriptionUpdate()
+    {
+        return lastUpdatedSensorDescription;
     }
     
     
@@ -141,23 +178,24 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
      * time stamp and send a SENSOR_CHANGED event when 
      * @throws SensorException
      */
-    protected void updateSensorDescription() throws SensorException
+    protected void updateSensorDescription()
     {
         synchronized (sensorDescription)
         {
             // by default we return the static description provided in config
-            if (config.sensorML != null && config.sensorML.length() > 0)
+            String smlUrl = config.getSensorDescriptionURL();
+            if (smlUrl != null && smlUrl.length() > 0)
             {
                 try
                 {
-                    SMLUtils utils = new SMLUtils();
-                    InputStream is = new URL(config.sensorML).openStream();
-                    sensorDescription = utils.readProcess(is);
+                    SMLUtils utils = new SMLUtils(SMLUtils.V2_0);
+                    InputStream is = new URL(smlUrl).openStream();
+                    sensorDescription = (AbstractPhysicalProcess)utils.readProcess(is);
                 }
                 catch (IOException e)
                 {
-                    throw new SensorException("Error while parsing static SensorML description for sensor " +
-                                                MsgUtils.moduleString(this), e);
+                    throw new IllegalStateException("Error while parsing static SensorML description for sensor " +
+                                                    MsgUtils.moduleString(this), e);
                 }
             }
             else
@@ -168,8 +206,9 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
             //////////////////////////////////////////////////////////////
             // add stuffs if not already defined in static SensorML doc //
             //////////////////////////////////////////////////////////////
-            long unixTime = System.currentTimeMillis();
-            double newValidityTime = unixTime / 1000.;
+            if (lastUpdatedSensorDescription == Long.MIN_VALUE)
+                lastUpdatedSensorDescription = System.currentTimeMillis();
+            double newValidityTime = lastUpdatedSensorDescription / 1000.;
             
             // default IDs
             String gmlId = sensorDescription.getId();
@@ -215,44 +254,133 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
                 }
             }
             
-            // send event
-            if (lastUpdatedSensorDescription != Double.NEGATIVE_INFINITY)
-                eventHandler.publishEvent(new SensorEvent(unixTime, this, SensorEvent.Type.SENSOR_CHANGED));
-            lastUpdatedSensorDescription = newValidityTime;
+            // position
+            if (locationOutput != null && sensorDescription instanceof AbstractPhysicalProcess)
+            {
+                // set ID of reference frame on location output
+                String localFrame = getLocalFrameID((AbstractPhysicalProcess)sensorDescription);
+                ((Vector)locationOutput.getRecordDescription()).setLocalFrame(localFrame);
+                
+                // if update rate is high, set sensorML location as link to output
+                if (locationOutput.getAverageSamplingPeriod() < 3600.)
+                {
+                    locationOutput.getRecordDescription().setId(LOCATION_OUTPUT_ID);
+                    OgcProperty<?> linkProp = SWEHelper.newLinkProperty("#" + LOCATION_OUTPUT_ID);
+                    ((AbstractPhysicalProcess)sensorDescription).getPositionList().add(linkProp);
+                }
+            }
         }
     }
-
-
-    @Override
-    public double getLastDescriptionUpdate()
+    
+    
+    protected void notifyNewDescription(long updateTime)
     {
-        return lastUpdatedSensorDescription;
+        // send event
+        lastUpdatedSensorDescription = updateTime;
+        eventHandler.publishEvent(new SensorEvent(updateTime, this, SensorEvent.Type.SENSOR_CHANGED));
+    }
+    
+    
+    /**
+     * Updates the sensor location. If a sensor location output is present, the new location
+     * will be send through this interface. The location provided in the SensorML description
+     * will also be updated unless it references the location output. 
+     * @param x
+     * @param y
+     * @param z
+     */
+    protected void updateLocation(double time, double x, double y, double z)
+    {
+        // send new location through output
+        if (locationOutput != null)
+            locationOutput.updateLocation(time, x, y, z);
+        
+        // update sensorML description
+        AbstractProcess processDesc = getCurrentDescription();
+        if (processDesc instanceof AbstractPhysicalProcess)
+        {
+            AbstractPhysicalProcess sensorDesc = (AbstractPhysicalProcess)processDesc;
+            
+            // update GML location if point template was provided
+            AbstractGeometry gmlLoc = sensorDesc.getLocation();
+            if (gmlLoc != null && gmlLoc instanceof Point)
+            {
+                double[] pos;
+                
+                if (Double.isNaN(z))
+                {
+                    gmlLoc.setSrsName(SWEHelper.getEpsgUri(4326));
+                    pos = new double[2];
+                }
+                else
+                {
+                    gmlLoc.setSrsName(SWEHelper.getEpsgUri(4979));
+                    pos = new double[3];
+                    pos[2] = z;
+                }
+                                
+                pos[0] = y;
+                pos[1] = x;
+                ((Point)gmlLoc).setPos(pos);
+            }
+            
+            // update position
+            OgcPropertyList<Object> posList = sensorDesc.getPositionList();
+            if (!posList.isEmpty())
+            {
+                /*for (Object posObj: posList)
+                {
+                    
+                }*/
+            }
+            else
+            {
+                SWEHelper fac = new SWEHelper();
+                Vector locVector = fac.newLocationVectorLLA(SWEConstants.DEF_SENSOR_LOC);
+                locVector.setLocalFrame(getLocalFrameID(sensorDesc));
+                sensorDesc.addPositionAsVector(locVector);
+            }
+            
+            // send sensorML changed event
+            long now = System.currentTimeMillis();
+            notifyNewDescription(now);
+        }
+    }
+    
+    
+    protected String getLocalFrameID(AbstractPhysicalProcess sensorDesc)
+    {
+        List<SpatialFrame> refFrames = sensorDesc.getLocalReferenceFrameList();
+        if (refFrames == null || refFrames.isEmpty())
+            return null;
+        
+        return refFrames.get(0).getId();
     }
 
 
     @Override
-    public AbstractProcess getSensorDescription(double time) throws SensorException
+    public AbstractProcess getSensorDescription(double time)
     {
-        throw new SensorException(ERROR_NO_HISTORY + MsgUtils.moduleClassAndId(this));
+        throw new UnsupportedOperationException(ERROR_NO_HISTORY + MsgUtils.moduleClassAndId(this));
     }
 
 
     @Override
-    public List<AbstractProcess> getSensorDescriptionHistory() throws SensorException
+    public List<AbstractProcess> getSensorDescriptionHistory()
     {
-        throw new SensorException(ERROR_NO_HISTORY + MsgUtils.moduleClassAndId(this));
+        throw new UnsupportedOperationException(ERROR_NO_HISTORY + MsgUtils.moduleClassAndId(this));
     }
 
 
     @Override
     public void updateSensorDescription(AbstractProcess systemDesc, boolean recordHistory) throws SensorException
     {
-        throw new SensorException(ERROR_NO_UPDATE + MsgUtils.moduleClassAndId(this));
+        throw new UnsupportedOperationException(ERROR_NO_UPDATE + MsgUtils.moduleClassAndId(this));
     }
 
 
     @Override
-    public Map<String, ISensorDataInterface> getAllOutputs() throws SensorException
+    public Map<String, ISensorDataInterface> getAllOutputs()
     {
         Map<String, ISensorDataInterface> allOutputs = new LinkedHashMap<String, ISensorDataInterface>();  
         allOutputs.putAll(obsOutputs);
@@ -262,22 +390,60 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
 
 
     @Override
-    public Map<String, ISensorDataInterface> getStatusOutputs() throws SensorException
+    public Map<String, ISensorDataInterface> getStatusOutputs()
     {
         return Collections.unmodifiableMap(statusOutputs);
     }
 
 
     @Override
-    public Map<String, ISensorDataInterface> getObservationOutputs() throws SensorException
+    public Map<String, ISensorDataInterface> getObservationOutputs()
     {
         return Collections.unmodifiableMap(obsOutputs);
     }
 
 
     @Override
-    public Map<String, ISensorControlInterface> getCommandInputs() throws SensorException
+    public Map<String, ISensorControlInterface> getCommandInputs()
     {
         return Collections.unmodifiableMap(controlInputs);
+    }
+    
+    
+    @Override
+    public AbstractFeature getCurrentFeatureOfInterest()
+    {
+        return null;
+    }
+
+
+    @Override
+    public void updateConfig(ConfigType config) throws SensorHubException
+    {
+        super.updateConfig(config);
+        if (config.sensorML != null)
+        {
+            updateSensorDescription();
+            notifyNewDescription(System.currentTimeMillis());
+        }
+    }
+
+    
+    @Override
+    public void loadState(IModuleStateManager loader) throws SensorHubException
+    {
+        super.loadState(loader);
+        Long lastUpdateTime = loader.getAsLong(STATE_LAST_SML_UPDATE);
+        if (lastUpdateTime != null)
+            this.lastUpdatedSensorDescription = lastUpdateTime;
+    }
+    
+    
+    @Override
+    public void saveState(IModuleStateManager saver) throws SensorHubException
+    {
+        super.saveState(saver);
+        saver.put(STATE_LAST_SML_UPDATE, this.lastUpdatedSensorDescription);
+        saver.flush();
     }
 }

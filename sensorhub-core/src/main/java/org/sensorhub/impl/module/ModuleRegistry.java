@@ -29,6 +29,7 @@ import org.sensorhub.api.module.IModule;
 import org.sensorhub.api.module.IModuleConfigRepository;
 import org.sensorhub.api.module.IModuleManager;
 import org.sensorhub.api.module.IModuleProvider;
+import org.sensorhub.api.module.IModuleStateManager;
 import org.sensorhub.api.module.ModuleConfig;
 import org.sensorhub.api.module.ModuleEvent;
 import org.sensorhub.impl.common.BasicEventHandler;
@@ -115,6 +116,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
             Class<IModule> clazz = (Class<IModule>)Class.forName(config.moduleClass);
             IModule module = clazz.newInstance();
             module.init(config);
+            module.loadState(getStateManager(config.id));
                         
             // keep track of what modules are loaded
             loadedModules.put(config.id, module);
@@ -133,9 +135,18 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
             
             return module;
         }
+        catch (ClassNotFoundException | IllegalAccessException | InstantiationException e)
+        {
+            throw new SensorHubException("Cannot instantiate module class", e);
+        }
+        catch (SensorHubException e)
+        {
+            log.error("Error while initializing module " + config.name, e);
+            throw e;
+        }
         catch (Exception e)
         {
-            throw new SensorHubException("Error while initializing module " + config.name, e);
+            throw new SensorHubException("Cannot load module " + config.name, e);
         }
     }
     
@@ -194,26 +205,35 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
     @SuppressWarnings("rawtypes")
     public synchronized IModule<?> enableModule(String moduleID) throws SensorHubException
     {
-        checkID(moduleID);        
-        IModule module = loadedModules.get(moduleID);
-        
-        // load module if not already loaded
-        if (module == null)
+        try
         {
-            ModuleConfig config = configRepos.get(moduleID);
-            config.enabled = true;
-            module = loadModule(config);
+            checkID(moduleID);        
+            IModule module = loadedModules.get(moduleID);
+            
+            // load module if not already loaded
+            if (module == null)
+            {
+                ModuleConfig config = configRepos.get(moduleID);
+                config.enabled = true;
+                module = loadModule(config);
+            }
+            
+            // otherwise just start it
+            else
+            {
+                module.start();      
+                module.getConfiguration().enabled = true;
+                eventHandler.publishEvent(new ModuleEvent(module, ModuleEvent.Type.ENABLED));
+                log.debug("Module " + MsgUtils.moduleString(module) +  " started");
+            }
+            
+            return module;
         }
-        
-        // otherwise just start it
-        else
+        catch (SensorHubException e)
         {
-            module.getConfiguration().enabled = true;
-            module.start();      
-            eventHandler.publishEvent(new ModuleEvent(module, ModuleEvent.Type.ENABLED));
+            log.error("Error while starting module " + moduleID, e);
+            throw e;
         }
-        
-        return module;
     }
     
     
@@ -224,23 +244,32 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
      */
     public synchronized void disableModule(String moduleID) throws SensorHubException
     {
-        checkID(moduleID);
-                
-        // unload and stop module if it was loaded
-        IModule<?> module = loadedModules.remove(moduleID);
-        if (module != null)
+        try
         {
-            try
+            checkID(moduleID);
+                    
+            // stop module if it was loaded
+            IModule<?> module = loadedModules.get(moduleID);
+            if (module != null)
             {
-                module.stop();
-                module.getConfiguration().enabled = false;
+                try
+                {
+                    module.stop();
+                    module.getConfiguration().enabled = false;
+                }
+                catch (Exception e)
+                {
+                    throw new SensorHubException("Error while stopping module " + MsgUtils.moduleString(module), e);
+                }
+                
+                eventHandler.publishEvent(new ModuleEvent(module, ModuleEvent.Type.DISABLED));
+                log.debug("Module " + MsgUtils.moduleString(module) +  " stopped");
             }
-            catch (Exception e)
-            {
-                throw new SensorHubException("Error while stopping module " + MsgUtils.moduleString(module), e);
-            }
-            
-            eventHandler.publishEvent(new ModuleEvent(module, ModuleEvent.Type.DISABLED));
+        }
+        catch (SensorHubException e)
+        {
+            log.error("Error while stopping module " + moduleID, e);
+            throw e;
         }
     }
     
@@ -261,8 +290,12 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
             module.cleanup();
         }
         
-        configRepos.remove(moduleID);        
+        // remove conf from repo if it was saved 
+        if (configRepos.contains(moduleID))
+            configRepos.remove(moduleID);
+        
         eventHandler.publishEvent(new ModuleEvent(module, ModuleEvent.Type.DELETED));
+        log.debug("Module " + MsgUtils.moduleString(module) +  " removed");
     }
     
     
@@ -356,8 +389,15 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
         List<IModuleProvider> installedModules = new ArrayList<IModuleProvider>();
         
         ServiceLoader<IModuleProvider> sl = ServiceLoader.load(IModuleProvider.class);
-        for (IModuleProvider provider: sl)
-            installedModules.add(provider);
+        try
+        {
+            for (IModuleProvider provider: sl)
+                installedModules.add(provider);
+        }
+        catch (Throwable e)
+        {
+            log.error("Invalid reference to module descriptor");
+        }
         
         return installedModules;
     }
@@ -400,7 +440,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
                 // save state if requested
                 // TODO use state saver
                 if (saveState)
-                    module.saveState(null);
+                    module.saveState(getStateManager(module.getLocalID()));
                 
                 // save config if requested
                 if (saveConfig)
@@ -414,6 +454,8 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
                 log.error("Error during shutdown", e);
             }
         }
+        
+        loadedModules.clear();
         
         // make sure to clear all listeners in case some modules failed to unregister themselves
         eventHandler.clearAllListeners();
@@ -431,6 +473,12 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
         // moduleID can exist either in live table, in config repository or both
         if (!loadedModules.containsKey(moduleID) && !configRepos.contains(moduleID))
             throw new RuntimeException("Module with ID " + moduleID + " is not available");
+    }
+    
+    
+    private IModuleStateManager getStateManager(String localID)
+    {
+        return new DefaultModuleStateManager(localID);
     }
 
 

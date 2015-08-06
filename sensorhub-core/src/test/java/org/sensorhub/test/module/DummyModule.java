@@ -16,8 +16,7 @@ package org.sensorhub.test.module;
 
 import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.module.IModule;
-import org.sensorhub.api.module.IModuleStateLoader;
-import org.sensorhub.api.module.IModuleStateSaver;
+import org.sensorhub.api.module.IModuleStateManager;
 import org.sensorhub.api.module.ModuleConfig;
 
 
@@ -32,8 +31,8 @@ public class DummyModule implements IModule<ModuleConfig>
     public String getLocalID() { return null; }
     public void start() {};
     public void stop() {}
-    public void saveState(IModuleStateSaver saver) {}
-    public void loadState(IModuleStateLoader loader) {}
+    public void saveState(IModuleStateManager saver) {}
+    public void loadState(IModuleStateManager loader) {}
     public void cleanup() {}
     public void registerListener(IEventListener listener) {}
     public void unregisterListener(IEventListener listener) {}

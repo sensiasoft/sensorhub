@@ -15,6 +15,7 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 package org.sensorhub.api.processing;
 
 import org.sensorhub.api.common.Event;
+import org.sensorhub.api.processing.ProcessingEvent.Type;
 
 
 /**
@@ -25,7 +26,7 @@ import org.sensorhub.api.common.Event;
  * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @since Feb 20, 2015
  */
-public class ProcessingEvent extends Event
+public class ProcessingEvent extends Event<Type>
 {
 	/**
 	 * Possible event types for a ProcessingEvent

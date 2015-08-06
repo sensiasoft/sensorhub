@@ -4,7 +4,7 @@
     "id": "5cb05c9c-9e08-4fa1-8731-ffaa5846bdc1",
     "name": "HTTP Server",
     "moduleClass": "org.sensorhub.impl.service.HttpServer",
-    "httpPort": 8080,
+    "httpPort": 8181,
     "servletsRootUrl": "/sensorhub",
     "staticDocRootUrl": "web"
   },
@@ -35,58 +35,40 @@
     "name": "Fake Weather Sensor",
     "enabled": true,
     "moduleClass": "org.sensorhub.impl.sensor.fakeweather.FakeWeatherSensor",
-    "sensorML": null,
+    "sensorML": "base_description.xml",
     "autoActivate": true,
     "enableHistory": false,
     "hiddenIO": null
-  },
+  }, 
   {
-    "objClass": "org.sensorhub.impl.sensor.fakecam.FakeCamConfig",
-    "id": "d136b6ea-3950-4691-bf56-c84ec7d89d74",
-    "name": "Fake Camera Sensor",
-    "enabled": true,
-    "moduleClass": "org.sensorhub.impl.sensor.fakecam.FakeCamSensor",
-    "sensorML": null,
-    "autoActivate": true,
-    "enableHistory": false,
-    "hiddenIO": null,
-    "videoFilePath": "/home/alex/Videos/output.mp4"
-  },    
-  {
-    "objClass": "org.sensorhub.impl.persistence.perst.BasicStorageConfig",
+    "objClass": "org.sensorhub.impl.persistence.StreamStorageConfig",
     "id": "5cb05c9c-9e08-4fa1-8731-ff4ff948bdc1",
-    "name": "GPS Data Storage",
-    "moduleClass": "org.sensorhub.impl.persistence.perst.BasicStorageImpl",
+    "name": "GPS Sensor Storage",
+    "moduleClass": "org.sensorhub.impl.persistence.GenericStreamStorage",
     "enabled": true,
-    "memoryCacheSize": 1024,
-    "storagePath": "gps_obs.dat"
-  },
+    "dataSourceID": "d136b6ea-3950-4691-bf56-c84ec7d89d72",
+    "storageConfig":    
+    {
+      "objClass": "org.sensorhub.impl.persistence.perst.BasicStorageConfig",
+      "moduleClass": "org.sensorhub.impl.persistence.perst.BasicStorageImpl",
+      "memoryCacheSize": 1024,
+      "storagePath": "gps_obs.dat"
+    }
+  }, 
   {
-    "objClass": "org.sensorhub.impl.persistence.SensorStorageHelperConfig",
-    "id": "5cb05c9c-9e08-4cca-5691-ff4ff948bdc1",
-    "name": "GPS Sensor Storage Helper",
-    "moduleClass": "org.sensorhub.impl.persistence.SensorStorageHelper",
-    "enabled": true,
-    "storageID": "5cb05c9c-9e08-4fa1-8731-ff4ff948bdc1",
-    "sensorID": "d136b6ea-3950-4691-bf56-c84ec7d89d72"
-  },  
-  {
-    "objClass": "org.sensorhub.impl.persistence.perst.BasicStorageConfig",
+    "objClass": "org.sensorhub.impl.persistence.StreamStorageConfig",
     "id": "5cb05c9c-9e08-4fa1-8731-ff4ff948bdc2",
     "name": "Weather Data Storage",
-    "moduleClass": "org.sensorhub.impl.persistence.perst.BasicStorageImpl",
+    "moduleClass": "org.sensorhub.impl.persistence.GenericStreamStorage",
     "enabled": true,
-    "memoryCacheSize": 1024,
-    "storagePath": "weather_obs.dat"
-  },
-  {
-    "objClass": "org.sensorhub.impl.persistence.SensorStorageHelperConfig",
-    "id": "5cb05c9c-9e08-4cca-5691-ff4ff948bdc2",
-    "name": "Weather Sensor Storage Helper",
-    "moduleClass": "org.sensorhub.impl.persistence.SensorStorageHelper",
-    "enabled": true,
-    "storageID": "5cb05c9c-9e08-4fa1-8731-ff4ff948bdc2",
-    "sensorID": "d136b6ea-3950-4691-bf56-c84ec7d89d73"
+    "dataSourceID": "d136b6ea-3950-4691-bf56-c84ec7d89d73",
+    "storageConfig":    
+    {
+      "objClass": "org.sensorhub.impl.persistence.perst.BasicStorageConfig",
+      "moduleClass": "org.sensorhub.impl.persistence.perst.BasicStorageImpl",
+      "memoryCacheSize": 1024,
+      "storagePath": "weather_obs.dat"
+    }
   },
   {
     "objClass": "org.sensorhub.impl.service.sos.SOSServiceConfig",
@@ -116,14 +98,6 @@
            "uri": "urn:mysos:offering03",
            "sensorID": "d136b6ea-3950-4691-bf56-c84ec7d89d73",           
            "storageID": "5cb05c9c-9e08-4fa1-8731-ff4ff948bdc2"
-       },
-       {
-           "objClass": "org.sensorhub.impl.service.sos.SensorDataProviderConfig",
-           "enabled": true,
-           "name": "Fake Camera",
-           "description": "Fake Camera sensor",
-           "uri": "urn:mysos:offering04",
-           "sensorID": "d136b6ea-3950-4691-bf56-c84ec7d89d74"
        }
     ],
     "ogcCapabilitiesInfo": {

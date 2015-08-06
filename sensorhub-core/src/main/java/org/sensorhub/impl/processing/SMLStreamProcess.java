@@ -52,48 +52,66 @@ public class SMLStreamProcess extends AbstractStreamProcess<SMLStreamProcessConf
     public void init(SMLStreamProcessConfig config) throws SensorHubException
     {
         this.config = config;
-        SMLUtils utils = new SMLUtils();
         
-        // parse SensorML file
-        try
+        // only go further if sensorML file was provided
+        // otherwise we'll do it at the next update
+        if (config.sensorML != null)
         {
-            InputStream is = new URL(config.sensorML).openStream();
-            processDescription = utils.readProcess(is);
-            smlProcess = (AbstractProcessImpl)processDescription;
+            SMLUtils utils = new SMLUtils(SMLUtils.V2_0);
             
-            // execute the whole chain in a single thread
-            if (smlProcess instanceof AggregateProcessImpl)
-                ((AggregateProcessImpl)smlProcess).setChildrenThreadsOn(false);
+            // parse SensorML file
+            try
+            {
+                InputStream is = new URL(config.sensorML).openStream();
+                processDescription = utils.readProcess(is);
+                smlProcess = (AbstractProcessImpl)processDescription;
+                
+                // execute the whole chain in a single thread
+                if (smlProcess instanceof AggregateProcessImpl)
+                    ((AggregateProcessImpl)smlProcess).setChildrenThreadsOn(false);
+            }
+            catch (Exception e)
+            {
+                throw new ProcessException("Error while parsing static SensorML description for process " +
+                        MsgUtils.moduleString(this), e);
+            }
+            
+            // make process executable
+            try
+            {
+                utils.makeProcessExecutable(smlProcess);
+                smlProcess.createNewInputBlocks();
+                smlProcess.createNewOutputBlocks();
+            }
+            catch (SMLProcessException e)
+            {
+                throw new ProcessException("Error while preparing SensorML process for execution in " +
+                        MsgUtils.moduleString(this), e);
+            }
+            
+            // advertise process inputs and outputs
+            scanIOList(smlProcess.getInputList(), inputs, false);
+            scanIOList(smlProcess.getParameterList(), parameters, false);
+            scanIOList(smlProcess.getOutputList(), outputs, true);
         }
-        catch (Exception e)
-        {
-            throw new ProcessException("Error while parsing static SensorML description for process " +
-                    MsgUtils.moduleString(this), e);
-        }
-        
-        // make process executable
-        try
-        {
-            utils.makeProcessExecutable(smlProcess);
-            smlProcess.createNewInputBlocks();
-            smlProcess.createNewOutputBlocks();
-        }
-        catch (SMLProcessException e)
-        {
-            throw new ProcessException("Error while preparing SensorML process for execution in " +
-                    MsgUtils.moduleString(this), e);
-        }
-        
-        // advertise process inputs and outputs
-        scanIOList(smlProcess.getInputList(), inputs, false);
-        scanIOList(smlProcess.getParameterList(), parameters, false);
-        scanIOList(smlProcess.getOutputList(), outputs, true);
-        
-        // call super to make connections to data sources
-        super.init(config);
     }
     
     
+    @Override
+    public void updateConfig(SMLStreamProcessConfig config) throws SensorHubException
+    {
+        super.updateConfig(config);
+        
+        if (smlProcess == null)
+            init(config);
+        else
+        {
+            stop();
+            start();
+        }
+    }
+
+
     @Override
     protected void connectInput(String inputName, String dataPath, DataQueue inputQueue) throws Exception
     {        
@@ -121,6 +139,9 @@ public class SMLStreamProcess extends AbstractStreamProcess<SMLStreamProcessConf
     @Override
     public void start() throws SensorHubException
     {
+        if (smlProcess == null)
+            throw new SensorHubException("No valid SensorML processing chain provided");
+        
         try
         {
             // start process thread

@@ -30,13 +30,10 @@ import org.apache.commons.io.IOUtils;
 import org.junit.After;
 import org.junit.Test;
 import org.sensorhub.api.module.IModule;
-import org.sensorhub.api.persistence.StorageConfig;
 import org.sensorhub.api.sensor.SensorConfig;
 import org.sensorhub.impl.SensorHub;
 import org.sensorhub.impl.SensorHubConfig;
 import org.sensorhub.impl.module.ModuleRegistry;
-import org.sensorhub.impl.persistence.InMemorySensorStorage;
-import org.sensorhub.impl.service.HttpServer;
 import org.sensorhub.impl.service.HttpServerConfig;
 import org.sensorhub.impl.service.ogc.OGCServiceConfig.CapabilitiesInfo;
 import org.sensorhub.impl.service.sos.SOSProviderConfig;
@@ -59,7 +56,9 @@ import org.vast.ows.OWSException;
 import org.vast.ows.OWSResponse;
 import org.vast.ows.OWSUtils;
 import org.vast.ows.sos.InsertObservationRequest;
+import org.vast.ows.sos.InsertResultTemplateRequest;
 import org.vast.ows.sos.InsertSensorRequest;
+import org.vast.ows.swe.InsertSensorResponse;
 import org.vast.ows.sos.SOSOfferingCapabilities;
 import org.vast.ows.sos.SOSServiceCapabilities;
 import org.vast.ows.sos.SOSUtils;
@@ -70,6 +69,7 @@ import org.vast.util.TimeExtent;
 
 public class TestSOSTService
 {
+    static final int SERVER_PORT = 8888;
     private static String SERVICE_ENDPOINT = "/sos";
     private static String SENSOR_UID = "urn:mycompany:mysensor:0001";
     File configFile;
@@ -83,10 +83,9 @@ public class TestSOSTService
         SensorHub.createInstance(new SensorHubConfig(configFile.getAbsolutePath(), configFile.getParent()));
         
         // start HTTP server
-        HttpServer server = HttpServer.getInstance();
-        HttpServerConfig config = new HttpServerConfig();
-        server.init(config);
-        server.start();
+        HttpServerConfig httpConfig = new HttpServerConfig();
+        httpConfig.httpPort = SERVER_PORT;
+        SensorHub.getInstance().getModuleRegistry().loadModule(httpConfig);
     }
     
     
@@ -94,13 +93,6 @@ public class TestSOSTService
     {   
         ModuleRegistry registry = SensorHub.getInstance().getModuleRegistry();
                 
-        // start sensorML storage module
-        StorageConfig config = new StorageConfig();
-        config.moduleClass = InMemorySensorStorage.class.getCanonicalName();
-        config.name = "SensorML DB";
-        config.enabled = true;
-        registry.loadModule(config);
-        
         // create service config
         SOSServiceConfig serviceCfg = new SOSServiceConfig();
         serviceCfg.moduleClass = SOSService.class.getCanonicalName();
@@ -151,7 +143,7 @@ public class TestSOSTService
     
     protected String getSosEndpointUrl()
     {
-        return "http://localhost:8080/sensorhub" + SERVICE_ENDPOINT;
+        return "http://localhost:" + SERVER_PORT + "/sensorhub" + SERVICE_ENDPOINT;
     }
     
     
@@ -219,6 +211,21 @@ public class TestSOSTService
     }
     
     
+    protected InsertResultTemplateRequest buildInsertResultTemplate(DataStream output, InsertSensorResponse resp) throws Exception
+    {
+        // build insert sensor request
+        InsertResultTemplateRequest req = new InsertResultTemplateRequest();
+        req.setPostServer(getSosEndpointUrl());
+        req.setVersion("2.0");
+        req.setOffering(resp.getAssignedOffering());
+        req.setResultStructure(output.getElementType());
+        req.setResultEncoding(output.getEncoding());
+        req.setObservationTemplate(new ObservationImpl());
+        return req;
+    }
+    
+    
+    
     @Test
     public void testSetupService() throws Exception
     {
@@ -256,11 +263,9 @@ public class TestSOSTService
         utils.writeXMLResponse(System.out, caps);
         assertEquals(2, caps.getLayers().size());
         
-        // check offering has correct observable properties, foi types, etc.
+        // check offering has correct properties
         SOSOfferingCapabilities newOffering = (SOSOfferingCapabilities)caps.getLayers().get(1);
-        assertTrue("Observation types missing", newOffering.getObservationTypes().containsAll(req.getObservationTypes()));
-        assertTrue("Observed properties missing", newOffering.getObservableProperties().containsAll(req.getObservableProperties()));
-        assertTrue("Procedure format missing", newOffering.getProcedureFormats().contains(req.getProcedureDescriptionFormat()));
+        assertEquals(req.getProcedureDescription().getUniqueIdentifier(), newOffering.getProcedures().iterator().next());
     }
 
     
@@ -310,11 +315,37 @@ public class TestSOSTService
     }
     
     
-    //@Test
+    @Test
     public void testInsertResultTemplate() throws Exception
     {
-        // send insert template
+        setupFramework();
+        deployService(buildSensorProvider1());
+        OWSUtils utils = new OWSUtils();
         
+        // first register sensor
+        InsertSensorRequest req = buildInsertSensor();
+        InsertSensorResponse resp = (InsertSensorResponse)utils.sendRequest(req, false);
+        
+        // send insert template
+        DataStream output = (DataStream)req.getProcedureDescription().getOutputList().get(0);
+        utils.sendRequest(buildInsertResultTemplate(output, resp), false);
+        output = (DataStream)req.getProcedureDescription().getOutputList().get(1);
+        utils.sendRequest(buildInsertResultTemplate(output, resp), false);
+        
+        // get capabilities
+        GetCapabilitiesRequest getCap = new GetCapabilitiesRequest();
+        getCap.setService(SOSUtils.SOS);
+        getCap.setVersion("2.0");
+        getCap.setGetServer(getSosEndpointUrl());
+        SOSServiceCapabilities caps = (SOSServiceCapabilities)utils.sendRequest(getCap, false);
+        utils.writeXMLResponse(System.out, caps);
+        assertEquals(2, caps.getLayers().size());
+        
+        // check offering now has new observed properties
+        SOSOfferingCapabilities newOffering = (SOSOfferingCapabilities)caps.getLayers().get(1);
+        assertTrue("Observation types missing", newOffering.getObservationTypes().containsAll(req.getObservationTypes()));
+        assertTrue("Observed properties missing", newOffering.getObservableProperties().containsAll(req.getObservableProperties()));
+        assertTrue("Procedure format missing", newOffering.getProcedureFormats().contains(req.getProcedureDescriptionFormat()));
     }
 
     
@@ -344,10 +375,17 @@ public class TestSOSTService
     public void cleanup()
     {
         try
-        {
+        {           
+            // also make sure we cleanup all modules to remove all generated files
+            ModuleRegistry registry = SensorHub.getInstance().getModuleRegistry();
+            for (IModule<?> module: registry.getLoadedModules()) 
+            {
+                module.stop();
+                module.cleanup();
+            }
+            registry.shutdown(false, false);
+            
             configFile.delete();
-            SensorHub.getInstance().stop();
-            HttpServer.getInstance().cleanup();
         }
         catch (Exception e)
         {

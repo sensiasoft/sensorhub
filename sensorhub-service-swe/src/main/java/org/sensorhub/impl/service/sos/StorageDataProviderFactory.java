@@ -14,32 +14,35 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.impl.service.sos;
 
-import java.util.HashSet;
-import java.util.LinkedHashSet;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.Set;
+import net.opengis.gml.v32.AbstractFeature;
 import net.opengis.sensorml.v20.AbstractProcess;
 import net.opengis.swe.v20.DataArray;
 import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataRecord;
 import net.opengis.swe.v20.SimpleComponent;
 import org.sensorhub.api.common.SensorHubException;
-import org.sensorhub.api.module.IModule;
-import org.sensorhub.api.persistence.IBasicStorage;
-import org.sensorhub.api.persistence.IDataFilter;
-import org.sensorhub.api.persistence.ITimeSeriesDataStore;
-import org.sensorhub.api.persistence.StorageException;
+import org.sensorhub.api.persistence.FoiFilter;
+import org.sensorhub.api.persistence.IFoiFilter;
+import org.sensorhub.api.persistence.IObsStorage;
+import org.sensorhub.api.persistence.IRecordStorageModule;
+import org.sensorhub.api.persistence.IRecordStoreInfo;
+import org.sensorhub.api.persistence.IStorageModule;
 import org.sensorhub.api.sensor.SensorException;
 import org.sensorhub.api.service.ServiceException;
 import org.sensorhub.impl.SensorHub;
 import org.sensorhub.utils.MsgUtils;
 import org.vast.data.DataIterator;
 import org.vast.ogc.om.IObservation;
-import org.vast.ows.server.SOSDataFilter;
 import org.vast.ows.sos.ISOSDataProvider;
+import org.vast.ows.sos.SOSDataFilter;
 import org.vast.ows.sos.SOSOfferingCapabilities;
 import org.vast.ows.swe.SWESOfferingCapabilities;
 import org.vast.swe.SWEConstants;
+import org.vast.util.Bbox;
 import org.vast.util.TimeExtent;
 
 
@@ -63,20 +66,20 @@ import org.vast.util.TimeExtent;
 public class StorageDataProviderFactory implements IDataProviderFactory
 {
     final StorageDataProviderConfig config;
-    final IBasicStorage<?> storage;
+    final IRecordStorageModule<?> storage;
     SOSOfferingCapabilities caps;
     
     
     protected StorageDataProviderFactory(StorageDataProviderConfig config) throws SensorHubException
     {
         this.config = config;
-        IModule<?> storageModule = null;
+        IStorageModule<?> storageModule = null;
         
         // get handle to data storage instance
         try
         {
             storageModule = SensorHub.getInstance().getPersistenceManager().getModuleById(config.storageID);
-            this.storage = (IBasicStorage<?>)storageModule;
+            this.storage = (IRecordStorageModule<?>)storageModule;
         }
         catch (ClassCastException e)
         {
@@ -113,10 +116,7 @@ public class StorageDataProviderFactory implements IDataProviderFactory
                 caps.setDescription("Data available from storage " + storage.getName());
             
             // observable properties
-            Set<String> outputDefs = getObservablePropertiesFromStorage();
-            caps.getObservableProperties().addAll(outputDefs);
-            
-            // observed area ??
+            getObservablePropertiesFromStorage(caps.getObservableProperties());
             
             // add phenomenon time = period of data available in storage
             caps.setPhenomenonTime(getTimeExtentFromStorage());
@@ -128,15 +128,22 @@ public class StorageDataProviderFactory implements IDataProviderFactory
             caps.getResponseFormats().add(SWESOfferingCapabilities.FORMAT_OM2);
             caps.getProcedureFormats().add(SWESOfferingCapabilities.FORMAT_SML2);
             
-            // TODO foi types (when using an obs storage)
+            // FOI stuff
+            if (storage instanceof IObsStorage)
+            {
+                // FOI IDs
+                getFoisFromStorage(caps.getRelatedFeatures());
+                
+                // observed area = bounding rectangle of all FOIs
+                getFoisSpatialExtentFromStorage();
+            }
             
             // obs types
-            Set<String> obsTypes = getObservationTypesFromStorage();
-            caps.getObservationTypes().addAll(obsTypes);
+            getObservationTypesFromStorage(caps.getObservationTypes());
             
             return caps;
         }
-        catch (SensorHubException e)
+        catch (Exception e)
         {
             throw new ServiceException("Error while generating capabilities for sensor " + MsgUtils.moduleString(storage), e);
         }
@@ -148,31 +155,39 @@ public class StorageDataProviderFactory implements IDataProviderFactory
     {
         try
         {
+            // update time extent
             TimeExtent newTimeExtent = getTimeExtentFromStorage();
             caps.setPhenomenonTime(newTimeExtent);
+            
+            // update FOI list and BBOX
+            if (storage instanceof IObsStorage)
+            {
+                getFoisFromStorage(caps.getRelatedFeatures());
+                getFoisSpatialExtentFromStorage();
+            }
         }
-        catch (StorageException e)
+        catch (Exception e)
         {
             throw new ServiceException("Error while updating capabilities for sensor " + MsgUtils.moduleString(storage), e);
-        }        
+        }
     }
 
 
     /*
-     * Builds list of observable properties by scanning record structure of each data store
+     * Gets time extents for all records from storage 
      */
-    protected TimeExtent getTimeExtentFromStorage() throws StorageException
+    protected TimeExtent getTimeExtentFromStorage()
     {
         TimeExtent timeExtent = new TimeExtent();
         
         // process outputs descriptions
-        for (Entry<String, ? extends ITimeSeriesDataStore<IDataFilter>> entry: storage.getDataStores().entrySet())
+        for (Entry<String, ? extends IRecordStoreInfo> entry: storage.getRecordStores().entrySet())
         {
             // skip hidden outputs
             if (config.hiddenOutputs != null && config.hiddenOutputs.contains(entry.getKey()))
                 continue;
             
-            double[] storedPeriod = entry.getValue().getDataTimeRange();
+            double[] storedPeriod = storage.getRecordsTimeRange(entry.getKey());
             
             if (!Double.isNaN(storedPeriod[0]))
             {
@@ -186,14 +201,44 @@ public class StorageDataProviderFactory implements IDataProviderFactory
     
     
     /*
+     * Builds list of FOI IDs from storage
+     */
+    protected void getFoisFromStorage(Set<String> foiIDs)
+    {
+        FoiFilter filter = new FoiFilter();
+        int numFois = ((IObsStorage) storage).getNumFois(filter);
+        if (numFois < config.maxFois)
+        {
+            Iterator<String> it = ((IObsStorage)storage).getFoiIDs(filter);
+            while (it.hasNext())
+                foiIDs.add(it.next());
+        }
+    }
+    
+    
+    /*
+     * Gets FOIs bounding rectangle from storage
+     */
+    protected void getFoisSpatialExtentFromStorage()
+    {
+        Bbox bbox = ((IObsStorage) storage).getFoisSpatialExtent();
+        if (bbox != null)
+        {
+            if (caps.getObservedAreas().size() == 0)
+                caps.getObservedAreas().add(bbox);
+            else
+                caps.getObservedAreas().set(0, bbox);
+        }
+    }
+    
+    
+    /*
      * Builds list of observable properties by scanning record structure of each data store
      */
-    protected Set<String> getObservablePropertiesFromStorage() throws StorageException
+    protected void getObservablePropertiesFromStorage(Set<String> observables)
     {
-        HashSet<String> observableUris = new LinkedHashSet<String>();
-        
         // process outputs descriptions
-        for (Entry<String, ? extends ITimeSeriesDataStore<IDataFilter>> entry: storage.getDataStores().entrySet())
+        for (Entry<String, ? extends IRecordStoreInfo> entry: storage.getRecordStores().entrySet())
         {
             // skip hidden outputs
             if (config.hiddenOutputs != null && config.hiddenOutputs.contains(entry.getKey()))
@@ -201,47 +246,41 @@ public class StorageDataProviderFactory implements IDataProviderFactory
             
             // iterate through all SWE components and add all definition URIs as observables
             // this way only composites with URI will get added
-            ITimeSeriesDataStore<?> timeSeries = entry.getValue();
-            DataIterator it = new DataIterator(timeSeries.getRecordDescription());
+            DataComponent recordStruct = entry.getValue().getRecordDescription();
+            DataIterator it = new DataIterator(recordStruct);
             while (it.hasNext())
             {
                 String defUri = (String)it.next().getDefinition();
                 if (defUri != null && !defUri.equals(SWEConstants.DEF_SAMPLING_TIME))
-                    observableUris.add(defUri);
+                    observables.add(defUri);
             }
         }
-        
-        return observableUris;
     }
     
     
     /*
-     * Build list of observertion types by scanning record structure of each data store
+     * Build list of observation types by scanning record structure of each data store
      */
-    protected Set<String> getObservationTypesFromStorage() throws StorageException
+    protected void getObservationTypesFromStorage(Set<String> obsTypes)
     {
-        HashSet<String> obsTypes = new HashSet<String>();
         obsTypes.add(IObservation.OBS_TYPE_GENERIC);
         
         // process outputs descriptions
-        for (Entry<String, ? extends ITimeSeriesDataStore<IDataFilter>> entry: storage.getDataStores().entrySet())
+        for (Entry<String, ? extends IRecordStoreInfo> entry: storage.getRecordStores().entrySet())
         {
             // skip hidden outputs
             if (config.hiddenOutputs != null && config.hiddenOutputs.contains(entry.getKey()))
                 continue;
             
             // obs type depends on top-level component
-            ITimeSeriesDataStore<?> timeSeries = entry.getValue();
-            DataComponent dataStruct = timeSeries.getRecordDescription();
-            if (dataStruct instanceof SimpleComponent)
+            DataComponent recordStruct = entry.getValue().getRecordDescription();
+            if (recordStruct instanceof SimpleComponent)
                 obsTypes.add(IObservation.OBS_TYPE_SCALAR);
-            else if (dataStruct instanceof DataRecord)
+            else if (recordStruct instanceof DataRecord)
                 obsTypes.add(IObservation.OBS_TYPE_RECORD);
-            else if (dataStruct instanceof DataArray)
+            else if (recordStruct instanceof DataArray)
                 obsTypes.add(IObservation.OBS_TYPE_ARRAY);
         }
-        
-        return obsTypes;
     }
     
     
@@ -256,11 +295,21 @@ public class StorageDataProviderFactory implements IDataProviderFactory
     
     
     @Override
-    public ISOSDataProvider getNewProvider(SOSDataFilter filter) throws ServiceException
+    public ISOSDataProvider getNewDataProvider(SOSDataFilter filter) throws ServiceException
     {
         checkEnabled();
-        return new StorageDataProvider(storage, filter);
+        return new StorageDataProvider(storage, config, filter);
     }    
+    
+    
+    @Override
+    public Iterator<AbstractFeature> getFoiIterator(final IFoiFilter filter) throws Exception
+    {
+        if (storage instanceof IObsStorage)
+            return ((IObsStorage) storage).getFois(filter);
+        
+        return Collections.EMPTY_LIST.iterator();
+    }
     
     
     /**

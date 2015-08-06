@@ -17,8 +17,8 @@ package org.sensorhub.api.persistence;
 
 /**
  * <p>
- * Base class for all data storage keys used in SensorHub.
- * Keys are used to store and retrieve data records from a storage.
+ * Base class for all keys associated to data records in SensorHub.
+ * Keys are used to store time stamped data records in storage.
  * </p>
  *
  * @author Alex Robin <alex.robin@sensiasoftware.com>
@@ -27,27 +27,47 @@ package org.sensorhub.api.persistence;
 public class DataKey
 {
     /**
-     * ID of data producer (i.e. the entity that produced the values in the data block).
-     * If value is null on retrieval, no filtering will be applied on producer ID
+     * ID of record type (i.e. maps to a record structure definition).<br/>
+     * This field cannot be null.
      */
-    public String producerID = null;
+    public String recordType;
     
     
     /**
-     * Time stamp of record
-     * If value is NaN on retrieval, no temporal filtering will be applied
+     * Time stamp of data record (e.g. measurement sampling time).<br/>
+     * If value is NaN, data record will never be selected when filtering on time stamp
      */
     public double timeStamp = Double.NaN;
     
     
     /**
-     * Default constructor providing basic indexing metadata
-     * @param producerID
-     * @param timeStamp
+     * ID of data producer (i.e. the entity that produced the data record).<br/>
+     * If value is null, data record will never be selected when filtering on producer ID
      */
-    public DataKey(String producerID, double timeStamp)
+    public String producerID = null;
+    
+    
+    /**
+     * Default constructor providing basic indexing metadata
+     * @param recordType {@link #recordType}
+     * @param timeStamp {@link #timeStamp}
+     */
+    public DataKey(String recordType, double timeStamp)
     {
-        this.producerID = producerID;
+        this.recordType = recordType;
         this.timeStamp = timeStamp;
+    }
+    
+    
+    /**
+     * Constructor with specific producer ID
+     * @param recordType {@link #recordType}
+     * @param producerID {@link #producerID}
+     * @param timeStamp {@link #timeStamp}
+     */
+    public DataKey(String recordType, String producerID, double timeStamp)
+    {
+        this(recordType, timeStamp);
+        this.producerID = producerID;
     }
 }

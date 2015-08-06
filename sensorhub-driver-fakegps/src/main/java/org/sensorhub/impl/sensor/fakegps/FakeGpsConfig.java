@@ -22,11 +22,13 @@ public class FakeGpsConfig extends SensorConfig
     
     public String googleApiUrl = "http://maps.googleapis.com/maps/api/directions/json";
     
-    public double centerLatitude; // in deg
+    public double centerLatitude = 34.7300; // in deg
     
-    public double centerLongitude; // in deg
+    public double centerLongitude = -86.5850; // in deg
     
     public double areaSize = 0.1; // in deg
     
     public double vehicleSpeed = 40; // km/h
+    
+    public boolean walkingMode = false;
 }

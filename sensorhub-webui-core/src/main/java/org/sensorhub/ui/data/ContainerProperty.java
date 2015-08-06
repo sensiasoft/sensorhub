@@ -15,20 +15,18 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 package org.sensorhub.ui.data;
 
 import java.lang.reflect.Field;
+import java.util.List;
 import org.sensorhub.api.config.DisplayInfo;
-import com.vaadin.data.Container;
-import com.vaadin.data.util.AbstractProperty;
 
 
-@SuppressWarnings("serial")
-public class ContainerProperty extends AbstractProperty<Container>
+@SuppressWarnings({ "serial", "rawtypes" })
+public class ContainerProperty extends BaseProperty<MyBeanItemContainer>
 {
     Object instance;
-    Field f;
-    Container container;
+    MyBeanItemContainer container;
     
 
-    public ContainerProperty(Object instance, Field f, Container container)
+    public ContainerProperty(Object instance, Field f, MyBeanItemContainer container)
     {
         this.instance = instance;
         this.f = f;
@@ -37,21 +35,38 @@ public class ContainerProperty extends AbstractProperty<Container>
 
 
     @Override
-    public Container getValue()
+    public MyBeanItemContainer getValue()
     {
         return container;
     }
 
 
     @Override
-    public void setValue(Container newValue) throws ReadOnlyException
+    public void setValue(MyBeanItemContainer newValue) throws ReadOnlyException
     {
-        // container instance cannot be changed
+        if (List.class.isAssignableFrom(f.getType()))
+        {
+            try
+            {
+                List list = (List)f.get(instance);
+                list.clear();
+                
+                for (Object itemId: container.getItemIds())
+                {
+                    Object bean = container.getUnfilteredItem(itemId).getBean();
+                    list.add(bean);
+                }
+            }
+            catch (Exception e)
+            {
+                e.printStackTrace();
+            }
+        }
     }
 
 
     @Override
-    public Class<? extends Container> getType()
+    public Class<? extends MyBeanItemContainer> getType()
     {
         return container.getClass();
     }
@@ -64,5 +79,11 @@ public class ContainerProperty extends AbstractProperty<Container>
             return ann.label();
         else
             return null;
+    }
+
+
+    public Field getField()
+    {
+        return f;
     }
 }

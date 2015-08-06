@@ -14,7 +14,8 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.api.data;
 
-import org.sensorhub.api.common.Event;
+import org.sensorhub.api.common.EntityEvent;
+import org.sensorhub.api.data.DataEvent.Type;
 import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataComponent;
 
@@ -28,31 +29,28 @@ import net.opengis.swe.v20.DataComponent;
  * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @since Feb 20, 2015
  */
-public class DataEvent extends Event
+public class DataEvent extends EntityEvent<Type>
 {
 	/**
      * Possible event types for a DataEvent
      */
-    public enum Type
+    public static enum Type
     {
-        NEW_DATA_AVAILABLE
+        /**
+         * New data is available from a sensor or process
+         */
+        NEW_DATA_AVAILABLE,
+        
+        /**
+         * For data that has already been sent but needs to be updated.<br/>
+         * (e.g. a model has actualized some of its predicted data)
+         */
+        DATA_UPDATED
     };
-    
-    
-    /**
-     * Type of data event
-     */
-    protected Type type;
-    
-    
-	/**
-	 * Description of data records contained in this event (by reference) 
-	 */
-	protected DataComponent recordDescription;
 	
 	
 	/**
-	 * New data that triggered this event.
+	 * New data that triggered this event.<br/>
 	 * Multiple records can be associated to a single event because with high
 	 * rate producers, it is often not practical to generate an event for
 	 * every single record of measurements.
@@ -61,40 +59,62 @@ public class DataEvent extends Event
 	
 	
 	/**
-	 * Constructor from list of records with their descriptor
-	 * @param timeStamp time of event generation (julian time, base 1970)
-     * @param source stream interface that generated the associated data
+	 * Constructs a data event with no related entity
+	 * @param timeStamp time of event generation (unix time in milliseconds, base 1970)
+     * @param dataInterface stream interface that generated the associated data
 	 * @param records arrays of records that triggered this notification
 	 */
-	public DataEvent(long timeStamp, IStreamingDataInterface source, DataBlock ... records)
+	public DataEvent(long timeStamp, IStreamingDataInterface dataInterface, DataBlock ... records)
 	{
-	    this.type = Type.NEW_DATA_AVAILABLE;
-	    this.timeStamp = timeStamp;
-		this.source = source;
-		this.recordDescription = source.getRecordDescription();
-		this.records = records;
+	    this(timeStamp, null, dataInterface, records);
 	}
 	
 	
-	@Override
-    public IStreamingDataInterface getSource()
+	/**
+     * Constructs a data event associated to an identifiable entity
+     * @param timeStamp time of event generation (unix time in milliseconds, base 1970)
+	 * @param entityID Unique ID of entity that produced the data records
+     * @param dataInterface stream interface that generated the associated data
+     * @param records arrays of records that triggered this notification
+     */
+    public DataEvent(long timeStamp, String entityID, IStreamingDataInterface dataInterface, DataBlock ... records)
     {
-        return (IStreamingDataInterface)this.source;
+        this.type = Type.NEW_DATA_AVAILABLE;
+        this.timeStamp = timeStamp;
+        //this.producerID = dataInterface.getParentModule().getLocalID();
+        //this.channelID = dataInterface.getName();
+        this.source = dataInterface;
+        this.relatedEntityID = entityID;
+        this.records = records;
     }
+		
 	
-	
+	@Override
     public Type getType()
     {
         return type;
     }
-
-
+	
+	
+    @Override
+    public IStreamingDataInterface getSource()
+    {
+        return (IStreamingDataInterface)this.source;
+    }
+	   
+	
+    /**
+     * @return description of the data records attached to this event
+     */
     public DataComponent getRecordDescription()
     {
-        return recordDescription;
+        return ((IStreamingDataInterface)source).getRecordDescription();
     }
 
 
+    /**
+     * @return list of data records produced
+     */
     public DataBlock[] getRecords()
     {
         return records;

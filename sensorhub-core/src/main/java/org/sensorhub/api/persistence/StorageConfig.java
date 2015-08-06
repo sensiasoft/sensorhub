@@ -32,11 +32,5 @@ public class StorageConfig extends ModuleConfig
 	 * Path to storage on storage device (file, folder, URL, etc...)
 	 */
 	public String storagePath;
-	
-	
-	/**
-	 * Memory cache size in kilobytes
-	 */
-	public int memoryCacheSize;
 
 }

@@ -1,34 +1,40 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <artifactId>sensorhub-test</artifactId>
+  <parent>
+     <groupId>org.sensorhub</groupId>
+     <artifactId>sensorhub-all</artifactId>
+     <version>1.0</version>
+     <relativePath>../sensorhub-all/pom.xml</relativePath>
+  </parent>
   <dependencies>
      <dependency>
         <groupId>org.sensorhub</groupId>
         <artifactId>sensorhub-core</artifactId>
-        <version>0.5</version>
+        <version>1.0</version>
         <type>bundle</type>
      </dependency>
      <dependency>
         <groupId>org.sensorhub</groupId>
         <artifactId>sensorhub-webui-core</artifactId>
-        <version>0.5</version>
+        <version>1.0</version>
      </dependency>
      <dependency>
         <groupId>org.sensorhub</groupId>
         <artifactId>sensorhub-service-swe</artifactId>
-        <version>0.5</version>
+        <version>1.0</version>
         <type>bundle</type>
      </dependency>
      <dependency>
         <groupId>org.sensorhub</groupId>
         <artifactId>sensorhub-storage-perst</artifactId>
-        <version>0.5</version>
+        <version>1.0</version>
         <type>bundle</type>
      </dependency>
      <dependency>
         <groupId>org.sensorhub</groupId>
         <artifactId>sensorhub-driver-v4l</artifactId>
-        <version>0.5</version>
+        <version>0.1</version>
         <type>bundle</type>
      </dependency>
      <dependency>
@@ -48,14 +54,25 @@
      </dependency>
      <dependency>
         <groupId>org.sensorhub</groupId>
+        <artifactId>sensorhub-driver-weatherStation</artifactId>
+        <version>0.1</version>
+     </dependency>
+     <dependency>
+        <groupId>org.sensorhub</groupId>
         <artifactId>sensorhub-driver-axis</artifactId>
         <version>0.1</version>
         <type>bundle</type>
      </dependency>
      <dependency>
+        <groupId>org.sensorhub</groupId>
+        <artifactId>sensorhub-driver-trupulse</artifactId>
+        <version>0.1</version>
+     </dependency>
+     <dependency>
         <groupId>org.vast.opengis</groupId>
         <artifactId>swe-common-video</artifactId>
         <version>1.0</version>
+        <scope>test</scope>
      </dependency>
      <dependency>
         <groupId>org.vast.opengis</groupId>
@@ -69,14 +86,30 @@
         <version>0.1.5</version>
      </dependency>
      <dependency>
+<<<<<<< HEAD
      	<groupId>org.sensorhub</groupId>
      	<artifactId>sensorhub-driver-weatherStation</artifactId>
      	<version>0.1</version>
+=======
+        <groupId>org.sensorhub</groupId>
+        <artifactId>sensorhub-process-sat</artifactId>
+        <version>0.1-SNAPSHOT</version>
+     </dependency>
+     <dependency>
+        <groupId>org.sensorhub</groupId>
+        <artifactId>sensorhub-driver-mti</artifactId>
+        <version>0.1</version>
+     </dependency>
+     <dependency>
+        <groupId>org.sensorhub</groupId>
+        <artifactId>sensorhub-comm-rxtx</artifactId>
+        <version>0.1</version>
+     </dependency>
+     <dependency>
+        <groupId>org.sensorhub</groupId>
+        <artifactId>sensorhub-service-sensorthings</artifactId>
+        <version>0.1-SNAPSHOT</version>
+>>>>>>> 209fd0c688502a09146dd294679463e87e6157b0
      </dependency>
   </dependencies>
-  <parent>
-     <groupId>org.sensorhub</groupId>
-     <artifactId>sensorhub-all</artifactId>
-     <version>0.5</version>
-  </parent>
 </project>

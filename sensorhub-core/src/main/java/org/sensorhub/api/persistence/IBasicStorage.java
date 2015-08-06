@@ -14,9 +14,11 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.api.persistence;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import net.opengis.sensorml.v20.AbstractProcess;
+import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataEncoding;
 
@@ -24,17 +26,15 @@ import net.opengis.swe.v20.DataEncoding;
 /**
  * <p>
  * Storage for one or more data streams coming from a single source.
- * (for instance, the source can be a sensor, a service or a process)
- * 
+ * (for instance, the source can be a sensor, a service or a process)<br/> 
  * This also supports storing lineage information if a description of the
  * data source is provided. 
  * </p>
  *
  * @author Alex Robin <alex.robin@sensiasoftware.com>
- * @param <ConfigType> Type of storage configuration
  * @since Nov 27, 2014
  */
-public interface IBasicStorage<ConfigType extends StorageConfig> extends IStorageModule<ConfigType>
+public interface IBasicStorage
 {
     
     /**
@@ -65,18 +65,16 @@ public interface IBasicStorage<ConfigType extends StorageConfig> extends IStorag
      * Stores a new data source description into storage.
      * Validity period must not overlap with existing descriptions
      * @param process SensorML process description to store
-     * @throws StorageException if new description cannot be stored
      */
-    public void storeDataSourceDescription(AbstractProcess process) throws StorageException;
+    public void storeDataSourceDescription(AbstractProcess process);
     
     
     /**
      * Update the data source description in storage.
      * Validity period must be exactly the same as one in storage
      * @param process SensorML process description to update
-     * @throws StorageException if validity period doesn't match any already in storage or new description cannot be stored
      */
-    public void updateDataSourceDescription(AbstractProcess process) throws StorageException;
+    public void updateDataSourceDescription(AbstractProcess process);
     
 
     /**
@@ -95,21 +93,114 @@ public interface IBasicStorage<ConfigType extends StorageConfig> extends IStorag
     
     
     /**
-     * Gets the list of underlying data stores
+     * Gets the list of available record types in this storage
      * @return map of name to data store instance
      */
-    public Map<String, ? extends ITimeSeriesDataStore<IDataFilter>> getDataStores();
+    public Map<String, ? extends IRecordStoreInfo> getRecordStores();
     
     
     /**
-     * Adds a new data store for the specified record structure
-     * @param name name of record stream (should match output name of the data source)
+     * Adds a data store for a new record type in this storage
+     * @param name name of record type (should match output name of the data source)
      * @param recordStructure SWE data component describing the record structure
      * @param recommendedEncoding recommended encoding for this record type
-     * @return newly created data store
-     * @throws StorageException if new data store cannot be created
      */
-    public ITimeSeriesDataStore<IDataFilter> addNewDataStore(String name,
-            DataComponent recordStructure, DataEncoding recommendedEncoding) throws StorageException;
+    public void addRecordStore(String name, DataComponent recordStructure, DataEncoding recommendedEncoding);
+        
+    
+    /**
+     * Helper method to retrieve the total number of method for the specified
+     * record type
+     * @param recordType name of record type
+     * @return total number of records
+     */
+    public int getNumRecords(String recordType);
+    
+    
+    /**
+     * Retrieves time range spanned by all records of the specified type
+     * @param recordType name of record type
+     * @return array of length 2 in the form [minTime maxTime] or [NaN NaN]
+     * if no records of this type are available
+     */
+    public double[] getRecordsTimeRange(String recordType);
+    
+    
+    /**
+     * Retrieves time boundaries of data clusters 
+     * (i.e. this allows to detect temporal holes in the data)
+     * @param recordType name of record type
+     * @return A read-only iterator among time periods delimiting clusters of data
+     */
+    public Iterator<double[]> getRecordsTimeClusters(String recordType);
+    
+    
+    /**
+     * Retrieves raw data block with the specified key
+     * @param key Record key
+     * @return data block or null if no record with the specified key was found
+     */
+    public DataBlock getDataBlock(DataKey key);
+    
+    
+    /**
+     * Gets iterator of raw data blocks matching the specified filter
+     * @param filter filtering parameters
+     * @return A read-only iterator among data blocks matching the filter
+     */
+    public Iterator<DataBlock> getDataBlockIterator(IDataFilter filter);
+    
+    
+    /**
+     * Gets iterator of records matching the specified filter
+     * @param filter filtering parameters
+     * @return A read-only iterator among records matching the filter
+     */
+    public Iterator<? extends IDataRecord> getRecordIterator(IDataFilter filter);
+    
+    
+    /**
+     * Computes the (potentially approximate) number of records matching the
+     * given filter.<br/>
+     * Since the returned value can be approximate and the number of matching
+     * records can change before or even during the actual call to
+     * {@link #getRecordIterator(IDataFilter)}, the exact number of records can
+     * only be obtained by counting the records returned by the iterator next()
+     * function.
+     * @param filter filtering parameters
+     * @return number of matching records
+     */
+    public int getNumMatchingRecords(IDataFilter filter);
+    
+    
+    /**
+     * Persists data block in storage
+     * @param key key object to associate to record
+     * @param data actual record data
+     */
+    public void storeRecord(DataKey key, DataBlock data);
+    
+    
+    /**
+     * Updates record with specified key with new data
+     * @param key key of record to update
+     * @param data new data block to assign to the record
+     */
+    public void updateRecord(DataKey key, DataBlock data);
+    
+    
+    /**
+     * Removes record with the specified key
+     * @param key record key
+     */
+    public void removeRecord(DataKey key);
+    
+    
+    /**
+     * Removes all records matching the filter
+     * @param filter filtering parameters
+     * @return number of deleted records
+     */
+    public int removeRecords(IDataFilter filter);
 
 }

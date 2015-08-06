@@ -15,6 +15,7 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 package org.sensorhub.api.persistence;
 
 import org.sensorhub.api.common.Event;
+import org.sensorhub.api.persistence.StorageEvent.Type;
 
 
 /**
@@ -25,7 +26,7 @@ import org.sensorhub.api.common.Event;
  * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @since Nov 12, 2010
  */
-public class StorageEvent extends Event
+public class StorageEvent extends Event<Type>
 {
     
     /**
@@ -40,57 +41,36 @@ public class StorageEvent extends Event
     };
     
     
-    /**
-     * ID of storage that generated the event
-     */
-    protected String storageId;
-    
-    
-    /**
-     * Type of storage event
-     */
-    protected Type type;  
+    String recordType;
 
 
-    public StorageEvent(long timeStamp, IStorageModule<?> source, Type type)
+    public StorageEvent(long timeStamp, IStorageModule<?> source, String recordType, Type type)
     {
-        this.timeStamp = timeStamp;
-        this.source = source;
-        this.storageId = source.getLocalID();
         this.type = type;
-    }
-    
-    
-    public StorageEvent(long timeStamp, IRecordDataStore<?,?> source, Type type)
-    {
         this.timeStamp = timeStamp;
+        //this.producerID = source.getLocalID();
+        //this.channelID = recordType;
         this.source = source;
-        this.storageId = source.getParentStorage().getLocalID();
-        this.type = type;
-    }
-    
-    
-    public String getStorageId()
-    {
-        return storageId;
+        this.recordType = recordType;
     }
 
 
-    public void setStorageId(String storageId)
-    {
-        this.storageId = storageId;
-    }
-
-
+    @Override
     public Type getType()
     {
         return type;
     }
-
-
-    public void setType(Type type)
+    
+    
+    @Override
+    public IStorageModule<?> getSource()
     {
-        this.type = type;
+        return (IStorageModule<?>)this.source;
     }
-
+    
+    
+    public String getRecordType()
+    {
+        return recordType;
+    }
 }

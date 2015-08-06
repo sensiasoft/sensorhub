@@ -16,11 +16,13 @@ package org.sensorhub.ui;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import org.sensorhub.api.module.IModuleProvider;
-import org.sensorhub.api.persistence.IBasicStorage;
+import org.sensorhub.api.module.ModuleConfig;
 import org.sensorhub.impl.SensorHub;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
+import com.vaadin.ui.Notification;
 import com.vaadin.ui.Table;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
@@ -30,44 +32,90 @@ import com.vaadin.ui.Button.ClickEvent;
 public class ModuleTypeSelectionPopup extends Window
 {
     private static final long serialVersionUID = -5368554789542357015L;
-
-
-    @SuppressWarnings("serial")
-    public ModuleTypeSelectionPopup(Class<?> moduleType)
+    private static final String PROP_NAME = "name";
+    private static final String PROP_VERSION = "version";
+    
+    
+    protected interface ModuleTypeSelectionCallback
+    {
+        public void configSelected(Class<?> moduleType, ModuleConfig config);
+    }
+    
+    
+    public ModuleTypeSelectionPopup(final Class<?> moduleType, final ModuleTypeSelectionCallback callback)
     {
         super("Select Module Type");
         VerticalLayout layout = new VerticalLayout();
         
         // generate table with module list
-        Table table = new Table();
+        final Table table = new Table();
         table.setSizeFull();
         table.setSelectable(true);
-        table.setColumnReorderingAllowed(true);
+        table.setColumnReorderingAllowed(true);        
+        table.addContainerProperty(PROP_NAME, String.class, null);
+        table.addContainerProperty(PROP_VERSION, String.class, null);
+        table.addContainerProperty("desc", String.class, null);
+        table.addContainerProperty("author", String.class, null);
+        table.setColumnHeaders(new String[] {"Module Type", "Version", "Description", "Author"});
+        table.setPageLength(10);
+        table.setMultiSelect(false);
         
-        table.addContainerProperty("name", String.class, null);
-        table.addContainerProperty("class", String.class, null);
-        table.setColumnHeaders(new String[] {"Module Type", "Implementing Class"});
-                
-        final Map<Object, Class<?>> configMap = new HashMap<Object, Class<?>>();
+        final Map<Object, IModuleProvider> providerMap = new HashMap<Object, IModuleProvider>();
         for (IModuleProvider provider: SensorHub.getInstance().getModuleRegistry().getInstalledModuleTypes())
         {
             Class<?> configClass = provider.getModuleConfigClass();
-            if (configClass.equals(moduleType))
+            Class<?> moduleClass = provider.getModuleClass();
+            if (moduleType.isAssignableFrom(configClass) || moduleType.isAssignableFrom(moduleClass))
             {
-                Object id = table.addItem(new Object[] {provider.getModuleName(), provider.getModuleClass().getCanonicalName()}, null);
-                configMap.put(id, configClass);
+                Object id = table.addItem(new Object[] {
+                        provider.getModuleName(),
+                        provider.getModuleVersion(),
+                        provider.getModuleDescription(),
+                        provider.getProviderName()}, null);
+                providerMap.put(id, provider);
             }
         }
-        table.addItem(new Object[] {"PERST Storage", IBasicStorage.class.getCanonicalName()}, null);
         layout.addComponent(table);
         
         // add OK button
         Button okButton = new Button("OK");
         okButton.addClickListener(new Button.ClickListener() {
+            private static final long serialVersionUID = 1L;
+
             @Override
             public void buttonClick(ClickEvent event)
             {
+                Object selectedItemId = table.getValue();
+                String name = null;
                 
+                try
+                {
+                    if (selectedItemId != null)
+                    {
+                        name = (String)table.getContainerProperty(selectedItemId, PROP_NAME).getValue();
+                                        
+                        IModuleProvider provider = providerMap.get(selectedItemId);
+                        Class<?> configClass = provider.getModuleConfigClass();
+                        ModuleConfig config = (ModuleConfig)configClass.newInstance();
+                        config.id = UUID.randomUUID().toString();
+                        config.moduleClass = provider.getModuleClass().getCanonicalName();
+                        config.name = "New " + name;
+                        config.enabled = false;
+                        
+                        // send back new config object
+                        callback.configSelected(moduleType, config); 
+                    }
+                }
+                catch (Exception e)
+                {
+                    close();
+                    String version = (String)table.getContainerProperty(selectedItemId, PROP_VERSION).getValue();
+                    Notification.show("Cannot instantiate module " + name + " v" + version, null, Notification.Type.ERROR_MESSAGE);
+                }
+                finally
+                {
+                    close();
+                }
             }
         });
         layout.addComponent(okButton);

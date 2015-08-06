@@ -23,6 +23,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.junit.After;
 import org.junit.Test;
 import org.sensorhub.impl.service.HttpServer;
 import org.sensorhub.impl.service.HttpServerConfig;
@@ -34,7 +35,7 @@ public class TestHttpServer
     @Test
     public void testStartServer() throws Exception
     {
-        HttpServer server = HttpServer.getInstance();
+        HttpServer server = new HttpServer();
         HttpServerConfig config = new HttpServerConfig();
         server.init(config);
         server.start();
@@ -55,7 +56,7 @@ public class TestHttpServer
     public void testDeployServlet() throws Exception
     {
         // start server
-        HttpServer server = HttpServer.getInstance();
+        HttpServer server = new HttpServer();
         HttpServerConfig config = new HttpServerConfig();
         server.init(config);
         server.start();
@@ -63,7 +64,7 @@ public class TestHttpServer
         final String testText = "Deploying hot servlet in SensorHub works";
         
         // deploy new servlet dynamically
-        server.deployServlet("/junit", new HttpServlet() {
+        server.deployServlet(new HttpServlet() {
             private static final long serialVersionUID = 1L;
             protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException
             {
@@ -77,7 +78,7 @@ public class TestHttpServer
                     throw new ServletException(e);
                 }
             }
-        });
+        }, "/junit");
         
         // connect to servlet and check response
         URL url = new URL("http://localhost:" + config.httpPort + config.servletsRootUrl + "/junit");
@@ -88,5 +89,20 @@ public class TestHttpServer
         
         assertTrue(resp.equals(testText));
         server.stop();
+    }
+    
+    
+    @After
+    public void cleanup()
+    {
+        try
+        {
+            HttpServer.getInstance().stop();
+            HttpServer.getInstance().cleanup();
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
     }
 }

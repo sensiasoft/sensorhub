@@ -14,6 +14,7 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.impl;
 
+import java.io.File;
 import org.sensorhub.api.config.IGlobalConfig;
 
 
@@ -39,7 +40,10 @@ public class SensorHubConfig implements IGlobalConfig
     public SensorHubConfig(String moduleConfigPath, String baseStoragePath)
     {
         this.moduleConfigPath = moduleConfigPath;
+        
         this.baseStoragePath = baseStoragePath;
+        if (baseStoragePath != null && !baseStoragePath.endsWith(File.separator))
+            baseStoragePath += File.separator;
     }
     
     
@@ -60,7 +64,6 @@ public class SensorHubConfig implements IGlobalConfig
     @Override
     public String getProperty(String property)
     {
-        // TODO Auto-generated method stub
         return null;
     }
 }

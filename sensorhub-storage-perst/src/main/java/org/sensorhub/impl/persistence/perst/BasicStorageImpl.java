@@ -14,71 +14,53 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.impl.persistence.perst;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import net.opengis.gml.v32.AbstractTimeGeometricPrimitive;
-import net.opengis.gml.v32.TimeInstant;
-import net.opengis.gml.v32.TimePeriod;
 import net.opengis.sensorml.v20.AbstractProcess;
+import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataEncoding;
-import org.garret.perst.Index;
-import org.garret.perst.Key;
 import org.garret.perst.Persistent;
 import org.garret.perst.Storage;
 import org.garret.perst.StorageFactory;
 import org.sensorhub.api.common.SensorHubException;
+import org.sensorhub.api.persistence.DataKey;
 import org.sensorhub.api.persistence.IBasicStorage;
+import org.sensorhub.api.persistence.IRecordStorageModule;
 import org.sensorhub.api.persistence.IDataFilter;
+import org.sensorhub.api.persistence.IDataRecord;
+import org.sensorhub.api.persistence.IRecordStoreInfo;
 import org.sensorhub.api.persistence.IStorageModule;
-import org.sensorhub.api.persistence.ITimeSeriesDataStore;
+import org.sensorhub.api.persistence.StorageEvent;
 import org.sensorhub.api.persistence.StorageException;
-import org.sensorhub.impl.common.BasicEventHandler;
+import org.sensorhub.api.persistence.StorageEvent.Type;
 import org.sensorhub.impl.module.AbstractModule;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 
 /**
  * <p>
- * Basic implementation of a PERST based persistent storage of data records.
- * This class must be listed in the META-INF services folder to be available via the persistence manager.
+ * PERST implementation of {@link IBasicStorage} for storing simple data records.
  * </p>
  *
  * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @since Nov 15, 2014
  */
-public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> implements IBasicStorage<BasicStorageConfig>
-{
-    private static final Logger log = LoggerFactory.getLogger(BasicStorageImpl.class);    
-    
-    private static Key KEY_SML_START_ALL_TIME = new Key(Double.NEGATIVE_INFINITY);
-    private static Key KEY_SML_END_ALL_TIME = new Key(Double.POSITIVE_INFINITY);
-    static Key KEY_DATA_START_ALL_TIME = new Key(new Object[] {Double.NEGATIVE_INFINITY});
-    static Key KEY_DATA_END_ALL_TIME = new Key(new Object[] {Double.POSITIVE_INFINITY});
+public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> implements IRecordStorageModule<BasicStorageConfig>
+{          
+    //private static final Logger log = LoggerFactory.getLogger(BasicStorageImpl.class);    
     
     protected Storage db;
-    protected DBRoot dbRoot;
-    protected Map<String, TimeSeriesImpl> dataStores;
+    protected Persistent dbRoot;
     protected boolean autoCommit;
     
-    
-    /*
-     * Default constructor necessary for java service loader
-     */
-    public BasicStorageImpl()
-    {
-    }
-    
-    
+        
     @Override
-    public void start() throws StorageException
+    public synchronized void start() throws StorageException
     {
         try
         {
@@ -92,49 +74,57 @@ public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> impleme
             db.setProperty("perst.concurrent.iterator", true);
             //db.setProperty("perst.alternative.btree", true);
             db.open(config.storagePath, config.memoryCacheSize*1024);
-            dbRoot = (DBRoot)db.getRoot();
+            dbRoot = (BasicStorageRoot)db.getRoot();
             
             if (dbRoot == null)
             { 
-                dbRoot = new DBRoot();                
+                dbRoot = createRoot(db);    
                 db.setRoot(dbRoot);
             }
-            
-            // make sure all data stores have parent and event handlers
-            // because transient variables are not recreated when loading from existing DB
-            // also keep strong reference to data stores because we may have listeners registered to them
-            for (TimeSeriesImpl timeSeries: dbRoot.dataStores.values())
-            {
-                timeSeries.eventHandler = new BasicEventHandler();
-                timeSeries.parentStorage = this;
-            }
-            
-            dataStores = dbRoot.dataStores;
         }
         catch (Exception e)
         {
             throw new StorageException("Error while opening storage " + config.name, e);
         }
     }
-
+    
+    
+    protected Persistent createRoot(Storage db)
+    {
+        return new BasicStorageRoot(db);
+    }
+    
 
     @Override
-    public void stop() throws SensorHubException
+    public synchronized void stop() throws SensorHubException
     {
-        db.close();
-        db = null;
+        if (db != null) 
+        {
+            db.close();
+            db = null;
+        }
     }
 
 
     @Override
-    public void cleanup() throws SensorHubException
+    public synchronized void cleanup() throws SensorHubException
     {
-        // remove database file?
+        if (db != null)
+            stop();
+        
+        // we just mark file as deleted by renaming it with .deleted suffix
+        // storage will restart with an empty file but we don't loose any data
+        if (config.storagePath != null)
+        {
+            File dbFile = new File(config.storagePath);
+            File newFile = new File(config.storagePath + ".deleted");
+            dbFile.renameTo(newFile);
+        }
     }
     
     
     @Override
-    public void backup(OutputStream os) throws IOException
+    public synchronized void backup(OutputStream os) throws IOException
     {
         db.backup(os);   
     }
@@ -178,76 +168,44 @@ public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> impleme
     @Override
     public void sync(IStorageModule<?> storage)
     {
-        // TODO Auto-generated method stub
-        
+        // TODO Auto-generated method stub        
     }
 
 
     @Override
     public AbstractProcess getLatestDataSourceDescription()
     {
-        Iterator<AbstractProcess> it = dbRoot.descriptionTimeIndex.iterator(KEY_SML_START_ALL_TIME, KEY_SML_END_ALL_TIME, Index.DESCENT_ORDER);
-        if (it.hasNext())
-            return it.next();
-        return null;
+        return ((BasicStorageRoot)dbRoot).getLatestDataSourceDescription();
     }
 
 
     @Override
     public List<AbstractProcess> getDataSourceDescriptionHistory(double startTime, double endTime)
     {
-        List<AbstractProcess> processList = dbRoot.descriptionTimeIndex.getList(new Key(startTime), new Key(endTime));
-        return Collections.unmodifiableList(processList);
+        return ((BasicStorageRoot)dbRoot).getDataSourceDescriptionHistory(startTime, endTime);
     }
 
 
     @Override
     public AbstractProcess getDataSourceDescriptionAtTime(double time)
     {
-        Iterator<AbstractProcess> it = dbRoot.descriptionTimeIndex.iterator(KEY_SML_START_ALL_TIME, new Key(time), Index.DESCENT_ORDER);
-        if (it.hasNext())
-            return it.next();
-        return null;
+        return ((BasicStorageRoot)dbRoot).getDataSourceDescriptionAtTime(time);
     }
 
 
     @Override
-    public synchronized void storeDataSourceDescription(AbstractProcess process) throws StorageException
+    public synchronized void storeDataSourceDescription(AbstractProcess process)
     {
-        if (process.getNumValidTimes() > 0)
-        {
-            // we add the description in index for each validity period/instant
-            for (AbstractTimeGeometricPrimitive validTime: process.getValidTimeList())
-            {
-                double time = Double.NaN;
-                
-                if (validTime instanceof TimeInstant)
-                    time = ((TimeInstant) validTime).getTimePosition().getDecimalValue();
-                else if (validTime instanceof TimePeriod)
-                    time = ((TimePeriod) validTime).getBeginPosition().getDecimalValue();
-                
-                if (!Double.isNaN(time))
-                    dbRoot.descriptionTimeIndex.put(new Key(time), process);
-            }
-        }
-        else
-        {
-            // if no validity period is specified, we just add with current time
-            double time = System.currentTimeMillis() / 1000.;
-            dbRoot.descriptionTimeIndex.put(new Key(time), process);
-        }
-        
+        ((BasicStorageRoot)dbRoot).storeDataSourceDescription(process);        
         if (autoCommit)
             commit();
     }
 
 
     @Override
-    public synchronized void updateDataSourceDescription(AbstractProcess process) throws StorageException
+    public synchronized void updateDataSourceDescription(AbstractProcess process)
     {
-        // TODO Auto-generated method stub
-        
-        //db.deallocate(oldObject);
+        ((BasicStorageRoot)dbRoot).updateDataSourceDescription(process);
         if (autoCommit)
             commit();
     }
@@ -256,14 +214,7 @@ public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> impleme
     @Override
     public synchronized void removeDataSourceDescription(double time)
     {
-        Iterator<AbstractProcess> it = dbRoot.descriptionTimeIndex.iterator(KEY_SML_START_ALL_TIME, new Key(time), Index.DESCENT_ORDER);
-        if (it.hasNext())
-        {
-            AbstractProcess sml = it.next();
-            it.remove();
-            db.deallocate(sml);
-        }
-        
+        ((BasicStorageRoot)dbRoot).removeDataSourceDescription(time);        
         if (autoCommit)
             commit();
     }
@@ -272,51 +223,118 @@ public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> impleme
     @Override
     public synchronized void removeDataSourceDescriptionHistory(double startTime, double endTime)
     {
-        Iterator<AbstractProcess> it = dbRoot.descriptionTimeIndex.iterator(new Key(startTime), new Key(endTime), Index.ASCENT_ORDER);
-        while (it.hasNext())
-        {
-            AbstractProcess sml = it.next();
-            it.remove();
-            db.deallocate(sml);
-        }
-        
+        ((BasicStorageRoot)dbRoot).removeDataSourceDescriptionHistory(startTime, endTime);        
         if (autoCommit)
             commit();
+    }
+    
+    
+    @Override
+    public synchronized void addRecordStore(String name, DataComponent recordStructure, DataEncoding recommendedEncoding)
+    {
+        ((BasicStorageRoot)dbRoot).addRecordStore(name, recordStructure, recommendedEncoding);
+        if (autoCommit)
+            commit();
+    }
+    
+    
+    @Override
+    public Map<String, ? extends IRecordStoreInfo> getRecordStores()
+    {
+        return ((BasicStorageRoot)dbRoot).getRecordStores();
     }
 
 
     @Override
-    public Map<String, ? extends ITimeSeriesDataStore<IDataFilter>> getDataStores()
+    public int getNumRecords(String recordType)
     {
-        return Collections.unmodifiableMap(dbRoot.dataStores);
-    }
-
-
-    @Override
-    public synchronized ITimeSeriesDataStore<IDataFilter> addNewDataStore(String name, DataComponent recordStructure, DataEncoding recommendedEncoding) throws StorageException
-    {
-        TimeSeriesImpl newTimeSeries = new TimeSeriesImpl(this, recordStructure, recommendedEncoding);
-        dbRoot.dataStores.put(name, newTimeSeries);
-        db.modify(dbRoot);
-        if (autoCommit)
-            commit();
-        return newTimeSeries;
+        return ((BasicStorageRoot)dbRoot).getNumRecords(recordType);
     }
 
     
-    /*
-     * Root of storage
-     */
-    private class DBRoot extends Persistent
+    @Override
+    public double[] getRecordsTimeRange(String recordType)
     {
-        Index<AbstractProcess> descriptionTimeIndex;
-        Map<String, TimeSeriesImpl> dataStores;
-        
-        public DBRoot()
-        {
-            dataStores = new HashMap<String,TimeSeriesImpl>(10);
-            descriptionTimeIndex = db.<AbstractProcess>createIndex(double.class, true);
-        }
+        return ((BasicStorageRoot)dbRoot).getRecordsTimeRange(recordType);
+    }
+    
+    
+    @Override
+    public Iterator<double[]> getRecordsTimeClusters(String recordType)
+    {
+        return ((BasicStorageRoot)dbRoot).getRecordsTimeClusters(recordType);
+    }
+    
+    
+    @Override
+    public DataBlock getDataBlock(DataKey key)
+    {
+        return ((BasicStorageRoot)dbRoot).getDataBlock(key);
     }
 
+
+    @Override
+    public Iterator<DataBlock> getDataBlockIterator(IDataFilter filter)
+    {
+        return ((BasicStorageRoot)dbRoot).getDataBlockIterator(filter);
+    }
+
+
+    @Override
+    public Iterator<? extends IDataRecord> getRecordIterator(IDataFilter filter)
+    {
+        return ((BasicStorageRoot)dbRoot).getRecordIterator(filter);
+    }
+
+
+    @Override
+    public int getNumMatchingRecords(IDataFilter filter)
+    {
+        return ((BasicStorageRoot)dbRoot).getNumMatchingRecords(filter);
+    }
+    
+
+    @Override
+    public synchronized void storeRecord(DataKey key, DataBlock data)
+    {
+        ((BasicStorageRoot)dbRoot).storeRecord(key, data);        
+        if (autoCommit)
+            commit();
+        
+        eventHandler.publishEvent(new StorageEvent(System.currentTimeMillis(), this, key.recordType, Type.STORE));
+    }
+
+
+    @Override
+    public synchronized void updateRecord(DataKey key, DataBlock data)
+    {
+        ((BasicStorageRoot)dbRoot).updateRecord(key, data);
+        if (autoCommit)
+            commit();
+        
+        eventHandler.publishEvent(new StorageEvent(System.currentTimeMillis(), this, key.recordType, Type.UPDATE));
+    }
+
+
+    @Override
+    public synchronized void removeRecord(DataKey key)
+    {
+        ((BasicStorageRoot)dbRoot).removeRecord(key);
+        if (autoCommit)
+            commit();
+        
+        eventHandler.publishEvent(new StorageEvent(System.currentTimeMillis(), this, key.recordType, Type.DELETE));
+    }
+
+
+    @Override
+    public synchronized int removeRecords(IDataFilter filter)
+    {
+        int count = ((BasicStorageRoot)dbRoot).removeRecords(filter);
+        if (autoCommit)
+            commit();
+        
+        eventHandler.publishEvent(new StorageEvent(System.currentTimeMillis(), this, filter.getRecordType(), Type.DELETE));
+        return count;
+    }
 }

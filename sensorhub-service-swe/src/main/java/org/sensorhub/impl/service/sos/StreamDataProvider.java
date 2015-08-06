@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
+import net.opengis.gml.v32.AbstractFeature;
 import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataEncoding;
@@ -27,17 +28,17 @@ import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.data.DataEvent;
 import org.sensorhub.api.data.IDataProducerModule;
+import org.sensorhub.api.data.IMultiSourceDataProducer;
 import org.sensorhub.api.data.IStreamingDataInterface;
 import org.sensorhub.api.service.ServiceException;
-import org.sensorhub.utils.MsgUtils;
 import org.vast.data.DataIterator;
 import org.vast.ogc.def.DefinitionRef;
 import org.vast.ogc.gml.FeatureRef;
 import org.vast.ogc.om.IObservation;
 import org.vast.ogc.om.ObservationImpl;
 import org.vast.ogc.om.ProcedureRef;
-import org.vast.ows.server.SOSDataFilter;
 import org.vast.ows.sos.ISOSDataProvider;
+import org.vast.ows.sos.SOSDataFilter;
 import org.vast.swe.SWEConstants;
 import org.vast.util.TimeExtent;
 
@@ -62,7 +63,7 @@ public abstract class StreamDataProvider implements ISOSDataProvider, IEventList
     int nextEventRecordIndex = 0;
             
     
-    public StreamDataProvider(IDataProducerModule<?> dataSource, SOSDataFilter filter) throws ServiceException
+    public StreamDataProvider(IDataProducerModule<?> dataSource, StreamDataProviderConfig config, SOSDataFilter filter) throws ServiceException
     {
         this.dataSource = dataSource;
         this.sourceOutputs = new ArrayList<IStreamingDataInterface>();
@@ -72,37 +73,36 @@ public abstract class StreamDataProvider implements ISOSDataProvider, IEventList
         stopTime = ((long)filter.getTimeRange().getStopTime()) * 1000L;
         
         // get list of desired stream outputs
-        try
+        dataSource.getConfiguration();
+        
+        // loop through all outputs and connect to the ones containing observables we need
+        for (IStreamingDataInterface outputInterface: dataSource.getAllOutputs().values())
         {
-            // loop through all outputs and connect to the ones containing observables we need
-            for (IStreamingDataInterface outputInterface: dataSource.getAllOutputs().values())
+            // skip hidden outputs
+            if (config.hiddenOutputs != null && config.hiddenOutputs.contains(outputInterface.getName()))
+                continue;
+            
+            // skip if disabled
+            if (!outputInterface.isEnabled())
+                continue;
+            
+            // keep it if we can find one of the observables
+            DataIterator it = new DataIterator(outputInterface.getRecordDescription());
+            while (it.hasNext())
             {
-                // skip if disabled
-                if (!outputInterface.isEnabled())
-                    continue;
-                
-                // keep it if we can find one of the observables
-                DataIterator it = new DataIterator(outputInterface.getRecordDescription());
-                while (it.hasNext())
+                String defUri = (String)it.next().getDefinition();
+                if (filter.getObservables().contains(defUri))
                 {
-                    String defUri = (String)it.next().getDefinition();
-                    if (filter.getObservables().contains(defUri))
-                    {
-                        // set to time out if no data is received after 10 sampling periods or min 5s
-                        timeOut = (long)(outputInterface.getAverageSamplingPeriod() * 10. * 1000.);
-                        timeOut = Math.max(timeOut, 5000L);
-                        sourceOutputs.add(outputInterface);
-                        
-                        // break for now since we support only requesting data from one output at a time
-                        // TODO support case of multiple outputs since it is technically possible with GetObservation
-                        break; 
-                    }
+                    // set to time out if no data is received after 10 sampling periods or min 5s
+                    timeOut = (long)(outputInterface.getAverageSamplingPeriod() * 10. * 1000.);
+                    timeOut = Math.max(timeOut, 5000L);
+                    sourceOutputs.add(outputInterface);
+                    
+                    // break for now since we support only requesting data from one output at a time
+                    // TODO support case of multiple outputs since it is technically possible with GetObservation
+                    break; 
                 }
             }
-        }
-        catch (SensorHubException e)
-        {
-            throw new ServiceException("Error while fetching output description for data source " + MsgUtils.moduleString(dataSource), e);
         }
         
         // if everything went well listen for events on the selected outputs
@@ -161,12 +161,31 @@ public abstract class StreamDataProvider implements ISOSDataProvider, IEventList
         
         // use same value for resultTime for now
         TimeExtent resultTime = new TimeExtent();
-        resultTime.setBaseTime(samplingTime);        
+        resultTime.setBaseTime(samplingTime);
         
-        // create observation object
+        // observation property URI
+        String obsPropDef = result.getDefinition();
+        if (obsPropDef == null)
+            obsPropDef = SWEConstants.NIL_UNKNOWN;
+        
+        // FOI
+        AbstractFeature foi = dataSource.getCurrentFeatureOfInterest();
+        if (dataSource instanceof IMultiSourceDataProducer)
+        {
+            String entityID = lastDataEvent.getRelatedEntityID();
+            foi = ((IMultiSourceDataProducer) dataSource).getCurrentFeatureOfInterest(entityID);
+        }
+        
+        String foiID;
+        if (foi != null)
+            foiID = foi.getUniqueIdentifier();
+        else
+            foiID = SWEConstants.NIL_UNKNOWN;
+        
+        // create observation object        
         IObservation obs = new ObservationImpl();
-        obs.setFeatureOfInterest(new FeatureRef("http://TODO"));
-        obs.setObservedProperty(new DefinitionRef("http://TODO"));
+        obs.setFeatureOfInterest(new FeatureRef(foiID));
+        obs.setObservedProperty(new DefinitionRef(obsPropDef));
         obs.setProcedure(new ProcedureRef(dataSource.getCurrentDescription().getUniqueIdentifier()));
         obs.setPhenomenonTime(phenTime);
         obs.setResultTime(resultTime);
@@ -261,7 +280,7 @@ public abstract class StreamDataProvider implements ISOSDataProvider, IEventList
     
     
     @Override
-    public void handleEvent(Event e)
+    public void handleEvent(Event<?> e)
     {
         if (e instanceof DataEvent)
         {

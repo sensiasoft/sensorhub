@@ -31,8 +31,7 @@ import org.sensorhub.api.common.Event;
 import org.sensorhub.api.common.IEventHandler;
 import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.common.SensorHubException;
-import org.sensorhub.api.module.IModuleStateLoader;
-import org.sensorhub.api.module.IModuleStateSaver;
+import org.sensorhub.api.module.IModuleStateManager;
 import org.sensorhub.api.module.ModuleEvent;
 import org.sensorhub.api.service.IServiceModule;
 import org.sensorhub.impl.SensorHub;
@@ -78,8 +77,10 @@ public class SPSService extends OWSServlet implements IServiceModule<SPSServiceC
     Map<String, SPSOfferingCapabilities> procedureToOfferingMap;
     Map<String, ISPSConnector> connectors;
     IEventHandler eventHandler;
+    
+    SMLUtils smlUtils = new SMLUtils(SMLUtils.V2_0);
     ITaskDB taskDB;
-    SPSNotificationSystem notifSystem;
+    //SPSNotificationSystem notifSystem;
     
     
     public SPSService()
@@ -152,12 +153,12 @@ public class SPSService extends OWSServlet implements IServiceModule<SPSServiceC
                     capabilities.getLayers().add(offCaps);
                     
                     // add connector and offering caps to maps
-                    String procedureID = offCaps.getProcedures().get(0);
+                    String procedureID = offCaps.getMainProcedure();
                     connectors.put(procedureID, connector);
                     procedureToOfferingMap.put(procedureID, offCaps);
                     
                     if (log.isDebugEnabled())
-                        log.debug("Offering " + "\"" + offCaps.toString() + "\" generated for procedure " + offCaps.getProcedures().get(0));
+                        log.debug("Offering " + "\"" + offCaps.toString() + "\" generated for procedure " + procedureID);
                 }
                 catch (Exception e)
                 {
@@ -206,20 +207,25 @@ public class SPSService extends OWSServlet implements IServiceModule<SPSServiceC
     
     protected void deploy()
     {
-        if (!HttpServer.getInstance().isEnabled())
+        HttpServer httpServer = HttpServer.getInstance();
+        if (httpServer == null)
+            throw new RuntimeException("HTTP server must be started");
+        
+        if (!httpServer.isEnabled())
             return;
         
         // deploy ourself to HTTP server
-        HttpServer.getInstance().deployServlet(config.endPoint, this);
+        httpServer.deployServlet(this, config.endPoint);
     }
     
     
     protected void undeploy()
     {
-        if (!HttpServer.getInstance().isEnabled())
+        HttpServer httpServer = HttpServer.getInstance();        
+        if (httpServer == null || !httpServer.isEnabled())
             return;
         
-        HttpServer.getInstance().undeployServlet(this);
+        httpServer.undeployServlet(this);
     }
     
     
@@ -231,7 +237,7 @@ public class SPSService extends OWSServlet implements IServiceModule<SPSServiceC
     
     
     @Override
-    public void handleEvent(Event e)
+    public void handleEvent(Event<?> e)
     {
         // what's important here is to redeploy if HTTP server is restarted
         if (e instanceof ModuleEvent && e.getSource() == HttpServer.getInstance())
@@ -276,13 +282,13 @@ public class SPSService extends OWSServlet implements IServiceModule<SPSServiceC
     
 
     @Override
-    public void saveState(IModuleStateSaver saver) throws SensorHubException
+    public void saveState(IModuleStateManager saver) throws SensorHubException
     {
     }
 
 
     @Override
-    public void loadState(IModuleStateLoader loader) throws SensorHubException
+    public void loadState(IModuleStateManager loader) throws SensorHubException
     {
     }
 
@@ -401,7 +407,7 @@ public class SPSService extends OWSServlet implements IServiceModule<SPSServiceC
         
         // serialize and send SensorML description
         OutputStream os = new BufferedOutputStream(request.getResponseStream());
-        new SMLUtils().writeProcess(os, connector.generateSensorMLDescription(Double.NaN), true);
+        smlUtils.writeProcess(os, connector.generateSensorMLDescription(Double.NaN), true);
     }
     
     

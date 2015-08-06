@@ -72,6 +72,12 @@ public class SensorHub
     }
     
     
+    public static void clearInstance()
+    {
+        instance = null;
+    }
+    
+    
     private SensorHub(IGlobalConfig config)
     {
         this.config = config;        
@@ -102,7 +108,7 @@ public class SensorHub
     
     public void stop()
     {
-        stop(false, false);
+        stop(false, true);
     }
     
     
@@ -131,6 +137,18 @@ public class SensorHub
     }
     
     
+    public IGlobalConfig getConfig()
+    {
+        return config;
+    }
+
+
+    public void setConfig(IGlobalConfig config)
+    {
+        this.config = config;
+    }
+
+
     public ModuleRegistry getModuleRegistry()
     {
         return registry;
@@ -166,12 +184,24 @@ public class SensorHub
             System.exit(1);
         }
         
-        // else only argument is config path pointing to module config path
+        // start sensorhub
         SensorHub instance = null;
         try
         {
             SensorHubConfig config = new SensorHubConfig(args[0], args[1]);
             instance = SensorHub.createInstance(config);
+                        
+            // register shutdown hook for a clean stop 
+            final SensorHub sh = instance;
+            Runtime.getRuntime().addShutdownHook(new Thread() {
+                public void run()
+                {
+                    sh.stop();
+                    System.out.println("SensorHub was cleanly stopped");
+                }            
+            });
+            
+            System.out.println("Starting SensorHub...");
             instance.start();
         }
         catch (Exception e)

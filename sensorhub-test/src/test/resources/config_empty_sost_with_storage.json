@@ -5,8 +5,8 @@
     "servletsRootUrl": "/sensorhub",
     "staticDocRootUrl": "web",
     "id": "5cb05c9c-9e08-4fa1-8731-ffaa5846bdc1",
-    "name": "HTTP Server",
     "moduleClass": "org.sensorhub.impl.service.HttpServer",
+    "name": "HTTP Server",
     "enabled": true
   },
   {
@@ -14,8 +14,8 @@
     "customPanels": [],
     "customForms": [],
     "id": "5cb05c9c-9123-4fa1-8731-ffaa51489678",
-    "name": "Admin UI",
     "moduleClass": "org.sensorhub.ui.AdminUIModule",
+    "name": "Admin UI",
     "enabled": true
   },
   {
@@ -23,29 +23,30 @@
     "enableTransactional": true,
     "newStorageConfig": {
       "objClass": "org.sensorhub.impl.persistence.perst.BasicStorageConfig",
-      "memoryCacheSize": 65536,
-      "moduleClass": "org.sensorhub.impl.persistence.perst.BasicStorageImpl",
+      "memoryCacheSize": 10240,
+      "moduleClass": "org.sensorhub.impl.persistence.perst.ObsStorageImpl",
       "enabled": true
     },
     "dataProviders": [
       {
         "objClass": "org.sensorhub.impl.service.sos.SensorDataProviderConfig",
-        "sensorID": "3668f2be-52bf-444c-b77f-a9b7acaba53e",
-        "storageID": "ea5621e9-d54f-462a-aa9c-7fabf3c5dbd1",
+        "sensorID": "6eef751c-dbed-4105-a545-3916061847b0",
+        "storageID": "4596f121-d4ff-4544-ae35-b7d5cdd3038c",
         "hiddenOutputs": [],
         "activateNotifications": false,
         "liveDataTimeout": 10.0,
         "enabled": true,
-        "uri": "urn:android:device:060693280a28e015-sos"
+        "uri": "urn:android:device:a0e0eac2fea3f614-sos",
+        "maxFois": 10
       }
     ],
     "dataConsumers": [
       {
         "objClass": "org.sensorhub.impl.service.sos.SensorConsumerConfig",
-        "sensorID": "3668f2be-52bf-444c-b77f-a9b7acaba53e",
-        "storageID": "ea5621e9-d54f-462a-aa9c-7fabf3c5dbd1",
+        "sensorID": "6eef751c-dbed-4105-a545-3916061847b0",
+        "storageID": "4596f121-d4ff-4544-ae35-b7d5cdd3038c",
         "enabled": true,
-        "offering": "urn:android:device:060693280a28e015-sos"
+        "offering": "urn:android:device:a0e0eac2fea3f614-sos"
       }
     ],
     "ogcCapabilitiesInfo": {
@@ -78,36 +79,33 @@
     "enableSOAP": true,
     "endPoint": "/sos",
     "id": "5cb05c9c-9e08-4fa1-8731-ff41e246bdc1",
-    "name": "SOS Service",
     "moduleClass": "org.sensorhub.impl.service.sos.SOSService",
+    "name": "SOS Service",
     "enabled": true
   },
   {
     "objClass": "org.sensorhub.impl.sensor.sost.SOSVirtualSensorConfig",
-    "sensorUID": "urn:android:device:060693280a28e015",
+    "sensorUID": "urn:android:device:a0e0eac2fea3f614",
     "autoActivate": true,
     "enableHistory": true,
-    "id": "3668f2be-52bf-444c-b77f-a9b7acaba53e",
-    "name": "ANDROID_SENSORS",
+    "id": "6eef751c-dbed-4105-a545-3916061847b0",
     "moduleClass": "org.sensorhub.impl.sensor.sost.SOSVirtualSensor",
+    "name": "Alex's Phone Sensors",
     "enabled": true
   },
   {
-    "objClass": "org.sensorhub.impl.persistence.perst.BasicStorageConfig",
-    "storagePath": "urn:android:device:060693280a28e015.dat",
-    "memoryCacheSize": 65536,
-    "id": "ea5621e9-d54f-462a-aa9c-7fabf3c5dbd1",
-    "name": "ANDROID_SENSORS Storage",
-    "moduleClass": "org.sensorhub.impl.persistence.perst.BasicStorageImpl",
-    "enabled": true
-  },
-  {
-    "objClass": "org.sensorhub.impl.persistence.SensorStorageHelperConfig",
-    "storageID": "ea5621e9-d54f-462a-aa9c-7fabf3c5dbd1",
-    "sensorID": "3668f2be-52bf-444c-b77f-a9b7acaba53e",
-    "id": "8274c3ea-a5b0-40d2-91d2-7be69ebc95fd",
-    "name": "Storage Listener for ANDROID_SENSORS",
-    "moduleClass": "org.sensorhub.impl.persistence.SensorStorageHelper",
+    "objClass": "org.sensorhub.impl.persistence.StreamStorageConfig",
+    "storageConfig": {
+      "objClass": "org.sensorhub.impl.persistence.perst.BasicStorageConfig",
+      "memoryCacheSize": 10240,
+      "storagePath": "urn:android:device:a0e0eac2fea3f614.dat",
+      "moduleClass": "org.sensorhub.impl.persistence.perst.ObsStorageImpl",
+      "enabled": true
+    },
+    "dataSourceID": "6eef751c-dbed-4105-a545-3916061847b0",
+    "id": "4596f121-d4ff-4544-ae35-b7d5cdd3038c",
+    "moduleClass": "org.sensorhub.impl.persistence.GenericStreamStorage",
+    "name": "Alex's Phone Sensors Storage",
     "enabled": true
   }
 ]

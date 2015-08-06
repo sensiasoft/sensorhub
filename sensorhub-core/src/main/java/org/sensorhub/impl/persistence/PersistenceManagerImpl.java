@@ -21,7 +21,7 @@ import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.module.IModule;
 import org.sensorhub.api.module.IModuleProvider;
 import org.sensorhub.api.module.ModuleConfig;
-import org.sensorhub.api.persistence.IBasicStorage;
+import org.sensorhub.api.persistence.IRecordStorageModule;
 import org.sensorhub.api.persistence.IPersistenceManager;
 import org.sensorhub.api.persistence.IStorageModule;
 import org.sensorhub.api.persistence.StorageConfig;
@@ -107,9 +107,9 @@ public class PersistenceManagerImpl implements IPersistenceManager
     
     
     @Override
-    public List<IBasicStorage<?>> findStorageForSensor(String sensorLocalID) throws SensorHubException
+    public List<IRecordStorageModule<?>> findStorageForSensor(String sensorLocalID) throws SensorHubException
     {
-        List<IBasicStorage<?>> sensorStorageList = new ArrayList<IBasicStorage<?>>();
+        List<IRecordStorageModule<?>> sensorStorageList = new ArrayList<IRecordStorageModule<?>>();
         
         ISensorModule<?> sensorModule = SensorHub.getInstance().getSensorManager().getModuleById(sensorLocalID);
         String sensorUID = sensorModule.getCurrentDescription().getUniqueIdentifier();
@@ -118,12 +118,12 @@ public class PersistenceManagerImpl implements IPersistenceManager
         List<IStorageModule<?>> storageModules = getLoadedModules();
         for (IStorageModule<?> module: storageModules)
         {
-            if (module instanceof IBasicStorage)
+            if (module instanceof IRecordStorageModule<?>)
             {
-                String dataSourceUID = ((IBasicStorage<?>) module).getLatestDataSourceDescription().getUniqueIdentifier();
+                String dataSourceUID = ((IRecordStorageModule<?>)module).getLatestDataSourceDescription().getUniqueIdentifier();
                 
                 if (dataSourceUID != null && dataSourceUID.equals(sensorUID))
-                    sensorStorageList.add((IBasicStorage<?>)module);
+                    sensorStorageList.add((IRecordStorageModule<?>)module);
             }
         }
         

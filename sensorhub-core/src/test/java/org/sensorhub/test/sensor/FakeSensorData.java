@@ -110,9 +110,9 @@ public class FakeSensorData extends AbstractSensorOutput<FakeSensor> implements 
                     if (Math.random() > 0.8)
                         return;
                     
-                    double time = System.currentTimeMillis() / 1000.;
+                    double samplingTime = System.currentTimeMillis() / 1000.;
                     DataBlock data = new DataBlockDouble(4);
-                    data.setDoubleValue(0, time);
+                    data.setDoubleValue(0, samplingTime);
                     data.setDoubleValue(1, 1.0 + ((int)(Math.random()*100))/1000.);
                     data.setDoubleValue(2, 2.0 + ((int)(Math.random()*100))/1000.);
                     data.setDoubleValue(3, 3.0 + ((int)(Math.random()*100))/1000.);
@@ -126,7 +126,8 @@ public class FakeSensorData extends AbstractSensorOutput<FakeSensor> implements 
                         dataQueue.remove();
                     dataQueue.offer(data);
                     
-                    eventHandler.publishEvent(new SensorDataEvent(time, FakeSensorData.this, data));
+                    latestRecordTime = System.currentTimeMillis();
+                    eventHandler.publishEvent(new SensorDataEvent(latestRecordTime, FakeSensorData.this, data));
                 }                        
             }                
         };
@@ -212,19 +213,6 @@ public class FakeSensorData extends AbstractSensorOutput<FakeSensor> implements 
         synchronized (dataQueue)
         {
             return dataQueue.peekLast();
-        }
-    }
-    
-    
-    @Override
-    public double getLatestRecordTime()
-    {
-        synchronized (dataQueue)
-        {
-            if (dataQueue.isEmpty())
-                return Double.NEGATIVE_INFINITY;
-            
-            return dataQueue.peekLast().getDoubleValue(0);
         }
     }
 

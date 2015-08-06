@@ -19,14 +19,30 @@ import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.xml.namespace.QName;
+import javax.xml.stream.XMLOutputFactory;
+import javax.xml.stream.XMLStreamWriter;
+import net.opengis.fes.v20.SpatialCapabilities;
+import net.opengis.fes.v20.SpatialOperator;
+import net.opengis.fes.v20.SpatialOperatorName;
+import net.opengis.fes.v20.TemporalCapabilities;
+import net.opengis.fes.v20.TemporalOperator;
+import net.opengis.fes.v20.TemporalOperatorName;
+import net.opengis.fes.v20.impl.FESFactory;
+import net.opengis.gml.v32.AbstractFeature;
 import net.opengis.sensorml.v20.AbstractProcess;
 import net.opengis.swe.v20.BinaryBlock;
 import net.opengis.swe.v20.BinaryEncoding;
@@ -39,17 +55,17 @@ import org.eclipse.jetty.websocket.servlet.WebSocketServletFactory;
 import org.sensorhub.api.common.Event;
 import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.common.SensorHubException;
-import org.sensorhub.api.module.IModuleStateLoader;
-import org.sensorhub.api.module.IModuleStateSaver;
+import org.sensorhub.api.module.IModuleStateManager;
 import org.sensorhub.api.module.ModuleEvent;
-import org.sensorhub.api.persistence.IBasicStorage;
+import org.sensorhub.api.persistence.FoiFilter;
+import org.sensorhub.api.persistence.IFoiFilter;
+import org.sensorhub.api.persistence.IStorageModule;
 import org.sensorhub.api.persistence.StorageConfig;
 import org.sensorhub.api.service.IServiceModule;
 import org.sensorhub.api.service.ServiceException;
 import org.sensorhub.impl.SensorHub;
 import org.sensorhub.impl.module.ModuleRegistry;
-import org.sensorhub.impl.persistence.SensorStorageHelper;
-import org.sensorhub.impl.persistence.StorageHelper;
+import org.sensorhub.impl.persistence.StreamStorageConfig;
 import org.sensorhub.impl.sensor.sost.SOSVirtualSensorConfig;
 import org.sensorhub.impl.sensor.sost.SOSVirtualSensor;
 import org.sensorhub.impl.service.HttpServer;
@@ -60,12 +76,14 @@ import org.vast.cdm.common.DataSource;
 import org.vast.cdm.common.DataStreamParser;
 import org.vast.cdm.common.DataStreamWriter;
 import org.vast.data.DataBlockMixed;
+import org.vast.ogc.OGCRegistry;
+import org.vast.ogc.gml.GMLStaxBindings;
 import org.vast.ogc.om.IObservation;
 import org.vast.ows.GetCapabilitiesRequest;
 import org.vast.ows.OWSExceptionReport;
 import org.vast.ows.OWSLayerCapabilities;
 import org.vast.ows.OWSRequest;
-import org.vast.ows.server.SOSDataFilter;
+import org.vast.ows.sos.GetFeatureOfInterestRequest;
 import org.vast.ows.sos.GetResultRequest;
 import org.vast.ows.sos.ISOSDataConsumer;
 import org.vast.ows.sos.ISOSDataConsumer.Template;
@@ -79,6 +97,7 @@ import org.vast.ows.sos.InsertResultTemplateRequest;
 import org.vast.ows.sos.InsertResultTemplateResponse;
 import org.vast.ows.sos.InsertSensorRequest;
 import org.vast.ows.sos.InsertSensorResponse;
+import org.vast.ows.sos.SOSDataFilter;
 import org.vast.ows.sos.SOSException;
 import org.vast.ows.sos.SOSOfferingCapabilities;
 import org.vast.ows.sos.SOSServiceCapabilities;
@@ -90,11 +109,14 @@ import org.vast.ows.swe.DescribeSensorRequest;
 import org.vast.ows.swe.SWESOfferingCapabilities;
 import org.vast.ows.swe.UpdateSensorRequest;
 import org.vast.ows.swe.UpdateSensorResponse;
+import org.vast.sensorML.SMLStaxBindings;
 import org.vast.sensorML.SMLUtils;
 import org.vast.swe.DataSourceDOM;
 import org.vast.swe.SWEHelper;
 import org.vast.util.ReaderException;
 import org.vast.util.TimeExtent;
+import org.vast.xml.XMLImplFinder;
+import com.vividsolutions.jts.geom.Polygon;
 
 
 /**
@@ -141,10 +163,10 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     @Override
     public void updateConfig(SOSServiceConfig config) throws SensorHubException
     {
-        // cleanup all previously instantiated providers        
-        
-        // rebuild everything
-
+        stop();
+        this.config = config;
+        if (config.enabled)
+            start();
     }    
     
     
@@ -172,10 +194,11 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
         capabilities.getProfiles().add(SOSServiceCapabilities.PROFILE_RESULT_RETRIEVAL);
         capabilities.getGetServers().put("GetCapabilities", config.endPoint);
         capabilities.getGetServers().put("DescribeSensor", config.endPoint);
+        capabilities.getGetServers().put("GetFeatureOfInterest", config.endPoint);
         capabilities.getGetServers().put("GetObservation", config.endPoint);
         capabilities.getGetServers().put("GetResult", config.endPoint);
         capabilities.getGetServers().put("GetResultTemplate", config.endPoint);
-        capabilities.getPostServers().putAll(capabilities.getGetServers());        
+        capabilities.getPostServers().putAll(capabilities.getGetServers());      
         
         if (config.enableTransactional)
         {
@@ -184,7 +207,27 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
             capabilities.getPostServers().put("InsertSensor", config.endPoint);
             capabilities.getPostServers().put("InsertObservation", config.endPoint);
             capabilities.getPostServers().put("InsertResult", config.endPoint);
+            capabilities.getGetServers().put("InsertResult", config.endPoint);
         }
+        
+        FESFactory fac = new FESFactory();
+        capabilities.setFilterCapabilities(fac.newFilterCapabilities());
+        
+        // supported temporal filters
+        TemporalCapabilities timeFilterCaps = fac.newTemporalCapabilities();
+        timeFilterCaps.getTemporalOperands().add(new QName(null, "TimeInstant", "gml"));
+        timeFilterCaps.getTemporalOperands().add(new QName(null, "TimePeriod", "gml"));
+        TemporalOperator timeOp = fac.newTemporalOperator();
+        timeOp.setName(TemporalOperatorName.DURING);
+        timeFilterCaps.getTemporalOperators().add(timeOp);
+        capabilities.getFilterCapabilities().setTemporalCapabilities(timeFilterCaps);
+        
+        // supported spatial filters
+        SpatialCapabilities spatialFilterCaps = fac.newSpatialCapabilities();
+        SpatialOperator spatialOp = fac.newSpatialOperator();
+        spatialOp.setName(SpatialOperatorName.BBOX);
+        spatialFilterCaps.getSpatialOperators().add(spatialOp);
+        capabilities.getFilterCapabilities().setSpatialCapabilities(spatialFilterCaps);
         
         // process each provider config
         if (config.dataProviders != null)
@@ -206,10 +249,11 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
                     offeringCaps.put(offCaps.getIdentifier(), offCaps);
                     
                     // build procedure-offering map
-                    procedureToOfferingMap.put(offCaps.getProcedures().get(0), offCaps.getIdentifier());
+                    String procedureID = offCaps.getMainProcedure();
+                    procedureToOfferingMap.put(procedureID, offCaps.getIdentifier());
                     
                     if (log.isDebugEnabled())
-                        log.debug("Offering " + "\"" + offCaps.toString() + "\" generated for procedure " + offCaps.getProcedures().get(0));
+                        log.debug("Offering " + "\"" + offCaps.toString() + "\" generated for procedure " + procedureID);
                 }
                 catch (Exception e)
                 {
@@ -255,6 +299,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
             if (timeExtent != null)
                 time = timeExtent.getBaseTime();
             return factory.generateSensorMLDescription(time);
+            
         }
         catch (Exception e)
         {
@@ -272,6 +317,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
         this.offeringCaps = new HashMap<String, SOSOfferingCapabilities>();
         
         // pre-generate capabilities
+        endpointUrl = null;
         this.capabilitiesCache = generateCapabilities();
                 
         // subscribe to server lifecycle events
@@ -299,20 +345,25 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     
     protected void deploy()
     {
-        if (!HttpServer.getInstance().isEnabled())
+        HttpServer httpServer = HttpServer.getInstance();
+        if (httpServer == null)
+            throw new RuntimeException("HTTP server must be started");
+        
+        if (!httpServer.isEnabled())
             return;
         
         // deploy ourself to HTTP server
-        HttpServer.getInstance().deployServlet(config.endPoint, this);
+        httpServer.deployServlet(this, config.endPoint);
     }
     
     
     protected void undeploy()
     {
-        if (!HttpServer.getInstance().isEnabled())
+        HttpServer httpServer = HttpServer.getInstance();        
+        if (httpServer == null || !httpServer.isEnabled())
             return;
         
-        HttpServer.getInstance().undeployServlet(this);
+        httpServer.undeployServlet(this);
     }
     
     
@@ -326,7 +377,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     
     
     @Override
-    public void handleEvent(Event e)
+    public void handleEvent(Event<?> e)
     {
         // what's important here is to redeploy if HTTP server is restarted
         if (e instanceof ModuleEvent && e.getSource() == HttpServer.getInstance())
@@ -364,14 +415,14 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
 
 
     @Override
-    public void saveState(IModuleStateSaver saver) throws SensorHubException
+    public void saveState(IModuleStateManager saver) throws SensorHubException
     {
         // TODO Auto-generated method stub
     }
 
 
     @Override
-    public void loadState(IModuleStateLoader loader) throws SensorHubException
+    public void loadState(IModuleStateManager loader) throws SensorHubException
     {
         // TODO Auto-generated method stub
     }
@@ -466,7 +517,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     {
         String sensorID = request.getProcedureID();
                 
-        // check query parameters        
+        // check query parameters
         OWSExceptionReport report = new OWSExceptionReport();        
         checkQueryProcedure(sensorID, report);
         checkQueryProcedureFormat(procedureToOfferingMap.get(sensorID), request.getFormat(), report);
@@ -474,7 +525,143 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
         
         // serialize and send SensorML description
         OutputStream os = new BufferedOutputStream(request.getResponseStream());
-        new SMLUtils().writeProcess(os, generateSensorML(sensorID, request.getTime()), true);
+        new SMLUtils(SMLUtils.V2_0).writeProcess(os, generateSensorML(sensorID, request.getTime()), true);
+    }
+    
+    
+    @Override
+    protected void handleRequest(final GetFeatureOfInterestRequest request) throws Exception
+    {
+        OWSExceptionReport report = new OWSExceptionReport();
+        Set<String> selectedProcedures = new LinkedHashSet<String>();
+                
+        // get list of procedures to scan
+        List<String> procedures = request.getProcedures();
+        if (procedures != null && !procedures.isEmpty())
+        {
+            // check listed procedures are valid
+            for (String procID: procedures)
+                checkQueryProcedure(procID, report);
+                        
+            selectedProcedures.addAll(procedures);
+        }
+        else
+        {
+            // otherwise just include all procedures
+            selectedProcedures.addAll(procedureToOfferingMap.keySet());
+        }
+        
+        // process observed properties
+        List<String> observables = request.getObservables();
+        if (observables != null && !observables.isEmpty())
+        {
+            // first check observables are valid in at least one offering
+            for (String obsProp: observables)
+            {
+                boolean found = false;
+                for (SOSOfferingCapabilities offering: capabilitiesCache.getLayers())
+                {
+                    if (offering.getObservableProperties().contains(obsProp))
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+                
+                if (!found)
+                    report.add(new SOSException(SOSException.invalid_param_code, "observedProperty", obsProp, "Observed property " + obsProp + " is not available"));
+            }
+            
+            // keep only procedures with selected observed properties            
+            Iterator<String> it = selectedProcedures.iterator();
+            while (it.hasNext())
+            {
+                String offeringID = procedureToOfferingMap.get(it.next());
+                SOSOfferingCapabilities offering = offeringCaps.get(offeringID);
+                
+                boolean found = false;
+                for (String obsProp: observables)
+                {
+                    offering.getObservableProperties().contains(obsProp);
+                    found = true;
+                    break;
+                }
+                
+                if (!found)
+                    it.remove();
+            }
+        }
+        
+        // if errors were detected, send them now
+        report.process();
+        
+        // prepare feature filter
+        final Polygon poly;
+        if (request.getSpatialFilter() != null)
+            poly = request.getBbox().toJtsPolygon();
+        else
+            poly = null;
+        
+        IFoiFilter filter = new FoiFilter()
+        {
+            public Polygon getRoi() { return poly; }
+            public Collection<String> getFeatureIDs() { return request.getFoiIDs(); };
+        };
+        
+        // init xml document writing
+        OutputStream os = new BufferedOutputStream(request.getResponseStream());
+        XMLOutputFactory factory = XMLImplFinder.getStaxOutputFactory();
+        XMLStreamWriter xmlWriter = factory.createXMLStreamWriter(os, "UTF-8");
+        
+        // write response root element
+        String sosNsUri = OGCRegistry.getNamespaceURI(SOSUtils.SOS, "2.0");
+        String sosPrefix = "sos";
+        xmlWriter.writeStartDocument();        
+        xmlWriter.writeStartElement(sosPrefix, "GetFeatureOfInterestResponse", sosNsUri);
+        xmlWriter.writeNamespace(sosPrefix, sosNsUri);
+        
+        // prepare GML writing
+        GMLStaxBindings gmlBindings = new GMLStaxBindings();
+        gmlBindings.registerFeatureBindings(new SMLStaxBindings());
+        gmlBindings.declareNamespacesOnRootElement();
+        gmlBindings.writeNamespaces(xmlWriter);
+        
+        // scan offering corresponding to each selected procedure
+        boolean first = true;
+        HashSet<String> returnedFids = new HashSet<String>();
+        
+        for (String procID: selectedProcedures)
+        {
+            IDataProviderFactory provider = getDataProviderFactoryBySensorID(procID);
+            
+            // output selected features
+            Iterator<AbstractFeature> it2 = provider.getFoiIterator(filter);
+            while (it2.hasNext())
+            {
+                AbstractFeature f = it2.next();
+                
+                // make sure we don't send twice the same feature
+                if (returnedFids.contains(f.getUniqueIdentifier()))
+                    continue;
+                returnedFids.add(f.getUniqueIdentifier());
+                
+                // write namespace on root because in most cases it is common to all features
+                if (first)
+                {
+                    xmlWriter.writeNamespace("ns1", f.getQName().getNamespaceURI());
+                    first = false;
+                }
+                
+                xmlWriter.writeStartElement(sosNsUri, "featureMember");
+                gmlBindings.writeAbstractFeature(xmlWriter, f);
+                xmlWriter.writeEndElement();
+                xmlWriter.flush();
+                os.write('\n');
+            }
+        }
+        
+        xmlWriter.writeEndDocument();
+        xmlWriter.close();
     }
     
     
@@ -500,17 +687,17 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
             if (offering == null)
             {
                 offering = sensorUID + "-sos";
-                ModuleRegistry moduleReg = SensorHub.getInstance().getModuleRegistry();           
+                ModuleRegistry moduleReg = SensorHub.getInstance().getModuleRegistry();
                 
-                // create and register new virtual sensor module as data consumer
+                // create and register new virtual sensor module
                 SOSVirtualSensorConfig sensorConfig = new SOSVirtualSensorConfig();
                 sensorConfig.enabled = false;
                 sensorConfig.sensorUID = sensorUID;
                 sensorConfig.name = request.getProcedureDescription().getName();
                 if (sensorConfig.name == null)
                     sensorConfig.name = request.getProcedureDescription().getId();
-                SOSVirtualSensor virtualSensor = (SOSVirtualSensor)moduleReg.loadModule(sensorConfig);            
-                virtualSensor.updateSensorDescription(request.getProcedureDescription(), true);
+                SOSVirtualSensor virtualSensor = (SOSVirtualSensor)moduleReg.loadModule(sensorConfig);
+                virtualSensor.updateSensorDescription(request.getProcedureDescription(), false);
                 SensorHub.getInstance().getModuleRegistry().enableModule(virtualSensor.getLocalID());
                                 
                 // generate new provider and consumer config
@@ -529,19 +716,28 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
                 if (config.newStorageConfig != null)
                 {
                     // create new data storage
-                    StorageConfig newStorageConfig = (StorageConfig)config.newStorageConfig.clone();
-                    newStorageConfig.id = null;
-                    newStorageConfig.name = virtualSensor.getName() + " Storage";
-                    newStorageConfig.storagePath = sensorUID + ".dat";
-                    IBasicStorage<?> storage = (IBasicStorage<?>)moduleReg.loadModule(newStorageConfig);
-                    SensorStorageHelper dataListener = StorageHelper.configureStorageForDataSource(virtualSensor, storage, true);
+                    StreamStorageConfig streamStorageConfig = new StreamStorageConfig();
+                    streamStorageConfig.id = null;
+                    streamStorageConfig.name = virtualSensor.getName() + " Storage";
+                    streamStorageConfig.enabled = true;
+                    streamStorageConfig.dataSourceID = virtualSensor.getLocalID();
+                    streamStorageConfig.storageConfig = (StorageConfig)config.newStorageConfig.clone();
+                    streamStorageConfig.storageConfig.storagePath = sensorUID + ".dat";
+                    IStorageModule<?> storage = (IStorageModule<?>)moduleReg.loadModule(streamStorageConfig);
                                         
                     // associate storage to config                    
                     providerConfig.storageID = storage.getLocalID();
                     consumerConfig.storageID = storage.getLocalID();
                     
                     // save config so that registered sensor stays active after restart
-                    moduleReg.saveConfiguration(this.config, sensorConfig, newStorageConfig, dataListener.getConfiguration());
+                    moduleReg.saveConfiguration(this.config, sensorConfig, streamStorageConfig);
+                    
+                    /*// also add related features to storage
+                    if (storage instanceof IObsStorage)
+                    {
+                        for (FeatureRef featureRef: request.getRelatedFeatures())
+                            ((IObsStorage) storage).storeFoi(featureRef.getTarget());
+                    }*/
                 }
                 
                 // instantiate provider and consumer instances
@@ -557,6 +753,13 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
                 capabilitiesCache.getLayers().add(offCaps);
                 offeringCaps.put(offCaps.getIdentifier(), offCaps);
                 procedureToOfferingMap.put(sensorUID, offering);
+            }
+            else
+            {
+                // disable update for now because descriptions are stored even if unchanged!!
+//                // get consumer and update
+//                ISOSDataConsumer consumer = getDataConsumerBySensorID(sensorUID);                
+//                consumer.updateSensor(request.getProcedureDescription());
             }
             
             // build and send response
@@ -583,19 +786,25 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
             boolean useMP4 = false;
             boolean useMJPEG = false;
             List<BinaryMember> mbrList = ((BinaryEncoding)resultEncoding).getMemberList();
-            BinaryMember videoFrameSpec = null;
+            BinaryBlock videoFrameSpec = null;
             
-            if (mbrList.size() == 1) // case of no time tag
-                videoFrameSpec = mbrList.get(0);
-            else if (mbrList.size() == 2) // case of time tag + encoded frame
-                videoFrameSpec = mbrList.get(1);
-            else
-                throw new RuntimeException("Invalid binary encoding specs");
-            
-            if (videoFrameSpec instanceof BinaryBlock && ((BinaryBlock)videoFrameSpec).getCompression().equals("H264"))
-                useMP4 = true;            
-            else if (videoFrameSpec instanceof BinaryBlock && ((BinaryBlock)videoFrameSpec).getCompression().equals("JPEG"))
-                useMJPEG = true;            
+            // try to find binary block encoding def in list
+            for (BinaryMember spec: mbrList)
+            {
+                if (spec instanceof BinaryBlock)
+                {
+                    videoFrameSpec = (BinaryBlock)spec;
+                    break;
+                }
+            }
+                    
+            if (videoFrameSpec != null)
+            {            
+                if (videoFrameSpec.getCompression().equals("H264"))
+                    useMP4 = true;            
+                else if (videoFrameSpec.getCompression().equals("JPEG"))
+                    useMJPEG = true;            
+            }
             
             if (useMP4)
             {            
@@ -658,8 +867,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
                     os.write(frameData);
                     os.flush();
                 }       
-                        
-                os.flush();
+
                 return true;
             }
         }
@@ -763,8 +971,10 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
             // get template ID
             // the same template ID is always returned for a given observable
             ISOSDataConsumer consumer = getDataConsumerByOfferingID(offering);
-            String templateID = consumer.newResultTemplate(request.getResultStructure(), request.getResultEncoding());
-            
+            String templateID = consumer.newResultTemplate(request.getResultStructure(),
+                                                           request.getResultEncoding(),
+                                                           request.getObservationTemplate());
+                        
             // only continue of template was not already registered
             if (!templateToOfferingMap.containsKey(templateID))
             {
@@ -890,6 +1100,13 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     {
         SOSOfferingCapabilities offering = checkAndGetOffering(offeringID);
         
+        if (requestTime.isNull())
+            return;
+        
+        // make sure startTime <= stopTime
+        if (requestTime.getStartTime() > requestTime.getStopTime())
+            report.add(new SOSException("The requested period must begin before the it ends"));
+            
         // refresh offering capabilities if needed
         try
         {

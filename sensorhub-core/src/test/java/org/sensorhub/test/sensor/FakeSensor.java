@@ -79,13 +79,13 @@ public class FakeSensor extends AbstractSensorModule<SensorConfig>
 
 
     @Override
-    protected void updateSensorDescription() throws SensorException
+    protected void updateSensorDescription()
     {
         synchronized (sensorDescription)
         {
             super.updateSensorDescription();
             sensorDescription.setUniqueIdentifier(sensorUID);
-            Point pos = new PointImpl();
+            Point pos = new PointImpl(3);
             pos.setId("P01");
             pos.setSrsName("http://www.opengis.net/def/crs/EPSG/0/4979");
             pos.setPos(new double[] {45.6, 2.3, 193.2});

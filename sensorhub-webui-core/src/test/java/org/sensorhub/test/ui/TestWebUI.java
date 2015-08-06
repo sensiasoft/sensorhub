@@ -23,14 +23,14 @@ import org.sensorhub.api.persistence.StorageConfig;
 import org.sensorhub.api.processing.ProcessConfig;
 import org.sensorhub.api.sensor.SensorConfig;
 import org.sensorhub.impl.SensorHub;
-import org.sensorhub.impl.module.DummyModule;
 import org.sensorhub.impl.module.InMemoryConfigDb;
 import org.sensorhub.impl.module.ModuleRegistry;
 import org.sensorhub.impl.service.HttpServer;
 import org.sensorhub.impl.service.HttpServerConfig;
+import org.sensorhub.test.module.DummyModule;
 import org.sensorhub.ui.AdminUIConfig;
 import org.sensorhub.ui.AdminUIModule;
-import org.sensorhub.ui.CustomPanelConfig;
+import org.sensorhub.ui.CustomUIConfig;
 import org.sensorhub.ui.HttpServerConfigForm;
 
 
@@ -70,7 +70,7 @@ public class TestWebUI
         adminConfig.enabled = true;
         adminConfig.moduleClass = AdminUIModule.class.getCanonicalName();
         adminConfig.id = UUID.randomUUID().toString();
-        adminConfig.customForms.add(new CustomPanelConfig(HttpServerConfig.class.getCanonicalName(), HttpServerConfigForm.class.getCanonicalName()));
+        adminConfig.customForms.add(new CustomUIConfig(HttpServerConfig.class.getCanonicalName(), HttpServerConfigForm.class.getCanonicalName()));
         configDB.add(adminConfig);
         
         // Dummy modules

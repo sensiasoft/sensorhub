@@ -15,27 +15,19 @@ Developer are Copyright (C) 2014 the Initial Developer. All Rights Reserved.
 
 package org.sensorhub.impl.sensor.station.metar;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
-
 import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataEncoding;
-import net.opengis.swe.v20.Quantity;
-import net.opengis.swe.v20.Time;
-
+import net.opengis.swe.v20.DataRecord;
 import org.sensorhub.api.sensor.SensorDataEvent;
 import org.sensorhub.impl.sensor.AbstractSensorOutput;
-import org.sensorhub.impl.sensor.station.Station;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.vast.data.DataRecordImpl;
-import org.vast.data.QuantityImpl;
-import org.vast.data.TextEncodingImpl;
-import org.vast.data.TextImpl;
-import org.vast.data.TimeImpl;
-import org.vast.swe.SWEConstants;
+import org.vast.swe.SWEHelper;
+
 
 /**
  * 
@@ -45,121 +37,80 @@ import org.vast.swe.SWEConstants;
  *      If record time is greater than latestRecord.time, we update latestRecord and latestBlock
  *      and send event to bus.  
  */
-
 public class MetarOutput extends AbstractSensorOutput<MetarSensor> //extends StationOutput
 {
-    private static final Logger log = LoggerFactory.getLogger(MetarOutput.class);
-    DataComponent metarRecordStruct;
-    DataBlock latestBlock;
-    MetarDataRecord latestRecord;
-    MetarDataPoller metarPoller = new MetarDataPoller();
     private static final long POLLING_INTERVAL_SECONDS = 120;
     private static final int AVERAGE_SAMPLING_PERIOD = (int)TimeUnit.MINUTES.toSeconds(20);
-    protected Timer timer;
+    
+    DataRecord metarRecordStruct;
+    DataEncoding metarRecordEncoding;
+    MetarDataPoller metarPoller = new MetarDataPoller();
+    Timer timer;
+    Map<String, Long> latestUpdateTimes;
+    
 
     public MetarOutput(MetarSensor parentSensor)
     {
         super(parentSensor);
+        latestUpdateTimes = new HashMap<String, Long>();
     }
 
 
     @Override
     public String getName()
     {
-        return "MetarWeatherStation";
+        return "metarWeather";
     }
 
 
     protected void init()
     {
+        SWEHelper fac = new SWEHelper();
+        
         // SWE Common data structure
-        metarRecordStruct = new DataRecordImpl(13);
+        metarRecordStruct = fac.newDataRecord(14);
         metarRecordStruct.setName(getName());
-        metarRecordStruct.setDefinition("http://sensorml.com/ont/swe/property/Weather/MetarStationRecord");
+        metarRecordStruct.setDefinition("http://sensorml.com/ont/swe/property/WeatherData");
         
-        Time c1 = new TimeImpl();
-        c1.getUom().setHref(Time.ISO_TIME_UNIT);
-        c1.setDefinition(SWEConstants.DEF_SAMPLING_TIME);
-        metarRecordStruct.addComponent("time", c1);
-
-        Quantity c;
-        c = new QuantityImpl();
-        c.getUom().setCode("degF");
-        c.setDefinition("http://sensorml.com/ont/swe/property/Temperature");
-        metarRecordStruct.addComponent("temperature", c);  
-
-        c = new QuantityImpl();
-        c.getUom().setCode("degF");
-        c.setDefinition("http://sensorml.com/ont/swe/property/DewPoint"); //  does not resolve
-        metarRecordStruct.addComponent("dewpoint", c);  
-
-        c = new QuantityImpl();
-        c.getUom().setCode("degF");
-        c.setDefinition("http://sensorml.com/ont/swe/property/HumidityValue"); 
-        metarRecordStruct.addComponent("relativeHumidity", c);  
+        metarRecordStruct.addField("time", fac.newTimeStampIsoUTC());
+        metarRecordStruct.addField("station", fac.newText("http://sensorml.com/ont/swe/property/StationID", "Station ID", null));
+        metarRecordStruct.addField("temp", fac.newQuantity("http://sensorml.com/ont/swe/property/Temperature", "Air Temperature", null, "degF"));
+        metarRecordStruct.addField("dewPoint", fac.newQuantity("http://sensorml.com/ont/swe/property/DewPoint", "Dew Point Temperature", null, "degF"));
+        metarRecordStruct.addField("humidity", fac.newQuantity("http://sensorml.com/ont/swe/property/HumidityValue", "Relative Humidity", null, "%"));
+        metarRecordStruct.addField("press", fac.newQuantity("http://sensorml.com/ont/swe/property/AirPressureValue", "Atmospheric Pressure", null, "[in_i]Hg"));
+        metarRecordStruct.addField("windSpeed", fac.newQuantity("http://sensorml.com/ont/swe/property/WindSpeed", "Wind Speed", null, "[mi_i]/h"));
+        metarRecordStruct.addField("windDir", fac.newQuantity("http://sensorml.com/ont/swe/property/WindDirectionAngle", "Wind Direction", null, "deg"));
+        metarRecordStruct.addField("windGust", fac.newQuantity("http://sensorml.com/ont/swe/property/WindGust", "Wind Gust", null, "[mi_i]/h"));
+        metarRecordStruct.addField("precip", fac.newQuantity("http://sensorml.com/ont/swe/property/Precipitation", "Hourly Precipitation", null, "[in_i]"));
+        metarRecordStruct.addField("cloudH", fac.newQuantity("http://sensorml.com/ont/swe/property/TopCloudHeightDimension", "Cloud Ceiling", null, "[ft_i]"));
+        metarRecordStruct.addField("visibilty", fac.newQuantity("http://sensorml.com/ont/swe/property/Visibility", "Visibility", null, "[ft_i]"));
+        metarRecordStruct.addField("weather", fac.newText("http://sensorml.com/ont/swe/property/PresentWeather", "Present Weather", null));
+        metarRecordStruct.addField("sky", fac.newText("http://sensorml.com/ont/swe/property/SkyConditions", "Sky Conditions", null));
         
-        c = new QuantityImpl();
-        c.getUom().setCode("in_i'Hg");
-        c.setDefinition("http://sensorml.com/ont/swe/property/AirPressureValue.html"); 
-        metarRecordStruct.addComponent("pressure", c);  
-        
-        c = new QuantityImpl();
-        c.getUom().setCode("mi_i/h");
-        c.setDefinition("http://sensorml.com/ont/swe/property/WindSpeed"); 
-        metarRecordStruct.addComponent("windSpeed", c);  
-        
-        c = new QuantityImpl();
-        c.getUom().setCode("deg");
-        c.setDefinition("http://sensorml.com/ont/swe/property/WindDirectionAngle"); 
-        metarRecordStruct.addComponent("windDirection", c);  
-        
-        c = new QuantityImpl();
-        c.getUom().setCode("mi_i/h");
-        c.setDefinition("http://sensorml.com/ont/swe/property/WindGust"); //  not there
-        metarRecordStruct.addComponent("windGust", c);  
-        
-        c = new QuantityImpl();
-        c.getUom().setCode("in");
-        c.setDefinition("http://sensorml.com/ont/swe/property/Precipitation.html"); 
-        metarRecordStruct.addComponent("hourlyPrecipitation", c);  
-        
-        c = new QuantityImpl();
-        c.getUom().setCode("ft_i");
-        c.setDefinition("http://sensorml.com/ont/swe/property/TopCloudHeightDimension.html"); 
-        metarRecordStruct.addComponent("cloudCeiling", c);  
-        
-        c = new QuantityImpl();
-        c.getUom().setCode("ft_i");
-        c.setDefinition("http://sensorml.com/ont/swe/property/Visibility");   // does not resolve
-        metarRecordStruct.addComponent("visibility", c);  
-        
-        TextImpl t = new TextImpl();  
-        t.setDefinition("http://sensorml.com/ont/swe/property/presentWeather");   // does not resolve
-        metarRecordStruct.addComponent("presentWeather", t); 
-        
-        t = new TextImpl();
-        t.setDefinition("http://sensorml.com/ont/swe/property/skyConditions");   // does not resolve
-        metarRecordStruct.addComponent("skyConditions", t); 
+        // default encoding is text
+        metarRecordEncoding = fac.newTextEncoding(",", "\n");
     }
 
 
-    private DataBlock recordToBlock(MetarDataRecord rec)
+    private DataBlock metarRecordToDataBlock(String stationID, MetarDataRecord rec)
     {
     	DataBlock dataBlock = metarRecordStruct.createDataBlock();
-        Station stn = rec.getStation();
-        dataBlock.setDoubleValue(0, rec.getTimeUtc()/1000.); 
-        dataBlock.setDoubleValue(1, rec.getTemperature()); 
-        dataBlock.setDoubleValue(2, rec.getDewPoint()); 
-        dataBlock.setDoubleValue(3, rec.getRelativeHumidity()); 
-        dataBlock.setDoubleValue(4, rec.getPressure()); 
-        dataBlock.setDoubleValue(5, rec.getWindSpeed()); 
-        dataBlock.setDoubleValue(6, rec.getWindDirection()); 
-        dataBlock.setDoubleValue(7, rec.getWindGust()); 
-        dataBlock.setDoubleValue(8, rec.getHourlyPrecip()); 
-        dataBlock.setIntValue(9, rec.getCloudCeiling()); 
-        dataBlock.setIntValue(10, rec.getVisibility()); 
-        dataBlock.setStringValue(11, rec.getPresentWeather()); 
-        dataBlock.setStringValue(12, rec.getSkyConditions()); 
+    	
+    	int index = 0;
+    	dataBlock.setDoubleValue(index++, rec.getTimeUtc()/1000.);
+        dataBlock.setStringValue(index++, stationID);
+        dataBlock.setDoubleValue(index++, rec.getTemperature());
+        dataBlock.setDoubleValue(index++, rec.getDewPoint());
+        dataBlock.setDoubleValue(index++, rec.getRelativeHumidity());
+        dataBlock.setDoubleValue(index++, rec.getPressure());
+        dataBlock.setDoubleValue(index++, rec.getWindSpeed());
+        dataBlock.setDoubleValue(index++, rec.getWindDirection());
+        dataBlock.setDoubleValue(index++, rec.getWindGust());
+        dataBlock.setDoubleValue(index++, rec.getHourlyPrecip());
+        dataBlock.setIntValue(index++, rec.getCloudCeiling());
+        dataBlock.setIntValue(index++, rec.getVisibility());
+        dataBlock.setStringValue(index++, rec.getPresentWeather());
+        dataBlock.setStringValue(index++, rec.getSkyConditions());
         
         return dataBlock;
     }
@@ -172,14 +123,27 @@ public class MetarOutput extends AbstractSensorOutput<MetarSensor> //extends Sta
         timer = new Timer();
         
         // start main measurement generation thread
-        TimerTask task = new TimerTask() {
+        TimerTask task = new TimerTask()
+        {
             public void run()
             {
-            	MetarDataRecord rec = metarPoller.pullStationData();
-            	if(latestRecord == null || rec.getTimeUtc() > latestRecord.getTimeUtc()) {
-            		latestRecord = rec;  
-            		latestBlock = recordToBlock(rec);
-            		eventHandler.publishEvent(new SensorDataEvent((double)rec.getTimeUtc(), MetarOutput.this, latestBlock));
+            	for (String stationID: parentSensor.getConfiguration().stationIDs)
+            	{
+                    MetarDataRecord rec = metarPoller.pullStationData(stationID);
+                    
+                    Long lastUpdateTime = latestUpdateTimes.get(stationID);
+                	if (lastUpdateTime == null || rec.getTimeUtc() > lastUpdateTime)
+                	{
+                	    latestUpdateTimes.put(stationID, rec.getTimeUtc());
+                		latestRecordTime = System.currentTimeMillis();
+                		latestRecord = metarRecordToDataBlock(stationID, rec);
+                		String stationUID = MetarSensor.STATION_UID_PREFIX + stationID;
+                		eventHandler.publishEvent(new SensorDataEvent(latestRecordTime, stationUID, MetarOutput.this, latestRecord));
+                	}
+                	
+                	// wait a bit before querying next station
+                	try { Thread.sleep(1000); }
+                    catch (InterruptedException e) { }
             	}
             }            
         };
@@ -215,24 +179,6 @@ public class MetarOutput extends AbstractSensorOutput<MetarSensor> //extends Sta
     @Override
     public DataEncoding getRecommendedEncoding()
     {
-        return new TextEncodingImpl(",", "\n");
+        return metarRecordEncoding;
     }
-
-
-    @Override
-    public DataBlock getLatestRecord()
-    {
-        return latestBlock;
-    }
-    
-    
-    @Override
-    public double getLatestRecordTime()
-    {
-        if (latestBlock != null)
-            return latestBlock.getDoubleValue(0);
-        
-        return Double.NaN;
-    }
-
 }

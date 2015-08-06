@@ -17,12 +17,10 @@ package org.sensorhub.impl.service.sos;
 import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataEncoding;
 import org.sensorhub.api.common.SensorHubException;
-import org.sensorhub.api.module.IModule;
 import org.sensorhub.api.persistence.IBasicStorage;
-import org.sensorhub.api.persistence.ITimeSeriesDataStore;
 import org.sensorhub.impl.SensorHub;
 import org.sensorhub.impl.module.ModuleRegistry;
-import org.sensorhub.impl.persistence.SensorStorageHelper;
+import org.vast.ogc.om.IObservation;
 import org.vast.ows.sos.ISOSDataConsumer;
 
 
@@ -36,51 +34,29 @@ import org.vast.ows.sos.ISOSDataConsumer;
  */
 public class SensorWithStorageConsumer extends SensorDataConsumer implements ISOSDataConsumer
 {
-    IBasicStorage<?> storage;
+    IBasicStorage storage;
     
     
     public SensorWithStorageConsumer(SensorConsumerConfig config) throws SensorHubException
     {
         super(config);
         ModuleRegistry moduleReg = SensorHub.getInstance().getModuleRegistry();
-        this.storage = (IBasicStorage<?>)moduleReg.getModuleById(config.storageID);
-        
-        // reassign current sensor description
-        this.sensor.setSensorDescription(storage.getLatestDataSourceDescription());
-        
-        // reassign existing templates
-        for (ITimeSeriesDataStore<?> dataStore: storage.getDataStores().values())
-            sensor.newResultTemplate(dataStore.getRecordDescription(), dataStore.getRecommendedEncoding());
+        this.storage = (IBasicStorage)moduleReg.getModuleById(config.storageID);
     }
 
 
     @Override
-    public String newResultTemplate(DataComponent component, DataEncoding encoding) throws Exception
+    public String newResultTemplate(DataComponent component, DataEncoding encoding, IObservation obsTemplate) throws Exception
     {
-        String templateID = sensor.newResultTemplate(component, encoding);
-        
+        String templateID = sensor.newResultTemplate(component, encoding, obsTemplate);
+                
         // add additional datastore if not already there
-        if (!storage.getDataStores().containsKey(templateID))
-        {
-            storage.addNewDataStore(templateID, component, encoding);
-            
-            // look for storage helper
-            ModuleRegistry moduleReg = SensorHub.getInstance().getModuleRegistry();
-            for (IModule<?> module: moduleReg.getLoadedModules())
-            {
-                if (module instanceof SensorStorageHelper)
-                {
-                    SensorStorageHelper listener = (SensorStorageHelper)module;
-                                        
-                    if (listener.getConfiguration().sensorID.equals(sensor.getLocalID()))
-                    {
-                        // register for new events
-                        sensor.getAllOutputs().get(templateID).registerListener(listener);
-                    }
-                }
-            }
-        }
+        String outputName = sensor.getOutputNameFromTemplateID(templateID);
+        if (!storage.getRecordStores().containsKey(outputName))
+            storage.addRecordStore(outputName, component, encoding);
         
+        // publish new feature of interest
+        sensor.newFeatureOfInterest(templateID, obsTemplate);
         return templateID;
     }
 }

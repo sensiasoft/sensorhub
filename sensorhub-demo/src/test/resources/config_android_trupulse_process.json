@@ -1,0 +1,159 @@
+[
+  {
+    "objClass": "org.sensorhub.impl.service.HttpServerConfig",
+    "id": "5cb05c9c-9e08-4fa1-8731-ffaa5846bdc1",
+    "name": "HTTP Server",
+    "moduleClass": "org.sensorhub.impl.service.HttpServer",
+    "httpPort": 8181,
+    "servletsRootUrl": "/sensorhub",
+    "staticDocRootUrl": "web"
+  },
+  {
+    "objClass": "org.sensorhub.ui.AdminUIConfig",
+    "id": "5cb05c9c-9123-4fa1-8731-ffaa51489678",
+    "moduleClass": "org.sensorhub.ui.AdminUIModule",
+    "enabled": true
+  },
+  {
+    "objClass": "org.sensorhub.impl.sensor.fakegps.FakeGpsConfig",
+    "id": "d136b6ea-3950-4691-bf56-c84ec7d89d72",
+    "name": "Simulated GPS Sensor",
+    "moduleClass": "org.sensorhub.impl.sensor.fakegps.FakeGpsSensor",
+    "enabled": true,
+    "sensorML": null,
+    "autoActivate": true,
+    "enableHistory": false,
+    "hiddenIO": null,
+    "centerLatitude": 34.7275,
+    "centerLongitude": -86.5880,
+    "areaSize": 0.005,
+    "vehicleSpeed": 10,
+    "walkingMode": true
+  },
+  {
+    "objClass": "org.sensorhub.impl.sensor.trupulse.TruPulseConfig",
+    "id": "d136b6ea-3950-4691-bf56-feazfez6f656",
+    "name": "TruPulse Range Finder",
+    "moduleClass": "org.sensorhub.impl.sensor.trupulse.TruPulseSensor",
+    "enabled": true,
+    "sensorML": null,
+    "autoActivate": true,
+    "enableHistory": false,
+    "hiddenIO": null,
+    "commSettings":
+    {
+        "objClass": "org.sensorhub.impl.comm.TCPConfig",
+        "moduleClass": "org.sensorhub.impl.sensor.trupulse.SimulatedTruPulseDataStream"
+    }
+  }, 
+  {
+    "objClass": "org.sensorhub.impl.process.trupulse.TargetGeolocConfig",
+    "id": "5cb4569c-9e08-4fa1-1458-fead589eff51",
+    "name": "Target Geolocation Processing",
+    "moduleClass": "org.sensorhub.impl.process.trupulse.TargetGeolocProcess",
+    "enabled": true,
+    "dataSources":
+    [    
+      {
+        "objClass": "org.sensorhub.api.processing.StreamingDataSourceConfig",
+        "producerID": "d136b6ea-3950-4691-bf56-c84ec7d89d72",
+        "inputConnections":
+        [
+          {
+             "source": "gpsLocation",
+             "destination": "sensorLocation"
+          }
+        ]
+      },
+      {
+        "objClass": "org.sensorhub.api.processing.StreamingDataSourceConfig",
+        "producerID": "d136b6ea-3950-4691-bf56-feazfez6f656",
+        "inputConnections":
+        [
+          {
+             "source": "rangeData",
+             "destination": "rangeData"
+          }
+        ]
+      }
+    ]
+  }, 
+  {
+    "objClass": "org.sensorhub.impl.persistence.StreamStorageConfig",
+    "id": "5cb4569c-9e08-4fa1-1458-edcc589eff51",
+    "name": "Target Location Storage",
+    "moduleClass": "org.sensorhub.impl.persistence.GenericStreamStorage",
+    "enabled": true,
+    "dataSourceID": "5cb4569c-9e08-4fa1-1458-fead589eff51",
+    "selectedOutputs": ["targetLocation"],
+    "storageConfig":    
+    {
+      "objClass": "org.sensorhub.impl.persistence.perst.BasicStorageConfig",
+      "moduleClass": "org.sensorhub.impl.persistence.perst.BasicStorageImpl",
+      "memoryCacheSize": 1024,
+      "storagePath": "trupulse_target_geoloc.dat"
+    }
+  }, 
+  {
+    "objClass": "org.sensorhub.impl.service.sos.SOSServiceConfig",
+    "id": "5cb05c9c-9e08-4fa1-8731-ff41e246bdc1",
+    "name": "SOS Service",
+    "moduleClass": "org.sensorhub.impl.service.sos.SOSService",
+    "enabled": true,
+    "endPoint": "/sos",
+    "enableHttpGET": true,
+    "enableHttpPOST": true,
+    "enableSOAP": true,
+    "enableTransactional": true,
+    "newStorageConfig": {
+      "objClass": "org.sensorhub.impl.persistence.perst.BasicStorageConfig",
+      "memoryCacheSize": 10240,
+      "moduleClass": "org.sensorhub.impl.persistence.perst.ObsStorageImpl",
+      "enabled": true
+    },    
+    "ogcCapabilitiesInfo": 
+    {
+      "title": "Demo SOS Service",
+      "description": "An SOS service automatically deployed by SensorHub",
+      "keywords": ["SensorHub", "Range Finder", "TruPulse"],
+      "fees": "NONE",
+      "accessConstraints": "NONE",
+      "serviceProvider":
+      {
+        "individualName": "Alex Robin",
+        "organizationName": "Sensia Software LLC",
+        "positionName": "Engineer",
+        "voiceNumber": "+33 5 23 56 89 78",
+        "faxNumber": "+33 5 23 56 89 77",
+        "deliveryPoint": "12 rue Voltaire",
+        "city": "Toulouse",
+        "administrativeArea": null,
+        "postalCode": "30000",
+        "country": "France",
+        "email": "admin@sensiasoft.com",
+        "website": null,
+        "hoursOfService": null,
+        "contactInstructions": null
+      }
+    },
+    "dataProviders" :
+    [
+       {
+           "objClass": "org.sensorhub.impl.service.sos.SensorDataProviderConfig",
+           "enabled": true,
+           "name": "Simulated GPS",
+           "description": "Simulated GPS sensor",
+           "uri": "urn:offering:gps",
+           "sensorID": "d136b6ea-3950-4691-bf56-c84ec7d89d72"
+       },
+       {
+           "objClass": "org.sensorhub.impl.service.sos.StreamProcessProviderConfig",
+           "enabled": true,
+           "name": "Target Location",
+           "description": "Location of target pointed with range finder",
+           "uri": "urn:offering:target",
+           "processID": "5cb4569c-9e08-4fa1-1458-fead589eff51"
+       }
+    ]
+  }
+]

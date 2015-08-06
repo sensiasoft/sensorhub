@@ -21,16 +21,24 @@ import org.sensorhub.api.persistence.StorageConfig;
 public class StreamStorageConfig extends StorageConfig
 {
     
-    @DisplayInfo(label="Data Source ID", desc="Local ID of streaming data source which data will be stored.")
+    @DisplayInfo(label="Storage Config", desc="Configuration of underlying storage")
     public StorageConfig storageConfig;
     
     
-    @DisplayInfo(label="Data Source ID", desc="Local ID of streaming data source which data will be stored.")
+    @DisplayInfo(label="Data Source ID", desc="Local ID of streaming data source which data will be store.")
     public String dataSourceID;
     
     
     @DisplayInfo(label="Selected Outputs", desc="Names of data source outputs to save to storage")
     public String[] selectedOutputs;
+    
+    
+    @DisplayInfo(label="Automatic Purge Policy", desc="Policy for automatically purging stored data")
+    public StorageAutoPurgeConfig autoPurgeConfig;
+    
+
+    @DisplayInfo(desc="Minimum period between database commits (in ms)")
+    public int minCommitPeriod = 10000;
     
     
     public StreamStorageConfig()

@@ -1,0 +1,3 @@
+org.sensorhub.impl.comm.TCPCommModuleDescriptor
+org.sensorhub.impl.persistence.StreamStorageModuleDescriptor
+org.sensorhub.impl.processing.SMLStreamProcessDescriptor

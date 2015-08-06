@@ -35,14 +35,14 @@ import org.vast.util.TimeExtent;
 public class StreamWithStorageProviderFactory<ProducerType extends IDataProducerModule<?>> extends StorageDataProviderFactory
 {
     final ProducerType producer;
-    double liveDataTimeOut;
+    long liveDataTimeOut;
     
     
     public StreamWithStorageProviderFactory(StreamDataProviderConfig config, ProducerType producer) throws SensorHubException
     {
         super(new StorageDataProviderConfig(config));
         this.producer = producer;
-        this.liveDataTimeOut = config.liveDataTimeout;
+        this.liveDataTimeOut = (long)(config.liveDataTimeout * 1000);
     }
 
 
@@ -80,30 +80,24 @@ public class StreamWithStorageProviderFactory<ProducerType extends IDataProducer
         // enable real-time requests if streaming data source is enabled
         if (producer.isEnabled())
         {
-            try
+            long now =  System.currentTimeMillis();
+            
+            // check latest record time
+            long lastRecordTime = Long.MIN_VALUE;
+            for (IStreamingDataInterface output: producer.getAllOutputs().values())
             {
-                // check latest record time
-                double lastRecordTime = Double.NEGATIVE_INFINITY;
-                for (IStreamingDataInterface output: producer.getAllOutputs().values())
-                {
-                    // skip hidden outputs
-                    if (config.hiddenOutputs != null && config.hiddenOutputs.contains(output.getName()))
-                        continue;
-                    
-                    double recTime = output.getLatestRecordTime();
-                    if (!Double.isNaN(recTime) && recTime > lastRecordTime)
-                        lastRecordTime = recTime;
-                }
+                // skip hidden outputs
+                if (config.hiddenOutputs != null && config.hiddenOutputs.contains(output.getName()))
+                    continue;
                 
-                // if latest record is not too old, enable real-time
-                double now =  System.currentTimeMillis() / 1000.; 
-                if (now - lastRecordTime < liveDataTimeOut)
-                    caps.getPhenomenonTime().setEndNow(true);
+                long recTime = output.getLatestRecordTime();
+                if (recTime != Long.MIN_VALUE && recTime > lastRecordTime)
+                    lastRecordTime = recTime;
             }
-            catch (SensorHubException e)
-            {
-                throw new ServiceException("Error while updating capabilities", e);
-            }        
+            
+            // if latest record is not too old, enable real-time
+            if (lastRecordTime != Long.MIN_VALUE && now - lastRecordTime < liveDataTimeOut)
+                caps.getPhenomenonTime().setEndNow(true);      
         }
     }
 }

@@ -16,6 +16,8 @@ package org.sensorhub.impl.sensor.android;
 
 import java.util.ArrayList;
 import java.util.List;
+import javax.xml.namespace.QName;
+import net.opengis.gml.v32.AbstractFeature;
 import net.opengis.sensorml.v20.PhysicalComponent;
 import net.opengis.sensorml.v20.PhysicalSystem;
 import net.opengis.sensorml.v20.SpatialFrame;
@@ -26,6 +28,8 @@ import org.sensorhub.api.sensor.SensorException;
 import org.sensorhub.impl.sensor.AbstractSensorModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.vast.ogc.gml.GenericFeatureImpl;
+import org.vast.sensorML.SMLStaxBindings;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.hardware.Sensor;
@@ -36,6 +40,7 @@ import android.hardware.camera2.CameraManager;
 import android.location.LocationManager;
 import android.location.LocationProvider;
 import android.os.Build;
+import android.provider.Settings.Secure;
 
 
 public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsConfig>
@@ -44,10 +49,8 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
     private static final Logger log = LoggerFactory.getLogger(AndroidSensorsDriver.class.getSimpleName());
     public static final String LOCAL_REF_FRAME = "LOCAL_FRAME";
     
-    public static Context androidContext;
     SensorManager sensorManager;
     LocationManager locationManager;
-    CameraManager cameraManager;
     SensorMLBuilder smlBuilder;
     List<PhysicalComponent> smlComponents;
     
@@ -64,6 +67,7 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
     {
         // we call stop() to cleanup just in case we weren't properly stopped
         stop();        
+        Context androidContext = config.androidContext;
         
         // create data interfaces for sensors
         this.sensorManager = (SensorManager)androidContext.getSystemService(Context.SENSOR_SERVICE);
@@ -118,8 +122,23 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
         
         // create data interfaces for cameras
         if (androidContext.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA))
+            createCameraOutputs(androidContext);
+        
+        // init all outputs
+        for (ISensorDataInterface o: this.getAllOutputs().values())
+            ((IAndroidOutput)o).init();
+        
+        // update sensorml description
+        updateSensorDescription();
+    }
+    
+    
+    @SuppressWarnings("deprecation")
+    protected void createCameraOutputs(Context androidContext) throws SensorException
+    {
+        if (android.os.Build.VERSION.SDK_INT > android.os.Build.VERSION_CODES.LOLLIPOP+2)
         {
-            this.cameraManager = (CameraManager)androidContext.getSystemService(Context.CAMERA_SERVICE);
+            CameraManager cameraManager = (CameraManager)androidContext.getSystemService(Context.CAMERA_SERVICE);
             
             try
             {
@@ -130,21 +149,29 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
                     int camDir = cameraManager.getCameraCharacteristics(cameraId).get(CameraCharacteristics.LENS_FACING);
                     if ( (camDir == CameraCharacteristics.LENS_FACING_BACK && config.activateBackCamera) ||
                          (camDir == CameraCharacteristics.LENS_FACING_FRONT && config.activateFrontCamera))
-                         useCamera(new AndroidCameraOutput(this, cameraManager, cameraId), cameraId);
+                    {
+                        useCamera2(new AndroidCamera2Output(this, cameraManager, cameraId, config.camPreviewSurfaceHolder), cameraId);
+                    }
                 }
             }
             catch (CameraAccessException e)
             {
                 throw new SensorException("Error while accessing cameras", e);
-            }        
+            }
         }
-        
-        // init all outputs
-        for (ISensorDataInterface o: this.getAllOutputs().values())
-            ((IAndroidOutput)o).init();
-        
-        // update sensorml description
-        updateSensorDescription();
+        else
+        {
+            for (int cameraId = 0; cameraId < android.hardware.Camera.getNumberOfCameras(); cameraId++)
+            {
+                android.hardware.Camera.CameraInfo info = new android.hardware.Camera.CameraInfo();                    
+                android.hardware.Camera.getCameraInfo(cameraId, info);
+                if ( (info.facing == android.hardware.Camera.CameraInfo.CAMERA_FACING_BACK && config.activateBackCamera) ||
+                     (info.facing == android.hardware.Camera.CameraInfo.CAMERA_FACING_FRONT && config.activateFrontCamera))
+                {
+                    useCamera(new AndroidCameraOutput(this, cameraId, config.camPreviewSurfaceHolder), cameraId);
+                }
+            }
+        }
     }
     
     
@@ -164,10 +191,18 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
     }
     
     
-    protected void useCamera(ISensorDataInterface output, String cameraId)
+    protected void useCamera(ISensorDataInterface output, int cameraId)
     {
         addOutput(output, false);
-        smlComponents.add(smlBuilder.getComponentDescription(cameraManager, cameraId));
+        smlComponents.add(smlBuilder.getComponentDescription(cameraId));
+        log.info("Getting data from camera #" + cameraId);
+    }
+    
+    
+    protected void useCamera2(ISensorDataInterface output, String cameraId)
+    {
+        addOutput(output, false);
+        smlComponents.add(smlBuilder.getComponentDescription(cameraId));
         log.info("Getting data from camera #" + cameraId);
     }
     
@@ -185,13 +220,16 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
 
 
     @Override
-    protected void updateSensorDescription() throws SensorException
+    protected void updateSensorDescription()
     {
         synchronized (sensorDescription)
         {
             super.updateSensorDescription();
-            sensorDescription.setId("ANDROID_SENSORS");
-            sensorDescription.setUniqueIdentifier("urn:android:device:" + Build.SERIAL);
+            
+            String deviceID = Secure.getString(config.androidContext.getContentResolver(), Secure.ANDROID_ID);
+            sensorDescription.setId("ANDROID_SENSORS_" + Build.SERIAL);
+            sensorDescription.setUniqueIdentifier("urn:android:device:" + deviceID);
+            sensorDescription.setName(config.name);
             
             SpatialFrame localRefFrame = new SpatialFrameImpl();
             localRefFrame.setId("LOCAL_FRAME");
@@ -201,6 +239,11 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
             localRefFrame.addAxis("z", "The Z axis points towards the outside of the front face of the screen");
             ((PhysicalSystem)sensorDescription).addLocalReferenceFrame(localRefFrame);
             
+            // add FOI
+            AbstractFeature foi = getCurrentFeatureOfInterest();
+            if (foi != null)
+                sensorDescription.getFeaturesOfInterest().addFeature(foi); 
+            
             // add components
             int index = 0;
             for (PhysicalComponent comp: smlComponents)
@@ -209,6 +252,23 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
                 ((PhysicalSystem)sensorDescription).addComponent(name, comp);
             }
         }
+    }
+    
+    
+    @Override
+    public AbstractFeature getCurrentFeatureOfInterest()
+    {
+        if (config.runName != null && config.runName.length() > 0)
+        {
+            AbstractFeature foi = new GenericFeatureImpl(new QName(SMLStaxBindings.NS_URI, "Feature", "sml"));
+            String uid = "urn:android:foi:" + config.runName.replaceAll("[ |']", "");
+            foi.setUniqueIdentifier(uid);
+            foi.setName(config.runName);
+            foi.setDescription(config.runDescription);
+            return foi;
+        }
+        
+        return null;
     }
 
 

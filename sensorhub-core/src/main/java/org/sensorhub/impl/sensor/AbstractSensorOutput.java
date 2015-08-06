@@ -40,6 +40,8 @@ public abstract class AbstractSensorOutput<SensorType extends ISensorModule<?>> 
     protected static String ERROR_NO_STORAGE = "Data storage is not supported by driver ";
     protected SensorType parentSensor;
     protected IEventHandler eventHandler;
+    protected DataBlock latestRecord;
+    protected long latestRecordTime = Long.MIN_VALUE;
     
     
     public AbstractSensorOutput(SensorType parentSensor)
@@ -72,6 +74,20 @@ public abstract class AbstractSensorOutput<SensorType extends ISensorModule<?>> 
     }
 
 
+    @Override
+    public DataBlock getLatestRecord()
+    {
+        return latestRecord;
+    }
+    
+    
+    @Override
+    public long getLatestRecordTime()
+    {
+        return latestRecordTime;
+    }
+    
+    
     @Override
     public boolean isStorageSupported()
     {

@@ -3,33 +3,38 @@
    <parent>
       <groupId>org.sensorhub</groupId>
       <artifactId>sensorhub-all</artifactId>
-      <version>0.5</version>
+      <version>1.0</version>
       <relativePath>../sensorhub-all/pom.xml</relativePath>
    </parent>
    <artifactId>sensorhub-storage-perst</artifactId>
    <name>SensorHub PERST Storage</name>
    <description>Storage module backed by a PERST object-oriented database</description>
    <packaging>bundle</packaging>
+   <repositories>
+      <repository>
+         <id>in-project</id>
+         <name>In-Project Repository</name>
+         <url>file://${project.basedir}/libs</url>
+      </repository>
+   </repositories>
    <dependencies>
       <dependency>
          <groupId>org.sensorhub</groupId>
          <artifactId>sensorhub-core</artifactId>
-         <version>0.5</version>
-         <scope>provided</scope>
+         <version>1.0</version>
+         <type>bundle</type>
+      </dependency>
+      <dependency>
+         <groupId>org.garret</groupId>
+         <artifactId>perst-fixed</artifactId>
+         <version>4.36</version>
       </dependency>
       <dependency>
          <groupId>org.sensorhub</groupId>
          <artifactId>sensorhub-core</artifactId>
-         <version>0.5</version>
+         <version>1.0</version>
          <type>test-jar</type>
          <scope>test</scope>
-      </dependency>
-      <dependency>
-         <groupId>org.garret</groupId>
-         <artifactId>perst</artifactId>
-         <version>4.36</version>
-         <scope>system</scope>
-         <systemPath>${project.basedir}/lib/perst-4.36_fixed.jar</systemPath>
       </dependency>
    </dependencies>
 </project>

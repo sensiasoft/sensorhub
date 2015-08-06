@@ -1,0 +1,98 @@
+// Modify the base color of the theme
+//$v-background-color: hsl(200, 50%, 50%);
+$v-layout-margin-top: 25px;
+
+// Import valo after setting the parameters
+@import "../valo/valo";
+@import "../../addons/gantt/gantt";
+@import "../../addons/gantt/gantt-valo";
+
+.sensorhub {   
+   @include valo;
+   @include gantt;
+   @include gantt-valo;
+   
+   .v-verticallayout > .v-slot:first-child .v-label-h1,
+   .v-verticallayout > .v-slot:first-child h1,
+   .v-verticallayout > div > .v-slot:first-child .v-label-h1,
+   .v-verticallayout > div > .v-slot:first-child h1,
+   .v-verticallayout > .v-slot:first-child .v-label-h2,
+   .v-verticallayout > .v-slot:first-child h2,
+   .v-verticallayout > div > .v-slot:first-child .v-label-h2,
+   .v-verticallayout > div > .v-slot:first-child h2,
+   .v-verticallayout > .v-slot:first-child .v-label-h3,
+   .v-verticallayout > .v-slot:first-child h3,
+   .v-verticallayout > div > .v-slot:first-child .v-label-h3,
+   .v-verticallayout > div > .v-slot:first-child h3 {
+      margin-top: 0;
+      margin-bottom: 0;
+   }
+   
+   .gantt {
+      border: 1px solid #d5d5d5;
+   }
+   
+   .apply-button {
+      position: fixed;
+      top: 25px;
+      right: 35px;
+      z-index: 10000;
+   }
+   
+   .v-slot-section-buttons {
+      position: relative;
+      top: 20px;
+      right: 0px;
+   }
+   
+   .section-buttons {
+      position: absolute;
+      right: 0px;
+      z-index: 1000;
+   }
+   
+   .v-formlayout-contentcell > .v-label-h3 {
+      top: 18px;
+   }
+   
+   .v-formlayout-firstrow {
+      height: 40px;
+   }
+   
+   .v-accordion-item-caption > .v-caption {
+      font-size: 16px;
+   }
+   
+   .v-table .v-table-cell-content-green {
+      background-image: url("icons/enabled.gif");
+      background-repeat: no-repeat;
+      background-position: 5px;
+      text-indent: 20px;
+   }
+   
+   .v-table .v-table-cell-content-red {
+      background-image: url("icons/disable.gif");
+      background-repeat: no-repeat;
+      background-position: 5px;
+      text-indent: 20px;
+   }
+   
+   .v-tooltip {
+      background-color: rgba(255, 255, 255, 0.9);
+      color: black;
+   }
+   
+   img.logo {
+      margin-left: 10px;
+   }
+   
+   .logo.h1 {
+      margin-bottom: 16px;
+      margin-right: 20px;
+      text-shadow: 1px 1px 0 rgba(50, 50, 50, 0.5);
+   }
+   
+   img.v-icon {
+      margin-bottom: 3px;
+   }
+}

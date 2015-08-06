@@ -2,11 +2,14 @@
    <modelVersion>4.0.0</modelVersion>
    <groupId>org.sensorhub</groupId>
    <artifactId>sensorhub-all</artifactId>
-   <version>0.5</version>
    <packaging>pom</packaging>
    <name>SensorHub</name>
    <url>http://code.google.com/p/sensorhub/</url>
    <description>SensorHub software allows one to easily build sensor networks that use standard formats to exchange measurements data, commands and events/alarms. These standard formats are mostly OGC standards from the Sensor Web Enablement (SWE) initiative and are key to design sensor networks that can largely evolve with time (addition of new types of sensors, reconfigurations, etc.). </description>
+   <properties>
+      <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+      <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+   </properties>
    <licenses>
       <license>
          <name>Mozilla Public License Version 2.0</name>
@@ -35,15 +38,6 @@
       <url>https://github.com/sensiasoft/sensorhub/issues</url>
       <system>GitHub</system>
    </issueManagement>
-   <modules>
-      <module>../sensorhub-core</module>
-      <module>../sensorhub-storage-perst</module>
-      <module>../sensorhub-service-swe</module>
-      <module>../sensorhub-driver-v4l</module>      
-      <module>../sensorhub-driver-fakegps</module>
-      <module>../sensorhub-driver-fakeweather</module>
-      <module>../sensorhub-tools</module>
-   </modules>
    <dependencies>
       <dependency>
          <groupId>junit</groupId>
@@ -104,4 +98,5 @@
          </plugin>
       </plugins>
    </build>
+   <version>1.0</version>
 </project>

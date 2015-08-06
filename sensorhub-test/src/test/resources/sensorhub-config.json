@@ -4,7 +4,7 @@
     "id": "5cb05c9c-9e08-4fa1-8731-ffaa5846bdc1",
     "name": "HTTP Server",
     "moduleClass": "org.sensorhub.impl.service.HttpServer",
-    "httpPort": 8080,
+    "httpPort": 8181,
     "rootURL": "/sensorhub",
     "docRoot": "web"
   },

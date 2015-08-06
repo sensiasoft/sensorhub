@@ -18,18 +18,20 @@ SensorHub is licensed under the [Mozilla Public License version 2.0](http://www.
 
 ## Using
 
-Refer to the [User's Guide](https://github.com/sensiasoft/sensorhub/wiki/User's-Guide) for instructions on how to install and use SensorHub.
+Refer to the [Documentation Site](http://docs.opensensorhub.org/documentation) for instructions on how to install and use SensorHub, as well as get the latest news.
+
+You can also go to this [Demo Page](http://sensiasoft.net:8181/demo.html) to see SensorHub in action with a few example sensor streams (Video, GPS, predicted satellite positions, etc.).
 
 
 ## Building
 
-SensorHub can be built using Maven either from the command line or within Eclipse. Please see the [Developer's Guide](../../wiki/Developer's-Guide) for detailed instructions.
+SensorHub can be built using Maven either from the command line or within Eclipse. Please see the [Developer's Guide](../../wiki/Developers-Guide) for detailed instructions.
 
 
 ## Contributing
 
-Refer to the [Developer's Guide](../../wiki/Developer's-Guide) for instructions on how to setup your development environment in Eclipse.
+Refer to the [Developer's Guide](../../wiki/Developers-Guide) for instructions on how to setup your development environment in Eclipse.
 
-You can find documentation in the [Javadocs](http://sensiasoft.github.io/sensorhub/apidocs) and [wiki](../../wiki/Home). 
+You can find documentation in the [Javadocs](http://docs.opensensorhub.org/apidocs/v1.0) and [wiki](../../wiki/Home). 
 
 Several sensor driver examples are also available in the source code to help you get started.

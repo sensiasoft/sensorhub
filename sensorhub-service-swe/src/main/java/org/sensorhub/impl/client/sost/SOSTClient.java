@@ -25,6 +25,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import net.opengis.gml.v32.AbstractFeature;
 import net.opengis.swe.v20.DataBlock;
 import org.sensorhub.api.common.Event;
 import org.sensorhub.api.common.IEventListener;
@@ -34,7 +35,6 @@ import org.sensorhub.api.sensor.ISensorDataInterface;
 import org.sensorhub.api.sensor.ISensorModule;
 import org.sensorhub.api.sensor.SensorDataEvent;
 import org.sensorhub.api.sensor.SensorEvent;
-import org.sensorhub.api.sensor.SensorException;
 import org.sensorhub.api.service.ServiceException;
 import org.sensorhub.impl.SensorHub;
 import org.sensorhub.impl.module.AbstractModule;
@@ -79,7 +79,7 @@ public class SOSTClient extends AbstractModule<SOSTClientConfig> implements IEve
     public class StreamInfo
     {
         String templateID;
-        public long lastSampleTime = -1;
+        public long lastEventTime = -1;
         public int errorCount = 0;
         private int minRecordsPerRequest = 10;
         private SWEData resultData = new SWEData();
@@ -97,8 +97,13 @@ public class SOSTClient extends AbstractModule<SOSTClientConfig> implements IEve
     @Override
     public void start() throws SensorHubException
     {
-        this.sensor = SensorHub.getInstance().getSensorManager().getModuleById(config.sensorID);
-                
+        sensor = SensorHub.getInstance().getSensorManager().getModuleById(config.sensorID);
+        if (!sensor.isConnected())
+        {
+            log.info("Sensor {} is not connected. Not connecting to SOS", MsgUtils.moduleString(sensor) );
+            return;
+        }
+        
         try
         {
             // register sensor
@@ -157,24 +162,18 @@ public class SOSTClient extends AbstractModule<SOSTClientConfig> implements IEve
      */
     protected void registerSensor(ISensorModule<?> sensor) throws OWSException
     {
-        try
-        {
-            // build insert sensor request
-            InsertSensorRequest req = new InsertSensorRequest();
-            req.setPostServer(config.sosEndpointUrl);
-            req.setVersion("2.0");
-            req.setProcedureDescription(sensor.getCurrentDescription());
-            req.setProcedureDescriptionFormat(InsertSensorRequest.DEFAULT_PROCEDURE_FORMAT);
-            req.getObservationTypes().add(IObservation.OBS_TYPE_RECORD);
-            req.getFoiTypes().add("gml:Feature");
-            
-            InsertSensorResponse resp = (InsertSensorResponse)sosUtils.sendRequest(req, false);
-            this.offering = resp.getAssignedOffering();
-        }
-        catch (SensorException e)
-        {
-            throw new RuntimeException("Cannot get SensorML description for sensor " + sensor.getName());
-        }
+        // build insert sensor request
+        InsertSensorRequest req = new InsertSensorRequest();
+        req.setPostServer(config.sosEndpointUrl);
+        req.setVersion("2.0");
+        req.setProcedureDescription(sensor.getCurrentDescription());
+        req.setProcedureDescriptionFormat(InsertSensorRequest.DEFAULT_PROCEDURE_FORMAT);
+        req.getObservationTypes().add(IObservation.OBS_TYPE_RECORD);
+        req.getFoiTypes().add("gml:Feature");
+        
+        // send request and get assigned ID
+        InsertSensorResponse resp = (InsertSensorResponse)sosUtils.sendRequest(req, false);
+        this.offering = resp.getAssignedOffering();
         
         // register to sensor change event
         sensor.registerListener(this);
@@ -188,22 +187,16 @@ public class SOSTClient extends AbstractModule<SOSTClientConfig> implements IEve
      */
     protected void updateSensor(ISensorModule<?> sensor) throws OWSException
     {
-        try
-        {
-            // build update sensor request
-            UpdateSensorRequest req = new UpdateSensorRequest(SOSUtils.SOS);
-            req.setPostServer(config.sosEndpointUrl);
-            req.setVersion("2.0");
-            req.setProcedureId(sensor.getCurrentDescription().getUniqueIdentifier());
-            req.setProcedureDescription(sensor.getCurrentDescription());
-            req.setProcedureDescriptionFormat(InsertSensorRequest.DEFAULT_PROCEDURE_FORMAT);
-            
-            sosUtils.sendRequest(req, false);
-        }
-        catch (SensorException e)
-        {
-            throw new RuntimeException("Cannot get SensorML description for sensor " + sensor.getName());
-        }
+        // build update sensor request
+        UpdateSensorRequest req = new UpdateSensorRequest(SOSUtils.SOS);
+        req.setPostServer(config.sosEndpointUrl);
+        req.setVersion("2.0");
+        req.setProcedureId(sensor.getCurrentDescription().getUniqueIdentifier());
+        req.setProcedureDescription(sensor.getCurrentDescription());
+        req.setProcedureDescriptionFormat(InsertSensorRequest.DEFAULT_PROCEDURE_FORMAT);
+        
+        // send request
+        sosUtils.sendRequest(req, false);
     }
     
     
@@ -214,14 +207,22 @@ public class SOSTClient extends AbstractModule<SOSTClientConfig> implements IEve
      */
     protected void registerDataStream(ISensorDataInterface sensorOutput) throws OWSException
     {
-        // send insert result template
+        // generate insert result template
         InsertResultTemplateRequest req = new InsertResultTemplateRequest();
         req.setPostServer(config.sosEndpointUrl);
         req.setVersion("2.0");
         req.setOffering(offering);
         req.setResultStructure(sensorOutput.getRecordDescription());
         req.setResultEncoding(sensorOutput.getRecommendedEncoding());
-        req.setObservationTemplate(new ObservationImpl());
+        ObservationImpl obsTemplate = new ObservationImpl();
+        
+        // set FOI if known
+        AbstractFeature foi = sensorOutput.getParentModule().getCurrentFeatureOfInterest();
+        if (foi != null)
+            obsTemplate.setFeatureOfInterest(foi);
+        req.setObservationTemplate(obsTemplate);
+        
+        // send request
         InsertResultTemplateResponse resp = (InsertResultTemplateResponse)sosUtils.sendRequest(req, false);
         
         // add stream info to map
@@ -242,7 +243,7 @@ public class SOSTClient extends AbstractModule<SOSTClientConfig> implements IEve
     
     
     @Override
-    public void handleEvent(final Event e)
+    public void handleEvent(final Event<?> e)
     {
         // sensor description updated
         if (e instanceof SensorEvent)
@@ -286,8 +287,8 @@ public class SOSTClient extends AbstractModule<SOSTClientConfig> implements IEve
                 return;
             }
             
-            // record last sample time
-            streamInfo.lastSampleTime = e.getTimeStamp();
+            // record last event time
+            streamInfo.lastEventTime = e.getTimeStamp();
             
             // append records to buffer
             for (DataBlock record: ((SensorDataEvent)e).getRecords())

@@ -17,14 +17,17 @@ package org.sensorhub.impl.service.sos;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map.Entry;
+import java.util.Set;
 import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataEncoding;
-import org.sensorhub.api.persistence.DataKey;
 import org.sensorhub.api.persistence.IBasicStorage;
-import org.sensorhub.api.persistence.IDataFilter;
 import org.sensorhub.api.persistence.IDataRecord;
-import org.sensorhub.api.persistence.ITimeSeriesDataStore;
+import org.sensorhub.api.persistence.IObsFilter;
+import org.sensorhub.api.persistence.IRecordStoreInfo;
+import org.sensorhub.api.persistence.ObsFilter;
+import org.sensorhub.api.persistence.ObsKey;
 import org.sensorhub.api.sensor.SensorException;
 import org.vast.data.DataIterator;
 import org.vast.ogc.def.DefinitionRef;
@@ -32,10 +35,11 @@ import org.vast.ogc.gml.FeatureRef;
 import org.vast.ogc.om.IObservation;
 import org.vast.ogc.om.ObservationImpl;
 import org.vast.ogc.om.ProcedureRef;
-import org.vast.ows.server.SOSDataFilter;
 import org.vast.ows.sos.ISOSDataProvider;
+import org.vast.ows.sos.SOSDataFilter;
 import org.vast.swe.SWEConstants;
 import org.vast.util.TimeExtent;
+import com.vividsolutions.jts.geom.Polygon;
 
 
 /**
@@ -51,63 +55,69 @@ public class StorageDataProvider implements ISOSDataProvider
 {
     private static final long MAX_WAIT_TIME = 5000L;
     
-    IBasicStorage<?> storage;
+    IBasicStorage storage;
     List<StorageState> dataStoresStates;
     DataComponentFilter recordFilter;
     double replaySpeedFactor;
     double lastRecordTime = Double.NaN;
-    long lastSystemTime; 
+    long lastSystemTime;
+    String foiID;
     
     
     class StorageState
     {
-        ITimeSeriesDataStore<IDataFilter> dataStore;
-        Iterator<? extends IDataRecord<DataKey>> recordIterator;
-        IDataRecord<DataKey> nextRecord;        
+        IRecordStoreInfo recordInfo;
+        Iterator<? extends IDataRecord> recordIterator;
+        IDataRecord nextRecord;
     }
     
     
-    public StorageDataProvider(IBasicStorage<?> storage, final SOSDataFilter filter)
+    public StorageDataProvider(IBasicStorage storage, StorageDataProviderConfig config, final SOSDataFilter filter)
     {
         this.storage = storage;
         this.dataStoresStates = new ArrayList<StorageState>();
         this.recordFilter = new DataComponentFilter(filter);
         this.replaySpeedFactor = filter.getReplaySpeedFactor();
         
-        final double[] timePeriod = new double[] {
-            filter.getTimeRange().getStartTime(),
-            filter.getTimeRange().getStopTime()
-        };
-        
-        // prepare record filter
-        IDataFilter storageFilter = new IDataFilter() {
-
-            @Override
-            public double[] getTimeStampRange()
-            {
-                return timePeriod;
-            }
-
-            @Override
-            public String getProducerID()
-            {
-                return null;
-            }
-        };
+        // prepare time range filter
+        final double[] timePeriod;
+        if (filter.getTimeRange() != null && !filter.getTimeRange().isNull())
+        {
+            timePeriod = new double[] {
+                filter.getTimeRange().getStartTime(),
+                filter.getTimeRange().getStopTime()
+            };
+        }
+        else
+            timePeriod = null;
         
         // loop through all outputs and connect to the ones containing observables we need
-        for (ITimeSeriesDataStore<IDataFilter> dataStore: storage.getDataStores().values())
+        for (Entry<String, ? extends IRecordStoreInfo> dsEntry: storage.getRecordStores().entrySet())
         {
+            // skip hidden outputs
+            if (config.hiddenOutputs != null && config.hiddenOutputs.contains(dsEntry.getKey()))
+                continue;
+            
+            IRecordStoreInfo recordInfo = dsEntry.getValue();
+            String recordType = recordInfo.getName();
+            
             // keep it if we can find one of the observables
-            DataIterator it = new DataIterator(dataStore.getRecordDescription());
+            DataIterator it = new DataIterator(recordInfo.getRecordDescription());
             while (it.hasNext())
             {
                 String defUri = (String)it.next().getDefinition();
                 if (filter.getObservables().contains(defUri))
                 {
+                    // prepare record filter
+                    IObsFilter storageFilter = new ObsFilter(recordType) {
+                        public double[] getTimeStampRange() { return timePeriod; }
+                        public Set<String> getFoiIDs() { return filter.getFoiIds(); }
+                        public Polygon getRoi() {return filter.getRoi(); }
+                    };
+                    
                     StorageState state = new StorageState();
-                    state.dataStore = dataStore;
-                    state.recordIterator = dataStore.getRecordIterator(storageFilter);
+                    state.recordInfo = recordInfo;
+                    state.recordIterator = storage.getRecordIterator(storageFilter);
                     if (state.recordIterator.hasNext()) // prefetch first record
                         state.nextRecord = state.recordIterator.next();
                     dataStoresStates.add(state);
@@ -149,12 +159,22 @@ public class StorageDataProvider implements ISOSDataProvider
         
         // use same value for resultTime for now
         TimeExtent resultTime = new TimeExtent();
-        resultTime.setBaseTime(samplingTime);        
+        resultTime.setBaseTime(samplingTime);
+        
+        // observation property URI
+        String obsPropDef = result.getDefinition();
+        if (obsPropDef == null)
+            obsPropDef = SWEConstants.NIL_UNKNOWN;
+        
+        // FOI
+        String foiID = this.foiID;
+        if (foiID == null)
+            foiID = SWEConstants.NIL_UNKNOWN;
         
         // create observation object
         IObservation obs = new ObservationImpl();
-        obs.setFeatureOfInterest(new FeatureRef("http://TODO"));
-        obs.setObservedProperty(new DefinitionRef("http://TODO"));
+        obs.setFeatureOfInterest(new FeatureRef(foiID));
+        obs.setObservedProperty(new DefinitionRef(obsPropDef));
         obs.setProcedure(new ProcedureRef(storage.getLatestDataSourceDescription().getUniqueIdentifier()));
         obs.setPhenomenonTime(phenTime);
         obs.setResultTime(resultTime);
@@ -202,8 +222,13 @@ public class StorageDataProvider implements ISOSDataProvider
         
         // get datablock from selected data store 
         StorageState state = dataStoresStates.get(nextStorageIndex);
-        DataBlock datablk = state.nextRecord.getData();
+        IDataRecord nextRec = state.nextRecord;
+        DataBlock datablk = nextRec.getData();
         
+        // also save FOI ID if set
+        if (nextRec.getKey() instanceof ObsKey)
+            this.foiID = ((ObsKey)nextRec.getKey()).foiID;
+                
         // prefetch next record
         if (state.recordIterator.hasNext())
             state.nextRecord = state.recordIterator.next();
@@ -231,7 +256,7 @@ public class StorageDataProvider implements ISOSDataProvider
         }        
         
         // return record properly filtered according to selected observables
-        return recordFilter.getFilteredRecord(state.dataStore.getRecordDescription(), datablk);
+        return recordFilter.getFilteredRecord(state.recordInfo.getRecordDescription(), datablk);
     }
     
 
@@ -240,14 +265,14 @@ public class StorageDataProvider implements ISOSDataProvider
     {
         // TODO generate choice if request includes several outputs
         
-        return dataStoresStates.get(0).dataStore.getRecordDescription();
+        return dataStoresStates.get(0).recordInfo.getRecordDescription();
     }
     
 
     @Override
     public DataEncoding getDefaultResultEncoding()
     {
-        return dataStoresStates.get(0).dataStore.getRecommendedEncoding();
+        return dataStoresStates.get(0).recordInfo.getRecommendedEncoding();
     }
 
 

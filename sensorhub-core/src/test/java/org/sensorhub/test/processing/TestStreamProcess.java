@@ -115,24 +115,22 @@ public class TestStreamProcess implements IEventListener
         for (StreamingDataSourceConfig dataSrc: dataSources)
             processCfg.dataSources.add(dataSrc);
         
-        IStreamProcessModule<?> process = (IStreamProcessModule<?>)SensorHub.getInstance().getModuleRegistry().loadModule(processCfg);
-        for (IStreamingDataInterface output: process.getAllOutputs().values())
-            output.registerListener(this);
-        
-        return process;
+        return (IStreamProcessModule<?>)SensorHub.getInstance().getModuleRegistry().loadModule(processCfg);
     }
     
     
     protected void runProcess(IStreamProcessModule<?> process) throws Exception
     {
-        new SMLUtils().writeProcess(System.out, process.getCurrentDescription(), true);
-        
         // prepare event writer
         writer = new AsciiDataWriter();
         writer.setDataEncoding(new TextEncodingImpl(",", ""));
         writer.setOutput(System.out);
         
         process.start();
+        new SMLUtils(SMLUtils.V2_0).writeProcess(System.out, process.getCurrentDescription(), true);
+        for (IStreamingDataInterface output: process.getAllOutputs().values())
+            output.registerListener(this);
+                
         SensorHub.getInstance().getModuleRegistry().getModuleById(FAKE_SENSOR1_ID).start();
         
         synchronized (this) 
@@ -225,18 +223,20 @@ public class TestStreamProcess implements IEventListener
     
     
     @Override
-    public void handleEvent(Event e)
+    public void handleEvent(Event<?> e)
     {
         if (e instanceof DataEvent)
         {
             try
             {
                 System.out.print(((DataEvent)e).getSource().getName() + ": ");
+                
                 writer.setDataComponents(((DataEvent)e).getRecordDescription());
                 writer.reset();                    
                 writer.write(((DataEvent)e).getRecords()[0]);
                 writer.flush();
                 System.out.println();
+                
                 eventCount++;
             }
             catch (IOException ex)

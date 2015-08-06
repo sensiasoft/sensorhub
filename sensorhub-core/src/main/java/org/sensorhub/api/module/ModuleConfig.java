@@ -38,17 +38,17 @@ public class ModuleConfig implements Cloneable
     
     
     /**
-     * User chosen name for the module
-     */
-    @DisplayInfo(label="Module Name")
-    public String name;
-    
-    
-    /**
      * Class implementing the module (will be instantiated when module is loaded)
      */
     @DisplayInfo(label="Module Class", desc="Module implementation class")
     public String moduleClass;
+    
+    
+    /**
+     * User chosen name for the module
+     */
+    @DisplayInfo(label="Module Name")
+    public String name;
     
     
     /**

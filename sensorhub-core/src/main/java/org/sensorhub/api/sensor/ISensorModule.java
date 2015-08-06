@@ -49,34 +49,25 @@ public interface ISensorModule<ConfigType extends SensorConfig> extends IDataPro
 
 
     /**
-     * Retrieves most current sensor description
+     * Retrieves most current sensor description.
      */
     @Override
-    public AbstractProcess getCurrentDescription() throws SensorException;
-
-
-    /**
-     * Used to check when sensor description was last updated.
-     */
-    @Override
-    public double getLastDescriptionUpdate();
+    public AbstractProcess getCurrentDescription();
 
 
     /**
      * Retrieves historic sensor description valid at time t
      * @param time julian time (1970) at which description is valid
      * @return SMLSytem object containing sensor metadata valid at time t
-     * @throws SensorException 
      */
-    public AbstractProcess getSensorDescription(double time) throws SensorException;
+    public AbstractProcess getSensorDescription(double time);
     
     
     /**
      * Gets the whole history of sensor descriptions
      * @return list of process descriptions (with disjoint time validity periods)
-     * @throws SensorException
      */
-    public List<AbstractProcess> getSensorDescriptionHistory() throws SensorException;
+    public List<AbstractProcess> getSensorDescriptionHistory();
 
 
     /**
@@ -91,34 +82,30 @@ public interface ISensorModule<ConfigType extends SensorConfig> extends IDataPro
 
     /**
      * Retrieves the list of interfaces to all sensor data outputs
-     * @throws SensorException 
      */
     @Override
-    public Map<String, ? extends ISensorDataInterface> getAllOutputs() throws SensorException;
+    public Map<String, ? extends ISensorDataInterface> getAllOutputs();
 
 
     /**
      * Retrieves the list of interface to sensor status outputs
      * @return map of output names -> data interface objects
-     * @throws SensorException 
      */
-    public Map<String, ? extends ISensorDataInterface> getStatusOutputs() throws SensorException;
+    public Map<String, ? extends ISensorDataInterface> getStatusOutputs();
 
 
     /**
      * Retrieves the list of interface to sensor observation outputs
      * @return map of output names -> data interface objects
-     * @throws SensorException 
      */
-    public Map<String, ? extends ISensorDataInterface> getObservationOutputs() throws SensorException;
+    public Map<String, ? extends ISensorDataInterface> getObservationOutputs();
 
 
     /**
      * Retrieves the list of interface to sensor command inputs
      * @return map of input names -> control interface objects
-     * @throws SensorException 
      */
-    public Map<String, ? extends ISensorControlInterface> getCommandInputs() throws SensorException;
+    public Map<String, ? extends ISensorControlInterface> getCommandInputs();
 
 
     /**

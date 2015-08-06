@@ -14,7 +14,10 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.impl.service.sos;
 
+import java.util.Iterator;
+import net.opengis.gml.v32.AbstractFeature;
 import net.opengis.sensorml.v20.AbstractProcess;
+import org.sensorhub.api.persistence.IFoiFilter;
 import org.vast.ows.sos.ISOSDataProviderFactory;
 import org.vast.ows.sos.SOSOfferingCapabilities;
 
@@ -70,6 +73,15 @@ public interface IDataProviderFactory extends ISOSDataProviderFactory
      * @throws Exception 
      */
     public AbstractProcess generateSensorMLDescription(double time) throws Exception;
+    
+    
+    /**
+     * Retrieves iterator among features of interest matching the filter
+     * @param filter feature filtering criterias
+     * @return read-only iterator (remove method does nothing)
+     * @throws Exception
+     */
+    public Iterator<AbstractFeature> getFoiIterator(IFoiFilter filter) throws Exception;
     
     
     /**

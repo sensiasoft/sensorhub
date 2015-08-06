@@ -19,8 +19,8 @@ import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.processing.IStreamProcessModule;
 import org.sensorhub.api.service.ServiceException;
 import org.sensorhub.impl.SensorHub;
-import org.vast.ows.server.SOSDataFilter;
 import org.vast.ows.sos.ISOSDataProvider;
+import org.vast.ows.sos.SOSDataFilter;
 
 
 /**
@@ -45,9 +45,10 @@ public class StreamProcessProviderFactory extends StreamDataProviderFactory<IStr
 
     
     @Override
-    public ISOSDataProvider getNewProvider(SOSDataFilter filter) throws ServiceException
+    public ISOSDataProvider getNewDataProvider(SOSDataFilter filter) throws ServiceException
     {
         checkEnabled();
-        return new StreamProcessDataProvider(producer, filter);
+        return new StreamProcessDataProvider(producer, (StreamProcessProviderConfig)config, filter);
     }
+
 }

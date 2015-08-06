@@ -21,19 +21,22 @@ import java.io.File;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import org.apache.commons.io.IOUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.sensorhub.api.module.IModule;
-import org.sensorhub.api.persistence.IBasicStorage;
+import org.sensorhub.api.persistence.IRecordStorageModule;
 import org.sensorhub.api.persistence.StorageConfig;
-import org.sensorhub.api.sensor.ISensorModule;
 import org.sensorhub.api.sensor.SensorConfig;
 import org.sensorhub.impl.SensorHub;
 import org.sensorhub.impl.SensorHubConfig;
 import org.sensorhub.impl.persistence.InMemoryBasicStorage;
-import org.sensorhub.impl.persistence.StorageHelper;
+import org.sensorhub.impl.persistence.StreamStorageConfig;
+import org.sensorhub.impl.persistence.perst.BasicStorageConfig;
+import org.sensorhub.impl.persistence.perst.ObsStorageImpl;
 import org.sensorhub.impl.service.HttpServer;
 import org.sensorhub.impl.service.HttpServerConfig;
 import org.sensorhub.impl.service.ogc.OGCServiceConfig.CapabilitiesInfo;
@@ -52,11 +55,13 @@ import org.vast.ows.OWSException;
 import org.vast.ows.OWSExceptionReader;
 import org.vast.ows.OWSRequest;
 import org.vast.ows.OWSUtils;
+import org.vast.ows.sos.GetFeatureOfInterestRequest;
 import org.vast.ows.sos.GetObservationRequest;
 import org.vast.ows.sos.InsertResultRequest;
 import org.vast.ows.sos.SOSOfferingCapabilities;
 import org.vast.ows.sos.SOSServiceCapabilities;
 import org.vast.swe.SWEData;
+import org.vast.util.Bbox;
 import org.vast.util.TimeExtent;
 import org.vast.xml.DOMHelper;
 import org.w3c.dom.Element;
@@ -65,16 +70,26 @@ import org.w3c.dom.NodeList;
 
 public class TestSOSService
 {
-    static String SERVICE_ENDPOINT = "/sos";
     static String NAME_OUTPUT1 = "weatherOut";
     static String NAME_OUTPUT2 = "imageOut";
+    static String UID_SENSOR1 = "urn:sensors:mysensor:001";
+    static String UID_SENSOR2 = "urn:sensors:mysensor:002";
     static String URI_OFFERING1 = "urn:mysos:sensor1";
     static String URI_OFFERING2 = "urn:mysos:sensor2";
+    static String URI_PROP1 = "urn:blabla:temperature";
+    static String URI_PROP2 = "urn:blabla:image";
     static String NAME_OFFERING1 = "SOS Sensor Provider #1";
     static String NAME_OFFERING2 = "SOS Sensor Provider #2";
-    static final double SAMPLING_PERIOD = 0.5;
+    static final double SAMPLING_PERIOD = 0.1;
     static final int NUM_GEN_SAMPLES = 5;
+    static final int NUM_GEN_FEATURES = 3;
+    static final int SERVER_PORT = 8888;
+    static final String SERVICE_PATH = "/sos";
+    static final String SERVICE_ENDPOINT = "http://localhost:" + SERVER_PORT + "/sensorhub" + SERVICE_PATH;
+    static final String DB_PATH = "db.dat";
     
+    
+    Map<Integer, Integer> obsFoiMap = new HashMap<Integer, Integer>();
     File configFile;
     
     
@@ -85,10 +100,12 @@ public class TestSOSService
         configFile = new File("junit-test.json");
         //configFile = File.createTempFile("junit-config-", ".json");
         configFile.deleteOnExit();
+        new File(DB_PATH).deleteOnExit();
         SensorHub.createInstance(new SensorHubConfig(configFile.getAbsolutePath(), configFile.getParent()));
         
         // start HTTP server
         HttpServerConfig httpConfig = new HttpServerConfig();
+        httpConfig.httpPort = SERVER_PORT;
         SensorHub.getInstance().getModuleRegistry().loadModule(httpConfig);
     }
     
@@ -98,7 +115,7 @@ public class TestSOSService
         // create service config
         SOSServiceConfig serviceCfg = new SOSServiceConfig();
         serviceCfg.moduleClass = SOSService.class.getCanonicalName();
-        serviceCfg.endPoint = SERVICE_ENDPOINT;
+        serviceCfg.endPoint = SERVICE_PATH;
         serviceCfg.enabled = true;
         serviceCfg.name = "SOS";
         CapabilitiesInfo srvcMetadata = serviceCfg.ogcCapabilitiesInfo;
@@ -119,17 +136,16 @@ public class TestSOSService
     }
     
     
-    protected SensorDataProviderConfig buildSensorProvider1(boolean pushEnabled) throws Exception
+    protected SensorDataProviderConfig buildSensorProvider1() throws Exception
     {
         // create test sensor
         SensorConfig sensorCfg = new SensorConfig();
         sensorCfg.enabled = true;
-        sensorCfg.moduleClass = FakeSensor.class.getCanonicalName();
+        sensorCfg.moduleClass = FakeSensorWithFoi.class.getCanonicalName();
         sensorCfg.name = "Sensor1";
-        IModule<?> sensor = SensorHub.getInstance().getModuleRegistry().loadModule(sensorCfg);
-        
-        // add custom interfaces
-        ((FakeSensor)sensor).setDataInterfaces(new FakeSensorData((FakeSensor)sensor, NAME_OUTPUT1, 10, SAMPLING_PERIOD, NUM_GEN_SAMPLES));
+        FakeSensor sensor = (FakeSensor)SensorHub.getInstance().getModuleRegistry().loadModule(sensorCfg);
+        sensor.setSensorUID(UID_SENSOR1);
+        sensor.setDataInterfaces(new FakeSensorData(sensor, NAME_OUTPUT1, 10, SAMPLING_PERIOD, NUM_GEN_SAMPLES));
         
         // create SOS data provider config
         SensorDataProviderConfig provCfg = new SensorDataProviderConfig();
@@ -148,12 +164,13 @@ public class TestSOSService
         // create test sensor
         SensorConfig sensorCfg = new SensorConfig();
         sensorCfg.enabled = true;
-        sensorCfg.moduleClass = FakeSensor.class.getCanonicalName();
+        sensorCfg.moduleClass = FakeSensorWithFoi.class.getCanonicalName();
         sensorCfg.name = "Sensor2";
-        IModule<?> sensor = SensorHub.getInstance().getModuleRegistry().loadModule(sensorCfg);
-        ((FakeSensor)sensor).setDataInterfaces(
-                new FakeSensorData((FakeSensor)sensor, NAME_OUTPUT1),
-                new FakeSensorData2((FakeSensor)sensor, NAME_OUTPUT2));
+        FakeSensorWithFoi sensor = (FakeSensorWithFoi)SensorHub.getInstance().getModuleRegistry().loadModule(sensorCfg);
+        sensor.setSensorUID(UID_SENSOR2);
+        sensor.setDataInterfaces(
+                new FakeSensorData(sensor, NAME_OUTPUT1),
+                new FakeSensorData2(sensor, NAME_OUTPUT2, SAMPLING_PERIOD, NUM_GEN_SAMPLES, obsFoiMap));
         
         // create SOS data provider config
         SensorDataProviderConfig provCfg = new SensorDataProviderConfig();
@@ -167,44 +184,44 @@ public class TestSOSService
     }
     
     
-    protected SensorDataProviderConfig buildSensorProvider1WithStorage(boolean pushEnabled) throws Exception
+    protected SensorDataProviderConfig buildSensorProvider1WithStorage() throws Exception
     {
-        SensorDataProviderConfig sosProviderConfig = buildSensorProvider1(pushEnabled);
+        SensorDataProviderConfig sosProviderConfig = buildSensorProvider1();
                        
-        // create in-memory storage
-        StorageConfig storageConfig = new StorageConfig();
-        storageConfig.moduleClass = InMemoryBasicStorage.class.getCanonicalName();
-        storageConfig.name = "Storage";
-        storageConfig.enabled = true;
+        // configure in-memory storage configure
+        StreamStorageConfig streamStorageConfig = new StreamStorageConfig();
+        streamStorageConfig.name = "Storage";
+        streamStorageConfig.enabled = true;
+        streamStorageConfig.storageConfig = new StorageConfig();
+        streamStorageConfig.storageConfig.moduleClass = InMemoryBasicStorage.class.getCanonicalName();
+        streamStorageConfig.dataSourceID = sosProviderConfig.sensorID;
         
         // configure storage for sensor
-        IBasicStorage<?> storage = (IBasicStorage<?>)SensorHub.getInstance().getModuleRegistry().loadModule(storageConfig);
-        ISensorModule<?> sensor = SensorHub.getInstance().getSensorManager().getModuleById(sosProviderConfig.sensorID);
-        StorageHelper.configureStorageForDataSource(sensor, storage, true);
+        IRecordStorageModule<?> storage = (IRecordStorageModule<?>)SensorHub.getInstance().getModuleRegistry().loadModule(streamStorageConfig);
         sosProviderConfig.storageID = storage.getLocalID();
         
         return sosProviderConfig;
     }
     
     
-    protected GetObservationRequest generateGetObsNow(String offeringId)
+    protected SensorDataProviderConfig buildSensorProvider2WithObsStorage() throws Exception
     {
-        GetObservationRequest getObs = new GetObservationRequest();
-        getObs.setGetServer("http://localhost:8080/sensorhub" + SERVICE_ENDPOINT);
-        getObs.setVersion("2.0");
-        getObs.setOffering(offeringId);
-        getObs.getObservables().add("urn:blabla:temperature");
-        double futureTime = System.currentTimeMillis()/1000.0 + 3600.;
-        getObs.setTime(TimeExtent.getNowToFutureDatePeriod(futureTime));
-        return getObs;
-    }
-    
-    
-    protected GetObservationRequest generateGetObsTimeRange(String offeringId, double beginTime, double endTime)
-    {
-        GetObservationRequest getObs = generateGetObsNow(offeringId);
-        getObs.setTime(new TimeExtent(beginTime, endTime));
-        return getObs;
+        SensorDataProviderConfig sosProviderConfig = buildSensorProvider2();
+                       
+        // configure in-memory storage configure
+        StreamStorageConfig streamStorageConfig = new StreamStorageConfig();
+        streamStorageConfig.name = "Storage";
+        streamStorageConfig.enabled = true;
+        streamStorageConfig.storageConfig = new BasicStorageConfig();
+        streamStorageConfig.storageConfig.moduleClass = ObsStorageImpl.class.getCanonicalName();
+        streamStorageConfig.storageConfig.storagePath = DB_PATH;
+        streamStorageConfig.dataSourceID = sosProviderConfig.sensorID;
+        
+        // configure storage for sensor
+        IRecordStorageModule<?> storage = (IRecordStorageModule<?>)SensorHub.getInstance().getModuleRegistry().loadModule(streamStorageConfig);
+        sosProviderConfig.storageID = storage.getLocalID();
+        
+        return sosProviderConfig;
     }
     
     
@@ -223,16 +240,41 @@ public class TestSOSService
     @Test
     public void testSetupService() throws Exception
     {
-        deployService(buildSensorProvider1(false));
+        deployService(buildSensorProvider1());
+    }
+    
+    
+    @Test
+    public void testNoTransactional() throws Exception
+    {
+        deployService(buildSensorProvider1());
+        
+        try
+        {
+            InsertResultRequest req = new InsertResultRequest();
+            req.setPostServer(SERVICE_ENDPOINT);
+            req.setVersion("2.0");
+            req.setTemplateId("template01");
+            SWEData sweData = new SWEData();
+            sweData.setElementType(new QuantityImpl());
+            sweData.setEncoding(new TextEncodingImpl(",", " "));
+            sweData.addData(new DataBlockDouble(1));
+            req.setResultData(sweData);
+            new OWSUtils().sendRequest(req, false);
+        }
+        catch (OWSException e)
+        {
+            assertTrue(e.getLocator().equals("request"));
+        }
     }
     
     
     @Test
     public void testGetCapabilitiesOneOffering() throws Exception
     {
-        deployService(buildSensorProvider1(false));
+        deployService(buildSensorProvider1());
         
-        InputStream is = new URL("http://localhost:8080/sensorhub" + SERVICE_ENDPOINT + "?service=SOS&version=2.0&request=GetCapabilities").openStream();
+        InputStream is = new URL(SERVICE_ENDPOINT + "?service=SOS&version=2.0&request=GetCapabilities").openStream();
         DOMHelper dom = new DOMHelper(is, false);
         dom.serialize(dom.getBaseElement(), System.out, true);
         
@@ -246,9 +288,9 @@ public class TestSOSService
     @Test
     public void testGetCapabilitiesTwoOfferings() throws Exception
     {
-        deployService(buildSensorProvider1(false), buildSensorProvider2());
+        deployService(buildSensorProvider1(), buildSensorProvider2());
         
-        InputStream is = new URL("http://localhost:8080/sensorhub" + SERVICE_ENDPOINT + "?service=SOS&version=2.0&request=GetCapabilities").openStream();
+        InputStream is = new URL(SERVICE_ENDPOINT + "?service=SOS&version=2.0&request=GetCapabilities").openStream();
         DOMHelper dom = new DOMHelper(is, false);
         dom.serialize(dom.getBaseElement(), System.out, true);
         
@@ -266,9 +308,9 @@ public class TestSOSService
     @Test
     public void testGetResultTwoOfferings() throws Exception
     {
-        deployService(buildSensorProvider1(false), buildSensorProvider2());
+        deployService(buildSensorProvider1(), buildSensorProvider2());
         
-        InputStream is = new URL("http://localhost:8080/sensorhub" + SERVICE_ENDPOINT + "?service=SOS&version=2.0&request=GetResult&offering=urn:mysos:sensor1&observedProperty=urn:blabla:temperature").openStream();
+        InputStream is = new URL(SERVICE_ENDPOINT + "?service=SOS&version=2.0&request=GetResult&offering=urn:mysos:sensor1&observedProperty=urn:blabla:temperature").openStream();
         IOUtils.copy(is, System.out);
     }
     
@@ -276,9 +318,9 @@ public class TestSOSService
     @Test(expected = OGCException.class)
     public void testGetResultWrongOffering() throws Exception
     {
-        deployService(buildSensorProvider1(false), buildSensorProvider2());
+        deployService(buildSensorProvider1(), buildSensorProvider2());
         
-        InputStream is = new URL("http://localhost:8080/sensorhub" + SERVICE_ENDPOINT + "?service=SOS&version=2.0&request=GetResult&offering=urn:mysos:wrong&observedProperty=urn:blabla:temperature").openStream();
+        InputStream is = new URL(SERVICE_ENDPOINT + "?service=SOS&version=2.0&request=GetResult&offering=urn:mysos:wrong&observedProperty=urn:blabla:temperature").openStream();
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         IOUtils.copy(is, os);
         
@@ -293,21 +335,26 @@ public class TestSOSService
     
     
     @Test
-    public void testGetObsOneOfferingUsingPolling() throws Exception
+    public void testGetObsOneOfferingStartNow() throws Exception
     {
-        deployService(buildSensorProvider1(false));
-        DOMHelper dom = sendRequest(generateGetObsNow(URI_OFFERING1), false);
+        deployService(buildSensorProvider1());
+        DOMHelper dom = sendRequest(generateGetObsStartNow(URI_OFFERING1, URI_PROP1), false);
         
         assertEquals("Wrong number of observations returned", NUM_GEN_SAMPLES, dom.getElements("*/OM_Observation").getLength());
     }
     
     
     @Test
-    public void testGetObsOneOfferingUsingPush() throws Exception
+    public void testGetObsOneOfferingEndNow() throws Exception
     {
-        deployService(buildSensorProvider1(true));
-        DOMHelper dom = sendRequest(generateGetObsNow(URI_OFFERING1), false);
+        deployService(buildSensorProvider1WithStorage());
         
+        // wait until data has been produced and archived
+        FakeSensor sensor = (FakeSensor)SensorHub.getInstance().getSensorManager().getLoadedModules().get(0);
+        while (sensor.getAllOutputs().get(NAME_OUTPUT1).isEnabled())
+            Thread.sleep(((long)SAMPLING_PERIOD*500));
+        
+        DOMHelper dom = sendRequest(generateGetObsEndNow(URI_OFFERING1, URI_PROP1), false);        
         assertEquals("Wrong number of observations returned", NUM_GEN_SAMPLES, dom.getElements("*/OM_Observation").getLength());
     }
     
@@ -315,31 +362,63 @@ public class TestSOSService
     @Test
     public void testGetObsOneOfferingWithTimeRange() throws Exception
     {
-        deployService(buildSensorProvider1WithStorage(true));
+        deployService(buildSensorProvider1WithStorage());
         
         // wait until data has been produced and archived
         FakeSensor sensor = (FakeSensor)SensorHub.getInstance().getSensorManager().getLoadedModules().get(0);
         while (sensor.getAllOutputs().get(NAME_OUTPUT1).isEnabled())
             Thread.sleep(((long)SAMPLING_PERIOD*500));
-        
+                
         // first get capabilities to know available time range
-        SOSServiceCapabilities caps = (SOSServiceCapabilities)new OWSUtils().getCapabilities("http://localhost:8080/sensorhub" + SERVICE_ENDPOINT, "SOS", "2.0");
+        SOSServiceCapabilities caps = (SOSServiceCapabilities)new OWSUtils().getCapabilities(SERVICE_ENDPOINT, "SOS", "2.0");
         TimeExtent timePeriod = ((SOSOfferingCapabilities)caps.getLayer(URI_OFFERING1)).getPhenomenonTime();
         System.out.println("Available time period is " + timePeriod.getIsoString(0));
         
         // then get obs
         double stopTime = System.currentTimeMillis() / 1000.0;
-        DOMHelper dom = sendRequest(generateGetObsTimeRange(URI_OFFERING1, timePeriod.getStartTime(), stopTime), false);
+        DOMHelper dom = sendRequest(generateGetObsTimeRange(URI_OFFERING1, URI_PROP1, timePeriod.getStartTime(), stopTime), false);
         assertEquals("Wrong number of observations returned", NUM_GEN_SAMPLES, dom.getElements("*/OM_Observation").getLength());
     }
     
     
     @Test
-    public void testGetObsTwoOfferingsUsingPolling() throws Exception
+    public void testGetObsTwoOfferingsWithPost() throws Exception
     {
-        deployService(buildSensorProvider1(false), buildSensorProvider2());
-        DOMHelper dom = sendRequest(generateGetObsNow(URI_OFFERING1), false);
+        deployService(buildSensorProvider1(), buildSensorProvider2());
+        DOMHelper dom = sendRequest(generateGetObsStartNow(URI_OFFERING1, URI_PROP1), true);
         
+        assertEquals("Wrong number of observations returned", NUM_GEN_SAMPLES, dom.getElements("*/OM_Observation").getLength());
+    }
+    
+    
+    @Test
+    public void testGetObsTwoOfferingsByFoi() throws Exception
+    {
+        obsFoiMap.put(1, 1);
+        obsFoiMap.put(3, 2);
+        obsFoiMap.put(4, 3);
+        
+        deployService(buildSensorProvider1(), buildSensorProvider2WithObsStorage());
+        
+        // wait until data has been produced and archived
+        FakeSensor sensor = (FakeSensor)SensorHub.getInstance().getSensorManager().getLoadedModules().get(1);
+        while (sensor.getAllOutputs().get(NAME_OUTPUT2).isEnabled())
+            Thread.sleep(((long)SAMPLING_PERIOD*500));
+        DOMHelper dom;
+        
+        dom = sendRequest(generateGetObsByFoi(URI_OFFERING2, URI_PROP2, 1), true);        
+        assertEquals("Wrong number of observations returned", 2, dom.getElements("*/OM_Observation").getLength());
+        
+        dom = sendRequest(generateGetObsByFoi(URI_OFFERING2, URI_PROP2, 2), true);        
+        assertEquals("Wrong number of observations returned", 1, dom.getElements("*/OM_Observation").getLength());
+        
+        dom = sendRequest(generateGetObsByFoi(URI_OFFERING2, URI_PROP2, 3), true);        
+        assertEquals("Wrong number of observations returned", 2, dom.getElements("*/OM_Observation").getLength());
+        
+        dom = sendRequest(generateGetObsByFoi(URI_OFFERING2, URI_PROP2, 1, 2), true);        
+        assertEquals("Wrong number of observations returned", 3, dom.getElements("*/OM_Observation").getLength());
+        
+        dom = sendRequest(generateGetObsByFoi(URI_OFFERING2, URI_PROP2, 1, 2, 3), true);        
         assertEquals("Wrong number of observations returned", NUM_GEN_SAMPLES, dom.getElements("*/OM_Observation").getLength());
     }
     
@@ -347,9 +426,9 @@ public class TestSOSService
     @Test(expected = OGCException.class)
     public void testGetObsWrongFormat() throws Exception
     {
-        deployService(buildSensorProvider1(false));
+        deployService(buildSensorProvider1());
         
-        InputStream is = new URL("http://localhost:8080/sensorhub" + SERVICE_ENDPOINT + "?service=SOS&version=2.0&request=GetObservation&offering=urn:mysos:sensor1&observedProperty=urn:blabla:temperature&responseFormat=badformat").openStream();
+        InputStream is = new URL(SERVICE_ENDPOINT + "?service=SOS&version=2.0&request=GetObservation&offering=urn:mysos:sensor1&observedProperty=urn:blabla:temperature&responseFormat=badformat").openStream();
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         IOUtils.copy(is, os);
         
@@ -363,31 +442,220 @@ public class TestSOSService
     }
     
     
-    @Test
-    public void testNoTransactional() throws Exception
+    protected GetObservationRequest generateGetObs(String offeringId, String obsProp)
     {
-        deployService(buildSensorProvider1(false));
+        GetObservationRequest getObs = new GetObservationRequest();
+        getObs.setGetServer(SERVICE_ENDPOINT);
+        getObs.setVersion("2.0");
+        getObs.setOffering(offeringId);
+        getObs.getObservables().add(obsProp);
+        return getObs;
+    }
+    
+    
+    protected GetObservationRequest generateGetObsStartNow(String offeringId, String obsProp)
+    {
+        GetObservationRequest getObs = generateGetObs(offeringId, obsProp);
+        double futureTime = System.currentTimeMillis()/1000.0 + 3600.;
+        getObs.setTime(TimeExtent.getPeriodStartingNow(futureTime));
+        return getObs;
+    }
+    
+    
+    protected GetObservationRequest generateGetObsEndNow(String offeringId, String obsProp)
+    {
+        GetObservationRequest getObs = generateGetObs(offeringId, obsProp);
+        double pastTime = System.currentTimeMillis()/1000.0 - 3600.;
+        getObs.setTime(TimeExtent.getPeriodEndingNow(pastTime));        
+        return getObs;
+    }
+    
+    
+    protected GetObservationRequest generateGetObsTimeRange(String offeringId, String obsProp, double beginTime, double endTime)
+    {
+        GetObservationRequest getObs = generateGetObs(offeringId, obsProp);
+        getObs.setTime(new TimeExtent(beginTime, endTime));
+        return getObs;
+    }
+    
+    
+    protected GetObservationRequest generateGetObsByFoi(String offeringId, String obsProp, int... foiNums)
+    {
+        GetObservationRequest getObs = generateGetObs(offeringId, obsProp);
+        for (int foiNum: foiNums)
+            getObs.getFoiIDs().add(FakeSensorWithFoi.FOI_UID_PREFIX + foiNum);
+        return getObs;
+    }
+    
+    
+    // TODO test getresult replay
+    
+    
+    @Test
+    public void testGetFoisByID() throws Exception
+    {
+        obsFoiMap.put(1, 1);
+        obsFoiMap.put(3, 2);
+        obsFoiMap.put(4, 3);
         
-        try
+        deployService(buildSensorProvider1(), buildSensorProvider2WithObsStorage());
+        
+        // wait until data has been produced and archived
+        FakeSensor sensor = (FakeSensor)SensorHub.getInstance().getSensorManager().getLoadedModules().get(1);
+        while (sensor.getAllOutputs().get(NAME_OUTPUT2).isEnabled())
+            Thread.sleep(((long)SAMPLING_PERIOD*500));        
+        
+        testGetFoisByID(1);
+        testGetFoisByID(2);
+        testGetFoisByID(3);
+        testGetFoisByID(1, 2);
+        testGetFoisByID(1, 3);
+        testGetFoisByID(3, 2);
+        testGetFoisByID(1, 2, 3);
+        testGetFoisByID(2, 3, 1);
+    }
+    
+    
+    protected void testGetFoisByID(int... foiNums) throws Exception
+    {
+        GetFeatureOfInterestRequest req = new GetFeatureOfInterestRequest();
+        req.setGetServer(SERVICE_ENDPOINT);
+        req.setVersion("2.0");
+        for (int foiNum: foiNums)
+            req.getFoiIDs().add(FakeSensorWithFoi.FOI_UID_PREFIX + foiNum);
+        
+        DOMHelper dom = sendRequest(req, false); 
+        assertEquals("Wrong number of features returned", foiNums.length, dom.getElements("*/*").getLength());
+        
+        NodeList nodes = dom.getElements("*/*");
+        for (int i=0; i<nodes.getLength(); i++)
         {
-            InsertResultRequest req = new InsertResultRequest();
-            req.setPostServer("http://localhost:8080/sensorhub" + SERVICE_ENDPOINT);
-            req.setVersion("2.0");
-            req.setTemplateId("template01");
-            SWEData sweData = new SWEData();
-            sweData.setElementType(new QuantityImpl());
-            sweData.setEncoding(new TextEncodingImpl(",", " "));
-            sweData.addData(new DataBlockDouble(1));
-            req.setResultData(sweData);
-            new OWSUtils().sendRequest(req, false);
-        }
-        catch (OWSException e)
-        {
-            assertTrue(e.getLocator().equals("request"));
+            String fid = dom.getAttributeValue((Element)nodes.item(i), "id");
+            assertEquals("F" + foiNums[i], fid);
         }
     }
-
     
+    
+    @Test
+    public void testGetFoisByBbox() throws Exception
+    {
+        obsFoiMap.put(2, 1);
+        obsFoiMap.put(4, 2);
+        obsFoiMap.put(5, 3);
+        
+        deployService(buildSensorProvider1(), buildSensorProvider2WithObsStorage());
+        
+        // wait until data has been produced and archived
+        FakeSensor sensor = (FakeSensor)SensorHub.getInstance().getSensorManager().getLoadedModules().get(1);
+        while (sensor.getAllOutputs().get(NAME_OUTPUT2).isEnabled())
+            Thread.sleep(((long)SAMPLING_PERIOD*500));
+        
+        testGetFoisByBbox(new Bbox(0.5, 0.5, 0.0, 1.5, 1.5, 0.0), 1);
+        testGetFoisByBbox(new Bbox(1.5, 1.5, 0.0, 2.5, 2.5, 0.0), 2);
+        testGetFoisByBbox(new Bbox(0.5, 0.5, 0.0, 2.5, 2.5, 0.0), 1, 2);
+        testGetFoisByBbox(new Bbox(0.5, 0.5, 0.0, 3.5, 3.5, 0.0), 1, 2, 3);
+    }
+    
+    
+    protected void testGetFoisByBbox(Bbox bbox, int... foiNums) throws Exception
+    {
+        GetFeatureOfInterestRequest req = new GetFeatureOfInterestRequest();
+        req.setGetServer(SERVICE_ENDPOINT);
+        req.setVersion("2.0");
+        req.setBbox(bbox);
+        
+        DOMHelper dom = sendRequest(req, false); 
+        assertEquals("Wrong number of features returned", foiNums.length, dom.getElements("*/*").getLength());
+        
+        NodeList nodes = dom.getElements("*/*");
+        for (int i=0; i<nodes.getLength(); i++)
+        {
+            String fid = dom.getAttributeValue((Element)nodes.item(i), "id");
+            assertEquals("F" + foiNums[i], fid);
+        }
+    }
+    
+    
+    @Test
+    public void testGetFoisByProcedure() throws Exception
+    {
+        obsFoiMap.put(2, 1);
+        obsFoiMap.put(4, 2);
+        obsFoiMap.put(5, 3);
+        
+        deployService(buildSensorProvider1(), buildSensorProvider2WithObsStorage());
+        
+        // wait until data has been produced and archived
+        FakeSensor sensor = (FakeSensor)SensorHub.getInstance().getSensorManager().getLoadedModules().get(1);
+        while (sensor.getAllOutputs().get(NAME_OUTPUT2).isEnabled())
+            Thread.sleep(((long)SAMPLING_PERIOD*500));
+        
+        testGetFoisByProcedure(Arrays.asList(UID_SENSOR2), 1, 2, 3);
+        testGetFoisByProcedure(Arrays.asList(UID_SENSOR1), 1, 2, 3);
+        testGetFoisByProcedure(Arrays.asList(UID_SENSOR1, UID_SENSOR2), 1, 2, 3);
+    }
+    
+    
+    protected void testGetFoisByProcedure(List<String> procIDs, int... foiNums) throws Exception
+    {
+        GetFeatureOfInterestRequest req = new GetFeatureOfInterestRequest();
+        req.setGetServer(SERVICE_ENDPOINT);
+        req.setVersion("2.0");
+        req.getProcedures().addAll(procIDs);
+        
+        DOMHelper dom = sendRequest(req, false); 
+        assertEquals("Wrong number of features returned", foiNums.length, dom.getElements("*/*").getLength());
+        
+        NodeList nodes = dom.getElements("*/*");
+        for (int i=0; i<nodes.getLength(); i++)
+        {
+            String fid = dom.getAttributeValue((Element)nodes.item(i), "id");
+            assertEquals("F" + foiNums[i], fid);
+        }
+    }
+    
+    
+    @Test
+    public void testGetFoisByObservables() throws Exception
+    {
+        obsFoiMap.put(2, 1);
+        obsFoiMap.put(4, 2);
+        obsFoiMap.put(5, 3);
+        
+        deployService(buildSensorProvider1(), buildSensorProvider2WithObsStorage());
+        
+        // wait until data has been produced and archived
+        FakeSensor sensor = (FakeSensor)SensorHub.getInstance().getSensorManager().getLoadedModules().get(1);
+        while (sensor.getAllOutputs().get(NAME_OUTPUT2).isEnabled())
+            Thread.sleep(((long)SAMPLING_PERIOD*500));
+        
+        testGetFoisByObservables(Arrays.asList("urn:blabla:image"), 1, 2, 3);
+        testGetFoisByObservables(Arrays.asList("urn:blabla:RedChannel"), 1, 2, 3);
+        testGetFoisByObservables(Arrays.asList("urn:blabla:GreenChannel"), 1, 2, 3);
+        testGetFoisByObservables(Arrays.asList("urn:blabla:BlueChannel"), 1, 2, 3);
+        testGetFoisByObservables(Arrays.asList("urn:blabla:weatherData"), 1, 2, 3);
+    }
+    
+    
+    protected void testGetFoisByObservables(List<String> obsIDs, int... foiNums) throws Exception
+    {
+        GetFeatureOfInterestRequest req = new GetFeatureOfInterestRequest();
+        req.setGetServer(SERVICE_ENDPOINT);
+        req.setVersion("2.0");
+        req.getObservables().addAll(obsIDs);
+        
+        DOMHelper dom = sendRequest(req, false); 
+        assertEquals("Wrong number of features returned", foiNums.length, dom.getElements("*/*").getLength());
+        
+        NodeList nodes = dom.getElements("*/*");
+        for (int i=0; i<nodes.getLength(); i++)
+        {
+            String fid = dom.getAttributeValue((Element)nodes.item(i), "id");
+            assertEquals("F" + foiNums[i], fid);
+        }
+    }
+    
+   
     @After
     public void cleanup()
     {
@@ -397,6 +665,9 @@ public class TestSOSService
                 configFile.delete();
             SensorHub.getInstance().stop();
             HttpServer.getInstance().cleanup();
+            File dbFile = new File(DB_PATH);
+            if (dbFile.exists())
+                dbFile.delete();
         }
         catch (Exception e)
         {

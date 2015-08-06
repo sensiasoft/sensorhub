@@ -19,8 +19,8 @@ import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.sensor.ISensorModule;
 import org.sensorhub.api.sensor.SensorEvent;
 import org.sensorhub.api.service.ServiceException;
-import org.vast.ows.server.SOSDataFilter;
 import org.vast.ows.sos.ISOSDataProvider;
+import org.vast.ows.sos.SOSDataFilter;
 
 
 /**
@@ -37,14 +37,14 @@ public class SensorDataProvider extends StreamDataProvider implements ISOSDataPr
 {
 
     
-    public SensorDataProvider(ISensorModule<?> srcSensor, SOSDataFilter filter) throws ServiceException
+    public SensorDataProvider(ISensorModule<?> srcSensor, SensorDataProviderConfig config, SOSDataFilter filter) throws ServiceException
     {
-        super(srcSensor, filter);
+        super(srcSensor, config, filter);
     }
     
     
     @Override
-    public void handleEvent(Event e)
+    public void handleEvent(Event<?> e)
     {
         if (e instanceof SensorEvent)
         {

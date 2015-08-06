@@ -62,9 +62,11 @@ public class SensorDataConsumer implements ISOSDataConsumer
 
 
     @Override
-    public String newResultTemplate(DataComponent component, DataEncoding encoding) throws Exception
+    public String newResultTemplate(DataComponent component, DataEncoding encoding, IObservation obsTemplate) throws Exception
     {
-        return sensor.newResultTemplate(component, encoding);
+        String templateID = sensor.newResultTemplate(component, encoding, obsTemplate);
+        sensor.newFeatureOfInterest(templateID, obsTemplate);
+        return templateID;
     }
 
 
@@ -78,10 +80,17 @@ public class SensorDataConsumer implements ISOSDataConsumer
     @Override
     public Template getTemplate(String templateID) throws Exception
     {
-        Template template = new Template();
-        ISensorDataInterface output = sensor.getAllOutputs().get(templateID);
-        template.component = output.getRecordDescription();
-        template.encoding = output.getRecommendedEncoding();
-        return template;
+        for (ISensorDataInterface output: sensor.getAllOutputs().values())
+        {
+            if (templateID.endsWith(output.getName()))
+            {
+                Template template = new Template();
+                template.component = output.getRecordDescription();
+                template.encoding = output.getRecommendedEncoding();
+                return template;
+            }
+        }
+        
+        return null;
     }
 }

@@ -3,23 +3,23 @@
   <parent>
     <groupId>org.sensorhub</groupId>
     <artifactId>sensorhub-all</artifactId>
-    <version>0.5</version>
+    <version>1.0</version>
+    <relativePath>../sensorhub-all/pom.xml</relativePath>
   </parent>
   <artifactId>sensorhub-tools</artifactId>
-  <version>0.5</version>
   <name>SensorHub Admin Tools</name>
   <description>Administration tools for SensorHub </description>
   <dependencies>
      <dependency>
         <groupId>org.sensorhub</groupId>
         <artifactId>sensorhub-storage-perst</artifactId>
-        <version>0.5</version>
+        <version>1.0</version>
         <type>bundle</type>
      </dependency>
      <dependency>
         <groupId>org.sensorhub</groupId>
         <artifactId>sensorhub-core</artifactId>
-        <version>0.5</version>
+        <version>1.0</version>
         <type>bundle</type>
      </dependency>
      <dependency>

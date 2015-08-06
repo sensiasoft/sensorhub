@@ -25,20 +25,14 @@ import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataEncoding;
 import net.opengis.swe.v20.Quantity;
-import net.opengis.swe.v20.Time;
-import org.vast.data.DataRecordImpl;
-import org.vast.data.QuantityImpl;
-import org.vast.data.TextEncodingImpl;
-import org.vast.data.TimeImpl;
-import org.vast.swe.SWEConstants;
+import org.vast.swe.SWEHelper;
 
 
 public class FakeWeatherOutput extends AbstractSensorOutput<FakeWeatherSensor>
 {
     //private static final Logger log = LoggerFactory.getLogger(FakeWeatherOutput.class);
     DataComponent weatherData;
-    DataBlock latestRecord;
-    boolean sendData;
+    DataEncoding weatherEncoding;
     Timer timer;
     
     // initialize then keep new values for each measurement
@@ -64,41 +58,29 @@ public class FakeWeatherOutput extends AbstractSensorOutput<FakeWeatherSensor>
     @Override
     protected void init()
     {
-        // build SWE Common data structure
-    	// Time, temperature, pressure, wind speed, wind direction
-        weatherData = new DataRecordImpl(5);
+        SWEHelper fac = new SWEHelper();
+        
+        // build SWE Common record structure
+    	weatherData = fac.newDataRecord(5);
         weatherData.setName(getName());
         weatherData.setDefinition("http://sensorml.com/ont/swe/property/Weather");
+        weatherData.setDescription("Weather measurements");
         
-        Time c1 = new TimeImpl();
-        c1.getUom().setHref(Time.ISO_TIME_UNIT);
-        c1.setDefinition(SWEConstants.DEF_SAMPLING_TIME);
-        weatherData.addComponent("time", c1);
-
-        Quantity c;
-        c = new QuantityImpl();
-        c.getUom().setCode("Cel");
-        c.setDefinition("http://sensorml.com/ont/swe/property/AtmosphericTemperature");
-        weatherData.addComponent("temperature",c);
-
-        c = new QuantityImpl();
-        c.getUom().setCode("hPa");
-        c.setDefinition("http://sensorml.com/ont/swe/property/AtmosphericPressure");
-        weatherData.addComponent("pressure", c);
-
-        c = new QuantityImpl();
-        c.getUom().setCode("m/s");
-        c.setDefinition("http://sensorml.com/ont/swe/property/WindSpeed");
-        weatherData.addComponent("windSpeed", c);        
-
-        c = new QuantityImpl();
-        c.setDefinition("http://sensorml.com/ont/swe/property/WindDirection");
-        c.getUom().setCode("deg");
-        // TODO check if this is the best local coordinate frame and where it will be defined
-        c.setReferenceFrame("http://sensorml.com/ont/swe/property/NED");
-        c.setAxisID("down");       
-        weatherData.addComponent("windDirection", c);        
-}
+        // add time, temperature, pressure, wind speed and wind direction fields
+        weatherData.addComponent("time", fac.newTimeStampIsoUTC());
+        weatherData.addComponent("temperature", fac.newQuantity(SWEHelper.getPropertyUri("AirTemperature"), "Air Temperature", null, "Cel"));
+        weatherData.addComponent("pressure", fac.newQuantity(SWEHelper.getPropertyUri("AtmosphericPressure"), "Air Pressure", null, "hPa"));
+        weatherData.addComponent("windSpeed", fac.newQuantity(SWEHelper.getPropertyUri("WindSpeed"), "Wind Speed", null, "m/s"));
+        
+        // for wind direction, we also specify a reference frame
+        Quantity q = fac.newQuantity(SWEHelper.getPropertyUri("WindDirection"), "Wind Direction", null, "deg");
+        q.setReferenceFrame("http://sensorml.com/ont/swe/property/NED");
+        q.setAxisID("z");
+        weatherData.addComponent("windDirection", q);
+     
+        // also generate encoding definition
+        weatherEncoding = fac.newTextEncoding(",", "\n");
+    }
 
     
     private void sendMeasurement()
@@ -132,7 +114,8 @@ public class FakeWeatherOutput extends AbstractSensorOutput<FakeWeatherSensor>
         
         // update latest record and send event
         latestRecord = dataBlock;
-        eventHandler.publishEvent(new SensorDataEvent(time, FakeWeatherOutput.this, dataBlock));        
+        latestRecordTime = System.currentTimeMillis();
+        eventHandler.publishEvent(new SensorDataEvent(latestRecordTime, FakeWeatherOutput.this, dataBlock));        
     }
 
 
@@ -182,24 +165,6 @@ public class FakeWeatherOutput extends AbstractSensorOutput<FakeWeatherSensor>
     @Override
     public DataEncoding getRecommendedEncoding()
     {
-        return new TextEncodingImpl(",", "\n");
+        return weatherEncoding;
     }
-
-
-    @Override
-    public DataBlock getLatestRecord()
-    {
-        return latestRecord;
-    }
-    
-    
-    @Override
-    public double getLatestRecordTime()
-    {
-        if (latestRecord != null)
-            return latestRecord.getDoubleValue(0);
-        
-        return Double.NaN;
-    }
-
 }

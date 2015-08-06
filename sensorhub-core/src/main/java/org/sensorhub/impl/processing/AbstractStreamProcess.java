@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.WeakHashMap;
+import net.opengis.gml.v32.AbstractFeature;
 import net.opengis.sensorml.v20.AbstractProcess;
 import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataComponent;
@@ -29,6 +30,7 @@ import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.data.DataEvent;
 import org.sensorhub.api.data.IDataProducerModule;
 import org.sensorhub.api.data.IStreamingDataInterface;
+import org.sensorhub.api.module.ModuleConfig;
 import org.sensorhub.api.processing.DataSourceConfig;
 import org.sensorhub.api.processing.DataSourceConfig.InputLinkConfig;
 import org.sensorhub.api.processing.IStreamProcessModule;
@@ -42,9 +44,9 @@ import org.sensorhub.impl.module.ModuleRegistry;
 import org.sensorhub.utils.MsgUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.vast.data.DataComponentHelper;
 import org.vast.process.DataQueue;
 import org.vast.sensorML.SMLFactory;
+import org.vast.swe.SWEHelper;
 
 
 /**
@@ -52,7 +54,7 @@ import org.vast.sensorML.SMLFactory;
  * Class providing default implementation of common stream processing API methods.
  * This can be used as the base for most stream process implementations.<br/>
  * Concrete process implementations generally need to override either
- * {@link #init(StreamProcessConfig)} or {@link #start()} in order to provide
+ * {@link #init(ModuleConfig)} or {@link #start()} in order to provide
  * actual process inputs, outputs and parameters.
  * </p>
  *
@@ -69,12 +71,11 @@ public abstract class AbstractStreamProcess<ConfigType extends StreamProcessConf
     protected Map<String, DataComponent> inputs = new LinkedHashMap<String, DataComponent>();
     protected Map<String, DataComponent> outputs = new LinkedHashMap<String, DataComponent>();
     protected Map<String, DataComponent> parameters = new LinkedHashMap<String, DataComponent>();
-    
-    protected Map<IStreamingDataInterface, InputData> streamSources = new WeakHashMap<IStreamingDataInterface, InputData>();
     protected Map<String, IStreamingDataInterface> outputInterfaces = new LinkedHashMap<String, IStreamingDataInterface>();  
     
+    protected Map<IStreamingDataInterface, InputData> streamSources;
     protected AbstractProcess processDescription;
-    protected double lastUpdatedSensorDescription = Double.NEGATIVE_INFINITY;
+    protected long lastUpdatedSensorDescription = Long.MIN_VALUE;
     protected boolean paused = false;
     protected int errorCount = 0;
     
@@ -141,14 +142,21 @@ public abstract class AbstractStreamProcess<ConfigType extends StreamProcessConf
     
     
     @Override
-    public Map<String, IStreamingDataInterface> getAllOutputs() throws SensorHubException
+    public Map<String, IStreamingDataInterface> getAllOutputs()
     {
         return Collections.unmodifiableMap(outputInterfaces);
+    }
+    
+    
+    @Override
+    public AbstractFeature getCurrentFeatureOfInterest()
+    {
+        return null;
     }
 
 
     @Override
-    public AbstractProcess getCurrentDescription() throws SensorHubException
+    public AbstractProcess getCurrentDescription()
     {
         if (processDescription == null)
         {
@@ -188,26 +196,33 @@ public abstract class AbstractStreamProcess<ConfigType extends StreamProcessConf
 
 
     @Override
-    public double getLastDescriptionUpdate()
+    public long getLastDescriptionUpdate()
     {
         return lastUpdatedSensorDescription;
     }
+    
+    
+    protected void connectInput(String inputName, String dataPath, DataQueue inputQueue) throws Exception
+    {        
+        DataComponent destData = inputs.get(inputName);
+        if (destData == null)
+            throw new ProcessException("Input " + inputName + " doesn't exist");
+        DataComponent dest = SWEHelper.findComponentByPath(destData, dataPath);
+        inputQueue.setDestinationComponent(dest);
+    }
 
 
-    /**
-     * Initializes the process by attempting to connect to specified sources.<br/>
-     * When overriding this method, super.init() generally has to be called.
-     */
     @Override
-    public void init(ConfigType config) throws SensorHubException
+    public void start() throws SensorHubException
     {
-        super.init(config);
+        errorCount = 0;
+        streamSources = new WeakHashMap<IStreamingDataInterface, InputData>();
         
-        // connect to all data sources
+        // attemp to connect to all configured data sources
         // we keep sources in WeakHashMaps so that source modules can be properly GCed when unloaded
-        ModuleRegistry moduleReg = SensorHub.getInstance().getModuleRegistry();
         for (DataSourceConfig dataSource: config.dataSources)
         {
+            ModuleRegistry moduleReg = SensorHub.getInstance().getModuleRegistry();
             if (!isCompatibleDataSource(dataSource))
                 throw new ProcessException("Data source is not supported");
             
@@ -244,7 +259,7 @@ public abstract class AbstractStreamProcess<ConfigType extends StreamProcessConf
                             streamSources.put(streamInterface, inputData);
                         }
                         
-                        DataComponent src = DataComponentHelper.findComponentByPath(compPath, inputData.srcDataBuffer);
+                        DataComponent src = SWEHelper.findComponentByPath(inputData.srcDataBuffer, compPath);
                         inputQueue.setSourceComponent(src);
                     }
                     catch (Exception e)
@@ -278,6 +293,7 @@ public abstract class AbstractStreamProcess<ConfigType extends StreamProcessConf
                     }
                     
                     inputData.dataQueues.add(inputQueue);
+                    streamInterface.registerListener(this);
                 }
             }
             
@@ -287,42 +303,24 @@ public abstract class AbstractStreamProcess<ConfigType extends StreamProcessConf
                 // TODO what do we do with storage input?
                 // should it be handled by the process impl directly?
             }
-        }
-    }
-    
-    
-    protected void connectInput(String inputName, String dataPath, DataQueue inputQueue) throws Exception
-    {        
-        DataComponent destData = inputs.get(inputName);
-        if (destData == null)
-            throw new ProcessException("Input " + inputName + " doesn't exist");
-        DataComponent dest = DataComponentHelper.findComponentByPath(dataPath, destData);
-        inputQueue.setDestinationComponent(dest);
-    }
-
-
-    @Override
-    public void start() throws SensorHubException
-    {
-        errorCount = 0;
-                
-        // register listeners with all streaming data sources
-        for (IStreamingDataInterface streamInterface: streamSources.keySet())
-            streamInterface.registerListener(this);
+        }            
     }
     
     
     @Override
     public void stop()
     {
-        // unregister listeners from all streaming data sources
-        for (Entry<IStreamingDataInterface, InputData> streamSrc: streamSources.entrySet())
+        if (streamSources != null)
         {
-            streamSrc.getKey().unregisterListener(this);
-            
-            // clear input queues
-            for (DataQueue q: streamSrc.getValue().dataQueues)
-                q.clear();
+            // unregister listeners from all streaming data sources
+            for (Entry<IStreamingDataInterface, InputData> streamSrc: streamSources.entrySet())
+            {
+                streamSrc.getKey().unregisterListener(this);
+                
+                // clear input queues
+                for (DataQueue q: streamSrc.getValue().dataQueues)
+                    q.clear();
+            }
         }
     }
 
@@ -349,7 +347,7 @@ public abstract class AbstractStreamProcess<ConfigType extends StreamProcessConf
     
     
     @Override
-    public void handleEvent(Event e)
+    public void handleEvent(Event<?> e)
     {
         if (paused)
             return;
@@ -357,8 +355,7 @@ public abstract class AbstractStreamProcess<ConfigType extends StreamProcessConf
         if (e instanceof DataEvent)
         {
             // retrieve input data attached to the event source interface
-            IStreamingDataInterface streamInterface = ((DataEvent)e).getSource();
-            InputData inputData = streamSources.get(streamInterface);
+            InputData inputData = streamSources.get(e.getSource());
             
             // check if streaming interface is still available
             // if source module was unloaded, it could have been GCed

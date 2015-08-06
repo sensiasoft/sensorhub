@@ -78,7 +78,7 @@ public class TestGenericStreamStorage
             Thread.sleep((long)(fakeSensorData.getAverageSamplingPeriod() * 500));
         
         Thread.sleep(100);
-        assertEquals(fakeSensorData.getMaxSampleCount(), storage.getDataStores().get(OUTPUT_NAME).getNumRecords());
+        assertEquals(fakeSensorData.getMaxSampleCount(), storage.getNumRecords(OUTPUT_NAME));
     }
     
     

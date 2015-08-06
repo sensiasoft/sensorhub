@@ -15,7 +15,6 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 package org.sensorhub.api.data;
 
 import net.opengis.sensorml.v20.AbstractProcess;
-import org.sensorhub.api.common.SensorHubException;
 
 
 /**
@@ -29,20 +28,27 @@ import org.sensorhub.api.common.SensorHubException;
  */
 public interface IModuleWithDescription
 {
-
+        
     /**
-     * Retrieves most current SensorML description of this module
-     * @return AbstractProcess object containing all metadata about the module
-     * @throws SensorHubException 
+     * Retrieves most current SensorML description of the entity whose data
+     * is provided by this module. All implementations must return an instance
+     * of AbstractProcess with a valid unique identifier.<br/>
+     * In the case of a module generating data from multiple entities (e.g. 
+     * sensor network), this returns the description of the group as a whole.
+     * Descriptions of individual entities within the group are retrived using
+     * {@link IMultiSourceDataProducer#getCurrentDescription(String)}
+     * @return AbstractProcess SensorML description of the data producer or
+     * null if none is available at the time of the call 
      */
-    public abstract AbstractProcess getCurrentDescription() throws SensorHubException;
+    public AbstractProcess getCurrentDescription();
 
 
     /**
      * Used to check when SensorML description was last updated.
      * This is useful to avoid requesting the object when it hasn't changed.
-     * @return date/time of last description update as julian time (1970)
+     * @return Date/time of last description update as unix time (ms since 1970) or
+     * {@link Long#MIN_VALUE} if description was never updated.
      */
-    public abstract double getLastDescriptionUpdate();
+    public long getLastDescriptionUpdate();
 
 }

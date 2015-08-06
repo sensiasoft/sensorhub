@@ -27,7 +27,6 @@ import org.sensorhub.api.sensor.SensorConfig;
  */
 public class SOSVirtualSensorConfig extends SensorConfig
 {
-        
     public String sensorUID;
     
     
