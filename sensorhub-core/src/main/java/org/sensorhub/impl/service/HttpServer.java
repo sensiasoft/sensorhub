@@ -25,9 +25,11 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.eclipse.jetty.servlets.CrossOriginFilter;
+import org.eclipse.jetty.servlets.DoSFilter;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.HandlerList;
 import org.eclipse.jetty.server.handler.ResourceHandler;
+import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
@@ -120,19 +122,16 @@ public class HttpServer extends AbstractModule<HttpServerConfig>
             // servlets
             if (config.servletsRootUrl != null)
             {
-                // authorize cross domain requests
-                /*RewriteHandler rewrite = new RewriteHandler();
-                HeaderPatternRule rule = new HeaderPatternRule();
-                rule.setAdd(true);
-                rule.setPattern("*");//config.servletsRootUrl + "/*");
-                rule.setName("Access-Control-Allow-Origin");
-                rule.setValue("*");
-                rewrite.addRule(rule);
-                handlers.addHandler(rewrite);*/
-                
                 servletHandler.setContextPath(config.servletsRootUrl);
                 handlers.addHandler(servletHandler);
                 log.info("Servlets root is " + config.servletsRootUrl);
+                
+                // DOS filter
+                FilterHolder holder = servletHandler.addFilter(DoSFilter.class, "/*", EnumSet.of(DispatcherType.REQUEST));
+                holder.setInitParameter("maxRequestsPerSec", Integer.toString(config.maxRequestsPerSecond));
+                holder.setInitParameter("remotePort", "true");
+                holder.setInitParameter("insertHeaders", "false");
+                holder.setInitParameter("maxRequestMs", Long.toString(24*3600*1000L)); // we need persistent requests!
                 
                 // filter to add proper cross-origin headers
                 servletHandler.addFilter(CrossOriginFilter.class, "/*", EnumSet.of(DispatcherType.REQUEST));
