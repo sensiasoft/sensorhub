@@ -15,8 +15,8 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 package org.sensorhub.impl.sensor.sost;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
 import net.opengis.OgcProperty;
@@ -60,8 +60,9 @@ import org.vast.sensorML.SMLUtils;
  */
 public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfig>
 {
+    protected final static String STATE_SML_DESC = "SensorDescription";
     protected static final Logger log = LoggerFactory.getLogger(SOSVirtualSensor.class);
-    
+        
     Map<DataStructureHash, String> structureToTemplateIdMap = new HashMap<DataStructureHash, String>();
     Map<DataStructureHash, String> structureToOutputMap = new HashMap<DataStructureHash, String>();
     AbstractFeature currentFoi;
@@ -305,7 +306,7 @@ public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfi
     @Override
     protected void updateSensorDescription()
     {
-        sensorDescription.setUniqueIdentifier(config.sensorUID);
+        sensorDescription.setUniqueIdentifier(config.id);
         
         // don't do anything more here.
         // we wait until description is set by SOS consumer
@@ -366,9 +367,8 @@ public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfi
     {
         try
         {
-            File f = new File(this.getLocalID() + ".xml");
-            if (sensorDescription != null)
-                new SMLUtils(SMLUtils.V2_0).writeProcess(new FileOutputStream(f), sensorDescription, true);
+            OutputStream os = saver.getOutputStream(STATE_SML_DESC);
+            new SMLUtils(SMLUtils.V2_0).writeProcess(os, sensorDescription, true);
         }
         catch (Exception e)
         {
@@ -382,10 +382,10 @@ public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfi
     {
         try
         {
-            File f = new File(this.getLocalID() + ".xml");
-            if (f.exists())
+            InputStream is = loader.getAsInputStream(STATE_SML_DESC);
+            if (is != null)
             {
-                sensorDescription = (PhysicalSystem)new SMLUtils(SMLUtils.V2_0).readProcess(new FileInputStream(f));
+                sensorDescription = (PhysicalSystem)new SMLUtils(SMLUtils.V2_0).readProcess(is);
                 int timeListSize = sensorDescription.getValidTimeList().size();
                 if (timeListSize > 0)
                 {
