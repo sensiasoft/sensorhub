@@ -246,14 +246,14 @@ public class AdminUI extends com.vaadin.ui.UI
         buildModuleList(layout, StorageConfig.class);
         
         layout = new VerticalLayout();
-        tab = stack.addTab(layout, "Services");
-        tab.setIcon(ACC_TAB_ICON);
-        buildModuleList(layout, ServiceConfig.class);
-        
-        layout = new VerticalLayout();
         tab = stack.addTab(layout, "Processing");
         tab.setIcon(ACC_TAB_ICON);
         buildModuleList(layout, ProcessConfig.class);
+        
+        layout = new VerticalLayout();
+        tab = stack.addTab(layout, "Services");
+        tab.setIcon(ACC_TAB_ICON);
+        buildModuleList(layout, ServiceConfig.class);
         
         layout = new VerticalLayout();
         tab = stack.addTab(layout, "Network");
@@ -286,19 +286,11 @@ public class AdminUI extends com.vaadin.ui.UI
     {
         ModuleRegistry reg = SensorHub.getInstance().getModuleRegistry();
         
-        // add config objects to container
-        List<ModuleConfig> moduleConfigs = reg.getAvailableModules();
+        // build bean items and add them to container
+        MyBeanItemContainer<ModuleConfig> container = new MyBeanItemContainer<ModuleConfig>(ModuleConfig.class);
         for (IModule<?> module: reg.getLoadedModules())
         {
-            ModuleConfig config = (ModuleConfig)module.getConfiguration();
-            if (!moduleConfigs.contains(config))
-                moduleConfigs.add(config);
-        }
-        
-        // build bean item
-        MyBeanItemContainer<ModuleConfig> container = new MyBeanItemContainer<ModuleConfig>(ModuleConfig.class);
-        for (ModuleConfig config: moduleConfigs)
-        {
+            ModuleConfig config = module.getConfiguration();
             if (configType.isAssignableFrom(config.getClass()))
                 container.addBean(config);
         }

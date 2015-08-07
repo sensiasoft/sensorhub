@@ -15,8 +15,8 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 package org.sensorhub.impl.sensor.sost;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
 import net.opengis.OgcProperty;
@@ -60,8 +60,9 @@ import org.vast.sensorML.SMLUtils;
  */
 public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfig>
 {
+    protected final static String STATE_SML_DESC = "SensorDescription";
     protected static final Logger log = LoggerFactory.getLogger(SOSVirtualSensor.class);
-    
+        
     Map<DataStructureHash, String> structureToTemplateIdMap = new HashMap<DataStructureHash, String>();
     Map<DataStructureHash, String> structureToOutputMap = new HashMap<DataStructureHash, String>();
     AbstractFeature currentFoi;
@@ -133,42 +134,29 @@ public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfi
     {
         // TODO merge all templates with same structure but different encodings to the same output
         
-        // try to obtain corresponding data interface
+        // use SensorML output name if structure matches one of the outputs
+        DataStructureHash outputHashObj = new DataStructureHash(component, null);
+        String outputName = structureToOutputMap.get(outputHashObj);
+                    
+        // else generate output name
+        if (outputName == null)
+            outputName = "output" + getAllOutputs().size();
+        
+        // create new sensor output interface if needed
         DataStructureHash templateHashObj = new DataStructureHash(component, encoding);
         String templateID = structureToTemplateIdMap.get(templateHashObj);
-                
-        // create a new one if needed
         if (templateID == null)
         {
-            // use SensorML output name if structure matches one of the outputs
-            DataStructureHash outputHashObj = new DataStructureHash(component, null);
-            String outputName = structureToOutputMap.get(outputHashObj);
-                        
-            // else generate output name
-            if (outputName == null)
-                outputName = "output" + getAllOutputs().size();
-            
-            // add sensor output interface
+            component.setName(outputName);
             SOSVirtualSensorOutput newOutput = new SOSVirtualSensorOutput(this, component, encoding);
             templateID = generateTemplateID(outputName);
-            component.setName(outputName);
             addOutput(newOutput, false);
             structureToTemplateIdMap.put(templateHashObj, templateID);
-            
-            // also update sensor description with data stream to keep encoding definition
-            if (sensorDescription != null)
-            {
-                DataStream ds = new SWEFactory().newDataStream();
-                ds.setElementType(outputName, component);
-                ds.setEncoding(encoding);
-                
-                OgcProperty<AbstractSWEIdentifiable> output = sensorDescription.getOutputList().getProperty(outputName);
-                if (output == null)
-                    sensorDescription.addOutput(outputName, ds);
-                else if (!(output.getValue() instanceof DataStream))
-                    output.setValue(ds);
-            }
-        }        
+        }
+        
+        // update sensor description with data stream to keep encoding definition
+        if (sensorDescription != null)
+            wrapOutputWithDataStream(outputName, component, encoding);
         
         return templateID;
     }
@@ -305,7 +293,7 @@ public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfi
     @Override
     protected void updateSensorDescription()
     {
-        sensorDescription.setUniqueIdentifier(config.sensorUID);
+        sensorDescription.setUniqueIdentifier(config.id);
         
         // don't do anything more here.
         // we wait until description is set by SOS consumer
@@ -366,9 +354,8 @@ public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfi
     {
         try
         {
-            File f = new File(this.getLocalID() + ".xml");
-            if (sensorDescription != null)
-                new SMLUtils(SMLUtils.V2_0).writeProcess(new FileOutputStream(f), sensorDescription, true);
+            OutputStream os = saver.getOutputStream(STATE_SML_DESC);
+            new SMLUtils(SMLUtils.V2_0).writeProcess(os, sensorDescription, true);
         }
         catch (Exception e)
         {
@@ -382,10 +369,10 @@ public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfi
     {
         try
         {
-            File f = new File(this.getLocalID() + ".xml");
-            if (f.exists())
+            InputStream is = loader.getAsInputStream(STATE_SML_DESC);
+            if (is != null)
             {
-                sensorDescription = (PhysicalSystem)new SMLUtils(SMLUtils.V2_0).readProcess(new FileInputStream(f));
+                sensorDescription = (PhysicalSystem)new SMLUtils(SMLUtils.V2_0).readProcess(is);
                 int timeListSize = sensorDescription.getValidTimeList().size();
                 if (timeListSize > 0)
                 {
@@ -399,6 +386,7 @@ public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfi
                     DataComponent dataStruct = null;
                     DataEncoding dataEnc = null;
                     
+                    // handle cases for different types of outputs
                     if (output instanceof DataStream)
                     {
                         dataStruct = ((DataStream) output).getElementType();
@@ -409,16 +397,18 @@ public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfi
                         dataStruct = ((DataInterface) output).getData().getElementType();
                         dataEnc = ((DataInterface) output).getData().getEncoding();                        
                     }
-                    
-                    if (dataStruct != null && dataEnc != null)
+                    else
                     {
-                        // register output hashcode
-                        DataStructureHash hashObj = new DataStructureHash(dataStruct, null);
-                        structureToOutputMap.put(hashObj, dataStruct.getName());
-                        
-                        // register as template
-                        newResultTemplate(dataStruct, dataEnc);
+                        dataStruct = (DataComponent)output;
                     }
+                    
+                    // register output hashcode
+                    DataStructureHash hashObj = new DataStructureHash(dataStruct, null);
+                    structureToOutputMap.put(hashObj, dataStruct.getName());
+                    
+                    // register as output if encoding is specified
+                    if (dataEnc != null)
+                        newResultTemplate(dataStruct, dataEnc);
                 }
             }
         }
@@ -427,4 +417,26 @@ public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfi
             throw new SensorHubException("Error while loading state for module " + MsgUtils.moduleString(this), e);
         }
     }
+    
+    
+    /*
+     * Used to wrap an output with a DataStream object to make sure we can recreate
+     * the output interfaces after SensorHub is restarted
+     */
+    protected void wrapOutputWithDataStream(String outputName, DataComponent dataStruct, DataEncoding encoding)
+    {
+        OgcProperty<AbstractSWEIdentifiable> output = sensorDescription.getOutputList().getProperty(outputName);            
+        if (output == null || !(output.getValue() instanceof DataStream))
+        {
+            DataStream ds = new SWEFactory().newDataStream();
+            ds.setElementType(outputName, dataStruct);
+            ds.setEncoding(encoding);
+            
+            if (output == null)
+                sensorDescription.addOutput(outputName, ds);
+            else
+                output.setValue(ds);
+        }
+    }
+
 }
