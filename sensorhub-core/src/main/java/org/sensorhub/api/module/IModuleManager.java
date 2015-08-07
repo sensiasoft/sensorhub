@@ -39,6 +39,13 @@ public interface IModuleManager<ModuleType extends IModule<?>>
     
     
     /**
+     * @param moduleID local ID of module  
+     * @return true if module is loaded, false otherwise
+     */
+    public boolean isModuleLoaded(String moduleID);
+    
+    
+    /**
      * Gets the list of all modules handled by this manager
      * that are configured but not yet loaded (i.e. disabled)
      * @return list of module configuration classes

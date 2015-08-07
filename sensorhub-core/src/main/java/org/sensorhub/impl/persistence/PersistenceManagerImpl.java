@@ -70,6 +70,13 @@ public class PersistenceManagerImpl implements IPersistenceManager
         
         return enabledStorages;
     }
+    
+    
+    @Override
+    public boolean isModuleLoaded(String moduleID)
+    {
+        return moduleRegistry.isModuleLoaded(moduleID);
+    }
 
 
     @Override

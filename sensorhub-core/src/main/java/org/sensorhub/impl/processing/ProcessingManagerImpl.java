@@ -59,6 +59,13 @@ public class ProcessingManagerImpl implements IProcessingManager
         
         return enabledProcesses;
     }
+    
+    
+    @Override
+    public boolean isModuleLoaded(String moduleID)
+    {
+        return moduleRegistry.isModuleLoaded(moduleID);
+    }
 
 
     @Override
