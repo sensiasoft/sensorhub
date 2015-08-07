@@ -25,7 +25,10 @@
     var east = Cesium.Math.toRadians(-86.585);
     var north = Cesium.Math.toRadians(34.73);
     var rect = new Cesium.Rectangle(west, south, east, north);
-    viewer.camera.viewRectangle(rect)
+    //viewer.camera.viewRectangle(rect)
+    var camTarget = Cesium.Cartesian3.fromDegrees(-86.589, 34.727, 0.0);
+    var camPos = new Cesium.HeadingPitchRange(Cesium.Math.toRadians(-10), Cesium.Math.toRadians(-30), 800.0);
+    viewer.camera.lookAt(camTarget, camPos);
     
     // add city buildings
     var position = Cesium.Cartesian3.fromDegrees(-86.59015675189, 34.72499930624, 0.0);
@@ -101,8 +104,10 @@
     var currentUrl = window.location;
     
     // query GPS stream from SOS using websockets
-    ws = new WebSocket("ws://" + currentUrl.host + "/sensorhub/sos?service=SOS&version=2.0&request=GetResult&offering=urn:offering:gps&observedProperty=http://www.opengis.net/def/property/OGC/0/SensorLocation&temporalFilter=phenomenonTime,now/2055-01-01");
+    ws = new WebSocket("ws://" + currentUrl.host + "/sensorhub/sos?service=SOS&version=2.0&request=GetResult&offering=urn:android:device:a0e0eac2fea3f614-sos&observedProperty=http://sensorml.com/ont/swe/property/Location&temporalFilter=phenomenonTime,now/2055-01-01");
     ws.binaryType = 'arraybuffer';
+    var firstGps = true;
+    var gpsAlt;
     ws.onmessage = function (event) {
       
         var rec = String.fromCharCode.apply(null, new Uint8Array(event.data));
@@ -111,17 +116,24 @@
         var tokens = rec.trim().split(",");
         var lat = parseFloat(tokens[1]);
         var lon = parseFloat(tokens[2]);
-        var alt = parseFloat(tokens[3]) - 193;
+        gpsAlt = parseFloat(tokens[3]);
+        var alt = 0.0;//parseFloat(tokens[3]) - 193;
         
         rfPos = [lon, lat, alt];
         sensorPos.position = Cesium.Cartesian3.fromDegrees(lon, lat, alt);
+
+        if (firstGps) {
+           var camTarget = Cesium.Cartesian3.fromDegrees(lon, lat, alt);
+           viewer.camera.lookAt(camTarget, camPos);
+           firstGps = false;
+        }
     }
     ws.onerror = function (event) {
         ws.close();
     }
     
     // query target location stream from SOS using websockets
-    ws = new WebSocket("ws://" + currentUrl.host + "/sensorhub/sos?service=SOS&version=2.0&request=GetResult&offering=urn:offering:target&observedProperty=http://sensorml.com/ont/swe/property/TargetLocation&temporalFilter=phenomenonTime,now/2055-01-01");
+    ws = new WebSocket("ws://" + currentUrl.host + "/sensorhub/sos?service=SOS&version=2.0&request=GetResult&offering=urn:offering:trupulse:target&observedProperty=http://sensorml.com/ont/swe/property/TargetLocation&temporalFilter=phenomenonTime,now/2055-01-01");
     ws.binaryType = 'arraybuffer';
     ws.onmessage = function (event) {
       
@@ -132,7 +144,7 @@
         var tokens = rec.trim().split(",");
         var targetLat = parseFloat(tokens[1]);
         var targetLon = parseFloat(tokens[2]);
-        var targetAlt = parseFloat(tokens[3]) - 193;
+        var targetAlt = parseFloat(tokens[3]) - gpsAlt;
         
         // temporarily show the laser beam
         targetPos.polyline.positions = Cesium.Cartesian3.fromDegreesArrayHeights([
