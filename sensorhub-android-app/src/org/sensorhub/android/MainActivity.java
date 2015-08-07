@@ -31,6 +31,7 @@ import org.sensorhub.impl.client.sost.SOSTClientConfig;
 import org.sensorhub.impl.comm.BluetoothConfig;
 import org.sensorhub.impl.module.InMemoryConfigDb;
 import org.sensorhub.impl.sensor.android.AndroidSensorsConfig;
+import org.sensorhub.impl.sensor.trupulse.SimulatedTruPulseDataStream;
 import org.sensorhub.impl.sensor.trupulse.TruPulseConfig;
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -59,6 +60,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback
 {
     private final static String ANDROID_SENSORS_ID = "ANDROID_SENSORS";
     private final static String ANDROID_SENSORS_SOST_ID = "SOST_CLIENT1";
+    private final static String TRUPULSE_SENSORS_SOST_ID = "SOST_CLIENT2";
     
     TextView textArea;
     SensorHubService boundService;
@@ -139,20 +141,24 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback
         sosConfig1.usePersistentConnection = true;
         sensorhubConfig.add(sosConfig1);
         
+        // TruPulse sensor stuff
         TruPulseConfig trupulseConfig = new TruPulseConfig();
         trupulseConfig.id = "TruPulse";
         trupulseConfig.name = "TruPulse Range Finder";
-        trupulseConfig.enabled = true;
+        trupulseConfig.enabled = prefs.getBoolean("trupulse_enabled", false);
         BluetoothConfig btConf = new BluetoothConfig();
-        btConf.moduleClass = BluetoothCommProvider.class.getCanonicalName();
         btConf.deviceName = "TP360RB.*";
+        if (prefs.getBoolean("trupulse_simu", false))
+            btConf.moduleClass = SimulatedTruPulseDataStream.class.getCanonicalName();
+        else
+            btConf.moduleClass = BluetoothCommProvider.class.getCanonicalName();
         trupulseConfig.commSettings = btConf;
         sensorhubConfig.add(trupulseConfig);
         
         SOSTClientConfig sosConfig2 = new SOSTClientConfig();
-        sosConfig2.id = "SOST_CLIENT2";
+        sosConfig2.id = TRUPULSE_SENSORS_SOST_ID;
         sosConfig2.name = "SOS-T Client for TruPulse Sensor";
-        sosConfig2.enabled = true;
+        sosConfig2.enabled = prefs.getBoolean("trupulse_enabled", false);
         sosConfig2.sensorID = trupulseConfig.id;
         sosConfig2.sosEndpointUrl = prefs.getString("sos_uri", "");
         sosConfig2.usePersistentConnection = true;

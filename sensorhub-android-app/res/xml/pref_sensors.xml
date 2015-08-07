@@ -48,4 +48,16 @@
         android:summary="Enable streaming of video data"
         android:title="Video Data" />
     
+    <CheckBoxPreference
+        android:defaultValue="false"
+        android:key="trupulse_enabled"
+        android:summary="Enable TruPulse range finder data (sensor must be connected via Bluetooth on startup)"
+        android:title="TruPulse Range Finder Data" />
+    
+    <CheckBoxPreference
+        android:defaultValue="false"
+        android:key="trupulse_simu"
+        android:summary="Use simulated TruPulse data instead of the actual sensor data"
+        android:title="Use Simulated TruPulse Data" />
+    
 </PreferenceScreen>
