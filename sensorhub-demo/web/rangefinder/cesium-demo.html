@@ -29,6 +29,8 @@
     var camTarget = Cesium.Cartesian3.fromDegrees(-86.589, 34.727, 0.0);
     var camPos = new Cesium.HeadingPitchRange(Cesium.Math.toRadians(-10), Cesium.Math.toRadians(-30), 800.0);
     viewer.camera.lookAt(camTarget, camPos);
+    viewer.clock.shouldAnimate = false;
+    viewer.clock.multiplier = 1;
     
     // add city buildings
     var position = Cesium.Cartesian3.fromDegrees(-86.59015675189, 34.72499930624, 0.0);
@@ -114,11 +116,16 @@
         //console.log(rec);
       
         var tokens = rec.trim().split(",");
+        var julianDate = Cesium.JulianDate.fromIso8601(tokens[0]);
         var lat = parseFloat(tokens[1]);
         var lon = parseFloat(tokens[2]);
         gpsAlt = parseFloat(tokens[3]);
         var alt = 0.0;//parseFloat(tokens[3]) - 193;
         
+        // set clock to GPS time
+        viewer.clock.currentTime = julianDate;
+        
+        // update sensor position marker
         rfPos = [lon, lat, alt];
         sensorPos.position = Cesium.Cartesian3.fromDegrees(lon, lat, alt);
 
@@ -146,6 +153,7 @@
         var targetLon = parseFloat(tokens[2]);
         var targetAlt = parseFloat(tokens[3]) - gpsAlt;
         
+        // handle case of NaN resulting from bad TruPulse measurement
         if (isNaN(targetLat) || isNaN(targetLon) || isNaN(targetAlt))
             return;
         
