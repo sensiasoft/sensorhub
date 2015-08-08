@@ -146,6 +146,9 @@
         var targetLon = parseFloat(tokens[2]);
         var targetAlt = parseFloat(tokens[3]) - gpsAlt;
         
+        if (isNaN(targetLat) || isNaN(targetLon) || isNaN(targetAlt))
+            return;
+        
         // temporarily show the laser beam
         targetPos.polyline.positions = Cesium.Cartesian3.fromDegreesArrayHeights([
                                           rfPos[0], rfPos[1], rfPos[2],
