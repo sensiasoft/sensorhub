@@ -136,6 +136,10 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     private static final Logger log = LoggerFactory.getLogger(SOSService.class);
     protected static final String invalidWSRequestMsg = "Invalid WebSocket request: ";
     
+    static final String MIME_TYPE_MULTIPART = "multipart/x-mixed-replace; boundary=--myboundary"; 
+    static final byte[] MIME_BOUNDARY_JPEG = new String("--myboundary\r\nContent-Type: image/jpeg\r\nContent-Length: ").getBytes();
+    static final byte[] END_MIME = new byte[] {0xD, 0xA, 0xD, 0xA};
+    
     String endpointUrl;
     SOSServiceConfig config;
     SOSServiceCapabilities capabilitiesCache;
@@ -860,18 +864,13 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
             
             else if (useMJPEG)
             {
-                if (request.getHttpResponse() != null)
+                if (isRequestForMJpegMimeMultipart(request) && request.getHttpResponse() != null)
                 {
                     request.getHttpResponse().addHeader("Cache-Control", "no-cache");
-                    request.getHttpResponse().addHeader("Pragma", "no-cache");
-                    
+                    request.getHttpResponse().addHeader("Pragma", "no-cache");                    
                     // set multi-part MIME so that browser can properly decode it in an img tag
-                    //request.getHttpResponse().setContentType("image/jpeg"); //video/x-motion-jpeg, video/x-jpeg
-                    request.getHttpResponse().setContentType("multipart/x-mixed-replace; boundary=--myboundary");
+                    request.getHttpResponse().setContentType(MIME_TYPE_MULTIPART);
                 }
-                
-                byte[] mimeBoundary = new String("--myboundary\r\nContent-Type: image/jpeg\r\nContent-Length: ").getBytes();
-                byte[] endMime = new byte[] {0xD, 0xA, 0xD, 0xA};
                 
                 // write each record in output stream
                 DataBlock nextRecord;
@@ -880,10 +879,14 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
                     DataBlock frameBlk = ((DataBlockMixed)nextRecord).getUnderlyingObject()[1];
                     byte[] frameData = (byte[])frameBlk.getUnderlyingObject();
                     
-                    // write MIME boundary
-                    os.write(mimeBoundary);
-                    os.write(Integer.toString(frameData.length).getBytes());
-                    os.write(endMime);
+                    if (isRequestForMJpegMimeMultipart(request))
+                    {
+                        // write MIME boundary
+                        os.write(MIME_BOUNDARY_JPEG);
+                        os.write(Integer.toString(frameData.length).getBytes());
+                        os.write(END_MIME);
+                    }
+                    
                     os.write(frameData);
                     os.flush();
                 }       
@@ -891,6 +894,29 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
                 return true;
             }
         }
+        
+        return false;
+    }
+    
+    
+    /*
+     * Check if we should insert MIME multipart boundaries between JPEG frames
+     * since it makes it work directly in some browsers image tags
+     */
+    protected boolean isRequestForMJpegMimeMultipart(GetResultRequest request)
+    {
+        HttpServletRequest httpRequest = request.getHttpRequest();
+        if (httpRequest == null)
+            return false;
+        
+        String userAgent = httpRequest.getHeader("User-Agent");
+        if (userAgent == null)
+            return false;
+        
+        if (userAgent.contains("Firefox"))
+            return true;
+        if (userAgent.contains("Chrome"))
+            return true;
         
         return false;
     }
