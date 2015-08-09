@@ -28,6 +28,7 @@ import org.sensorhub.api.module.ModuleConfig;
 import org.sensorhub.api.persistence.StorageConfig;
 import org.sensorhub.api.processing.ProcessConfig;
 import org.sensorhub.api.sensor.SensorConfig;
+import org.sensorhub.api.service.ClientConfig;
 import org.sensorhub.api.service.ServiceConfig;
 import org.sensorhub.impl.SensorHub;
 import org.sensorhub.impl.module.ModuleRegistry;
@@ -254,6 +255,11 @@ public class AdminUI extends com.vaadin.ui.UI
         tab = stack.addTab(layout, "Services");
         tab.setIcon(ACC_TAB_ICON);
         buildModuleList(layout, ServiceConfig.class);
+        
+        layout = new VerticalLayout();
+        tab = stack.addTab(layout, "Clients");
+        tab.setIcon(ACC_TAB_ICON);
+        buildModuleList(layout, ClientConfig.class);
         
         layout = new VerticalLayout();
         tab = stack.addTab(layout, "Network");
