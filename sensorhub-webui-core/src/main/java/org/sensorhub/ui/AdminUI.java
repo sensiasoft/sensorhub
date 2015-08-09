@@ -60,11 +60,14 @@ import com.vaadin.server.VaadinRequest;
 import com.vaadin.server.VaadinSession;
 import com.vaadin.ui.Accordion;
 import com.vaadin.ui.Alignment;
+import com.vaadin.ui.Button;
+import com.vaadin.ui.Component;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.HorizontalSplitPanel;
 import com.vaadin.ui.Image;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
+import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.TabSheet.Tab;
 import com.vaadin.ui.Table;
 import com.vaadin.ui.Table.CellStyleGenerator;
@@ -211,25 +214,15 @@ public class AdminUI extends com.vaadin.ui.UI
         leftPane.setSizeFull();
         
         // header image and title
-        HorizontalLayout header = new HorizontalLayout();
-        header.setMargin(false);
-        header.setHeight(100.0f, Unit.PIXELS);
-        header.setWidth(100.0f, Unit.PERCENTAGE);
-        Image img = new Image(null, LOGO_ICON);
-        img.setHeight(90, Unit.PIXELS);
-        img.setStyleName(STYLE_LOGO);
-        header.addComponent(img);
-        Label title = new Label("SensorHub");
-        title.addStyleName(UIConstants.STYLE_H1);
-        title.addStyleName(STYLE_LOGO);
-        title.setWidth(null);
-        header.addComponent(title);
-        header.setExpandRatio(img, 0);
-        header.setExpandRatio(title, 1);
-        header.setComponentAlignment(img, Alignment.MIDDLE_LEFT);
-        header.setComponentAlignment(title, Alignment.MIDDLE_RIGHT);
+        Component header = buildHeader();
         leftPane.addComponent(header);
-            
+        leftPane.setExpandRatio(header, 0);
+        
+        // toolbar
+        Component toolbar = buildToolbar();
+        leftPane.addComponent(toolbar);
+        leftPane.setExpandRatio(toolbar, 0);
+        
         // accordion with several sections
         Accordion stack = new Accordion();
         stack.setSizeFull();
@@ -266,8 +259,7 @@ public class AdminUI extends com.vaadin.ui.UI
         tab.setIcon(ACC_TAB_ICON);
         buildNetworkConfig(layout);
         
-        leftPane.addComponent(stack);
-        leftPane.setExpandRatio(header, 0);
+        leftPane.addComponent(stack);        
         leftPane.setExpandRatio(stack, 1);
         splitPanel.addComponent(leftPane);
         
@@ -275,6 +267,63 @@ public class AdminUI extends com.vaadin.ui.UI
         configArea = new VerticalLayout();
         configArea.setMargin(true);
         splitPanel.addComponent(configArea);
+    }
+    
+    
+    protected Component buildHeader()
+    {
+        HorizontalLayout header = new HorizontalLayout();
+        header.setMargin(false);
+        header.setHeight(100.0f, Unit.PIXELS);
+        header.setWidth(100.0f, Unit.PERCENTAGE);
+        Image img = new Image(null, LOGO_ICON);
+        img.setHeight(90, Unit.PIXELS);
+        img.setStyleName(STYLE_LOGO);
+        header.addComponent(img);
+        Label title = new Label("SensorHub");
+        title.addStyleName(UIConstants.STYLE_H1);
+        title.addStyleName(STYLE_LOGO);
+        title.setWidth(null);
+        header.addComponent(title);
+        header.setExpandRatio(img, 0);
+        header.setExpandRatio(title, 1);
+        header.setComponentAlignment(img, Alignment.MIDDLE_LEFT);
+        header.setComponentAlignment(title, Alignment.MIDDLE_RIGHT);
+        return header;
+    }
+    
+    
+    protected Component buildToolbar()
+    {
+        HorizontalLayout toolbar = new HorizontalLayout();
+        toolbar.setWidth(100.0f, Unit.PERCENTAGE);
+        
+        // apply changes button
+        Button saveButton = new Button("Save Config");
+        saveButton.setDescription("Save Config");
+        saveButton.setIcon(UIConstants.APPLY_ICON);
+        saveButton.addStyleName(UIConstants.STYLE_SMALL);
+        saveButton.setWidth(100.0f, Unit.PERCENTAGE);
+        
+        // apply button action
+        saveButton.addClickListener(new Button.ClickListener() {
+            private static final long serialVersionUID = 1L;
+            public void buttonClick(ClickEvent event)
+            {
+                try
+                {
+                    SensorHub.getInstance().getModuleRegistry().saveModulesConfiguration();
+                }
+                catch (Exception e)
+                {
+                    AdminUI.log.error("Error while saving SensorHub configuration", e);
+                    Notification.show("Error", e.getMessage(), Notification.Type.ERROR_MESSAGE);
+                }
+            }
+        });        
+
+        toolbar.addComponent(saveButton);
+        return toolbar;
     }
     
     
