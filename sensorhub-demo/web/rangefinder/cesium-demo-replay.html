@@ -9,13 +9,15 @@
   <script src="../Cesium/Cesium.js"></script>
   <style>
       @import url(../Cesium/Widgets/widgets.css);
-      html, body, #cesiumContainer {
-          width: 1024px; height: 768px; margin: auto; padding: 0; overflow: hidden;
+      #cesiumContainer {
+          width: 1024px; height: 768px; margin: auto; padding: 0; overflow: hidden; display: inline-block;
       }
   </style>
 </head>
 <body>
   <div id="cesiumContainer"></div>
+  <div><input type="checkbox" checked="true" onclick="handleClick(this);"/>Toggle Buildings</div>
+  <!--<img id="video" width="800" height="600"></img>-->
   <script>
     var viewer = new Cesium.Viewer('cesiumContainer', {targetFrameRate: 10});
     var rfPos = [-86.5880, 34.7275, 0.0];
@@ -30,10 +32,16 @@
     var camPos = new Cesium.HeadingPitchRange(Cesium.Math.toRadians(-10), Cesium.Math.toRadians(-30), 800.0);
     viewer.camera.lookAt(camTarget, camPos);
     viewer.clock.shouldAnimate = false;
-    viewer.clock.multiplier = 1;
+    viewer.clock.multiplier = 5;
+
+    var terrainProvider = new Cesium.CesiumTerrainProvider({
+        url : 'http://assets.agi.com/stk-terrain/world'
+    });
+    viewer.terrainProvider = terrainProvider
+    viewer.scene.globe.depthTestAgainstTerrain = true;
 
     // add city buildings
-    var position = Cesium.Cartesian3.fromDegrees(-86.59015675189, 34.72499930624, 0.0);
+    var position = Cesium.Cartesian3.fromDegrees(-86.59015675189, 34.72499930624, 153.0);
     var heading = Cesium.Math.toRadians(0.2335140809488);
     var orientation = Cesium.Transforms.headingPitchRollQuaternion(position, heading, 0, 0);
     viewer.entities.add({
@@ -45,7 +53,7 @@
         }
     });
     
-    position = Cesium.Cartesian3.fromDegrees(-86.58643201592, 34.7286354703, 0.0);
+    position = Cesium.Cartesian3.fromDegrees(-86.58643201592, 34.7286354703, 163.0);
     heading = Cesium.Math.toRadians(0.2356579220988);
     orientation = Cesium.Transforms.headingPitchRollQuaternion(position, heading, 0, 0);
     viewer.entities.add({
@@ -53,11 +61,12 @@
         position : position,
         orientation : orientation,
         model : {
-            uri : "municipal_building.bgltf"
+            uri : "municipal_building.bgltf",
+            debugWireframe: true
         }
     });
     
-    position = Cesium.Cartesian3.fromDegrees(-86.58874164418, 34.72869003861, 0.0);
+    position = Cesium.Cartesian3.fromDegrees(-86.58874164418, 34.72869003861, 153.0);
     heading = Cesium.Math.toRadians(0.2343421483055);
     orientation = Cesium.Transforms.headingPitchRollQuaternion(position, heading, 0, 0);
     viewer.entities.add({
@@ -69,7 +78,7 @@
         }
     });
     
-    position = Cesium.Cartesian3.fromDegrees(-86.59079648585, 34.72699075691, 0.0);
+    position = Cesium.Cartesian3.fromDegrees(-86.59079648585, 34.72699075691, 153.0);
     heading = Cesium.Math.toRadians(0.2331612632112);
     orientation = Cesium.Transforms.headingPitchRollQuaternion(position, heading, 0, 0);
     viewer.entities.add({
@@ -106,11 +115,11 @@
     var currentUrl = window.location;
     
     // query GPS stream from SOS using websockets
-    ws = new WebSocket("ws://" + currentUrl.host + "/sensorhub/sos?service=SOS&version=2.0&request=GetResult&offering=urn:android:device:89845ed469b7edc7-sos&observedProperty=http://sensorml.com/ont/swe/property/Location&temporalFilter=phenomenonTime,2015-08-08T20:00:00Z/2055-01-01&replaySpeed=1");
-    ws.binaryType = 'arraybuffer';
+    var ws1 = new WebSocket("ws://" + currentUrl.host + "/sensorhub/sos?service=SOS&version=2.0&request=GetResult&offering=urn:android:device:89845ed469b7edc7-sos&observedProperty=http://sensorml.com/ont/swe/property/Location&temporalFilter=phenomenonTime,2015-08-11T20:19:00Z/2055-01-01&replaySpeed=5");
+    ws1.binaryType = 'arraybuffer';
     var firstGps = true;
     var gpsAlt;
-    ws.onmessage = function (event) {
+    ws1.onmessage = function (event) {
       
         var rec = String.fromCharCode.apply(null, new Uint8Array(event.data));
         //console.log(rec);
@@ -120,7 +129,7 @@
         var lat = parseFloat(tokens[1]);
         var lon = parseFloat(tokens[2]);
         gpsAlt = parseFloat(tokens[3]);
-        var alt = 0.0;//parseFloat(tokens[3]) - 193;
+        var alt = gpsAlt; // or keep at 0.0 if no terrain
         
         // set clock to GPS time
         viewer.clock.currentTime = julianDate;
@@ -135,14 +144,14 @@
            firstGps = false;
         }
     }
-    ws.onerror = function (event) {
-        ws.close();
+    ws1.onerror = function (event) {
+        ws1.close();
     }
     
     // query target location stream from SOS using websockets
-    ws = new WebSocket("ws://" + currentUrl.host + "/sensorhub/sos?service=SOS&version=2.0&request=GetResult&offering=urn:offering:trupulse:target&observedProperty=http://sensorml.com/ont/swe/property/TargetLocation&temporalFilter=phenomenonTime,2015-08-08T20:00:00Z/2055-01-01&replaySpeed=1");
-    ws.binaryType = 'arraybuffer';
-    ws.onmessage = function (event) {
+    var ws2 = new WebSocket("ws://" + currentUrl.host + "/sensorhub/sos?service=SOS&version=2.0&request=GetResult&offering=urn:offering:trupulse:target&observedProperty=http://sensorml.com/ont/swe/property/TargetLocation&temporalFilter=phenomenonTime,2015-08-11T20:19:01Z/2055-01-01&replaySpeed=5");
+    ws2.binaryType = 'arraybuffer';
+    ws2.onmessage = function (event) {
       
         var rec = String.fromCharCode.apply(null, new Uint8Array(event.data));
         console.log(rec);
@@ -151,7 +160,7 @@
         var tokens = rec.trim().split(",");
         var targetLat = parseFloat(tokens[1]);
         var targetLon = parseFloat(tokens[2]);
-        var targetAlt = parseFloat(tokens[3]) - gpsAlt;
+        var targetAlt = parseFloat(tokens[3]); // or subtract gpsAlt if no terrain
 
         // handle case of NaN resulting from bad TruPulse measurement
         if (isNaN(targetLat) || isNaN(targetLon) || isNaN(targetAlt))
@@ -174,10 +183,34 @@
         }
     });
     }
-    ws.onerror = function (event) {
-        ws.close();
+    ws2.onerror = function (event) {
+        ws2.close();
     }
-    
+
+    /*// query video stream from SOS using websockets
+    var imgTag = document.getElementById("video");
+    var ws3 = new WebSocket("ws://" + currentUrl.host + "/sensorhub/sos?service=SOS&version=2.0&request=GetResult&offering=urn:android:device:89845ed469b7edc7-sos&observedProperty=http://sensorml.com/ont/swe/property/VideoFrame&temporalFilter=phenomenonTime,2015-08-11T20:19:05Z/2055-01-01&replaySpeed=1");
+    ws3.binaryType = 'blob';
+    ws3.onmessage = function (event) {
+        event.data.type = "image/jpg";
+        var blobURL = window.URL.createObjectURL(event.data);
+        var oldBlobURL = imgTag.src;          
+        imgTag.src = blobURL;
+        window.URL.revokeObjectURL(oldBlobURL);
+    }
+    ws3.onerror = function (event) {
+        ws3.close();
+    }*/
+
+    function handleClick(cb) {
+        var entities = viewer.entities.values;
+        for (var i = 0; i < entities.length; i++) {
+            var entity = entities[i];
+            if (entity.model != null)
+                entity.show = cb.checked;
+        }
+    }
+  
   </script>
 </body>
 </html>

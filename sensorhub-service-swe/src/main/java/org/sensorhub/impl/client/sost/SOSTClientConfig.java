@@ -14,7 +14,8 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.impl.client.sost;
 
-import org.sensorhub.api.module.ModuleConfig;
+import org.sensorhub.api.config.DisplayInfo;
+import org.sensorhub.api.service.ClientConfig;
 
 
 /**
@@ -25,30 +26,22 @@ import org.sensorhub.api.module.ModuleConfig;
  * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @since Feb 6, 2015
  */
-public class SOSTClientConfig extends ModuleConfig
+public class SOSTClientConfig extends ClientConfig
 {
         
-    /**
-     * SOS endpoint URL where the requests are sent
-     */
+    @DisplayInfo(desc="SOS endpoint URL where the requests are sent")
     public String sosEndpointUrl;
 
     
-    /**
-     * Local ID of sensor to register with SOS
-     */
+    @DisplayInfo(desc="Local ID of sensor to register with SOS")
     public String sensorID;
 
     
-    /**
-     * set to true to use a persistent Insertresult connection
-     */
+    @DisplayInfo(desc="Set to true to use a persistent Insertresult connection")
     public boolean usePersistentConnection;
 
     
-    /**
-     * Maximum number of connection errors before we stop sending data to remote server
-     */
+    @DisplayInfo(desc="Maximum number of connection errors before we stop sending data to remote server")
     public int maxConnectErrors = 10;
     
     
