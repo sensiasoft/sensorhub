@@ -161,7 +161,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback
         sosConfig2.enabled = prefs.getBoolean("trupulse_enabled", false);
         sosConfig2.sensorID = trupulseConfig.id;
         sosConfig2.sosEndpointUrl = prefs.getString("sos_uri", "");
-        sosConfig2.usePersistentConnection = true;
+        sosConfig2.usePersistentConnection = false;
         sensorhubConfig.add(sosConfig2);
     }
 
