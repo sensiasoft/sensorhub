@@ -12,7 +12,7 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
  
 ******************************* END LICENSE BLOCK ***************************/
 
-package org.sensorhub.impl.sensor.mti;
+package org.sensorhub.test.service;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -31,6 +31,7 @@ public class TcpRepeater
     Object sync = new Object();
     volatile boolean sending = false;
     byte[] msgBytes;
+    
     
     TcpRepeater(int port) throws IOException
     {
@@ -82,7 +83,6 @@ public class TcpRepeater
                             }
                             else if (s.isConnected())
                             {
-                                s.getOutputStream().write(MtiOutput.PREAMBLE & 0xFF);
                                 s.getOutputStream().write(msgBytes);
                                 s.getOutputStream().flush();
                             }
