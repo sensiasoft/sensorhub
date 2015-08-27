@@ -297,6 +297,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
         {
             module.stop();
             module.cleanup();
+            getStateManager(moduleID).cleanup();
         }
         
         // remove conf from repo if it was saved 
