@@ -27,6 +27,8 @@ import org.sensorhub.api.comm.CommConfig;
  */
 public class RS232Config extends CommConfig
 {
+	public enum Parity { PARITY_EVEN, PARITY_MARK, PARITY_NONE, PARITY_ODD, PARITY_SPACE };
+	
 	
     public boolean autodetect;
 	
@@ -40,5 +42,5 @@ public class RS232Config extends CommConfig
 	
 	public byte stopBits = 1;
 	
-	public boolean parity = false;
+	public Parity parity = Parity.PARITY_NONE;
 }
