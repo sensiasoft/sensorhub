@@ -216,12 +216,12 @@ public class NexradOutput extends AbstractSensorOutput<NexradSensor>
 
 
 	@Override
-	public double getLatestRecordTime()
+	public long getLatestRecordTime()
 	{
 		if (latestRecord != null)
-			return latestRecord.getDoubleValue(0);
+			return latestRecord.getLongValue(0);
 
-		return Double.NaN;
+		return -1;
 	}
 
 }
