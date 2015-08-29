@@ -14,6 +14,7 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.impl.service;
 
+import org.sensorhub.api.config.DisplayInfo;
 import org.sensorhub.api.module.ModuleConfig;
 
 
@@ -28,29 +29,25 @@ import org.sensorhub.api.module.ModuleConfig;
 public class HttpServerConfig extends ModuleConfig
 {
      
-    /**
-     * TCP port where HTTP server will listen
-     */
+    @DisplayInfo(desc="TCP port where HTTP server will listen")
     public int httpPort = 8080;
     
     
-    /**
-     * Root URL where the server will accept requests
-     * This will be the prefix to all servlet URLs
-     */
+    @DisplayInfo(desc="Root URL where static web content will be served.")
+    public String staticDocRootUrl = null;
+    
+    
+    @DisplayInfo(desc="Root URL where the server will accept requests. This will be the prefix to all servlet URLs.")
     public String servletsRootUrl = "/sensorhub";
     
     
-    /**
-     * Root folder where web documents will be obtained
-     */
-    public String staticDocRootUrl = null;
+    @DisplayInfo(desc="Maximum number of requests per second allowed per session/connection")
+    public int maxRequestsPerSecond = 10;
     
-
 
     public HttpServerConfig()
     {
-        this.id = "???";
+        this.id = "HTTP_SERVER_0";
         this.name = "HTTP Server";
         this.moduleClass = HttpServer.class.getCanonicalName();
         this.enabled = true;

@@ -53,15 +53,15 @@ import com.vividsolutions.jts.geom.Polygon;
  */
 public class StorageDataProvider implements ISOSDataProvider
 {
-    private static final long MAX_WAIT_TIME = 5000L;
-    
     IBasicStorage storage;
     List<StorageState> dataStoresStates;
     DataComponentFilter recordFilter;
-    double replaySpeedFactor;
-    double lastRecordTime = Double.NaN;
-    long lastSystemTime;
     String foiID;
+    
+    // replay stuff 
+    double replaySpeedFactor;
+    double requestStartTime;
+    long requestSystemTime;
     
     
     class StorageState
@@ -78,7 +78,8 @@ public class StorageDataProvider implements ISOSDataProvider
         this.dataStoresStates = new ArrayList<StorageState>();
         this.recordFilter = new DataComponentFilter(filter);
         this.replaySpeedFactor = filter.getReplaySpeedFactor();
-        
+        this.requestSystemTime = System.currentTimeMillis();
+                        
         // prepare time range filter
         final double[] timePeriod;
         if (filter.getTimeRange() != null && !filter.getTimeRange().isNull())
@@ -87,6 +88,8 @@ public class StorageDataProvider implements ISOSDataProvider
                 filter.getTimeRange().getStartTime(),
                 filter.getTimeRange().getStopTime()
             };
+            
+            this.requestStartTime = timePeriod[0];
         }
         else
             timePeriod = null;
@@ -238,21 +241,13 @@ public class StorageDataProvider implements ISOSDataProvider
         // wait if replay mode is active
         if (!Double.isNaN(replaySpeedFactor))
         {
-            if (!Double.isNaN(lastRecordTime))
+            long realEllapsedTime = System.currentTimeMillis() - requestSystemTime;
+            long waitTime = (long)((nextStorageTime - requestStartTime) * 1000. / replaySpeedFactor) - realEllapsedTime;
+            if (waitTime > 0)
             {
-                long realEllapsedTime = System.currentTimeMillis() - lastSystemTime;
-                long waitTime = (long)((nextStorageTime - lastRecordTime) * 1000. / replaySpeedFactor) - realEllapsedTime;
-                if (waitTime > 0)
-                {
-                    if (waitTime > MAX_WAIT_TIME)
-                        waitTime = MAX_WAIT_TIME;
-                    try { Thread.sleep(waitTime ); }
-                    catch (InterruptedException e) { }
-                }
+                try { Thread.sleep(waitTime ); }
+                catch (InterruptedException e) { }
             }
-            
-            lastRecordTime = nextStorageTime;
-            lastSystemTime = System.currentTimeMillis();
         }        
         
         // return record properly filtered according to selected observables

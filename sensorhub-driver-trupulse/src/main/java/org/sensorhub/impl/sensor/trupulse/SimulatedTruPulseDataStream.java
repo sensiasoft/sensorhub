@@ -1,10 +1,14 @@
 /***************************** BEGIN LICENSE BLOCK ***************************
 
- The contents of this file are Copyright (C) 2014 Sensia Software LLC.
- All Rights Reserved.
+The contents of this file are subject to the Mozilla Public License, v. 2.0.
+If a copy of the MPL was not distributed with this file, You can obtain one
+at http://mozilla.org/MPL/2.0/.
+
+Software distributed under the License is distributed on an "AS IS" basis,
+WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+for the specific language governing rights and limitations under the License.
  
- Contributor(s): 
-    Alexandre Robin <alex.robin@sensiasoftware.com>
+Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
  
 ******************************* END LICENSE BLOCK ***************************/
 
@@ -29,9 +33,9 @@ import org.sensorhub.impl.module.AbstractModule;
 public class SimulatedTruPulseDataStream extends AbstractModule<TCPConfig> implements ICommProvider<TCPConfig>
 {
     PipedInputStream is;
-    Writer writer;
-    
+    Writer writer;    
     Timer timer;
+    int counter = 0;
     
     
     @Override
@@ -52,9 +56,9 @@ public class SimulatedTruPulseDataStream extends AbstractModule<TCPConfig> imple
     {
         try
         {
-            float range = 100.0f;
-            float az = (float)(Math.random()*360.);
-            float inc = (float)(Math.random()*5.+5.);
+            float range = 100f;
+            float az = (float)((counter%4)*90);
+            float inc = (float)((counter/4)*10);
             String msg = String.format(Locale.US, "$PLTIT,HV,%.2f,M,%.2f,D,%.2f,D,%.2f,M,*FF\n", range, az, inc, range);
             writer.write(msg);
             writer.flush();
@@ -86,16 +90,18 @@ public class SimulatedTruPulseDataStream extends AbstractModule<TCPConfig> imple
         if (timer != null)
             return;
         timer = new Timer();
+        counter = 0;
         
         // start main measurement generation thread
         TimerTask task = new TimerTask() {
             public void run()
             {
                 sendMeasurement();
+                counter++;
             }            
         };
         
-        timer.scheduleAtFixedRate(task, 0, 1000L);
+        timer.scheduleAtFixedRate(task, 0, 5000L);
     }
 
 

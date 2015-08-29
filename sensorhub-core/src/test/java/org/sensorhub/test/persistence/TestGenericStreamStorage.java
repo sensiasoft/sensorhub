@@ -19,6 +19,7 @@ import java.io.File;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.persistence.StorageConfig;
 import org.sensorhub.api.sensor.ISensorModule;
 import org.sensorhub.api.sensor.SensorConfig;
@@ -85,6 +86,13 @@ public class TestGenericStreamStorage
     @After
     public void cleanup()
     {
-        configFile.delete();
+        try
+        {
+            SensorHub.getInstance().getModuleRegistry().shutdown(false, false);
+            configFile.delete();
+        }
+        catch (SensorHubException e)
+        {
+        }
     }
 }

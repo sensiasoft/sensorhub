@@ -12,7 +12,8 @@ public class SensorHubDemos
         //URL processMapUrl = TestSMLProcessing.class.getResource("ProcessMap.xml");
         //ProcessLoader.loadMaps(processMapUrl.toString(), false);
         
-        SensorHub.main(new String[] {"src/test/resources/config_android_trupulse_process.json", "storage"});
+        //SensorHub.main(new String[] {"src/test/resources/config_android_trupulse_process.json", "storage"});
+        SensorHub.main(new String[] {"src/test/resources/config_cam_pointing_with_trupulse.json", "storage"});
     }
 
 }

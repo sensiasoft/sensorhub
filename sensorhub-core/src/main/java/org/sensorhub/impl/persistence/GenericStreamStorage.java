@@ -111,7 +111,7 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
             if (storageConfig == null)
                 throw new StorageException("Underlying storage configuration must be provided for generic storage " + config.name);
             else
-                throw new StorageException("Cannot instantiate underlying storage " + storageConfig.moduleClass);
+                throw new StorageException("Cannot instantiate underlying storage " + storageConfig.moduleClass, e);
         }
         
         // retrieve reference to data source

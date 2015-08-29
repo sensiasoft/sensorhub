@@ -19,6 +19,7 @@ import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -56,10 +57,10 @@ import org.sensorhub.api.common.Event;
 import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.module.IModuleStateManager;
+import org.sensorhub.api.module.ModuleConfig;
 import org.sensorhub.api.module.ModuleEvent;
 import org.sensorhub.api.persistence.FoiFilter;
 import org.sensorhub.api.persistence.IFoiFilter;
-import org.sensorhub.api.persistence.IStorageModule;
 import org.sensorhub.api.persistence.StorageConfig;
 import org.sensorhub.api.service.IServiceModule;
 import org.sensorhub.api.service.ServiceException;
@@ -134,6 +135,10 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
 {
     private static final Logger log = LoggerFactory.getLogger(SOSService.class);
     protected static final String invalidWSRequestMsg = "Invalid WebSocket request: ";
+    
+    static final String MIME_TYPE_MULTIPART = "multipart/x-mixed-replace; boundary=--myboundary"; 
+    static final byte[] MIME_BOUNDARY_JPEG = new String("--myboundary\r\nContent-Type: image/jpeg\r\nContent-Length: ").getBytes();
+    static final byte[] END_MIME = new byte[] {0xD, 0xA, 0xD, 0xA};
     
     String endpointUrl;
     SOSServiceConfig config;
@@ -298,8 +303,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
             double time = Double.NaN;
             if (timeExtent != null)
                 time = timeExtent.getBaseTime();
-            return factory.generateSensorMLDescription(time);
-            
+            return factory.generateSensorMLDescription(time);            
         }
         catch (Exception e)
         {
@@ -525,7 +529,10 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
         
         // serialize and send SensorML description
         OutputStream os = new BufferedOutputStream(request.getResponseStream());
-        new SMLUtils(SMLUtils.V2_0).writeProcess(os, generateSensorML(sensorID, request.getTime()), true);
+        AbstractProcess processDesc = generateSensorML(sensorID, request.getTime());
+        if (processDesc == null)
+            throw new SOSException(SOSException.invalid_param_code, "validTime"); 
+        new SMLUtils(SMLUtils.V2_0).writeProcess(os, processDesc, true);
     }
     
     
@@ -686,58 +693,76 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
             String offering = procedureToOfferingMap.get(sensorUID);
             if (offering == null)
             {
-                offering = sensorUID + "-sos";
                 ModuleRegistry moduleReg = SensorHub.getInstance().getModuleRegistry();
+                ArrayList<ModuleConfig> configSaveList = new ArrayList<ModuleConfig>(3);
+                configSaveList.add(this.config); 
                 
-                // create and register new virtual sensor module
-                SOSVirtualSensorConfig sensorConfig = new SOSVirtualSensorConfig();
-                sensorConfig.enabled = false;
-                sensorConfig.sensorUID = sensorUID;
-                sensorConfig.name = request.getProcedureDescription().getName();
-                if (sensorConfig.name == null)
-                    sensorConfig.name = request.getProcedureDescription().getId();
-                SOSVirtualSensor virtualSensor = (SOSVirtualSensor)moduleReg.loadModule(sensorConfig);
-                virtualSensor.updateSensorDescription(request.getProcedureDescription(), false);
-                SensorHub.getInstance().getModuleRegistry().enableModule(virtualSensor.getLocalID());
-                                
+                offering = sensorUID + "-sos";
+                String sensorName = request.getProcedureDescription().getName();
+                if (sensorName == null)
+                    sensorName = request.getProcedureDescription().getId();
+                
+                // create and register new virtual sensor module if not already present
+                if (!moduleReg.isModuleLoaded(sensorUID))
+                {
+                    SOSVirtualSensorConfig sensorConfig = new SOSVirtualSensorConfig();
+                    sensorConfig.enabled = false;
+                    sensorConfig.id = sensorUID;
+                    sensorConfig.name = sensorName;
+                    SOSVirtualSensor virtualSensor = (SOSVirtualSensor)moduleReg.loadModule(sensorConfig);
+                    virtualSensor.updateSensorDescription(request.getProcedureDescription(), false);
+                    configSaveList.add(sensorConfig);
+                }
+                
+                // make sure module is enabled
+                SensorHub.getInstance().getModuleRegistry().enableModule(sensorUID);
+                
                 // generate new provider and consumer config
                 SensorDataProviderConfig providerConfig = new SensorDataProviderConfig();
                 providerConfig.enabled = true;
-                providerConfig.sensorID = virtualSensor.getLocalID();
+                providerConfig.sensorID = sensorUID;
                 providerConfig.uri = offering;
                 config.dataProviders.add(providerConfig);
                 
                 SensorConsumerConfig consumerConfig = new SensorConsumerConfig();
                 consumerConfig.enabled = true;
                 consumerConfig.offering = offering;
-                consumerConfig.sensorID = virtualSensor.getLocalID();
+                consumerConfig.sensorID = sensorUID;
                 config.dataConsumers.add(consumerConfig);
                 
+                // when new storage creation is enabled
                 if (config.newStorageConfig != null)
                 {
-                    // create new data storage
-                    StreamStorageConfig streamStorageConfig = new StreamStorageConfig();
-                    streamStorageConfig.id = null;
-                    streamStorageConfig.name = virtualSensor.getName() + " Storage";
-                    streamStorageConfig.enabled = true;
-                    streamStorageConfig.dataSourceID = virtualSensor.getLocalID();
-                    streamStorageConfig.storageConfig = (StorageConfig)config.newStorageConfig.clone();
-                    streamStorageConfig.storageConfig.storagePath = sensorUID + ".dat";
-                    IStorageModule<?> storage = (IStorageModule<?>)moduleReg.loadModule(streamStorageConfig);
+                    String storageID = sensorUID + "#storage";
+                    
+                    // create data storage if not already configured
+                    if (!moduleReg.isModuleLoaded(storageID))
+                    {
+                        // create new storage module
+                        StreamStorageConfig streamStorageConfig = new StreamStorageConfig();
+                        streamStorageConfig.id = storageID;
+                        streamStorageConfig.name = sensorName + " Storage";
+                        streamStorageConfig.enabled = true;
+                        streamStorageConfig.dataSourceID = sensorUID;
+                        streamStorageConfig.storageConfig = (StorageConfig)config.newStorageConfig.clone();
+                        streamStorageConfig.storageConfig.storagePath = sensorUID + ".dat";
+                        moduleReg.loadModule(streamStorageConfig);
+                        configSaveList.add(streamStorageConfig);
+                        
+                        /*// also add related features to storage
+                        if (storage instanceof IObsStorage)
+                        {
+                            for (FeatureRef featureRef: request.getRelatedFeatures())
+                                ((IObsStorage) storage).storeFoi(featureRef.getTarget());
+                        }*/
+                    }
                                         
                     // associate storage to config                    
-                    providerConfig.storageID = storage.getLocalID();
-                    consumerConfig.storageID = storage.getLocalID();
+                    providerConfig.storageID = storageID;
+                    consumerConfig.storageID = storageID;
                     
-                    // save config so that registered sensor stays active after restart
-                    moduleReg.saveConfiguration(this.config, sensorConfig, streamStorageConfig);
-                    
-                    /*// also add related features to storage
-                    if (storage instanceof IObsStorage)
-                    {
-                        for (FeatureRef featureRef: request.getRelatedFeatures())
-                            ((IObsStorage) storage).storeFoi(featureRef.getTarget());
-                    }*/
+                    // save config so that components stay active after restart
+                    moduleReg.saveConfiguration(configSaveList.toArray(new ModuleConfig[0]));
                 }
                 
                 // instantiate provider and consumer instances
@@ -756,10 +781,9 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
             }
             else
             {
-                // disable update for now because descriptions are stored even if unchanged!!
-//                // get consumer and update
-//                ISOSDataConsumer consumer = getDataConsumerBySensorID(sensorUID);                
-//                consumer.updateSensor(request.getProcedureDescription());
+                // get consumer and update
+                ISOSDataConsumer consumer = getDataConsumerBySensorID(sensorUID);                
+                consumer.updateSensor(request.getProcedureDescription());
             }
             
             // build and send response
@@ -840,18 +864,13 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
             
             else if (useMJPEG)
             {
-                if (request.getHttpResponse() != null)
+                if (isRequestForMJpegMimeMultipart(request) && request.getHttpResponse() != null)
                 {
                     request.getHttpResponse().addHeader("Cache-Control", "no-cache");
-                    request.getHttpResponse().addHeader("Pragma", "no-cache");
-                    
+                    request.getHttpResponse().addHeader("Pragma", "no-cache");                    
                     // set multi-part MIME so that browser can properly decode it in an img tag
-                    //request.getHttpResponse().setContentType("image/jpeg"); //video/x-motion-jpeg, video/x-jpeg
-                    request.getHttpResponse().setContentType("multipart/x-mixed-replace; boundary=--myboundary");
+                    request.getHttpResponse().setContentType(MIME_TYPE_MULTIPART);
                 }
-                
-                byte[] mimeBoundary = new String("--myboundary\r\nContent-Type: image/jpeg\r\nContent-Length: ").getBytes();
-                byte[] endMime = new byte[] {0xD, 0xA, 0xD, 0xA};
                 
                 // write each record in output stream
                 DataBlock nextRecord;
@@ -860,10 +879,14 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
                     DataBlock frameBlk = ((DataBlockMixed)nextRecord).getUnderlyingObject()[1];
                     byte[] frameData = (byte[])frameBlk.getUnderlyingObject();
                     
-                    // write MIME boundary
-                    os.write(mimeBoundary);
-                    os.write(Integer.toString(frameData.length).getBytes());
-                    os.write(endMime);
+                    if (isRequestForMJpegMimeMultipart(request))
+                    {
+                        // write MIME boundary
+                        os.write(MIME_BOUNDARY_JPEG);
+                        os.write(Integer.toString(frameData.length).getBytes());
+                        os.write(END_MIME);
+                    }
+                    
                     os.write(frameData);
                     os.flush();
                 }       
@@ -871,6 +894,29 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
                 return true;
             }
         }
+        
+        return false;
+    }
+    
+    
+    /*
+     * Check if we should insert MIME multipart boundaries between JPEG frames
+     * since it makes it work directly in some browsers image tags
+     */
+    protected boolean isRequestForMJpegMimeMultipart(GetResultRequest request)
+    {
+        HttpServletRequest httpRequest = request.getHttpRequest();
+        if (httpRequest == null)
+            return false;
+        
+        String userAgent = httpRequest.getHeader("User-Agent");
+        if (userAgent == null)
+            return false;
+        
+        if (userAgent.contains("Firefox"))
+            return true;
+        if (userAgent.contains("Chrome"))
+            return true;
         
         return false;
     }

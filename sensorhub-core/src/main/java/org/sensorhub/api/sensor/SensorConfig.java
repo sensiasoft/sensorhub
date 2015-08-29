@@ -30,28 +30,19 @@ import org.sensorhub.api.module.ModuleConfig;
 public class SensorConfig extends ModuleConfig
 {
     
-    /**
-     * URL of SensorML description of the sensor
-     */
-    @DisplayInfo(label="SensorML", desc="URL of SensorML file")
+    @DisplayInfo(label="SensorML URL", desc="URL of SensorML file providing the base description of the sensor")
     public String sensorML;
     
     
-    /**
-     * Automatically activate sensor when plugged in
-     */
+    @DisplayInfo(desc="Check to automatically activate sensor when plugged in")
     public boolean autoActivate = true;
     
     
-    /**
-     * Enables/disables maintenance of SensorML history
-     */
+    @DisplayInfo(desc="Enables/disables maintenance of SensorML history")    
     public boolean enableHistory = true;
     
     
-    /**
-     * Allows hiding some of the sensor interfaces
-     */
+    @DisplayInfo(desc="List of hidden sensor interfaces")    
     public String[] hiddenIO;
     
     

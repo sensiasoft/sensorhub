@@ -21,6 +21,7 @@ import java.util.UUID;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.module.IModuleProvider;
 import org.sensorhub.api.module.ModuleConfig;
 import org.sensorhub.api.persistence.StorageConfig;
@@ -170,6 +171,13 @@ public class TestModuleRegistry
     @After
     public void cleanup()
     {
-        configFile.delete();
+        try
+        {
+            registry.shutdown(false, false);
+            configFile.delete();
+        }
+        catch (SensorHubException e)
+        {
+        }
     }
 }

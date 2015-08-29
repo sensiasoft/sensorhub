@@ -56,7 +56,8 @@
             }
             
             // query SOS GPS stream
-            ws = new WebSocket("ws://localhost:8181/sensorhub/sos?service=SOS&version=2.0&request=GetResult&offering=urn:mysos:offering02&observedProperty=http://www.opengis.net/def/property/OGC/0/SensorLocation&temporalFilter=phenomenonTime,now/2055-01-01");
+            var currentUrl = window.location;
+            var ws = new WebSocket("ws://" + currentUrl.host + "/sensorhub/sos?service=SOS&version=2.0&request=GetResult&offering=urn:mysos:offering02&observedProperty=http://www.opengis.net/def/property/OGC/0/SensorLocation&temporalFilter=phenomenonTime,now/2055-01-01");
             ws.onmessage = function (event) {
                 reader.readAsText(event.data);
             }

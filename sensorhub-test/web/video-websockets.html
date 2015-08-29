@@ -1,0 +1,34 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>Example getting video data through websockets and rendering to img tag using createObjectURL</title>
+    <style>
+      body {
+        margin: 0px;
+        padding: 0px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="text" style="background-color: black; color: white; padding: 10px"></div>
+    <img id="video" width="800" height="600"></img>
+    <script>
+      var imgTag = document.getElementById("video");
+      // query video stream from SOS using websockets
+      var currentUrl = window.location;
+      ws = new WebSocket("ws://" + currentUrl.host + "/sensorhub/sos?service=SOS&version=2.0&request=GetResult&offering=urn:android:device:a0e0eac2fea3f614-sos&observedProperty=http://sensorml.com/ont/swe/property/VideoFrame&temporalFilter=phenomenonTime,now/2055-06-01");
+      ws.binaryType = 'blob';
+      ws.onmessage = function (event) {
+          //event.data.type = "image/jpeg";
+          var blobURL = window.URL.createObjectURL(event.data);
+          var oldBlobURL = imgTag.src;          
+          imgTag.src = blobURL;
+          window.URL.revokeObjectURL(oldBlobURL);
+          document.getElementById("text").innerHTML = blobURL + " size=" + event.data.size;
+      }
+      ws.onerror = function (event) {
+          ws.close();
+      }
+    </script>
+  </body>
+</html>

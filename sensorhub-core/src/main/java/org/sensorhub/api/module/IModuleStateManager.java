@@ -43,4 +43,6 @@ public interface IModuleStateManager
     public OutputStream getOutputStream(String key);
     
     public void flush();
+    
+    public void cleanup();
 }

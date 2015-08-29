@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Properties;
@@ -62,7 +63,7 @@ public class DefaultModuleStateManager implements IModuleStateManager
         }
         catch (Exception e)
         {
-            throw new RuntimeException("Cannot read module state file", e);
+            throw new RuntimeException("Cannot read module state information", e);
         }
     }
 
@@ -158,7 +159,7 @@ public class DefaultModuleStateManager implements IModuleStateManager
     {
         stateProps.setProperty(key, Long.toString(value));
     }
-
+    
 
     @Override
     public OutputStream getOutputStream(String key)
@@ -173,6 +174,38 @@ public class DefaultModuleStateManager implements IModuleStateManager
         catch (FileNotFoundException e)
         {
             return null;
+        }
+    }
+    
+    
+    @Override
+    public void flush()
+    {
+        ensureFolder();
+        
+        try
+        {
+            OutputStream os = new BufferedOutputStream(new FileOutputStream(getStateFile()));
+            stateProps.store(os, null);
+            os.close();
+        }
+        catch (Exception e)
+        {
+            throw new RuntimeException("Cannot save module state information", e);
+        }        
+    }
+
+
+    @Override
+    public void cleanup()
+    {
+        try
+        {
+            FileUtils.deleteRecursively(folder);
+        }
+        catch (IOException e)
+        {
+            throw new RuntimeException("Error while deleting module state information", e);
         }
     }
     
@@ -195,23 +228,4 @@ public class DefaultModuleStateManager implements IModuleStateManager
     {
         return new File(folder, stateFileName);
     }
-
-
-    @Override
-    public void flush()
-    {
-        ensureFolder();
-        
-        try
-        {
-            OutputStream os = new BufferedOutputStream(new FileOutputStream(getStateFile()));
-            stateProps.store(os, null);
-            os.close();
-        }
-        catch (Exception e)
-        {
-            throw new RuntimeException("Cannot save module state", e);
-        }        
-    }
-
 }

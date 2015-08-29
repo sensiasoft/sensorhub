@@ -44,5 +44,10 @@
         <artifactId>sensorhub-driver-fakegps</artifactId>
         <version>0.1</version>
      </dependency>
+     <dependency>
+        <groupId>org.sensorhub</groupId>
+        <artifactId>sensorhub-process-geoloc</artifactId>
+        <version>0.1-SNAPSHOT</version>
+     </dependency>
   </dependencies>
 </project>

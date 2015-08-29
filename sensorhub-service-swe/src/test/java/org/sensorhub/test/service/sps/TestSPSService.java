@@ -364,10 +364,10 @@ public class TestSPSService
     {
         try
         {
+            SensorHub.getInstance().getModuleRegistry().shutdown(false, false);            
+            HttpServer.getInstance().cleanup();
             if (configFile != null)
                 configFile.delete();
-            SensorHub.getInstance().stop();
-            HttpServer.getInstance().cleanup();
         }
         catch (Exception e)
         {

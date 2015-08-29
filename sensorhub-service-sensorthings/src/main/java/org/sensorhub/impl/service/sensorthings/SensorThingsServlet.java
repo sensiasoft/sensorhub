@@ -21,7 +21,7 @@ import net.opengis.sensorml.v20.AbstractProcess;
 import net.opengis.swe.v20.DataComponent;
 import org.sensorhub.api.persistence.IDataRecord;
 import org.sensorhub.api.persistence.IObsStorage;
-import org.sensorhub.api.persistence.IRecordInfo;
+import org.sensorhub.api.persistence.IRecordStoreInfo;
 import org.sensorhub.api.persistence.ObsFilter;
 import org.sensorhub.api.persistence.ObsKey;
 
@@ -76,21 +76,21 @@ public class SensorThingsServlet extends HttpServlet
         // TODO build resource from metadata contained in p
         
         // ex: path = /Sensors{1}/DataStreams
-        for (IRecordInfo streamInfo: storageList.get(0).getRecordTypes().values())
+        for (IRecordStoreInfo streamInfo: storageList.get(0).getRecordStores().values())
         {
             DataComponent rec = streamInfo.getRecordDescription();
-            double[] timeRange = storageList.get(0).getRecordsTimeRange(streamInfo.getRecordType());
+            double[] timeRange = storageList.get(0).getRecordsTimeRange(streamInfo.getName());
             // TODO build datastream JSON resource from metadata contained in   
         }
         
         // ex: path = /Sensors{1}/DataStreams{3}/Observations
         // figure out name of datastream at index 3
         int i = 0;
-        for (IRecordInfo streamInfo: storageList.get(0).getRecordTypes().values())
+        for (IRecordStoreInfo streamInfo: storageList.get(0).getRecordStores().values())
         {
             if (i == 2)
             {
-                ObsFilter filter = new ObsFilter(streamInfo.getRecordType());
+                ObsFilter filter = new ObsFilter(streamInfo.getName());
                 Iterator<? extends IDataRecord> it = storageList.get(0).getRecordIterator(filter);
                 while (it.hasNext())
                 {

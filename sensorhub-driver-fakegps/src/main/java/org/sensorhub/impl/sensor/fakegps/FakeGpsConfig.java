@@ -18,17 +18,20 @@ import org.sensorhub.api.sensor.SensorConfig;
 
 
 public class FakeGpsConfig extends SensorConfig
-{
-    
+{    
     public String googleApiUrl = "http://maps.googleapis.com/maps/api/directions/json";
     
-    public double centerLatitude = 34.7300; // in deg
+    // use these to add specific start and stop locations
+    public Double startLatitude = null;  // in degrees
+    public Double startLongitude = null;  // in degrees
+    public Double stopLatitude = null;  // in degrees
+    public Double stopLongitude = null;  // in degrees
     
+    // otherwise use these to generate random start and stop locations
+    public double centerLatitude = 34.7300; // in deg    
     public double centerLongitude = -86.5850; // in deg
-    
     public double areaSize = 0.1; // in deg
     
     public double vehicleSpeed = 40; // km/h
-    
     public boolean walkingMode = false;
 }

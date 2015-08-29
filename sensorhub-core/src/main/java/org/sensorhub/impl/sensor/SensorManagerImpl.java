@@ -58,6 +58,13 @@ public class SensorManagerImpl implements ISensorManager
         
         return enabledSensors;
     }
+    
+    
+    @Override
+    public boolean isModuleLoaded(String moduleID)
+    {
+        return moduleRegistry.isModuleLoaded(moduleID);
+    }
 
 
     @Override

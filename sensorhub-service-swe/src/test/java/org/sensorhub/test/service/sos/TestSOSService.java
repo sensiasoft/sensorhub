@@ -661,10 +661,10 @@ public class TestSOSService
     {
         try
         {
+            SensorHub.getInstance().getModuleRegistry().shutdown(false, false);
+            HttpServer.getInstance().cleanup();
             if (configFile != null)
                 configFile.delete();
-            SensorHub.getInstance().stop();
-            HttpServer.getInstance().cleanup();
             File dbFile = new File(DB_PATH);
             if (dbFile.exists())
                 dbFile.delete();

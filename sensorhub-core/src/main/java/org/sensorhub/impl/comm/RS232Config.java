@@ -15,6 +15,7 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 package org.sensorhub.impl.comm;
 
 import org.sensorhub.api.comm.CommConfig;
+import org.sensorhub.api.config.DisplayInfo;
 
 
 /**
@@ -27,12 +28,10 @@ import org.sensorhub.api.comm.CommConfig;
  */
 public class RS232Config extends CommConfig
 {
+	public enum Parity { PARITY_EVEN, PARITY_MARK, PARITY_NONE, PARITY_ODD, PARITY_SPACE };
 	
-    public boolean autodetect;
-	
-	public int autodetectInterval;
-	
-	public String portName;
+	@DisplayInfo(desc="Serial port device name. Usually something like /dev/ttyXXX on Linux")
+    public String portName;
 	
 	public int baudRate = 9600;
 	
@@ -40,5 +39,8 @@ public class RS232Config extends CommConfig
 	
 	public byte stopBits = 1;
 	
-	public boolean parity = false;
+	public Parity parity = Parity.PARITY_NONE;
+	
+	@DisplayInfo(desc="Timeout after which serial port data is made available if at least one byte is available")
+	public int receiveTimeout = 100;
 }

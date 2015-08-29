@@ -116,6 +116,8 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
             Class<IModule> clazz = (Class<IModule>)Class.forName(config.moduleClass);
             IModule module = clazz.newInstance();
             module.init(config);
+            
+            // load saved module state
             module.loadState(getStateManager(config.id));
                         
             // keep track of what modules are loaded
@@ -148,6 +150,13 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
         {
             throw new SensorHubException("Cannot load module " + config.name, e);
         }
+    }
+    
+    
+    @Override
+    public boolean isModuleLoaded(String moduleID)
+    {
+        return loadedModules.containsKey(moduleID);
     }
     
     
@@ -263,7 +272,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
                 }
                 
                 eventHandler.publishEvent(new ModuleEvent(module, ModuleEvent.Type.DISABLED));
-                log.debug("Module " + MsgUtils.moduleString(module) +  " stopped");
+                log.debug("Module " + MsgUtils.moduleString(module) + " stopped");
             }
         }
         catch (SensorHubException e)
@@ -288,6 +297,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
         {
             module.stop();
             module.cleanup();
+            getStateManager(moduleID).cleanup();
         }
         
         // remove conf from repo if it was saved 
@@ -437,17 +447,25 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
         {
             try
             {
-                // save state if requested
-                // TODO use state saver
-                if (saveState)
-                    module.saveState(getStateManager(module.getLocalID()));
-                
                 // save config if requested
                 if (saveConfig)
                     configRepos.update(module.getConfiguration());
                 
                 // cleanly stop module
                 this.disableModule(module.getLocalID());
+                
+                // save state if requested
+                if (saveState)
+                {
+                    try
+                    {                   
+                        module.saveState(getStateManager(module.getLocalID()));
+                    }
+                    catch (Exception e)
+                    {
+                        log.warn("Module state not saved", e);
+                    }
+                }
             }
             catch (Exception e)
             {
