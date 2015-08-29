@@ -9,19 +9,6 @@
    <artifactId>sensorhub-base</artifactId>
    <packaging>pom</packaging>
    <name>SensorHub Base</name>
-   <modules>
-      <module>lib-swe-common/swe-common-all</module>
-      <module>lib-sensorml/sensorml-all</module>
-      <module>lib-ows/ows-framework-all</module>
-      <module>sensorhub-all</module>
-      <module>sensorhub-core</module>
-      <module>sensorhub-storage-perst</module>
-      <module>sensorhub-service-swe</module>    
-      <module>sensorhub-driver-fakegps</module>
-      <module>sensorhub-driver-fakeweather</module>
-      <module>sensorhub-tools</module>
-      <module>sensorhub-webui-core</module>
-   </modules>
    <build>
       <plugins>
          <plugin>
@@ -68,4 +55,36 @@
          </plugin>
       </plugins>
    </build>
+   <profiles>
+      <profile>
+         <id>sensors</id>
+         <modules>
+            <module>sensorhub-driver-v4l</module>
+            <module>sensorhub-driver-axis</module>
+            <module>sensorhub-driver-weatherStation</module>
+            <module>sensorhub-driver-mti</module>
+            <module>sensorhub-driver-trupulse</module>
+            <module>sensorhub-driver-gps-nmea</module>
+         </modules>
+      </profile>
+      <profile>
+         <id>default</id>
+         <activation>
+            <activeByDefault>true</activeByDefault>
+         </activation>
+         <modules>
+            <module>lib-swe-common/swe-common-all</module>
+            <module>lib-sensorml/sensorml-all</module>
+            <module>lib-ows/ows-framework-all</module>
+            <module>sensorhub-all</module>
+            <module>sensorhub-core</module>
+            <module>sensorhub-storage-perst</module>
+            <module>sensorhub-service-swe</module>    
+            <module>sensorhub-driver-fakegps</module>
+            <module>sensorhub-driver-fakeweather</module>
+            <module>sensorhub-tools</module>
+            <module>sensorhub-webui-core</module>
+         </modules>
+      </profile>
+   </profiles>
 </project>
