@@ -22,4 +22,8 @@ public class NexradConfig extends SensorConfig
     public double centerLatitude; // in deg
     public double centerLongitude; // in deg
     public double elevationMeters;
+
+    public static void main(String[] args) {
+		System.err.println("Build ME");
+	}
 }

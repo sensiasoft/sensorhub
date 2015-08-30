@@ -36,7 +36,6 @@ import org.slf4j.LoggerFactory;
 import org.vast.data.DataRecordImpl;
 import org.vast.data.QuantityImpl;
 import org.vast.data.SWEFactory;
-import org.vast.data.TextEncodingImpl;
 import org.vast.data.TimeImpl;
 import org.vast.swe.SWEConstants;
 import org.vast.swe.SWEHelper;
@@ -49,7 +48,7 @@ public class NexradOutput extends AbstractSensorOutput<NexradSensor>
 	DataBlock latestRecord;
 	BinaryEncoding encoding;
 	boolean sendData;
-	Timer timer;
+	Timer timer;	
 	static int NUM_BINS = 720;  // this should be fixed at construction time as part of the config
 
 	public NexradOutput(NexradSensor parentSensor)
@@ -94,9 +93,10 @@ public class NexradOutput extends AbstractSensorOutput<NexradSensor>
 		nexradStruct.addComponent("azimuth",az);
 
 		SWEFactory fac = new SWEFactory();
-		Count numBins = fac.newCount();
+		Count numBins = fac.newCount(DataType.INT);
 		numBins.setDefinition("http://sensorml.com/ont/swe/property/NumberOfSamples"); 
-		numBins.setId("NUM_BINS");
+//		numBins.setId("NUM_BINS");
+		numBins.setValue(NUM_BINS);  // this needs to be variable but not working as configured below
 		nexradStruct.addComponent("count",numBins);
 
 		DataRecord productRecord = new DataRecordImpl(3);
@@ -111,7 +111,7 @@ public class NexradOutput extends AbstractSensorOutput<NexradSensor>
 
 		Quantity velQuant = fac.newQuantity(DataType.FLOAT);
 		velQuant.setDefinition("http://sensorml.com/ont/swe/propertyx/Velocity");  // does not exist- will be reflectivity,velocity,or spectrumWidth- choice here?
-		reflQuant.getUom().setCode("m/s");
+		velQuant.getUom().setCode("m/s");
 		DataArray velData = fac.newDataArray();
 		velData.setElementType("Velocity", velQuant);
 		velData.setElementCount(numBins); 
@@ -133,7 +133,6 @@ public class NexradOutput extends AbstractSensorOutput<NexradSensor>
 
 	private void sendRadial() throws IOException
 	{
-		//  test getting real data into the block
 		//  What will really be happening. We will be getting one full sweep every 5 to 6 minutes, and then a pause
 		//  So need to sim this somehow
 		String testFile = "C:/Data/sensorhub/Level2/HTX/KHTX20110427_205716_V03";
@@ -143,8 +142,8 @@ public class NexradOutput extends AbstractSensorOutput<NexradSensor>
 		// build and publish datablock
 		DataBlock dataBlock = nexradStruct.createDataBlock();
 		Radial first = sweep.getRadials().get(0);
-		double time = first.radialStartTime / 1000.;
-		dataBlock.setDoubleValue(0, time);
+		long time = (long)first.radialStartTime / 1000;
+		dataBlock.setLongValue(0, time);
 		dataBlock.setDoubleValue(1, first.elevation);
 		dataBlock.setDoubleValue(2, first.azimuth);
 		dataBlock.setIntValue(first.numGates);
@@ -221,7 +220,7 @@ public class NexradOutput extends AbstractSensorOutput<NexradSensor>
 		if (latestRecord != null)
 			return latestRecord.getLongValue(0);
 
-		return -1;
+		return 0;
 	}
 
 }
