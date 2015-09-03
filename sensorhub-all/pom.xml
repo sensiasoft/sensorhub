@@ -29,7 +29,7 @@
       </developer>
    </developers>
    <scm>
-      <url>https://github.com/sensiasoft/sensorhub/tree/master/sensorhub</url>
+      <url>https://github.com/sensiasoft/sensorhub/tree/master</url>
       <connection>scm:git:https://github.com/sensiasoft/sensorhub.git</connection>
       <developerConnection>scm:git:https://github.com/sensiasoft/sensorhub.git</developerConnection>
       <tag>HEAD</tag>
@@ -92,6 +92,7 @@
                   <Embed-Dependency>*;scope=system</Embed-Dependency>
                   <!--<Export-Package>org.sensorhub.*</Export-Package>-->
                   <!-- use exportcontents instead of Export-Package otherwise it also includes all classes from dependencies -->
+                  <Embed-Directory>lib</Embed-Directory>
                   <_exportcontents>org.sensorhub.*</_exportcontents>
                </instructions>
             </configuration>
