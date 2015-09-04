@@ -26,14 +26,13 @@
             <module>sensorhub-driver-fakegps</module>
             <module>sensorhub-driver-fakeweather</module>
             <module>sensorhub-tools</module>
-            <module>sensorhub-dist</module>
          </modules>
       </profile>
       <profile>
          <id>webui</id>
          <modules>
+            <module>sensorhub-webui-core/widgetset</module>
             <module>sensorhub-webui-core</module>
-            <module>sensorhub-webui-core/widgetset/sensorhub-widgetset</module>
          </modules>
       </profile>
       <profile>
@@ -49,7 +48,6 @@
             <module>sensorhub-driver-mti</module>
             <module>sensorhub-driver-trupulse</module>
             <module>sensorhub-driver-gps-nmea</module>
-            <module>sensorhub-dist</module>
          </modules>
       </profile>
    </profiles>
