@@ -12,14 +12,14 @@
   <dependencies>
      <dependency>
         <groupId>org.sensorhub</groupId>
-        <artifactId>sensorhub-storage-perst</artifactId>
-        <version>1.0</version>
+        <artifactId>sensorhub-core</artifactId>
+        <version>${project.version}</version>
         <type>bundle</type>
      </dependency>
      <dependency>
         <groupId>org.sensorhub</groupId>
-        <artifactId>sensorhub-core</artifactId>
-        <version>1.0</version>
+        <artifactId>sensorhub-storage-perst</artifactId>
+        <version>${project.version}</version>
         <type>bundle</type>
      </dependency>
      <dependency>

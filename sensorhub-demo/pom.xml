@@ -7,41 +7,40 @@
     <relativePath>../sensorhub-all/pom.xml</relativePath>
   </parent>
   <artifactId>sensorhub-demo</artifactId>
-  <version>0.1</version>
   <name>SensorHub Demo Components</name>
   <description>Components used only for demo purposes</description>
   <dependencies>
      <dependency>
         <groupId>org.sensorhub</groupId>
         <artifactId>sensorhub-core</artifactId>
-        <version>1.0</version>
+        <version>${project.version}</version>
         <type>bundle</type>
      </dependency>
      <dependency>
         <groupId>org.sensorhub</groupId>
         <artifactId>sensorhub-webui-core</artifactId>
-        <version>1.0</version>
-     </dependency>
-     <dependency>
-        <groupId>org.sensorhub</groupId>
-        <artifactId>sensorhub-driver-trupulse</artifactId>
-        <version>0.1</version>
+        <version>${project.version}</version>
      </dependency>
      <dependency>
         <groupId>org.sensorhub</groupId>
         <artifactId>sensorhub-storage-perst</artifactId>
-        <version>1.0</version>
+        <version>${project.version}</version>
         <type>bundle</type>
      </dependency>
      <dependency>
         <groupId>org.sensorhub</groupId>
         <artifactId>sensorhub-service-swe</artifactId>
-        <version>1.0</version>
+        <version>${project.version}</version>
         <type>bundle</type>
      </dependency>
      <dependency>
         <groupId>org.sensorhub</groupId>
         <artifactId>sensorhub-driver-fakegps</artifactId>
+        <version>0.1</version>
+     </dependency>
+     <dependency>
+        <groupId>org.sensorhub</groupId>
+        <artifactId>sensorhub-driver-trupulse</artifactId>
         <version>0.1</version>
      </dependency>
      <dependency>
