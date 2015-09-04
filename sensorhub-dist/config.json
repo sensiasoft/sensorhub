@@ -52,7 +52,7 @@
       "objClass": "org.sensorhub.impl.persistence.perst.BasicStorageConfig",
       "moduleClass": "org.sensorhub.impl.persistence.perst.BasicStorageImpl",
       "memoryCacheSize": 1024,
-      "storagePath": "gps_obs.dat"
+      "storagePath": "db/gps_obs.dat"
     }
   }, 
   {
@@ -67,7 +67,7 @@
       "objClass": "org.sensorhub.impl.persistence.perst.BasicStorageConfig",
       "moduleClass": "org.sensorhub.impl.persistence.perst.BasicStorageImpl",
       "memoryCacheSize": 1024,
-      "storagePath": "weather_obs.dat"
+      "storagePath": "db/weather_obs.dat"
     }
   },
   {
@@ -105,22 +105,22 @@
     {
       "title": "Test SOS Service",
       "description": "An SOS service automatically deployed by SensorHub",
-      "keywords": ["SensorHub", "Video"],
+      "keywords": ["SensorHub", "GPS", "weather"],
       "fees": "NONE",
       "accessConstraints": "NONE",
       "serviceProvider":
       {
-        "individualName": "Alex Robin",
-        "organizationName": "Sensia Software LLC",
-        "positionName": "Engineer",
-        "voiceNumber": "+33 5 23 56 89 78",
-        "faxNumber": "+33 5 23 56 89 77",
-        "deliveryPoint": "12 rue Voltaire",
-        "city": "Toulouse",
-        "administrativeArea": null,
-        "postalCode": "30000",
+        "individualName": "Bobby Jones",
+        "organizationName": "Bobby Jones Inc.",
+        "positionName": "CEO",
+        "voiceNumber": "+1 800 123 4567",
+        "faxNumber": "+1 800 123 4568",
+        "deliveryPoint": "1 Main Street",
+        "city": "Portland",
+        "administrativeArea": "OR",
+        "postalCode": "97209",
         "country": "France",
-        "email": "admin@sensiasoft.com",
+        "email": "admin@tommy.com",
         "website": null,
         "hoursOfService": null,
         "contactInstructions": null

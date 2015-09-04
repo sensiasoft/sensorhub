@@ -26,7 +26,7 @@
             <module>sensorhub-driver-fakegps</module>
             <module>sensorhub-driver-fakeweather</module>
             <module>sensorhub-tools</module>
-            <module>sensorhub-app</module>
+            <module>sensorhub-dist</module>
          </modules>
       </profile>
       <profile>
@@ -49,6 +49,7 @@
             <module>sensorhub-driver-mti</module>
             <module>sensorhub-driver-trupulse</module>
             <module>sensorhub-driver-gps-nmea</module>
+            <module>sensorhub-dist</module>
          </modules>
       </profile>
    </profiles>
