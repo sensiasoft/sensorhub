@@ -3,10 +3,10 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>org.sensorhub</groupId>
-	<artifactId>sensorhub-widgetset</artifactId>
+	<artifactId>sensorhub-webui-widgetset</artifactId>
 	<packaging>jar</packaging>
-	<version>7.4.0</version>
-	<name>sensorhub-widgetset</name>
+	<version>1.0</version>
+	<name>SensorHub Vaadin WidgetSet</name>
 
 	<properties>
 		<vaadin.version>7.4.0</vaadin.version>
@@ -35,7 +35,7 @@
 	</repositories>
 
 	<dependencies>
-		<dependency>
+		<!-- <dependency>
 			<groupId>javax.servlet</groupId>
 			<artifactId>javax.servlet-api</artifactId>
 			<version>3.0.1</version>
@@ -45,12 +45,7 @@
 			<groupId>com.vaadin</groupId>
 			<artifactId>vaadin-server</artifactId>
 			<version>${vaadin.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>com.vaadin</groupId>
-			<artifactId>vaadin-push</artifactId>
-			<version>${vaadin.version}</version>
-		</dependency>
+		</dependency> -->
 		<dependency>
 			<groupId>com.vaadin</groupId>
 			<artifactId>vaadin-client</artifactId>
