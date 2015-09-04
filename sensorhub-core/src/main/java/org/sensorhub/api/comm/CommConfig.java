@@ -30,7 +30,7 @@ public abstract class CommConfig extends ModuleConfig
             commProvider.init(this);  
             return commProvider;
         }
-        catch (Exception e)
+        catch (Throwable e)
         {
             throw new RuntimeException("Cannot load module " + moduleClass, e);
         }

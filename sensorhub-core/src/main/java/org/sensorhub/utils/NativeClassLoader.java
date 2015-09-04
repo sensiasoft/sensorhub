@@ -18,6 +18,7 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.JarURLConnection;
@@ -25,7 +26,10 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.net.URLConnection;
 import java.nio.file.Files;
-import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,7 +49,8 @@ public class NativeClassLoader extends URLClassLoader
 {
     static final URL[] EMPTY_URLS = new URL[] {};
     private Logger log; // cannot be a static logger in case it is used as system classloader
-    private HashSet<String> loadedLibraries = new HashSet<String>();
+    private Map<String, String> loadedLibraries = new HashMap<String, String>();
+    private List<File> tmpFolders = new ArrayList<File>(); 
     
 
     public NativeClassLoader()
@@ -57,6 +62,28 @@ public class NativeClassLoader extends URLClassLoader
     public NativeClassLoader(ClassLoader parent)
     {
         super((parent instanceof URLClassLoader) ? ((URLClassLoader) parent).getURLs() : EMPTY_URLS, parent);
+        setupShutdownHook();
+    }
+    
+    
+    protected void setupShutdownHook()
+    {
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            public void run()
+            {
+                // remove temp folders
+                for (File f: tmpFolders)
+                {
+                    try
+                    {
+                        FileUtils.deleteRecursively(f);
+                    }
+                    catch (IOException e)
+                    {
+                    }
+                }
+            }            
+        });
     }
 
 
@@ -97,30 +124,45 @@ public class NativeClassLoader extends URLClassLoader
     }
 
 
-    protected String findLibrary(String libname)
+    @Override
+    protected String findLibrary(String libName)
     {
+        // setup logger cause it doesn't work the static way when used as system class loader
         if (log == null)
             log = LoggerFactory.getLogger(NativeClassLoader.class);
         
-        if (loadedLibraries.contains(libname))
-            return null;    
+        // get path directly if we have already found this library
+        String libPath = loadedLibraries.get(libName);
         
-        String lib = System.mapLibraryName(libname);
-        URL url = findResource(lib);
-        
-        if (url == null)
+        // first try with specific OS name
+        if (libPath == null)
         {
-            url = findResource("lib/native/" + osName() + "/" + osArch() + "/" + lib);
-            if (url == null)
-                return null;
+            String libFileName = System.mapLibraryName(libName);
+            libPath = findLibraryFile(libName, libFileName);
         }
-
-        loadedLibraries.add(libname);
-        return extractResource(url);
+        
+        // otherwise try directly with library name
+        if (libPath == null)
+            libPath = findLibraryFile(libName, libName);
+        
+        return libPath;
     }
     
     
-    private String extractResource(URL url)
+    protected String findLibraryFile(String libName, String libFileName)
+    {
+        // try to get it from embedded native lib folder
+        URL url = findResource("lib/native/" + osName() + "/" + osArch() + "/" + libFileName);
+        
+        // if we have nothing return null to let VM search for it in java.library.path
+        if (url == null)
+            return null;
+        
+        return extractResource(libName, url);
+    }
+    
+    
+    private String extractResource(String libName, URL url)
     {
         try
         {
@@ -130,15 +172,16 @@ public class NativeClassLoader extends URLClassLoader
             if (con instanceof JarURLConnection)
             {                
                 // get resource from jar
-                JarURLConnection jar = (JarURLConnection)con;
-                InputStream in = new BufferedInputStream(jar.getInputStream());
+                JarURLConnection jarItemConn = (JarURLConnection)con;
+                InputStream in = new BufferedInputStream(jarItemConn.getInputStream());
                 
                 // copy to temp location (folder named as jar file)
-                File jarfile = new File(jar.getJarFile().getName());
-                File tmpdir = Files.createTempDirectory(jarfile.getName()).toFile();
-                File outfile = new File(tmpdir, jar.getJarEntry().getName());
-                outfile.getParentFile().mkdirs();
-                OutputStream out = new BufferedOutputStream(new FileOutputStream(outfile));            
+                File jarFile = new File(jarItemConn.getJarFile().getName());
+                File tmpDir = Files.createTempDirectory(jarFile.getName()).toFile();
+                tmpFolders.add(tmpDir);
+                File outFile = new File(tmpDir, jarItemConn.getJarEntry().getName());
+                outFile.getParentFile().mkdirs();
+                OutputStream out = new BufferedOutputStream(new FileOutputStream(outFile));            
                 byte[] buffer = new byte[1024];
                 int len;
                 while ((len = in.read(buffer)) > 0)
@@ -147,7 +190,7 @@ public class NativeClassLoader extends URLClassLoader
                 in.close();
     
                 // use path to temp file
-                libPath = outfile.getPath();
+                libPath = outFile.getPath();
             }
             else
             {
@@ -155,6 +198,7 @@ public class NativeClassLoader extends URLClassLoader
                 libPath = url.getFile();
             }            
             
+            loadedLibraries.put(libName, libPath);
             log.debug("Using native library from: " + libPath);
             return libPath;
         }
@@ -188,5 +232,4 @@ public class NativeClassLoader extends URLClassLoader
         
         return c;
     }
-
 }
