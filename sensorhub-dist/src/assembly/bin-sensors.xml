@@ -15,6 +15,15 @@
          <unpack>false</unpack>
          <useTransitiveDependencies>false</useTransitiveDependencies>
       </dependencySet>
+      <dependencySet>
+         <outputDirectory>lib</outputDirectory>
+         <unpack>false</unpack>
+         <includes>
+             <include>*:v4l4j</include>
+             <include>*:rxtx</include>             
+             <include>*:jdk.dio</include>
+         </includes>
+      </dependencySet>
    </dependencySets>
 
 </assembly>
