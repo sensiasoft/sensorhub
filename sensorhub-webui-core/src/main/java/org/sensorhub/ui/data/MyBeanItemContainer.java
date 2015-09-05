@@ -27,13 +27,21 @@ public class MyBeanItemContainer<BeanType> extends AbstractInMemoryContainer<Obj
 {
     final Map<Object, MyBeanItem<BeanType>> itemIdToItem = new HashMap<Object, MyBeanItem<BeanType>>();
     final MyBeanItem<BeanType> templateItem;
+    final Collection<?> underlyingCollection;
     
     
     public MyBeanItemContainer(Class<BeanType> beanType) throws IllegalArgumentException
     {
+        this(null, beanType);
+    }
+    
+    
+    public MyBeanItemContainer(Collection<?> beanCollection, Class<BeanType> beanType) throws IllegalArgumentException
+    {
         try
         {
-            templateItem = new MyBeanItem<BeanType>(beanType.newInstance());
+            this.underlyingCollection = beanCollection;
+            this.templateItem = new MyBeanItem<BeanType>(beanType.newInstance());
         }
         catch (Exception e)
         {
@@ -110,7 +118,9 @@ public class MyBeanItemContainer<BeanType> extends AbstractInMemoryContainer<Obj
     {
         int removePos = indexOfId(itemId);
         boolean ret = internalRemoveItem(itemId);
-        itemIdToItem.remove(itemId);
+        MyBeanItem<BeanType> item = itemIdToItem.remove(itemId);
+        if (underlyingCollection != null)
+            underlyingCollection.remove(item.getBean());
         fireItemRemoved(removePos, itemId);
         return ret;
     }
@@ -121,6 +131,8 @@ public class MyBeanItemContainer<BeanType> extends AbstractInMemoryContainer<Obj
     {
         super.internalRemoveAllItems();
         itemIdToItem.clear();
+        if (underlyingCollection != null)
+            underlyingCollection.clear();
         this.fireItemsRemoved(0, firstItemId(), size());
         return true;
     }

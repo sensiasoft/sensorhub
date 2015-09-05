@@ -103,8 +103,8 @@ public class MyBeanItem<BeanType> implements Item
             {
                 try
                 {
-                    MyBeanItemContainer<Object> container = new MyBeanItemContainer<Object>(Object.class);
                     Collection<?> listObj = (Collection<?>)f.get(bean);
+                    MyBeanItemContainer<Object> container = new MyBeanItemContainer<Object>(listObj, Object.class);
                     if (listObj != null)
                     {
                         for (Object o: listObj)

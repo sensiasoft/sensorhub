@@ -33,6 +33,7 @@ import com.vaadin.data.Property;
 import com.vaadin.data.fieldgroup.FieldGroup;
 import com.vaadin.data.fieldgroup.FieldGroup.CommitException;
 import com.vaadin.shared.ui.MarginInfo;
+import com.vaadin.ui.AbstractComponent;
 import com.vaadin.ui.AbstractField;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
@@ -48,9 +49,12 @@ import com.vaadin.ui.Label;
 import com.vaadin.ui.ListSelect;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.TabSheet;
+import com.vaadin.ui.TabSheet.CloseHandler;
 import com.vaadin.ui.TabSheet.SelectedTabChangeEvent;
 import com.vaadin.ui.TabSheet.SelectedTabChangeListener;
 import com.vaadin.ui.TabSheet.Tab;
+import com.vaadin.ui.Window.CloseEvent;
+import com.vaadin.ui.Window.CloseListener;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Button.ClickEvent;
@@ -370,8 +374,9 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
         String label = prop.getLabel();
         if (label == null)
             label = DisplayUtils.getPrettyName((String)propId);
-        
+                
         Label sectionLabel = new Label(label);
+        sectionLabel.setDescription(prop.getDescription());
         sectionLabel.addStyleName(STYLE_H3);
         sectionLabel.addStyleName(STYLE_COLORED);
         titleBar.addComponent(sectionLabel);
@@ -388,18 +393,61 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
             subform.build(null, childBeanItem);
             ((MarginHandler)subform).setMargin(new MarginInfo(true, false, true, false));
             allForms.add(subform);
-            tabs.addTab(subform, "Item #" + (i++));
+            Tab tab = tabs.addTab(subform, "Item #" + (i++));
+            tab.setClosable(true);
+            
+            // store item id so we can map a tab with the corresponding bean item
+            ((AbstractComponent)subform).setData(itemId);
         }
         
+        // catch close event to delete item
+        tabs.setCloseHandler(new CloseHandler() {
+            private static final long serialVersionUID = 1L;
+            @Override
+            public void onTabClose(TabSheet tabsheet, Component tabContent)
+            {
+                final Tab tab = tabsheet.getTab(tabContent);
+                
+                final ConfirmDialog popup = new ConfirmDialog("Are you sure you want to delete " + tab.getCaption() + "?</br>All settings will be lost.");
+                popup.addCloseListener(new CloseListener() {
+                    private static final long serialVersionUID = 1L;
+                    @Override
+                    public void windowClose(CloseEvent e)
+                    {
+                        if (popup.isConfirmed())
+                        {                    
+                            // retrieve id of item shown on tab
+                            AbstractComponent tabContent = (AbstractComponent)tab.getComponent();
+                            Object itemId = tabContent.getData();
+                            
+                            // remove from UI
+                            tabs.removeTab(tab);
+                            
+                            // remove from container
+                            prop.getValue().removeItem(itemId);
+                        }
+                    }                        
+                });
+                
+                popup.setModal(true);
+                AdminUI.getInstance().addWindow(popup);
+            }
+        });
+        
+        // catch select event on '+' tab to add new item
         tabs.addSelectedTabChangeListener(new SelectedTabChangeListener() {
             private static final long serialVersionUID = 1L;
             public void selectedTabChange(SelectedTabChangeEvent event)
             {
                 Component selectedTab = event.getTabSheet().getSelectedTab();
                 final Tab tab = tabs.getTab(selectedTab);
-                
+                final int selectedTabPos = tabs.getTabPosition(tab);
+                                
+                // case of + tab to add new item
                 if (tab.getCaption().equals(""))
                 {
+                    tabs.setSelectedTab(selectedTabPos-1);
+                    
                     try
                     {
                         // show popup to select among available module types
@@ -410,15 +458,20 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
                             {
                                 try
                                 {
+                                    // add new item to container
                                     MyBeanItem<Object> childBeanItem = prop.getValue().addBean(objectType.newInstance(), ((String)propId) + PROP_SEP);
                                     prop.setValue(prop.getValue());
+                                    
+                                    // generate form for new item
                                     IModuleConfigForm subform = AdminUI.getInstance().generateForm(childBeanItem.getBean().getClass());
                                     subform.build(null, childBeanItem);
                                     ((MarginHandler)subform).setMargin(new MarginInfo(true, false, true, false));
                                     allForms.add(subform);
-                                    int newTabPos = tabs.getTabPosition(tab);
-                                    tabs.addTab(subform, "Item #" + (newTabPos+1), null, newTabPos);
-                                    tabs.setSelectedTab(newTabPos);
+                                    
+                                    // add new tab and select it
+                                    Tab newTab = tabs.addTab(subform, "Item #" + (selectedTabPos+1), null, selectedTabPos);
+                                    newTab.setClosable(true);
+                                    tabs.setSelectedTab(newTab);
                                 }
                                 catch (Exception e)
                                 {
