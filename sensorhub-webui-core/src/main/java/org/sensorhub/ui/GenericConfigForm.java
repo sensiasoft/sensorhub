@@ -40,12 +40,12 @@ import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.ComponentContainer;
-import com.vaadin.ui.CustomField;
 import com.vaadin.ui.Field;
 import com.vaadin.ui.FormLayout;
 import com.vaadin.ui.GridLayout;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
+import com.vaadin.ui.ListSelect;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.TabSheet;
 import com.vaadin.ui.TabSheet.SelectedTabChangeEvent;
@@ -161,15 +161,18 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
                     }
                     
                     // add to one of the widget lists so we can order by widget type
-                    if (field instanceof Label)
-                        labels.add(field);
-                    else if (field instanceof TextField || field instanceof CustomField)
+                    Class<?> propType = prop.getType();
+                    if (propType.equals(String.class))
                     {
-                        if (prop.getType().equals(String.class))
-                            textBoxes.add(field);
+                        if (field instanceof Label)
+                            labels.add(field);
                         else
-                            numberBoxes.add(field);
+                            textBoxes.add(field);
                     }
+                    else if (Enum.class.isAssignableFrom(propType))
+                        numberBoxes.add(field);
+                    else if (Number.class.isAssignableFrom(propType))
+                        numberBoxes.add(field);
                     else if (field instanceof CheckBox)
                         checkBoxes.add(field);
                     else
@@ -227,6 +230,9 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
                 
         if (field instanceof TextField)
             ((TextField)field).setNullRepresentation("");
+        
+        if (field instanceof ListSelect)
+            ((ListSelect)field).setRows(1);
         
         return field;
     } 

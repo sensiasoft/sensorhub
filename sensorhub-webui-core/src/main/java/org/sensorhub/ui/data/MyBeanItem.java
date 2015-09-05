@@ -185,13 +185,18 @@ public class MyBeanItem<BeanType> implements Item
     
     protected boolean isSimpleType(Field f)
     {
-        if (f.getType().isPrimitive())
+        Class<?> fType = f.getType();
+        
+        if (fType.isPrimitive())
             return true;
         
-        if (Number.class.isAssignableFrom(f.getType()))
+        if (fType == String.class)
             return true;
         
-        if (f.getType() == String.class)
+        if (Number.class.isAssignableFrom(fType))
+            return true;
+        
+        if (Enum.class.isAssignableFrom(fType))
             return true;
         
         return false;
