@@ -16,6 +16,7 @@ package org.sensorhub.impl.service.sos;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.sensorhub.api.config.DisplayInfo;
 import org.sensorhub.api.persistence.StorageConfig;
 import org.sensorhub.impl.service.ogc.OGCServiceConfig;
 
@@ -34,23 +35,27 @@ public class SOSServiceConfig extends OGCServiceConfig
     /**
      * Set to true to enable transactional operation support
      */
+    @DisplayInfo(desc="Set to true to enable transactional operation support")
     public boolean enableTransactional = false;
     
     
     /**
      * Storage configuration to use for newly registered sensors
      */
+    @DisplayInfo(desc="Storage configuration to use for newly registered sensors")
     public StorageConfig newStorageConfig;
     
     
     /**
-     * Providers configurations
+     * Configuration of data providers for SOS offerings
      */
+    @DisplayInfo(label="Offerings", desc="Configuration of data providers for SOS offerings")
     public List<SOSProviderConfig> dataProviders = new ArrayList<SOSProviderConfig>();
     
     
     /**
      * Consumers configurations 
      */
+    @DisplayInfo(desc="Configuration of data consumers for SOS offerings created by SOS-T")
     public List<SOSConsumerConfig> dataConsumers = new ArrayList<SOSConsumerConfig>();
 }

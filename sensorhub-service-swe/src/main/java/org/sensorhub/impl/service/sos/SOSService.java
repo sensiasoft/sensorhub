@@ -870,28 +870,27 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
                     request.getHttpResponse().addHeader("Pragma", "no-cache");                    
                     // set multi-part MIME so that browser can properly decode it in an img tag
                     request.getHttpResponse().setContentType(MIME_TYPE_MULTIPART);
-                }
                 
-                // write each record in output stream
-                DataBlock nextRecord;
-                while ((nextRecord = dataProvider.getNextResultRecord()) != null)
-                {
-                    DataBlock frameBlk = ((DataBlockMixed)nextRecord).getUnderlyingObject()[1];
-                    byte[] frameData = (byte[])frameBlk.getUnderlyingObject();
-                    
-                    if (isRequestForMJpegMimeMultipart(request))
+                    // write each record in output stream
+                    // skip time stamp to provide raw MJPEG
+                    // TODO set timestamp in JPEG metadata
+                    DataBlock nextRecord;
+                    while ((nextRecord = dataProvider.getNextResultRecord()) != null)
                     {
+                        DataBlock frameBlk = ((DataBlockMixed)nextRecord).getUnderlyingObject()[1];
+                        byte[] frameData = (byte[])frameBlk.getUnderlyingObject();
+                        
                         // write MIME boundary
                         os.write(MIME_BOUNDARY_JPEG);
                         os.write(Integer.toString(frameData.length).getBytes());
                         os.write(END_MIME);
+                        
+                        os.write(frameData);
+                        os.flush();
                     }
                     
-                    os.write(frameData);
-                    os.flush();
-                }       
-
-                return true;
+                    return true;
+                }
             }
         }
         
