@@ -15,7 +15,7 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 package org.sensorhub.ui.data;
 
 import java.lang.reflect.Field;
-import java.util.List;
+import java.util.Collection;
 import org.sensorhub.api.config.DisplayInfo;
 
 
@@ -44,23 +44,20 @@ public class ContainerProperty extends BaseProperty<MyBeanItemContainer>
     @Override
     public void setValue(MyBeanItemContainer newValue) throws ReadOnlyException
     {
-        if (List.class.isAssignableFrom(f.getType()))
+        try
         {
-            try
+            Collection list = (Collection)f.get(instance);
+            list.clear();
+            
+            for (Object itemId: container.getItemIds())
             {
-                List list = (List)f.get(instance);
-                list.clear();
-                
-                for (Object itemId: container.getItemIds())
-                {
-                    Object bean = container.getUnfilteredItem(itemId).getBean();
-                    list.add(bean);
-                }
+                Object bean = container.getUnfilteredItem(itemId).getBean();
+                list.add(bean);
             }
-            catch (Exception e)
-            {
-                e.printStackTrace();
-            }
+        }
+        catch (Exception e)
+        {
+            throw new RuntimeException("Error while updating collection");
         }
     }
 

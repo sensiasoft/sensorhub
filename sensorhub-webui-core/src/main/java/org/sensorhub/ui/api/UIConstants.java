@@ -31,6 +31,7 @@ public interface UIConstants
     
     // constants for icon resources
     public static final Resource ADD_ICON = new ThemeResource("icons/add.gif");
+    public static final Resource DEL_ICON = new ThemeResource("icons/remove.gif");
     public static final Resource LINK_ICON = new ThemeResource("icons/link.png");
     public static final Resource APPLY_ICON = new ThemeResource("icons/save.png");
     public static final Resource REFRESH_ICON = new ThemeResource("icons/refresh.gif");

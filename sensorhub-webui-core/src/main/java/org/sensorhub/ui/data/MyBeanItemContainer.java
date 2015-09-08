@@ -14,6 +14,7 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.ui.data;
 
+import java.lang.reflect.Modifier;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -27,26 +28,42 @@ public class MyBeanItemContainer<BeanType> extends AbstractInMemoryContainer<Obj
 {
     final Map<Object, MyBeanItem<BeanType>> itemIdToItem = new HashMap<Object, MyBeanItem<BeanType>>();
     final MyBeanItem<BeanType> templateItem;
-    final Collection<?> underlyingCollection;
+    final Class<? extends BeanType> actualBeanType;
     
     
     public MyBeanItemContainer(Class<BeanType> beanType) throws IllegalArgumentException
     {
-        this(null, beanType);
+        this(null, beanType, MyBeanItem.NO_PREFIX);
     }
     
     
-    public MyBeanItemContainer(Collection<?> beanCollection, Class<BeanType> beanType) throws IllegalArgumentException
+    public MyBeanItemContainer(Collection<?> beanCollection, Class<? extends BeanType> beanType, String prefix) throws IllegalArgumentException
     {
         try
         {
-            this.underlyingCollection = beanCollection;
-            this.templateItem = new MyBeanItem<BeanType>(beanType.newInstance());
+            this.actualBeanType = beanType;
+            if ((beanType.getModifiers() & Modifier.ABSTRACT) == 0)
+                this.templateItem = new MyBeanItem<BeanType>(beanType.newInstance());
+            else
+                this.templateItem = null;
+            
+            // add collection members as bean items
+            if (beanCollection != null)
+            {
+                for (BeanType o: (Collection<BeanType>)beanCollection)
+                    addBean(o, prefix);
+            }
         }
         catch (Exception e)
         {
             throw new RuntimeException(e);
         }
+    }
+    
+    
+    public Class<? extends BeanType> getBeanType()
+    {
+        return actualBeanType;
     }
     
     
@@ -118,9 +135,7 @@ public class MyBeanItemContainer<BeanType> extends AbstractInMemoryContainer<Obj
     {
         int removePos = indexOfId(itemId);
         boolean ret = internalRemoveItem(itemId);
-        MyBeanItem<BeanType> item = itemIdToItem.remove(itemId);
-        if (underlyingCollection != null)
-            underlyingCollection.remove(item.getBean());
+        itemIdToItem.remove(itemId);
         fireItemRemoved(removePos, itemId);
         return ret;
     }
@@ -131,8 +146,6 @@ public class MyBeanItemContainer<BeanType> extends AbstractInMemoryContainer<Obj
     {
         super.internalRemoveAllItems();
         itemIdToItem.clear();
-        if (underlyingCollection != null)
-            underlyingCollection.clear();
         this.fireItemsRemoved(0, firstItemId(), size());
         return true;
     }
