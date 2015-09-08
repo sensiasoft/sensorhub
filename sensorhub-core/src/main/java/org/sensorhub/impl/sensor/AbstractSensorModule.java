@@ -155,7 +155,7 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
     {
         synchronized (sensorDescription)
         {
-            if (!sensorDescription.isSetIdentifier())
+            if (sensorDescription == null || !sensorDescription.isSetIdentifier())
                 updateSensorDescription();
         
             return sensorDescription;

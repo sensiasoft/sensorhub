@@ -33,11 +33,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vast.cdm.common.DataStreamParser;
 import org.vast.ows.OWSException;
+import org.vast.ows.OWSExceptionReader;
 import org.vast.ows.sos.GetResultRequest;
 import org.vast.ows.sos.GetResultTemplateRequest;
 import org.vast.ows.sos.GetResultTemplateResponse;
 import org.vast.ows.sos.SOSUtils;
+import org.vast.ows.swe.DescribeSensorRequest;
+import org.vast.sensorML.SMLUtils;
 import org.vast.swe.SWEHelper;
+import org.vast.xml.DOMHelper;
 
 
 /**
@@ -88,12 +92,37 @@ public class SOSClient
             req.getObservables().addAll(grRequest.getObservables());
             GetResultTemplateResponse resp = sosUtils.<GetResultTemplateResponse> sendRequest(req, false);
             this.dataDescription = resp.getResultStructure();
-            this.dataEncoding = resp.getResultEncoding();            
+            this.dataEncoding = resp.getResultEncoding();
             log.debug("Retrieved observation result template from {}", sosUtils.buildURLQuery(req));
         }
         catch (Exception e)
         {
             throw new SensorHubException("Error while getting observation result template", e);
+        }
+    }
+    
+    
+    public AbstractProcess getSensorDescription(String sensorUID) throws SensorHubException
+    {
+
+        try
+        {
+            DescribeSensorRequest req = new DescribeSensorRequest();
+            req.setGetServer(grRequest.getGetServer());
+            req.setVersion(grRequest.getVersion());
+            req.setProcedureID(sensorUID);            
+            
+            InputStream is = sosUtils.sendGetRequest(req).getInputStream();
+            DOMHelper dom = new DOMHelper(new BufferedInputStream(is), false);
+            OWSExceptionReader.checkException(dom, dom.getBaseElement());
+            AbstractProcess smlDesc = new SMLUtils(SMLUtils.V2_0).readProcess(dom, dom.getBaseElement());
+            log.debug("Retrieved sensor description for sensor {}", sensorUID);
+            
+            return smlDesc;
+        }
+        catch (Exception e)
+        {
+            throw new SensorHubException("Cannot fetch SensorML description for sensor " + sensorUID);
         }
     }
 
@@ -250,11 +279,5 @@ public class SOSClient
     public DataEncoding getRecommendedEncoding()
     {
         return dataEncoding;
-    }
-
-
-    public AbstractProcess getSensorDescription()
-    {
-        return null;
     }
 }

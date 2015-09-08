@@ -42,6 +42,7 @@ import org.vast.util.TimeExtent;
  * Driver for SWE enabled sensors communicating via SOS & SPS standard services.
  * This can also be used to communicate with a sensor deployed on another
  * (usually remote) sensor hub node.
+ * TODO forward full SensorML description
  * </p>
  *
  * @author Alex Robin <alex.robin@sensiasoftware.com>
@@ -72,8 +73,8 @@ public class SWEVirtualSensor extends AbstractSensorModule<SWEVirtualSensorConfi
         if (config.sosEndpointUrl != null && config.observedProperties.size() == 0)
             throw new SensorHubException("At least one observed property must be specified");
     }
-
-
+    
+    
     @Override
     public void start() throws SensorHubException
     {        
@@ -87,68 +88,82 @@ public class SWEVirtualSensor extends AbstractSensorModule<SWEVirtualSensorConfi
         if (config.sosEndpointUrl != null)
         {
             // find matching offering(s) for sensor UID
+            SOSServiceCapabilities caps = null;
             try
             {
                 GetCapabilitiesRequest getCap = new GetCapabilitiesRequest();
                 getCap.setService(SOSUtils.SOS);
                 getCap.setVersion(SOS_VERSION);
                 getCap.setGetServer(config.sosEndpointUrl);
-                SOSServiceCapabilities caps = owsUtils.<SOSServiceCapabilities>sendRequest(getCap, false);
-                
-                int outputNum = 1;
-                sosClients = new ArrayList<SOSClient>(config.observedProperties.size());
-                
-                for (SOSOfferingCapabilities offering: caps.getLayers())
-                {
-                    if (offering.getMainProcedure().equals(config.sensorUID))
-                    {
-                        String offeringID = offering.getIdentifier();
-                        
-                        for (String obsProp: config.observedProperties)
-                        {
-                            if (offering.getObservableProperties().contains(obsProp))
-                            {                            
-                                // create data request
-                                GetResultRequest req = new GetResultRequest();
-                                req.setGetServer(config.sosEndpointUrl);
-                                req.setVersion(SOS_VERSION);
-                                req.setOffering(offeringID);
-                                req.getObservables().add(obsProp);
-                                req.setTime(TimeExtent.getPeriodStartingNow(STREAM_END_TIME));
-                                req.setXmlWrapper(false);
-                                
-                                // create client and retrieve result template
-                                SOSClient sos = new SOSClient(req, config.sosUseWebsockets);
-                                sosClients.add(sos);
-                                sos.retrieveStreamDescription();
-                                DataComponent recordDef = sos.getRecordDescription();
-                                if (recordDef.getName() == null)
-                                    recordDef.setName("output" + outputNum);
-                                outputNum++;
-                                
-                                // create output
-                                final SWEVirtualSensorOutput output = new SWEVirtualSensorOutput(this, recordDef, sos.getRecommendedEncoding());
-                                this.addOutput(output, false);
-                                
-                                sos.startStream(new SOSRecordListener() {
-                                    @Override
-                                    public void newRecord(DataBlock data)
-                                    {
-                                        output.publishNewRecord(data);
-                                    }
-                                });
-                            }
-                        }
-                    }
-                }
-                
-                if (sosClients.isEmpty())
-                    throw new SensorHubException("Observation data for sensor " + config.sensorUID + " is not available from SOS " + config.sosEndpointUrl);
+                caps = owsUtils.<SOSServiceCapabilities>sendRequest(getCap, false);
             }
             catch (OWSException e)
             {
                 throw new SensorHubException("Cannot retrieve SOS capabilities", e);
             }
+            
+            // scan all offerings and connect to selected ones
+            int outputNum = 1;
+            sosClients = new ArrayList<SOSClient>(config.observedProperties.size());            
+            for (SOSOfferingCapabilities offering: caps.getLayers())
+            {
+                if (offering.getMainProcedure().equals(config.sensorUID))
+                {
+                    String offeringID = offering.getIdentifier();
+                    
+                    for (String obsProp: config.observedProperties)
+                    {
+                        if (offering.getObservableProperties().contains(obsProp))
+                        {                            
+                            // create data request
+                            GetResultRequest req = new GetResultRequest();
+                            req.setGetServer(config.sosEndpointUrl);
+                            req.setVersion(SOS_VERSION);
+                            req.setOffering(offeringID);
+                            req.getObservables().add(obsProp);
+                            req.setTime(TimeExtent.getPeriodStartingNow(STREAM_END_TIME));
+                            req.setXmlWrapper(false);
+                            
+                            // create client and retrieve result template
+                            SOSClient sos = new SOSClient(req, config.sosUseWebsockets);
+                            sosClients.add(sos);
+                            sos.retrieveStreamDescription();
+                            DataComponent recordDef = sos.getRecordDescription();
+                            if (recordDef.getName() == null)
+                                recordDef.setName("output" + outputNum);
+                            
+                            // retrieve sensor description from remote SOS if available (first time only)
+                            try
+                            {
+                                if (outputNum == 1 && config.sensorML == null)
+                                    this.sensorDescription = sos.getSensorDescription(config.sensorUID);
+                            }
+                            catch (SensorHubException e)
+                            {
+                                log.warn(e.getMessage());
+                            }
+                            
+                            // create output
+                            final SWEVirtualSensorOutput output = new SWEVirtualSensorOutput(this, recordDef, sos.getRecommendedEncoding());
+                            this.addOutput(output, false);
+                            
+                            sos.startStream(new SOSRecordListener() {
+                                @Override
+                                public void newRecord(DataBlock data)
+                                {
+                                    output.publishNewRecord(data);
+                                }
+                            });
+                            
+                            outputNum++;
+                        }
+                    }
+                }
+            }
+            
+            if (sosClients.isEmpty())
+                throw new SensorHubException("Requested observation data is not available from SOS " + config.sosEndpointUrl +
+                                             ". Check Sensor UID and observed properties have valid values." );
         }
         
         // create and start SPS client
@@ -189,7 +204,21 @@ public class SWEVirtualSensor extends AbstractSensorModule<SWEVirtualSensorConfi
 
             sosClients = null;
         }
-    }    
+    }
+    
+    
+    @Override
+    protected void updateSensorDescription()
+    {
+        synchronized (sensorDescription)
+        {
+            super.updateSensorDescription();
+            
+            // if no sensor description was obtained from remote SOS, just set identifier
+            sensorDescription.setId("SWE_SENSOR");
+            sensorDescription.setUniqueIdentifier(config.sensorUID);
+        }
+    }
 
 
     @Override
