@@ -1,3 +1,4 @@
 org.sensorhub.impl.service.sos.SOSModuleDescriptor
 org.sensorhub.impl.service.sps.SPSModuleDescriptor
 org.sensorhub.impl.client.sost.SOSTClientModuleDescriptor
+org.sensorhub.impl.sensor.swe.SWEVirtualSensorDescriptor

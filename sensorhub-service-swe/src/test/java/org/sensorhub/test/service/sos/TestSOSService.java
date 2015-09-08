@@ -19,6 +19,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.InputStream;
+import java.io.StringWriter;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -310,8 +311,17 @@ public class TestSOSService
     {
         deployService(buildSensorProvider1(), buildSensorProvider2());
         
-        InputStream is = new URL(SERVICE_ENDPOINT + "?service=SOS&version=2.0&request=GetResult&offering=urn:mysos:sensor1&observedProperty=urn:blabla:temperature").openStream();
-        IOUtils.copy(is, System.out);
+        InputStream is = new URL(SERVICE_ENDPOINT + 
+                "?service=SOS&version=2.0&request=GetResult" + 
+                "&offering=" + URI_OFFERING1 +
+                "&observedProperty=" + URI_PROP1 + 
+                "&temporalfilter=time,now/2055-09-05").openStream();
+        
+        StringWriter writer = new StringWriter();
+        IOUtils.copy(is, writer);
+        System.out.println(writer.toString());
+        
+        assertEquals("Wrong number of records returned", NUM_GEN_SAMPLES, writer.toString().split("\n").length);
     }
     
     
