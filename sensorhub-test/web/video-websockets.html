@@ -16,15 +16,16 @@
       var imgTag = document.getElementById("video");
       // query video stream from SOS using websockets
       var currentUrl = window.location;
-      ws = new WebSocket("ws://" + currentUrl.host + "/sensorhub/sos?service=SOS&version=2.0&request=GetResult&offering=urn:android:device:a0e0eac2fea3f614-sos&observedProperty=http://sensorml.com/ont/swe/property/VideoFrame&temporalFilter=phenomenonTime,now/2055-06-01");
-      ws.binaryType = 'blob';
+      ws = new WebSocket("ws://" + currentUrl.host + "/sensorhub/sos?service=SOS&version=2.0&request=GetResult&offering=urn:android:device:060693280a28e015-sos&observedProperty=http://sensorml.com/ont/swe/property/VideoFrame&temporalFilter=phenomenonTime,2015-02-16T07:58:00Z/2015-02-16T08:09:00Z&replaySpeed=10");
+      ws.binaryType = 'arraybuffer';
       ws.onmessage = function (event) {
-          //event.data.type = "image/jpeg";
-          var blobURL = window.URL.createObjectURL(event.data);
+          var timeStamp = new DataView(event.data).getFloat64(0, false); // read double time stamp as big endian
+          var imgBlob = new Blob([event.data]);
+          var blobURL = window.URL.createObjectURL(imgBlob.slice(12)); // JPEG image starts at offset 12 after 8-bytes time stamp and 4-bytes image length
           var oldBlobURL = imgTag.src;          
           imgTag.src = blobURL;
           window.URL.revokeObjectURL(oldBlobURL);
-          document.getElementById("text").innerHTML = blobURL + " size=" + event.data.size;
+          document.getElementById("text").innerHTML = "image time: " + new Date(timeStamp * 1000).toISOString();
       }
       ws.onerror = function (event) {
           ws.close();
