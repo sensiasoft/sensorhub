@@ -21,7 +21,9 @@ import java.util.List;
 import java.util.Locale;
 import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataComponent;
+import net.opengis.swe.v20.DataRecord;
 import net.opengis.swe.v20.ScalarComponent;
+import net.opengis.swe.v20.Vector;
 import org.sensorhub.api.module.ModuleConfig;
 import org.sensorhub.api.persistence.DataFilter;
 import org.sensorhub.api.persistence.IRecordStoreInfo;
@@ -35,7 +37,7 @@ import org.tltv.gantt.client.shared.SubStep;
 import org.vast.swe.SWEConstants;
 import org.vast.swe.ScalarIndexer;
 import org.vast.util.DateTimeFormat;
-import com.vaadin.data.util.converter.StringToDoubleConverter;
+import com.vaadin.data.util.converter.Converter;
 import com.vaadin.shared.ui.label.ContentMode;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
@@ -210,34 +212,7 @@ public class StorageAdminPanel extends DefaultModulePanel<IRecordStorageModule<?
         // add column names
         List<ScalarIndexer> indexers = new ArrayList<ScalarIndexer>();
         DataComponent recordDef = recordInfo.getRecordDescription();
-        for (int i = 0; i < recordDef.getComponentCount(); i++)
-        {
-            DataComponent child = recordDef.getComponent(i);
-            if (child instanceof ScalarComponent)
-            {
-                // add column names
-                String propId = child.getName();
-                String label = getPrettyName(child);
-                table.addContainerProperty(propId, Double.class, null, label, null, null);
-                
-                // correct time formatting
-                if (child.getDefinition().equals(SWEConstants.DEF_SAMPLING_TIME))
-                {
-                    table.setConverter(propId, new StringToDoubleConverter() {
-                        private static final long serialVersionUID = 1L;
-                        DateTimeFormat dateFormat = new DateTimeFormat();
-                        public String convertToPresentation(Double value, Class<? extends String> targetType, Locale locale) throws ConversionException
-                        {
-                            return dateFormat.formatIso(value, 0);
-                        }
-                        
-                    });
-                }
-                
-                // prepare indexer for reading from datablocks
-                indexers.add(new ScalarIndexer(recordDef, (ScalarComponent)child));
-            }
-        }
+        addColumns(recordDef, recordDef, table, indexers);
         
         // add data
         Iterator<DataBlock> it = storage.getDataBlockIterator(new DataFilter(recordInfo.getName()));
@@ -249,13 +224,67 @@ public class StorageAdminPanel extends DefaultModulePanel<IRecordStorageModule<?
             
             Object[] values = new Object[indexers.size()];
             for (int i=0; i<values.length; i++)
-                values[i] = indexers.get(i).getDoubleValue(dataBlk);
+                values[i] = indexers.get(i).getStringValue(dataBlk);
             
             table.addItem(values, count);
             count++;
         }
         
         return table;
+    }
+    
+    
+    protected void addColumns(DataComponent recordDef, DataComponent component, Table table, List<ScalarIndexer> indexers)
+    {
+        if (component instanceof ScalarComponent)
+        {
+            // add column names
+            String propId = component.getName();
+            String label = getPrettyName(component);
+            table.addContainerProperty(propId, String.class, null, label, null, null);
+            
+            // correct time formatting
+            String def = component.getDefinition();
+            if (def != null && def.equals(SWEConstants.DEF_SAMPLING_TIME))
+            {
+                table.setConverter(propId, new Converter<String, String>() {
+                    private static final long serialVersionUID = 1L;
+                    DateTimeFormat dateFormat = new DateTimeFormat();
+                    public String convertToPresentation(String value, Class<? extends String> targetType, Locale locale) throws ConversionException
+                    {
+                        return dateFormat.formatIso(Double.parseDouble(value), 0);
+                    }
+                    @Override
+                    public String convertToModel(String value, Class<? extends String> targetType, Locale locale) throws com.vaadin.data.util.converter.Converter.ConversionException
+                    {
+                        return null;
+                    }
+                    @Override
+                    public Class<String> getModelType()
+                    {
+                        return String.class;
+                    }
+                    @Override
+                    public Class<String> getPresentationType()
+                    {
+                        return String.class;
+                    }                        
+                });
+            }
+            
+            // prepare indexer for reading from datablocks
+            indexers.add(new ScalarIndexer(recordDef, (ScalarComponent)component));
+        }
+        
+        // call recursively for records
+        else if (component instanceof DataRecord || component instanceof Vector)
+        {
+            for (int i = 0; i < component.getComponentCount(); i++)
+            {
+                DataComponent child = component.getComponent(i);
+                addColumns(recordDef, child, table, indexers);
+            }
+        }
     }
     
     
