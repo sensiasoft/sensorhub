@@ -105,5 +105,10 @@
         <artifactId>sensorhub-service-sensorthings</artifactId>
         <version>0.1-SNAPSHOT</version>
      </dependency>
+     <dependency>
+        <groupId>org.sensorhub</groupId>
+        <artifactId>sensorhub-driver-avl-911</artifactId>
+        <version>0.1-SNAPSHOT</version>
+     </dependency>
   </dependencies>
 </project>

@@ -62,16 +62,6 @@
                <type>jar</type>
             </dependency>
          </dependencies>
-         <build>
-            <resources>
-               <resource>
-                 <directory>src/scripts</directory>
-                 <includes>
-                   <include>**/*</include>
-                 </includes>
-               </resource>
-            </resources>
-         </build>
       </profile>
       <profile>
          <id>sensors</id>
@@ -82,52 +72,127 @@
             <dependency>
                <groupId>org.sensorhub</groupId>
                <artifactId>sensorhub-comm-rxtx</artifactId>
-               <version>[0.1,)</version>
+               <version>[0.1-SNAPSHOT,)</version>
+               <exclusions>
+                 <exclusion>
+                   <groupId>org.sensorhub</groupId>
+                   <artifactId>sensorhub-core</artifactId>
+                 </exclusion>
+               </exclusions> 
             </dependency>
             <dependency>
                <groupId>org.sensorhub</groupId>
                <artifactId>sensorhub-comm-dio</artifactId>
-               <version>[0.1,)</version>
+               <version>[0.1-SNAPSHOT,)</version>
+               <exclusions>
+                 <exclusion>
+                   <groupId>org.sensorhub</groupId>
+                   <artifactId>sensorhub-core</artifactId>
+                 </exclusion>
+               </exclusions> 
             </dependency>
             <dependency>
                <groupId>org.sensorhub</groupId>
                <artifactId>sensorhub-process-vecmath</artifactId>
                <version>[0.1-SNAPSHOT,)</version>
+               <exclusions>
+                 <exclusion>
+                   <groupId>org.sensorhub</groupId>
+                   <artifactId>sensorhub-core</artifactId>
+                 </exclusion>
+               </exclusions> 
             </dependency>
             <dependency>
                <groupId>org.sensorhub</groupId>
                <artifactId>sensorhub-process-geoloc</artifactId>
                <version>[0.1-SNAPSHOT,)</version>
+               <exclusions>
+                 <exclusion>
+                   <groupId>org.sensorhub</groupId>
+                   <artifactId>sensorhub-core</artifactId>
+                 </exclusion>
+                 <exclusion>
+                   <groupId>org.vast.opengis</groupId>
+                   <artifactId>ows-framework-bindings</artifactId>
+                 </exclusion>
+               </exclusions> 
             </dependency>
             <dependency>
                <groupId>org.sensorhub</groupId>
                <artifactId>sensorhub-driver-v4l</artifactId>
-               <version>[0.1,)</version>
+               <version>[0.1-SNAPSHOT,)</version>
+               <exclusions>
+                 <exclusion>
+                   <groupId>org.sensorhub</groupId>
+                   <artifactId>sensorhub-core</artifactId>
+                 </exclusion>
+               </exclusions> 
             </dependency>
             <dependency>
                <groupId>org.sensorhub</groupId>
                <artifactId>sensorhub-driver-axis</artifactId>
-               <version>[0.1,)</version>
+               <version>[0.1-SNAPSHOT,)</version>
+               <exclusions>
+                 <exclusion>
+                   <groupId>org.sensorhub</groupId>
+                   <artifactId>sensorhub-core</artifactId>
+                 </exclusion>
+               </exclusions> 
             </dependency>
             <dependency>
                <groupId>org.sensorhub</groupId>
                <artifactId>sensorhub-driver-weatherStation</artifactId>
-               <version>[0.1,)</version>
+               <version>[0.1-SNAPSHOT,)</version>
+               <exclusions>
+                 <exclusion>
+                   <groupId>org.sensorhub</groupId>
+                   <artifactId>sensorhub-core</artifactId>
+                 </exclusion>
+               </exclusions> 
             </dependency>
             <dependency>
                <groupId>org.sensorhub</groupId>
                <artifactId>sensorhub-driver-mti</artifactId>
-               <version>[0.1,)</version>
+               <version>[0.1-SNAPSHOT,)</version>
+               <exclusions>
+                 <exclusion>
+                   <groupId>org.sensorhub</groupId>
+                   <artifactId>sensorhub-core</artifactId>
+                 </exclusion>
+               </exclusions> 
             </dependency>
             <dependency>
                <groupId>org.sensorhub</groupId>
                <artifactId>sensorhub-driver-trupulse</artifactId>
-               <version>[0.1,)</version>
+               <version>[0.1-SNAPSHOT,)</version>
+               <exclusions>
+                 <exclusion>
+                   <groupId>org.sensorhub</groupId>
+                   <artifactId>sensorhub-core</artifactId>
+                 </exclusion>
+               </exclusions> 
             </dependency>
             <dependency>
                <groupId>org.sensorhub</groupId>
                <artifactId>sensorhub-driver-gps-nmea</artifactId>
-               <version>[0.1,)</version>
+               <version>[0.1-SNAPSHOT,)</version>
+               <exclusions>
+                 <exclusion>
+                   <groupId>org.sensorhub</groupId>
+                   <artifactId>sensorhub-core</artifactId>
+                 </exclusion>
+               </exclusions> 
+            </dependency>
+            <dependency>
+               <groupId>org.sensorhub</groupId>
+               <artifactId>sensorhub-driver-avl-911</artifactId>
+               <version>[0.1-SNAPSHOT,)</version>
+               <exclusions>
+                 <exclusion>
+                   <groupId>org.sensorhub</groupId>
+                   <artifactId>sensorhub-core</artifactId>
+                 </exclusion>
+               </exclusions> 
             </dependency>
          </dependencies>
       </profile>
@@ -142,7 +207,7 @@
                <descriptors>
                   <descriptor>src/assembly/bin-${distType}.xml</descriptor>
                </descriptors>
-               <finalName>sensorhub-${distType}-v${project.version}</finalName>
+               <finalName>sensorhub-v${project.version}</finalName>
             </configuration>
             <executions>
                <execution>
