@@ -41,7 +41,7 @@
     "storageConfig":    
     {
       "objClass": "org.sensorhub.impl.persistence.perst.BasicStorageConfig",
-      "moduleClass": "org.sensorhub.impl.persistence.perst.ObsStorageImpl",
+      "moduleClass": "org.sensorhub.impl.persistence.perst.MultiEntityStorageImpl",
       "memoryCacheSize": 1024,
       "storagePath": "avl.dat"
     }

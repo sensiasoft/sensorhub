@@ -195,7 +195,7 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
         if (dataSource instanceof IMultiSourceDataProducer && storage instanceof IMultiSourceStorage)
         {
             for (String entityID: ((IMultiSourceDataProducer)dataSource).getEntityIDs())
-                addProducerInfo(entityID);
+                ensureProducerInfo(entityID);
         }
         else
         {
@@ -207,11 +207,12 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
                 if (foi != null)
                     ((IObsStorage)storage).storeFoi(producerID, foi);
             }
-            
-            // create one data store for each sensor output
-            for (IStreamingDataInterface output: getSelectedOutputs(dataSource))
-                storage.addRecordStore(output.getName(), output.getRecordDescription(), output.getRecommendedEncoding());
         }
+        
+        // create one data store for each sensor output
+        // we do that in multi source storage even if it's also done in each provider data store
+        for (IStreamingDataInterface output: getSelectedOutputs(dataSource))
+            storage.addRecordStore(output.getName(), output.getRecordDescription(), output.getRecommendedEncoding());
     }
     
     
@@ -235,7 +236,7 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
     }
     
     
-    protected void addProducerInfo(String producerID)
+    protected void ensureProducerInfo(String producerID)
     {
         if (storage instanceof IMultiSourceStorage)
         {
@@ -248,8 +249,10 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
                 // create producer data store
                 IBasicStorage dataStore = ((IMultiSourceStorage<IBasicStorage>)storage).addDataStore(producerID);
                 
-                // save producer SensorML description
-                dataStore.storeDataSourceDescription(((IMultiSourceDataProducer) dataSource).getCurrentDescription(producerID));
+                // save producer SensorML description if any
+                AbstractProcess sml = ((IMultiSourceDataProducer) dataSource).getCurrentDescription(producerID);
+                if (sml != null)
+                    dataStore.storeDataSourceDescription(sml);
                 
                 // save current FOI
                 AbstractFeature foi = ((IMultiSourceDataProducer) dataSource).getCurrentFeatureOfInterest(producerID);
@@ -339,7 +342,7 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
                     String entityID = dataEvent.getRelatedEntityID();
                     if (entityID != null)
                     {
-                        addProducerInfo(entityID); // to handle new producer
+                        ensureProducerInfo(entityID); // to handle new producer
                         foiID = currentFoiMap.get(entityID);
                     }
                     else
@@ -386,8 +389,13 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
                 
                 // store feature object if specified
                 if (foiEvent.getFoi() != null)
+                {
+                    if (producerID != null)
+                        ensureProducerInfo(producerID); // in case no data has been received for this producer yet
                     ((IObsStorage) storage).storeFoi(producerID, foiEvent.getFoi());
+                }
                 
+                // also remember as current FOI
                 if (producerID != null)
                     currentFoiMap.put(producerID, foiEvent.getFoiID());
                 else

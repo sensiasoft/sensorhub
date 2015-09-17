@@ -32,6 +32,7 @@ public interface IMultiSourceDataProducer
      * Retrieves the most current SensorML description of the given entity.
      * @param entityID unique ID of the desired entity (e.g. sensor in a network)
      * @return AbstractProcess SensorML description of the data producing entity
+     * or null if no description is available
      */
     public AbstractProcess getCurrentDescription(String entityID);
     
@@ -40,7 +41,8 @@ public interface IMultiSourceDataProducer
      * Used to check when SensorML description of the given entity was last updated.
      * This is useful to avoid requesting the object when it hasn't changed.
      * @param entityID unique ID of the desired entity (e.g. sensor in a network)
-     * @return Date/time of last description update as julian time (1970)
+     * @return Date/time of last description update as julian time (1970) or
+     * {@link Long#MIN_VALUE} if description was never updated.
      */
     public double getLastDescriptionUpdate(String entityID);
     
