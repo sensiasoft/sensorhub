@@ -83,12 +83,20 @@ public class FoiEvent extends EntityEvent<Type>
 	}
 	
 	
-	public FoiEvent(long timeStamp, String sensorID, IDataProducerModule<?> srcModule, String foiID, double startTime)
+	/**
+     * Creates a {@link Type#NEW_FOI} event with only the feature ID for a specific entity
+     * @param timeStamp time of event generation (unix time in milliseconds, base 1970)
+	 * @param entityID Unique ID of entity observing the FOI identified by foiID
+     * @param srcModule module that generated the event
+     * @param foiID ID of feature of interest
+     * @param startTime time at which observation of the FoI started (julian time in seconds, base 1970)
+     */
+    public FoiEvent(long timeStamp, String entityID, IDataProducerModule<?> srcModule, String foiID, double startTime)
     {
         this.type = Type.NEW_FOI;
         this.timeStamp = timeStamp;
         this.source = srcModule;
-        this.relatedEntityID = sensorID;
+        this.relatedEntityID = entityID;
         this.foiID = foiID;
     }
 	
@@ -108,12 +116,20 @@ public class FoiEvent extends EntityEvent<Type>
     }
 	
 	
-	public FoiEvent(long timeStamp, String sensorID, IDataProducerModule<?> srcModule, AbstractFeature foi, double startTime)
+	/**
+     * Creates a {@link Type#NEW_FOI} event with an attached feature object for a specific entity
+     * @param timeStamp time of event generation (unix time in milliseconds, base 1970)
+	 * @param entityID Unique ID of entity observing the attached FOI
+     * @param srcModule module that generated the event
+     * @param foi feature object
+     * @param startTime time at which observation of the FoI started (julian time in seconds, base 1970)
+     */
+    public FoiEvent(long timeStamp, String entityID, IDataProducerModule<?> srcModule, AbstractFeature foi, double startTime)
     {
         this.type = Type.NEW_FOI;
         this.timeStamp = timeStamp;
         this.source = srcModule;
-        this.relatedEntityID = sensorID;
+        this.relatedEntityID = entityID;
         this.foi = foi;
         this.foiID = foi.getUniqueIdentifier();
         this.startTime = startTime;
