@@ -99,8 +99,9 @@ public abstract class StreamDataProviderFactory<ProducerType extends IDataProduc
             
             // phenomenon time
             TimeExtent phenTime = new TimeExtent();
-            phenTime.setBaseAtNow(true);
-            phenTime.setTimeStep(getLowestSamplingPeriodFromProducer());
+            phenTime.setBeginNow(true);
+            phenTime.setEndNow(true);
+            //phenTime.setTimeStep(getLowestSamplingPeriodFromProducer());
             caps.setPhenomenonTime(phenTime);
         
             // use producer uniqueID as procedure ID

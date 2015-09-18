@@ -61,11 +61,14 @@ public class StreamWithStorageProviderFactory<ProducerType extends IDataProducer
         // enable real-time requests only if streaming data source is enabled
         if (producer.isEnabled())
         {
-            TimeExtent storageTimeExtent = caps.getPhenomenonTime();
-            if (storageTimeExtent.isNull())
-                caps.getPhenomenonTime().setBaseAtNow(true);
+            TimeExtent timeExtent = caps.getPhenomenonTime();
+            if (timeExtent.isNull())
+            {
+                timeExtent.setBeginNow(true);
+                timeExtent.setEndNow(true);
+            }
             else            
-                caps.getPhenomenonTime().setEndNow(true);        
+                timeExtent.setEndNow(true);        
         }
         
         return capabilities;
