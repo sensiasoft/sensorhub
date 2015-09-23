@@ -1,0 +1,8 @@
+org.sensorhub.impl.client.sos
+org.sensorhub.impl.client.sost
+org.sensorhub.impl.client.sps
+org.sensorhub.impl.sensor.sost
+org.sensorhub.impl.sensor.swe
+org.sensorhub.impl.service.sos
+org.sensorhub.impl.service.sps
+org.sensorhub.impl.service.wsn
