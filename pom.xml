@@ -48,6 +48,7 @@
             <module>sensorhub-driver-mti</module>
             <module>sensorhub-driver-trupulse</module>
             <module>sensorhub-driver-gps-nmea</module>
+            <module>sensorhub-driver-avl-911</module>
          </modules>
       </profile>
    </profiles>
