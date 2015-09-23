@@ -1,0 +1,50 @@
+pre {
+    white-space: pre;
+    word-wrap: initial;
+    word-break: initial;
+    overflow-x: auto;
+}
+
+.navbar .brand {
+    background-image: url("../images/logo.png");
+    background-size: 48px auto;
+    background-repeat: no-repeat;
+    background-position: left center;
+    margin-left: 0;
+    padding-left: 60px;
+}
+
+.subhead h1 {
+    line-height: 50px;
+}
+
+.section h2 {
+    margin-top: 40px;
+}
+
+.section h3 {
+    line-height: 26px;
+    margin-top: 40px;
+}
+
+.section h4 {
+    margin-top: 20px;
+}
+
+.section img {
+    display: block;
+    margin: 20px auto 20px auto;
+}
+
+h1[id]:before, h2[id]:before {
+    margin: -110px 0 0;
+}
+
+footer.well {
+    margin-top: 40px;
+    padding: 0 0;
+}
+
+.color-highlight {
+    color: #225e9b;
+}
