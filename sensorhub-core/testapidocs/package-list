@@ -1,0 +1,7 @@
+org.sensorhub.test
+org.sensorhub.test.module
+org.sensorhub.test.osgi
+org.sensorhub.test.persistence
+org.sensorhub.test.processing
+org.sensorhub.test.sensor
+org.sensorhub.test.service
