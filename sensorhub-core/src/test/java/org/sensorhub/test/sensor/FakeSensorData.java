@@ -65,22 +65,13 @@ public class FakeSensorData extends AbstractSensorOutput<FakeSensor> implements 
     
     public FakeSensorData(FakeSensor sensor, final String name, final int bufferSize, final double samplingPeriod, final int maxSampleCount)
     {
-        super(sensor);
+        super(name, sensor);
         this.name = name;
         this.bufferSize = bufferSize;
         this.samplingPeriod = samplingPeriod;
         this.dataQueue = new LinkedBlockingDeque<DataBlock>(bufferSize);
-        this.maxSampleCount = maxSampleCount;
-        this.eventHandler = new BasicEventHandler();
-        
+        this.maxSampleCount = maxSampleCount;        
         init();
-    }
-    
-    
-    @Override
-    public String getName()
-    {
-        return name;
     }
 
 

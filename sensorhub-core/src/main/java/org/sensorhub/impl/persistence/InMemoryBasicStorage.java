@@ -44,7 +44,6 @@ import org.sensorhub.api.persistence.StorageConfig;
 import org.sensorhub.api.persistence.StorageEvent;
 import org.sensorhub.api.persistence.StorageEvent.Type;
 import org.sensorhub.api.persistence.StorageException;
-import org.sensorhub.impl.common.BasicEventHandler;
 import org.sensorhub.impl.module.AbstractModule;
 
 
@@ -62,12 +61,10 @@ public class InMemoryBasicStorage extends AbstractModule<StorageConfig> implemen
 {
     Map<String, TimeSeriesImpl> dataStores = new LinkedHashMap<String, TimeSeriesImpl>();
     List<AbstractProcess> dataSourceDescriptions = new ArrayList<AbstractProcess>();
-    BasicEventHandler eventHandler;
     
     
     public InMemoryBasicStorage()
     {
-        this.eventHandler = new BasicEventHandler();
     }
     
     

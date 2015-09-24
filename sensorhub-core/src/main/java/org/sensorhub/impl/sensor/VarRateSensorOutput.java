@@ -29,13 +29,20 @@ import org.sensorhub.api.sensor.ISensorModule;
  */
 public abstract class VarRateSensorOutput<SensorType extends ISensorModule<?>> extends AbstractSensorOutput<SensorType>
 {
-    double avgSamplingPeriod = 100;
+    double avgSamplingPeriod = 10.0;
     int avgSampleCount = 0;
     
     
     public VarRateSensorOutput(SensorType parentSensor, double initialSamplingPeriod)
     {
-        super(parentSensor);
+        this(null, parentSensor,initialSamplingPeriod);
+    }
+    
+    
+    public VarRateSensorOutput(String name, SensorType parentSensor, double initialSamplingPeriod)
+    {
+        super(name, parentSensor);
+        this.avgSamplingPeriod = initialSamplingPeriod;
     }
     
     

@@ -35,7 +35,7 @@ import org.sensorhub.api.module.IModuleStateManager;
 import org.sensorhub.api.module.ModuleEvent;
 import org.sensorhub.api.service.IServiceModule;
 import org.sensorhub.impl.SensorHub;
-import org.sensorhub.impl.common.BasicEventHandler;
+import org.sensorhub.impl.common.EventBus;
 import org.sensorhub.impl.service.HttpServer;
 import org.sensorhub.impl.service.ogc.OGCServiceConfig.CapabilitiesInfo;
 import org.slf4j.Logger;
@@ -85,7 +85,6 @@ public class SPSService extends OWSServlet implements IServiceModule<SPSServiceC
     
     public SPSService()
     {
-        this.eventHandler = new BasicEventHandler();
         this.owsUtils = new SPSUtils();
     }
     
@@ -94,6 +93,7 @@ public class SPSService extends OWSServlet implements IServiceModule<SPSServiceC
     public void init(SPSServiceConfig config) throws SensorHubException
     {
         this.config = config;
+        this.eventHandler = EventBus.getInstance().registerProducer(config.id);
     }
 
 

@@ -21,7 +21,7 @@ import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.sensor.ISensorDataInterface;
 import org.sensorhub.api.sensor.ISensorModule;
 import org.sensorhub.api.sensor.SensorException;
-import org.sensorhub.impl.common.BasicEventHandler;
+import org.sensorhub.impl.common.EventBus;
 import org.sensorhub.utils.MsgUtils;
 
 
@@ -39,6 +39,7 @@ public abstract class AbstractSensorOutput<SensorType extends ISensorModule<?>> 
 {
     protected static String ERROR_NO_STORAGE = "Data storage is not supported by driver ";
     protected SensorType parentSensor;
+    protected String name;
     protected IEventHandler eventHandler;
     protected DataBlock latestRecord;
     protected long latestRecordTime = Long.MIN_VALUE;
@@ -46,8 +47,19 @@ public abstract class AbstractSensorOutput<SensorType extends ISensorModule<?>> 
     
     public AbstractSensorOutput(SensorType parentSensor)
     {
+        this(null, parentSensor);
+    }
+    
+    
+    public AbstractSensorOutput(String name, SensorType parentSensor)
+    {
+        this.name = name;
         this.parentSensor = parentSensor;
-        this.eventHandler = new BasicEventHandler();
+        
+        // obtain an event handler for this output
+        String moduleID = parentSensor.getLocalID();
+        String topic = getName();
+        this.eventHandler = EventBus.getInstance().registerProducer(moduleID, topic);
     }
     
     
@@ -64,6 +76,13 @@ public abstract class AbstractSensorOutput<SensorType extends ISensorModule<?>> 
     public SensorType getParentModule()
     {
         return parentSensor;
+    }
+    
+    
+    @Override
+    public String getName()
+    {
+        return name;
     }
 
 

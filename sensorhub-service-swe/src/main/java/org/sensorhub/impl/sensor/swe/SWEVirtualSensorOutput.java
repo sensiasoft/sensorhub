@@ -33,7 +33,7 @@ public class SWEVirtualSensorOutput extends VarRateSensorOutput<SWEVirtualSensor
     
     public SWEVirtualSensorOutput(SWEVirtualSensor sensor, DataComponent recordStructure, DataEncoding recordEncoding)
     {
-        super(sensor, 1.0);
+        super(recordStructure.getName(), sensor, 1.0);
         this.recordStructure = recordStructure;
         this.recordEncoding = recordEncoding;
         
@@ -48,13 +48,6 @@ public class SWEVirtualSensorOutput extends VarRateSensorOutput<SWEVirtualSensor
     protected void init() throws SensorException
     {
         
-    }
-
-
-    @Override
-    public String getName()
-    {
-        return recordStructure.getName();
     }
 
 
