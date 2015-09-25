@@ -1,0 +1,15 @@
+net.opengis
+net.opengis.swe.v20
+net.opengis.swe.v20.bind
+org.vast.cdm.common
+org.vast.cdm.semantics
+org.vast.data
+org.vast.ogc
+org.vast.ogc.def
+org.vast.ogc.gml
+org.vast.ogc.xlink
+org.vast.swe
+org.vast.unit
+org.vast.util
+org.vast.xml
+org.vast.xml.transform

@@ -1,0 +1,11 @@
+net.opengis.sensorml.v20
+net.opengis.sensorml.v20.bind
+net.opengis.sensorml.v20.impl
+org.isotc211.v2005.gco
+org.isotc211.v2005.gco.bind
+org.isotc211.v2005.gco.impl
+org.isotc211.v2005.gmd
+org.isotc211.v2005.gmd.bind
+org.isotc211.v2005.gmd.impl
+org.vast.process
+org.vast.sensorML

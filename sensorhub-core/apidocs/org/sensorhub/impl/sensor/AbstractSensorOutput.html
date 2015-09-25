@@ -162,20 +162,20 @@ implements <a href="../../../../org/sensorhub/api/sensor/ISensorDataInterface.ht
 </td>
 </tr>
 <tr class="rowColor">
-<td class="colFirst"><code><a href="http://docs.oracle.com/javase/7/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</a>&lt;<a href="https://github.com/sensiasoft/lib-swe-common/tree/master/swe-common-core/apidocs/net/opengis/swe/v20/DataBlock.html?is-external=true" title="class or interface in net.opengis.swe.v20">DataBlock</a>&gt;</code></td>
+<td class="colFirst"><code><a href="http://docs.oracle.com/javase/7/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</a>&lt;<a href="http://docs.opensensorhub.org/swe-common-core/apidocs/net/opengis/swe/v20/DataBlock.html?is-external=true" title="class or interface in net.opengis.swe.v20">DataBlock</a>&gt;</code></td>
 <td class="colLast"><code><strong><a href="../../../../org/sensorhub/impl/sensor/AbstractSensorOutput.html#getAllRecords(boolean)">getAllRecords</a></strong>(boolean&nbsp;clear)</code>
 <div class="block">Retrieves all records stored by the driver or sensor.<br/>
  This method must be implemented if <a href="../../../../org/sensorhub/api/sensor/ISensorDataInterface.html#isStorageSupported()"><code>ISensorDataInterface.isStorageSupported()</code></a> returns true.</div>
 </td>
 </tr>
 <tr class="altColor">
-<td class="colFirst"><code><a href="https://github.com/sensiasoft/lib-swe-common/tree/master/swe-common-core/apidocs/net/opengis/swe/v20/DataBlock.html?is-external=true" title="class or interface in net.opengis.swe.v20">DataBlock</a></code></td>
+<td class="colFirst"><code><a href="http://docs.opensensorhub.org/swe-common-core/apidocs/net/opengis/swe/v20/DataBlock.html?is-external=true" title="class or interface in net.opengis.swe.v20">DataBlock</a></code></td>
 <td class="colLast"><code><strong><a href="../../../../org/sensorhub/impl/sensor/AbstractSensorOutput.html#getLatestRecord()">getLatestRecord</a></strong>()</code>
 <div class="block">Gets the latest record received on this data channel.</div>
 </td>
 </tr>
 <tr class="rowColor">
-<td class="colFirst"><code><a href="http://docs.oracle.com/javase/7/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</a>&lt;<a href="https://github.com/sensiasoft/lib-swe-common/tree/master/swe-common-core/apidocs/net/opengis/swe/v20/DataBlock.html?is-external=true" title="class or interface in net.opengis.swe.v20">DataBlock</a>&gt;</code></td>
+<td class="colFirst"><code><a href="http://docs.oracle.com/javase/7/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</a>&lt;<a href="http://docs.opensensorhub.org/swe-common-core/apidocs/net/opengis/swe/v20/DataBlock.html?is-external=true" title="class or interface in net.opengis.swe.v20">DataBlock</a>&gt;</code></td>
 <td class="colLast"><code><strong><a href="../../../../org/sensorhub/impl/sensor/AbstractSensorOutput.html#getLatestRecords(int,%20boolean)">getLatestRecords</a></strong>(int&nbsp;maxRecords,
                 boolean&nbsp;clear)</code>
 <div class="block">Retrieves the N last records stored.<br/>
@@ -357,7 +357,7 @@ implements <a href="../../../../org/sensorhub/api/sensor/ISensorDataInterface.ht
 <ul class="blockList">
 <li class="blockList">
 <h4>getLatestRecord</h4>
-<pre>public&nbsp;<a href="https://github.com/sensiasoft/lib-swe-common/tree/master/swe-common-core/apidocs/net/opengis/swe/v20/DataBlock.html?is-external=true" title="class or interface in net.opengis.swe.v20">DataBlock</a>&nbsp;getLatestRecord()</pre>
+<pre>public&nbsp;<a href="http://docs.opensensorhub.org/swe-common-core/apidocs/net/opengis/swe/v20/DataBlock.html?is-external=true" title="class or interface in net.opengis.swe.v20">DataBlock</a>&nbsp;getLatestRecord()</pre>
 <div class="block"><strong>Description copied from interface:&nbsp;<code><a href="../../../../org/sensorhub/api/sensor/ISensorDataInterface.html#getLatestRecord()">ISensorDataInterface</a></code></strong></div>
 <div class="block">Gets the latest record received on this data channel. Even implementations with no
  storage support must always retain the last record and implement this method.
@@ -457,7 +457,7 @@ implements <a href="../../../../org/sensorhub/api/sensor/ISensorDataInterface.ht
 <ul class="blockList">
 <li class="blockList">
 <h4>getLatestRecords</h4>
-<pre>public&nbsp;<a href="http://docs.oracle.com/javase/7/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</a>&lt;<a href="https://github.com/sensiasoft/lib-swe-common/tree/master/swe-common-core/apidocs/net/opengis/swe/v20/DataBlock.html?is-external=true" title="class or interface in net.opengis.swe.v20">DataBlock</a>&gt;&nbsp;getLatestRecords(int&nbsp;maxRecords,
+<pre>public&nbsp;<a href="http://docs.oracle.com/javase/7/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</a>&lt;<a href="http://docs.opensensorhub.org/swe-common-core/apidocs/net/opengis/swe/v20/DataBlock.html?is-external=true" title="class or interface in net.opengis.swe.v20">DataBlock</a>&gt;&nbsp;getLatestRecords(int&nbsp;maxRecords,
                                boolean&nbsp;clear)
                                  throws <a href="../../../../org/sensorhub/api/sensor/SensorException.html" title="class in org.sensorhub.api.sensor">SensorException</a></pre>
 <div class="block"><strong>Description copied from interface:&nbsp;<code><a href="../../../../org/sensorhub/api/sensor/ISensorDataInterface.html#getLatestRecords(int,%20boolean)">ISensorDataInterface</a></code></strong></div>
@@ -479,7 +479,7 @@ implements <a href="../../../../org/sensorhub/api/sensor/ISensorDataInterface.ht
 <ul class="blockList">
 <li class="blockList">
 <h4>getAllRecords</h4>
-<pre>public&nbsp;<a href="http://docs.oracle.com/javase/7/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</a>&lt;<a href="https://github.com/sensiasoft/lib-swe-common/tree/master/swe-common-core/apidocs/net/opengis/swe/v20/DataBlock.html?is-external=true" title="class or interface in net.opengis.swe.v20">DataBlock</a>&gt;&nbsp;getAllRecords(boolean&nbsp;clear)
+<pre>public&nbsp;<a href="http://docs.oracle.com/javase/7/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</a>&lt;<a href="http://docs.opensensorhub.org/swe-common-core/apidocs/net/opengis/swe/v20/DataBlock.html?is-external=true" title="class or interface in net.opengis.swe.v20">DataBlock</a>&gt;&nbsp;getAllRecords(boolean&nbsp;clear)
                               throws <a href="../../../../org/sensorhub/api/sensor/SensorException.html" title="class in org.sensorhub.api.sensor">SensorException</a></pre>
 <div class="block"><strong>Description copied from interface:&nbsp;<code><a href="../../../../org/sensorhub/api/sensor/ISensorDataInterface.html#getAllRecords(boolean)">ISensorDataInterface</a></code></strong></div>
 <div class="block">Retrieves all records stored by the driver or sensor.<br/>

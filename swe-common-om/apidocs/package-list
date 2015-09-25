@@ -1,0 +1,6 @@
+net.opengis.gml.v32
+net.opengis.gml.v32.bind
+net.opengis.gml.v32.impl
+org.vast.ogc.gml
+org.vast.ogc.om
+org.vast.util

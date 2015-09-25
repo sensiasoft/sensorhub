@@ -120,7 +120,7 @@
 			<div class="body-content">
 <div class="section"> 
  <div class="page-header">
-  <h2 id="Developers_Guide">Developers Guide</h2>
+  <h2 id="Developers_Guide">Developer’s Guide</h2>
  </div> 
  <p>This guide is meant to help you setup a development environment based on the Eclipse IDE so that you can extend SensorHub with your own sensor drivers, web services and other components.</p> 
  <p>Don’t forget to send us a Pull Request if you want to contribute your work back to this project. Other users may be interested by your modules and bug fixes! </p> 
@@ -138,15 +138,15 @@
    <p>If you want to build the code and run it on your computer, you’ll need <tt>git</tt> and <tt>Maven 3</tt>. To clone the code repository locally, first <tt>cd</tt> in the directory where you want the code to be downloaded and use the following command:</p> 
    <div class="source"> 
     <div class="source"> 
-     <pre> git clone --recursive https://github.com/sensiasoft/sensorhub
+     <pre> &gt; git clone --recursive https://github.com/sensiasoft/sensorhub
 </pre> 
     </div> 
    </div> 
    <p>This will create a folder called “sensorhub” containing the code of the different Maven modules in your current directory. You can then build the project and install it to your local Maven repository by launching the following commands:</p> 
    <div class="source"> 
     <div class="source"> 
-     <pre> cd sensorhub
- mvn clean install 
+     <pre> &gt; cd sensorhub
+ &gt; mvn clean install 
 </pre> 
     </div> 
    </div> 
@@ -155,7 +155,7 @@
    <p>You can then run SensorHub with an example configuration file. For instance, the following command launches SensorHub with the simulated sensors provided in the default build:</p> 
    <div class="source"> 
     <div class="source"> 
-     <pre> mvn -N -e exec:java -Dexec.mainClass=&quot;org.sensorhub.impl.SensorHub&quot; -Dexec.args=&quot;sensorhub-test/src/test/resources/config_fakesensors_with_storage.json db&quot;
+     <pre> &gt; mvn -N -e exec:java -Dexec.mainClass=&quot;org.sensorhub.impl.SensorHub&quot; -Dexec.args=&quot;sensorhub-test/src/test/resources/config_fakesensors_with_storage.json db&quot;
 </pre> 
     </div> 
    </div> 
@@ -211,15 +211,15 @@
     <p>First add a new remote pointing to the <i>sensiasoft</i> master branch (you only have to do that the first time):</p> 
     <div class="source"> 
      <div class="source"> 
-      <pre> git remote add upstream https://github.com/sensiasoft/sensorhub
+      <pre> &gt; git remote add upstream https://github.com/sensiasoft/sensorhub
 </pre> 
      </div> 
     </div> 
     <p>Then pull changes from the “upstream” remote:</p> 
     <div class="source"> 
      <div class="source"> 
-      <pre> git pull upstream master
- git submodule update
+      <pre> &gt; git pull upstream master
+ &gt; git submodule update
 </pre> 
      </div> 
     </div> 
@@ -261,14 +261,14 @@
     <p>To do this with git command line tool, first stage and commit your changes locally:</p> 
     <div class="source"> 
      <div class="source"> 
-      <pre> git commit -am &quot;Your commit message&quot;
+      <pre> &gt; git commit -am &quot;Your commit message&quot;
 </pre> 
      </div> 
     </div> 
     <p>and then push them to your remote GitHub repository:</p> 
     <div class="source"> 
      <div class="source"> 
-      <pre> git push
+      <pre> &gt; git push
 </pre> 
      </div> 
     </div> 
@@ -297,7 +297,7 @@
 				<div class="well">
 					<ul class="nav nav-list">
 						<li class="nav-header">Table of Contents</li>
-		<li class="dropdown"><a href="#Developers_Guide" title="Developers Guide">Developers Guide <b class="caret"></b></a>
+		<li class="dropdown"><a href="#Developers_Guide" title="Developer’s Guide">Developer’s Guide <b class="caret"></b></a>
 			<ul class="nav nav-list">
 		<li><a href="#Option_1_Explore" title="Option 1: Explore">Option 1: Explore</a>
 		<li class="dropdown"><a href="#Option_2_Download_and_Build" title="Option 2: Download and Build">Option 2: Download and Build <b class="caret"></b></a>

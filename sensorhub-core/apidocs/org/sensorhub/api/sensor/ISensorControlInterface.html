@@ -134,18 +134,18 @@ extends <a href="../../../../org/sensorhub/api/common/IEventProducer.html" title
 </tr>
 <tr class="rowColor">
 <td class="colFirst"><code><a href="../../../../org/sensorhub/api/common/CommandStatus.html" title="class in org.sensorhub.api.common">CommandStatus</a></code></td>
-<td class="colLast"><code><strong><a href="../../../../org/sensorhub/api/sensor/ISensorControlInterface.html#execCommand(net.opengis.swe.v20.DataBlock)">execCommand</a></strong>(<a href="https://github.com/sensiasoft/lib-swe-common/tree/master/swe-common-core/apidocs/net/opengis/swe/v20/DataBlock.html?is-external=true" title="class or interface in net.opengis.swe.v20">DataBlock</a>&nbsp;command)</code>
+<td class="colLast"><code><strong><a href="../../../../org/sensorhub/api/sensor/ISensorControlInterface.html#execCommand(net.opengis.swe.v20.DataBlock)">execCommand</a></strong>(<a href="http://docs.opensensorhub.org/swe-common-core/apidocs/net/opengis/swe/v20/DataBlock.html?is-external=true" title="class or interface in net.opengis.swe.v20">DataBlock</a>&nbsp;command)</code>
 <div class="block">Executes the command synchronously, blocking until completion of command</div>
 </td>
 </tr>
 <tr class="altColor">
 <td class="colFirst"><code><a href="../../../../org/sensorhub/api/common/CommandStatus.html" title="class in org.sensorhub.api.common">CommandStatus</a></code></td>
-<td class="colLast"><code><strong><a href="../../../../org/sensorhub/api/sensor/ISensorControlInterface.html#execCommandGroup(java.util.List)">execCommandGroup</a></strong>(<a href="http://docs.oracle.com/javase/7/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</a>&lt;<a href="https://github.com/sensiasoft/lib-swe-common/tree/master/swe-common-core/apidocs/net/opengis/swe/v20/DataBlock.html?is-external=true" title="class or interface in net.opengis.swe.v20">DataBlock</a>&gt;&nbsp;commands)</code>
+<td class="colLast"><code><strong><a href="../../../../org/sensorhub/api/sensor/ISensorControlInterface.html#execCommandGroup(java.util.List)">execCommandGroup</a></strong>(<a href="http://docs.oracle.com/javase/7/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</a>&lt;<a href="http://docs.opensensorhub.org/swe-common-core/apidocs/net/opengis/swe/v20/DataBlock.html?is-external=true" title="class or interface in net.opengis.swe.v20">DataBlock</a>&gt;&nbsp;commands)</code>
 <div class="block">Executes multiple commands synchronously and in the order specified.</div>
 </td>
 </tr>
 <tr class="rowColor">
-<td class="colFirst"><code><a href="https://github.com/sensiasoft/lib-swe-common/tree/master/swe-common-core/apidocs/net/opengis/swe/v20/DataComponent.html?is-external=true" title="class or interface in net.opengis.swe.v20">DataComponent</a></code></td>
+<td class="colFirst"><code><a href="http://docs.opensensorhub.org/swe-common-core/apidocs/net/opengis/swe/v20/DataComponent.html?is-external=true" title="class or interface in net.opengis.swe.v20">DataComponent</a></code></td>
 <td class="colLast"><code><strong><a href="../../../../org/sensorhub/api/sensor/ISensorControlInterface.html#getCommandDescription()">getCommandDescription</a></strong>()</code>
 <div class="block">Retrieves description of command message
  Note that this can be a choice of multiple messages</div>
@@ -201,27 +201,27 @@ extends <a href="../../../../org/sensorhub/api/common/IEventProducer.html" title
 </tr>
 <tr class="altColor">
 <td class="colFirst"><code><a href="../../../../org/sensorhub/api/common/CommandStatus.html" title="class in org.sensorhub.api.common">CommandStatus</a></code></td>
-<td class="colLast"><code><strong><a href="../../../../org/sensorhub/api/sensor/ISensorControlInterface.html#scheduleCommand(net.opengis.swe.v20.DataBlock,%20org.vast.util.DateTime)">scheduleCommand</a></strong>(<a href="https://github.com/sensiasoft/lib-swe-common/tree/master/swe-common-core/apidocs/net/opengis/swe/v20/DataBlock.html?is-external=true" title="class or interface in net.opengis.swe.v20">DataBlock</a>&nbsp;command,
-               <a href="https://github.com/sensiasoft/lib-swe-common/tree/master/swe-common-core/apidocs/org/vast/util/DateTime.html?is-external=true" title="class or interface in org.vast.util">DateTime</a>&nbsp;execTime)</code>
+<td class="colLast"><code><strong><a href="../../../../org/sensorhub/api/sensor/ISensorControlInterface.html#scheduleCommand(net.opengis.swe.v20.DataBlock,%20org.vast.util.DateTime)">scheduleCommand</a></strong>(<a href="http://docs.opensensorhub.org/swe-common-core/apidocs/net/opengis/swe/v20/DataBlock.html?is-external=true" title="class or interface in net.opengis.swe.v20">DataBlock</a>&nbsp;command,
+               <a href="http://docs.opensensorhub.org/swe-common-core/apidocs/org/vast/util/DateTime.html?is-external=true" title="class or interface in org.vast.util">DateTime</a>&nbsp;execTime)</code>
 <div class="block">Schedules a command to be executed asynchronously at the specified time</div>
 </td>
 </tr>
 <tr class="rowColor">
 <td class="colFirst"><code><a href="../../../../org/sensorhub/api/common/CommandStatus.html" title="class in org.sensorhub.api.common">CommandStatus</a></code></td>
-<td class="colLast"><code><strong><a href="../../../../org/sensorhub/api/sensor/ISensorControlInterface.html#scheduleCommandGroup(java.util.List,%20org.vast.util.DateTime)">scheduleCommandGroup</a></strong>(<a href="http://docs.oracle.com/javase/7/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</a>&lt;<a href="https://github.com/sensiasoft/lib-swe-common/tree/master/swe-common-core/apidocs/net/opengis/swe/v20/DataBlock.html?is-external=true" title="class or interface in net.opengis.swe.v20">DataBlock</a>&gt;&nbsp;commands,
-                    <a href="https://github.com/sensiasoft/lib-swe-common/tree/master/swe-common-core/apidocs/org/vast/util/DateTime.html?is-external=true" title="class or interface in org.vast.util">DateTime</a>&nbsp;execTime)</code>
+<td class="colLast"><code><strong><a href="../../../../org/sensorhub/api/sensor/ISensorControlInterface.html#scheduleCommandGroup(java.util.List,%20org.vast.util.DateTime)">scheduleCommandGroup</a></strong>(<a href="http://docs.oracle.com/javase/7/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</a>&lt;<a href="http://docs.opensensorhub.org/swe-common-core/apidocs/net/opengis/swe/v20/DataBlock.html?is-external=true" title="class or interface in net.opengis.swe.v20">DataBlock</a>&gt;&nbsp;commands,
+                    <a href="http://docs.opensensorhub.org/swe-common-core/apidocs/org/vast/util/DateTime.html?is-external=true" title="class or interface in org.vast.util">DateTime</a>&nbsp;execTime)</code>
 <div class="block">Schedules a group of commands to be executed asynchronously at the specified time.</div>
 </td>
 </tr>
 <tr class="altColor">
 <td class="colFirst"><code><a href="../../../../org/sensorhub/api/common/CommandStatus.html" title="class in org.sensorhub.api.common">CommandStatus</a></code></td>
-<td class="colLast"><code><strong><a href="../../../../org/sensorhub/api/sensor/ISensorControlInterface.html#sendCommand(net.opengis.swe.v20.DataBlock)">sendCommand</a></strong>(<a href="https://github.com/sensiasoft/lib-swe-common/tree/master/swe-common-core/apidocs/net/opengis/swe/v20/DataBlock.html?is-external=true" title="class or interface in net.opengis.swe.v20">DataBlock</a>&nbsp;command)</code>
+<td class="colLast"><code><strong><a href="../../../../org/sensorhub/api/sensor/ISensorControlInterface.html#sendCommand(net.opengis.swe.v20.DataBlock)">sendCommand</a></strong>(<a href="http://docs.opensensorhub.org/swe-common-core/apidocs/net/opengis/swe/v20/DataBlock.html?is-external=true" title="class or interface in net.opengis.swe.v20">DataBlock</a>&nbsp;command)</code>
 <div class="block">Sends a command that will be executed asynchronously</div>
 </td>
 </tr>
 <tr class="rowColor">
 <td class="colFirst"><code><a href="../../../../org/sensorhub/api/common/CommandStatus.html" title="class in org.sensorhub.api.common">CommandStatus</a></code></td>
-<td class="colLast"><code><strong><a href="../../../../org/sensorhub/api/sensor/ISensorControlInterface.html#sendCommandGroup(java.util.List)">sendCommandGroup</a></strong>(<a href="http://docs.oracle.com/javase/7/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</a>&lt;<a href="https://github.com/sensiasoft/lib-swe-common/tree/master/swe-common-core/apidocs/net/opengis/swe/v20/DataBlock.html?is-external=true" title="class or interface in net.opengis.swe.v20">DataBlock</a>&gt;&nbsp;commands)</code>
+<td class="colLast"><code><strong><a href="../../../../org/sensorhub/api/sensor/ISensorControlInterface.html#sendCommandGroup(java.util.List)">sendCommandGroup</a></strong>(<a href="http://docs.oracle.com/javase/7/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</a>&lt;<a href="http://docs.opensensorhub.org/swe-common-core/apidocs/net/opengis/swe/v20/DataBlock.html?is-external=true" title="class or interface in net.opengis.swe.v20">DataBlock</a>&gt;&nbsp;commands)</code>
 <div class="block">Sends a group of commands for asynchronous execution.</div>
 </td>
 </tr>
@@ -320,7 +320,7 @@ extends <a href="../../../../org/sensorhub/api/common/IEventProducer.html" title
 <ul class="blockList">
 <li class="blockList">
 <h4>getCommandDescription</h4>
-<pre><a href="https://github.com/sensiasoft/lib-swe-common/tree/master/swe-common-core/apidocs/net/opengis/swe/v20/DataComponent.html?is-external=true" title="class or interface in net.opengis.swe.v20">DataComponent</a>&nbsp;getCommandDescription()</pre>
+<pre><a href="http://docs.opensensorhub.org/swe-common-core/apidocs/net/opengis/swe/v20/DataComponent.html?is-external=true" title="class or interface in net.opengis.swe.v20">DataComponent</a>&nbsp;getCommandDescription()</pre>
 <div class="block">Retrieves description of command message
  Note that this can be a choice of multiple messages</div>
 <dl><dt><span class="strong">Returns:</span></dt><dd>Data component containing message structure</dd></dl>
@@ -332,7 +332,7 @@ extends <a href="../../../../org/sensorhub/api/common/IEventProducer.html" title
 <ul class="blockList">
 <li class="blockList">
 <h4>execCommand</h4>
-<pre><a href="../../../../org/sensorhub/api/common/CommandStatus.html" title="class in org.sensorhub.api.common">CommandStatus</a>&nbsp;execCommand(<a href="https://github.com/sensiasoft/lib-swe-common/tree/master/swe-common-core/apidocs/net/opengis/swe/v20/DataBlock.html?is-external=true" title="class or interface in net.opengis.swe.v20">DataBlock</a>&nbsp;command)
+<pre><a href="../../../../org/sensorhub/api/common/CommandStatus.html" title="class in org.sensorhub.api.common">CommandStatus</a>&nbsp;execCommand(<a href="http://docs.opensensorhub.org/swe-common-core/apidocs/net/opengis/swe/v20/DataBlock.html?is-external=true" title="class or interface in net.opengis.swe.v20">DataBlock</a>&nbsp;command)
                           throws <a href="../../../../org/sensorhub/api/sensor/SensorException.html" title="class in org.sensorhub.api.sensor">SensorException</a></pre>
 <div class="block">Executes the command synchronously, blocking until completion of command</div>
 <dl><dt><span class="strong">Parameters:</span></dt><dd><code>command</code> - command message data</dd>
@@ -347,7 +347,7 @@ extends <a href="../../../../org/sensorhub/api/common/IEventProducer.html" title
 <ul class="blockList">
 <li class="blockList">
 <h4>execCommandGroup</h4>
-<pre><a href="../../../../org/sensorhub/api/common/CommandStatus.html" title="class in org.sensorhub.api.common">CommandStatus</a>&nbsp;execCommandGroup(<a href="http://docs.oracle.com/javase/7/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</a>&lt;<a href="https://github.com/sensiasoft/lib-swe-common/tree/master/swe-common-core/apidocs/net/opengis/swe/v20/DataBlock.html?is-external=true" title="class or interface in net.opengis.swe.v20">DataBlock</a>&gt;&nbsp;commands)
+<pre><a href="../../../../org/sensorhub/api/common/CommandStatus.html" title="class in org.sensorhub.api.common">CommandStatus</a>&nbsp;execCommandGroup(<a href="http://docs.oracle.com/javase/7/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</a>&lt;<a href="http://docs.opensensorhub.org/swe-common-core/apidocs/net/opengis/swe/v20/DataBlock.html?is-external=true" title="class or interface in net.opengis.swe.v20">DataBlock</a>&gt;&nbsp;commands)
                                throws <a href="../../../../org/sensorhub/api/sensor/SensorException.html" title="class in org.sensorhub.api.sensor">SensorException</a></pre>
 <div class="block">Executes multiple commands synchronously and in the order specified.
  This method will block until all commands are completed</div>
@@ -363,7 +363,7 @@ extends <a href="../../../../org/sensorhub/api/common/IEventProducer.html" title
 <ul class="blockList">
 <li class="blockList">
 <h4>sendCommand</h4>
-<pre><a href="../../../../org/sensorhub/api/common/CommandStatus.html" title="class in org.sensorhub.api.common">CommandStatus</a>&nbsp;sendCommand(<a href="https://github.com/sensiasoft/lib-swe-common/tree/master/swe-common-core/apidocs/net/opengis/swe/v20/DataBlock.html?is-external=true" title="class or interface in net.opengis.swe.v20">DataBlock</a>&nbsp;command)
+<pre><a href="../../../../org/sensorhub/api/common/CommandStatus.html" title="class in org.sensorhub.api.common">CommandStatus</a>&nbsp;sendCommand(<a href="http://docs.opensensorhub.org/swe-common-core/apidocs/net/opengis/swe/v20/DataBlock.html?is-external=true" title="class or interface in net.opengis.swe.v20">DataBlock</a>&nbsp;command)
                           throws <a href="../../../../org/sensorhub/api/sensor/SensorException.html" title="class in org.sensorhub.api.sensor">SensorException</a></pre>
 <div class="block">Sends a command that will be executed asynchronously</div>
 <dl><dt><span class="strong">Parameters:</span></dt><dd><code>command</code> - command message data</dd>
@@ -378,7 +378,7 @@ extends <a href="../../../../org/sensorhub/api/common/IEventProducer.html" title
 <ul class="blockList">
 <li class="blockList">
 <h4>sendCommandGroup</h4>
-<pre><a href="../../../../org/sensorhub/api/common/CommandStatus.html" title="class in org.sensorhub.api.common">CommandStatus</a>&nbsp;sendCommandGroup(<a href="http://docs.oracle.com/javase/7/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</a>&lt;<a href="https://github.com/sensiasoft/lib-swe-common/tree/master/swe-common-core/apidocs/net/opengis/swe/v20/DataBlock.html?is-external=true" title="class or interface in net.opengis.swe.v20">DataBlock</a>&gt;&nbsp;commands)
+<pre><a href="../../../../org/sensorhub/api/common/CommandStatus.html" title="class in org.sensorhub.api.common">CommandStatus</a>&nbsp;sendCommandGroup(<a href="http://docs.oracle.com/javase/7/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</a>&lt;<a href="http://docs.opensensorhub.org/swe-common-core/apidocs/net/opengis/swe/v20/DataBlock.html?is-external=true" title="class or interface in net.opengis.swe.v20">DataBlock</a>&gt;&nbsp;commands)
                                throws <a href="../../../../org/sensorhub/api/sensor/SensorException.html" title="class in org.sensorhub.api.sensor">SensorException</a></pre>
 <div class="block">Sends a group of commands for asynchronous execution.
  Order is guaranteed but not atomicity</div>
@@ -394,8 +394,8 @@ extends <a href="../../../../org/sensorhub/api/common/IEventProducer.html" title
 <ul class="blockList">
 <li class="blockList">
 <h4>scheduleCommand</h4>
-<pre><a href="../../../../org/sensorhub/api/common/CommandStatus.html" title="class in org.sensorhub.api.common">CommandStatus</a>&nbsp;scheduleCommand(<a href="https://github.com/sensiasoft/lib-swe-common/tree/master/swe-common-core/apidocs/net/opengis/swe/v20/DataBlock.html?is-external=true" title="class or interface in net.opengis.swe.v20">DataBlock</a>&nbsp;command,
-                            <a href="https://github.com/sensiasoft/lib-swe-common/tree/master/swe-common-core/apidocs/org/vast/util/DateTime.html?is-external=true" title="class or interface in org.vast.util">DateTime</a>&nbsp;execTime)
+<pre><a href="../../../../org/sensorhub/api/common/CommandStatus.html" title="class in org.sensorhub.api.common">CommandStatus</a>&nbsp;scheduleCommand(<a href="http://docs.opensensorhub.org/swe-common-core/apidocs/net/opengis/swe/v20/DataBlock.html?is-external=true" title="class or interface in net.opengis.swe.v20">DataBlock</a>&nbsp;command,
+                            <a href="http://docs.opensensorhub.org/swe-common-core/apidocs/org/vast/util/DateTime.html?is-external=true" title="class or interface in org.vast.util">DateTime</a>&nbsp;execTime)
                               throws <a href="../../../../org/sensorhub/api/sensor/SensorException.html" title="class in org.sensorhub.api.sensor">SensorException</a></pre>
 <div class="block">Schedules a command to be executed asynchronously at the specified time</div>
 <dl><dt><span class="strong">Parameters:</span></dt><dd><code>command</code> - command message data</dd><dd><code>execTime</code> - desired time of execution</dd>
@@ -410,8 +410,8 @@ extends <a href="../../../../org/sensorhub/api/common/IEventProducer.html" title
 <ul class="blockList">
 <li class="blockList">
 <h4>scheduleCommandGroup</h4>
-<pre><a href="../../../../org/sensorhub/api/common/CommandStatus.html" title="class in org.sensorhub.api.common">CommandStatus</a>&nbsp;scheduleCommandGroup(<a href="http://docs.oracle.com/javase/7/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</a>&lt;<a href="https://github.com/sensiasoft/lib-swe-common/tree/master/swe-common-core/apidocs/net/opengis/swe/v20/DataBlock.html?is-external=true" title="class or interface in net.opengis.swe.v20">DataBlock</a>&gt;&nbsp;commands,
-                                 <a href="https://github.com/sensiasoft/lib-swe-common/tree/master/swe-common-core/apidocs/org/vast/util/DateTime.html?is-external=true" title="class or interface in org.vast.util">DateTime</a>&nbsp;execTime)
+<pre><a href="../../../../org/sensorhub/api/common/CommandStatus.html" title="class in org.sensorhub.api.common">CommandStatus</a>&nbsp;scheduleCommandGroup(<a href="http://docs.oracle.com/javase/7/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</a>&lt;<a href="http://docs.opensensorhub.org/swe-common-core/apidocs/net/opengis/swe/v20/DataBlock.html?is-external=true" title="class or interface in net.opengis.swe.v20">DataBlock</a>&gt;&nbsp;commands,
+                                 <a href="http://docs.opensensorhub.org/swe-common-core/apidocs/org/vast/util/DateTime.html?is-external=true" title="class or interface in org.vast.util">DateTime</a>&nbsp;execTime)
                                    throws <a href="../../../../org/sensorhub/api/sensor/SensorException.html" title="class in org.sensorhub.api.sensor">SensorException</a></pre>
 <div class="block">Schedules a group of commands to be executed asynchronously at the specified time.
  Order is guaranteed but not atomicity</div>

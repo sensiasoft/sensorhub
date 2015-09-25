@@ -136,13 +136,13 @@ extends <a href="../../../../org/sensorhub/api/persistence/IBasicStorage.html" t
 </td>
 </tr>
 <tr class="rowColor">
-<td class="colFirst"><code><a href="http://docs.oracle.com/javase/7/docs/api/java/util/Iterator.html?is-external=true" title="class or interface in java.util">Iterator</a>&lt;<a href="https://github.com/sensiasoft/lib-swe-common/tree/master/swe-common-om/apidocs/net/opengis/gml/v32/AbstractFeature.html?is-external=true" title="class or interface in net.opengis.gml.v32">AbstractFeature</a>&gt;</code></td>
+<td class="colFirst"><code><a href="http://docs.oracle.com/javase/7/docs/api/java/util/Iterator.html?is-external=true" title="class or interface in java.util">Iterator</a>&lt;<a href="http://docs.opensensorhub.org/swe-common-om/apidocs/net/opengis/gml/v32/AbstractFeature.html?is-external=true" title="class or interface in net.opengis.gml.v32">AbstractFeature</a>&gt;</code></td>
 <td class="colLast"><code><strong><a href="../../../../org/sensorhub/api/persistence/IObsStorage.html#getFois(org.sensorhub.api.persistence.IFoiFilter)">getFois</a></strong>(<a href="../../../../org/sensorhub/api/persistence/IFoiFilter.html" title="interface in org.sensorhub.api.persistence">IFoiFilter</a>&nbsp;filter)</code>
 <div class="block">Retrieves features of interest matching the given filter</div>
 </td>
 </tr>
 <tr class="altColor">
-<td class="colFirst"><code><a href="https://github.com/sensiasoft/lib-swe-common/tree/master/swe-common-core/apidocs/org/vast/util/Bbox.html?is-external=true" title="class or interface in org.vast.util">Bbox</a></code></td>
+<td class="colFirst"><code><a href="http://docs.opensensorhub.org/swe-common-core/apidocs/org/vast/util/Bbox.html?is-external=true" title="class or interface in org.vast.util">Bbox</a></code></td>
 <td class="colLast"><code><strong><a href="../../../../org/sensorhub/api/persistence/IObsStorage.html#getFoisSpatialExtent()">getFoisSpatialExtent</a></strong>()</code>
 <div class="block">Gets the bounding rectangle of all features of interest contained
  in this storage</div>
@@ -157,7 +157,7 @@ extends <a href="../../../../org/sensorhub/api/persistence/IBasicStorage.html" t
 <tr class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><strong><a href="../../../../org/sensorhub/api/persistence/IObsStorage.html#storeFoi(java.lang.String,%20net.opengis.gml.v32.AbstractFeature)">storeFoi</a></strong>(<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;producerID,
-        <a href="https://github.com/sensiasoft/lib-swe-common/tree/master/swe-common-om/apidocs/net/opengis/gml/v32/AbstractFeature.html?is-external=true" title="class or interface in net.opengis.gml.v32">AbstractFeature</a>&nbsp;foi)</code>
+        <a href="http://docs.opensensorhub.org/swe-common-om/apidocs/net/opengis/gml/v32/AbstractFeature.html?is-external=true" title="class or interface in net.opengis.gml.v32">AbstractFeature</a>&nbsp;foi)</code>
 <div class="block">Stores a new feature of interest description into storage.</div>
 </td>
 </tr>
@@ -201,7 +201,7 @@ extends <a href="../../../../org/sensorhub/api/persistence/IBasicStorage.html" t
 <ul class="blockList">
 <li class="blockList">
 <h4>getFoisSpatialExtent</h4>
-<pre><a href="https://github.com/sensiasoft/lib-swe-common/tree/master/swe-common-core/apidocs/org/vast/util/Bbox.html?is-external=true" title="class or interface in org.vast.util">Bbox</a>&nbsp;getFoisSpatialExtent()</pre>
+<pre><a href="http://docs.opensensorhub.org/swe-common-core/apidocs/org/vast/util/Bbox.html?is-external=true" title="class or interface in org.vast.util">Bbox</a>&nbsp;getFoisSpatialExtent()</pre>
 <div class="block">Gets the bounding rectangle of all features of interest contained
  in this storage</div>
 <dl><dt><span class="strong">Returns:</span></dt><dd>bounding rectangle as Bbox instance</dd></dl>
@@ -225,7 +225,7 @@ extends <a href="../../../../org/sensorhub/api/persistence/IBasicStorage.html" t
 <ul class="blockList">
 <li class="blockList">
 <h4>getFois</h4>
-<pre><a href="http://docs.oracle.com/javase/7/docs/api/java/util/Iterator.html?is-external=true" title="class or interface in java.util">Iterator</a>&lt;<a href="https://github.com/sensiasoft/lib-swe-common/tree/master/swe-common-om/apidocs/net/opengis/gml/v32/AbstractFeature.html?is-external=true" title="class or interface in net.opengis.gml.v32">AbstractFeature</a>&gt;&nbsp;getFois(<a href="../../../../org/sensorhub/api/persistence/IFoiFilter.html" title="interface in org.sensorhub.api.persistence">IFoiFilter</a>&nbsp;filter)</pre>
+<pre><a href="http://docs.oracle.com/javase/7/docs/api/java/util/Iterator.html?is-external=true" title="class or interface in java.util">Iterator</a>&lt;<a href="http://docs.opensensorhub.org/swe-common-om/apidocs/net/opengis/gml/v32/AbstractFeature.html?is-external=true" title="class or interface in net.opengis.gml.v32">AbstractFeature</a>&gt;&nbsp;getFois(<a href="../../../../org/sensorhub/api/persistence/IFoiFilter.html" title="interface in org.sensorhub.api.persistence">IFoiFilter</a>&nbsp;filter)</pre>
 <div class="block">Retrieves features of interest matching the given filter</div>
 <dl><dt><span class="strong">Parameters:</span></dt><dd><code>filter</code> - filtering criterias</dd>
 <dt><span class="strong">Returns:</span></dt><dd>A read-only iterator over matching FOIs</dd></dl>
@@ -238,7 +238,7 @@ extends <a href="../../../../org/sensorhub/api/persistence/IBasicStorage.html" t
 <li class="blockList">
 <h4>storeFoi</h4>
 <pre>void&nbsp;storeFoi(<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;producerID,
-            <a href="https://github.com/sensiasoft/lib-swe-common/tree/master/swe-common-om/apidocs/net/opengis/gml/v32/AbstractFeature.html?is-external=true" title="class or interface in net.opengis.gml.v32">AbstractFeature</a>&nbsp;foi)</pre>
+            <a href="http://docs.opensensorhub.org/swe-common-om/apidocs/net/opengis/gml/v32/AbstractFeature.html?is-external=true" title="class or interface in net.opengis.gml.v32">AbstractFeature</a>&nbsp;foi)</pre>
 <div class="block">Stores a new feature of interest description into storage.</div>
 <dl><dt><span class="strong">Parameters:</span></dt><dd><code>producerID</code> - ID of producer by which this FOI has been observed</dd><dd><code>foi</code> - feature object to store</dd></dl>
 </li>
