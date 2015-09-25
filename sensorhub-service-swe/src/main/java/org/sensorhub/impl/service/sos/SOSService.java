@@ -36,6 +36,8 @@ import javax.servlet.http.HttpServletResponse;
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamWriter;
+import net.opengis.fes.v20.Conformance;
+import net.opengis.fes.v20.FilterCapabilities;
 import net.opengis.fes.v20.SpatialCapabilities;
 import net.opengis.fes.v20.SpatialOperator;
 import net.opengis.fes.v20.SpatialOperatorName;
@@ -189,6 +191,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
         // get main capabilities info from config
         CapabilitiesInfo serviceInfo = config.ogcCapabilitiesInfo;
         SOSServiceCapabilities capabilities = new SOSServiceCapabilities();
+        capabilities.getSupportedVersions().add("2.0.0");
         capabilities.getIdentification().setTitle(serviceInfo.title);
         capabilities.getIdentification().setDescription(serviceInfo.description);
         capabilities.setFees(serviceInfo.fees);
@@ -197,26 +200,50 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
         
         // supported operations and extensions
         capabilities.getProfiles().add(SOSServiceCapabilities.PROFILE_RESULT_RETRIEVAL);
+        capabilities.getProfiles().add(SOSServiceCapabilities.PROFILE_OMXML);
         capabilities.getGetServers().put("GetCapabilities", config.endPoint);
         capabilities.getGetServers().put("DescribeSensor", config.endPoint);
         capabilities.getGetServers().put("GetFeatureOfInterest", config.endPoint);
         capabilities.getGetServers().put("GetObservation", config.endPoint);
         capabilities.getGetServers().put("GetResult", config.endPoint);
         capabilities.getGetServers().put("GetResultTemplate", config.endPoint);
-        capabilities.getPostServers().putAll(capabilities.getGetServers());      
+        capabilities.getPostServers().putAll(capabilities.getGetServers());
         
         if (config.enableTransactional)
         {
-            capabilities.getProfiles().add(SOSServiceCapabilities.PROFILE_RESULT_INSERTION);
+            capabilities.getProfiles().add(SOSServiceCapabilities.PROFILE_SENSOR_INSERTION);
+            capabilities.getProfiles().add(SOSServiceCapabilities.PROFILE_SENSOR_DELETION);
             capabilities.getProfiles().add(SOSServiceCapabilities.PROFILE_OBS_INSERTION);
+            capabilities.getProfiles().add(SOSServiceCapabilities.PROFILE_RESULT_INSERTION);
             capabilities.getPostServers().put("InsertSensor", config.endPoint);
+            capabilities.getPostServers().put("DeleteSensor", config.endPoint);
             capabilities.getPostServers().put("InsertObservation", config.endPoint);
             capabilities.getPostServers().put("InsertResult", config.endPoint);
             capabilities.getGetServers().put("InsertResult", config.endPoint);
         }
         
+        // filter capabilities
         FESFactory fac = new FESFactory();
-        capabilities.setFilterCapabilities(fac.newFilterCapabilities());
+        FilterCapabilities filterCaps = fac.newFilterCapabilities();
+        capabilities.setFilterCapabilities(filterCaps);
+        
+        // conformance
+        Conformance filterConform = filterCaps.getConformance();
+        filterConform.addConstraint(fac.newConstraint("ImplementsQuery", Boolean.TRUE.toString()));
+        filterConform.addConstraint(fac.newConstraint("ImplementsAdHocQuery", Boolean.FALSE.toString()));
+        filterConform.addConstraint(fac.newConstraint("ImplementsFunctions", Boolean.FALSE.toString()));
+        filterConform.addConstraint(fac.newConstraint("ImplementsResourceld", Boolean.FALSE.toString()));
+        filterConform.addConstraint(fac.newConstraint("ImplementsMinStandardFilter", Boolean.FALSE.toString()));
+        filterConform.addConstraint(fac.newConstraint("ImplementsStandardFilter", Boolean.FALSE.toString()));
+        filterConform.addConstraint(fac.newConstraint("ImplementsMinSpatialFilter", Boolean.TRUE.toString()));
+        filterConform.addConstraint(fac.newConstraint("ImplementsSpatialFilter", Boolean.FALSE.toString()));
+        filterConform.addConstraint(fac.newConstraint("ImplementsMinTemporalFilter", Boolean.TRUE.toString()));
+        filterConform.addConstraint(fac.newConstraint("ImplementsTemporalFilter", Boolean.FALSE.toString()));
+        filterConform.addConstraint(fac.newConstraint("ImplementsVersionNav", Boolean.FALSE.toString()));
+        filterConform.addConstraint(fac.newConstraint("ImplementsSorting", Boolean.FALSE.toString()));
+        filterConform.addConstraint(fac.newConstraint("ImplementsExtendedOperators", Boolean.FALSE.toString()));
+        filterConform.addConstraint(fac.newConstraint("ImplementsMinimumXPath", Boolean.FALSE.toString()));
+        filterConform.addConstraint(fac.newConstraint("ImplementsSchemaElementFunc", Boolean.FALSE.toString()));
         
         // supported temporal filters
         TemporalCapabilities timeFilterCaps = fac.newTemporalCapabilities();
@@ -225,14 +252,15 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
         TemporalOperator timeOp = fac.newTemporalOperator();
         timeOp.setName(TemporalOperatorName.DURING);
         timeFilterCaps.getTemporalOperators().add(timeOp);
-        capabilities.getFilterCapabilities().setTemporalCapabilities(timeFilterCaps);
+        filterCaps.setTemporalCapabilities(timeFilterCaps);
         
         // supported spatial filters
         SpatialCapabilities spatialFilterCaps = fac.newSpatialCapabilities();
+        spatialFilterCaps.getGeometryOperands().add(new QName(null, "Envelope", "gml"));
         SpatialOperator spatialOp = fac.newSpatialOperator();
         spatialOp.setName(SpatialOperatorName.BBOX);
         spatialFilterCaps.getSpatialOperators().add(spatialOp);
-        capabilities.getFilterCapabilities().setSpatialCapabilities(spatialFilterCaps);
+        filterCaps.setSpatialCapabilities(spatialFilterCaps);
         
         // process each provider config
         if (config.dataProviders != null)
