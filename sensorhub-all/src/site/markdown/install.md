@@ -44,3 +44,9 @@ You can connect to the [Admin Console](images/webui1.png "SensorHub Admin Web UI
 
 When active, the console allows you to manage all SensorHub modules including sensors, processing chains, storage units, as well as service interfaces such as Sensor Observation Services (SOS) or Sensor Planning Services (SPS).
 
+
+### Logging Configuration
+
+All logging is made via logback and the configuration is done via the `logback.xml` file included in the distribution.
+For instance, you can enable debug logs by changing .See the [logback documentation]() for more details. 
+

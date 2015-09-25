@@ -1,4 +1,4 @@
-Welcome to SensorHub
+Welcome to SensorHub's Documentation Website
 ---
 
 SensorHub software allows one to easily build interoperable and evolutive sensor networks, based on open-standards for all data exchanges, and providing advanced processing capabilities. The open-standards used are mostly [OGC](http://www.opengeospatial.org) standards from the [Sensor Web Enablement](http://www.opengeospatial.org/projects/groups/sensorwebdwg) (SWE) initiative and are key to design sensor networks that can largely evolve with time (addition of new types of sensors, reconfigurations, etc.).
@@ -9,7 +9,9 @@ SensorHub embeds the full power of OGC web services ([Sensor Observation Service
 
 Low level functions of SensorHub (send commands and read data from sensor) are coded efficiently and can be used on embedded hardware running [Java SE®](http://www.oracle.com/technetwork/java/javase), [Java ME®][Java ME] or [Android®](http://www.android.com) while more advanced data processing capabilities are fully multi-threaded and can thus benefit from a more powerful hardware platform (e.g. multi-processor servers or even clusters).
 
-SensorHub is pure java software but we have plans to release parts of this software in other languages (Arduino, C++) to be used on low power micro-controllers (note that some more powerful ARM micro-controllers can run the Java version directly using [Java ME®][Java ME].
+SensorHub is pure java software but we have plans to release parts of this software in other languages (Arduino, C++) to be used on low power micro-controllers (note that some more powerful ARM micro-controllers can also run the Java version directly using [Java ME®][Java ME]).
+
+If you're interested in knowing more, this [presentation](https://drive.google.com/open?id=0B41B4izqa7n_Zlc5Qi1YaE1Ubm8) gives an overview of SensorHub's architecture.
 
 
 [Java ME]: http://www.oracle.com/us/technologies/java/embedded/micro-edition/overview/index.html

@@ -1,4 +1,4 @@
-Developers Guide
+Developer's Guide
 ---
 
 This guide is meant to help you setup a development environment based on the Eclipse IDE so that you can extend SensorHub with your own sensor drivers, web services and other components.
@@ -26,12 +26,12 @@ Below are the steps to download and build the code using either command line too
 If you want to build the code and run it on your computer, you'll need `git` and `Maven 3`.
 To clone the code repository locally, first `cd` in the directory where you want the code to be downloaded and use the following command:
 
-     git clone --recursive https://github.com/sensiasoft/sensorhub
+     > git clone --recursive https://github.com/sensiasoft/sensorhub
 
 This will create a folder called "sensorhub" containing the code of the different Maven modules in your current directory. You can then build the project and install it to your local Maven repository by launching the following commands:
 
-     cd sensorhub
-     mvn clean install 
+     > cd sensorhub
+     > mvn clean install 
 
 _Note 1: The first time you launch Maven, the build process can take a while because Maven goes to fetch its own dependencies (i.e. Maven plugins) as well as SensorHub's dependencies. Later builds will go faster because these dependencies are cached in a local Maven repository._
 
@@ -39,7 +39,7 @@ _Note 2: Some of the JUnit tests automatically run during the 'test' phase of th
 
 You can then run SensorHub with an example configuration file. For instance, the following command launches SensorHub with the simulated sensors provided in the default build:
 
-     mvn -N -e exec:java -Dexec.mainClass="org.sensorhub.impl.SensorHub" -Dexec.args="sensorhub-test/src/test/resources/config_fakesensors_with_storage.json db"
+     > mvn -N -e exec:java -Dexec.mainClass="org.sensorhub.impl.SensorHub" -Dexec.args="sensorhub-test/src/test/resources/config_fakesensors_with_storage.json db"
 
 If you want to add other modules than the ones included in the default build, go to the module folder and do a `mvn clean install` there. You will then be able to use a configuration file that uses this new module.
 
@@ -97,12 +97,12 @@ While you're working on your stuff, don't forget to pull changes from the main r
 
 First add a new remote pointing to the *sensiasoft* master branch (you only have to do that the first time):
 
-     git remote add upstream https://github.com/sensiasoft/sensorhub
+     > git remote add upstream https://github.com/sensiasoft/sensorhub
 
 Then pull changes from the "upstream" remote:
 
-     git pull upstream master
-     git submodule update
+     > git pull upstream master
+     > git submodule update
 
 *Note that you may have to manually merge things with your working copy if you have made conflicting changes.*
 
@@ -141,11 +141,11 @@ You can push your changes to your own GitHub repo at any time, even if your code
 
 To do this with git command line tool, first stage and commit your changes locally:
 
-     git commit -am "Your commit message"
+     > git commit -am "Your commit message"
 
 and then push them to your remote GitHub repository:
 
-     git push
+     > git push
 
 (Please see the [git online documentation](http://git-scm.com/book/en/v2) for more details and other ways to use git)
 

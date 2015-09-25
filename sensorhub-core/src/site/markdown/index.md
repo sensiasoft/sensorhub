@@ -7,7 +7,7 @@ SensorHub software is implemented on top of public APIs that make the system mod
 The core APIs are:
 
 - [SWE Common and SensorML Bindings](sensorml-api.html) to create/read/write SensorML documents
-- [Sensor](sensor-api.html) to implement sensor drivers
+- [Sensor API](sensor-api.html) to implement sensor and actuator drivers
 - [Process API]() to implement processing chains
 - [Persistence API]() to implement bindings to any database system
 - [Communication API]() to implement drivers for various communication buses (serial, USB, Bluetooth, I2C, SPI, etc.)
