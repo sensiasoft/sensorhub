@@ -137,14 +137,23 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
                 {
                     AbstractFeature foi = ((IMultiSourceDataProducer)dataSource).getCurrentFeatureOfInterest(entityID);
                     if (foi != null)
+                    {
                         currentFoiMap.put(entityID, foi.getUniqueIdentifier());
+                        if (storage instanceof IObsStorage)
+                            ((IObsStorage)storage).storeFoi(entityID, foi);
+                    }
                 }
             }
             else
             {
+                String producerID = dataSource.getCurrentDescription().getUniqueIdentifier();
                 AbstractFeature foi = dataSource.getCurrentFeatureOfInterest();
                 if (foi != null)
+                {
                     currentFoi = foi.getUniqueIdentifier();
+                    if (storage instanceof IObsStorage)
+                        ((IObsStorage)storage).storeFoi(producerID, foi);
+                }
             }
             
             // register to data events
@@ -197,17 +206,6 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
             for (String entityID: ((IMultiSourceDataProducer)dataSource).getEntityIDs())
                 ensureProducerInfo(entityID);
         }
-        else
-        {
-            // copy current feature of interest
-            if (storage instanceof IObsStorage)
-            {
-                String producerID = dataSource.getCurrentDescription().getUniqueIdentifier();
-                AbstractFeature foi = dataSource.getCurrentFeatureOfInterest();
-                if (foi != null)
-                    ((IObsStorage)storage).storeFoi(producerID, foi);
-            }
-        }
         
         // create one data store for each sensor output
         // we do that in multi source storage even if it's also done in each provider data store
@@ -253,11 +251,6 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
                 AbstractProcess sml = ((IMultiSourceDataProducer) dataSource).getCurrentDescription(producerID);
                 if (sml != null)
                     dataStore.storeDataSourceDescription(sml);
-                
-                // save current FOI
-                AbstractFeature foi = ((IMultiSourceDataProducer) dataSource).getCurrentFeatureOfInterest(producerID);
-                if (foi != null)
-                    ((IObsStorage)storage).storeFoi(producerID, foi);
                 
                 // create one data store for each sensor output
                 for (IStreamingDataInterface output: getSelectedOutputs(dataSource))

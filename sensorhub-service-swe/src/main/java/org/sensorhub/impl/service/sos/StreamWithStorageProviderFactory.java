@@ -14,9 +14,13 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.impl.service.sos;
 
+import java.util.Iterator;
+import net.opengis.gml.v32.AbstractFeature;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.data.IDataProducerModule;
 import org.sensorhub.api.data.IStreamingDataInterface;
+import org.sensorhub.api.persistence.IFoiFilter;
+import org.sensorhub.api.persistence.IObsStorage;
 import org.sensorhub.api.service.ServiceException;
 import org.vast.ows.sos.SOSOfferingCapabilities;
 import org.vast.util.TimeExtent;
@@ -57,6 +61,10 @@ public class StreamWithStorageProviderFactory<ProducerType extends IDataProducer
     public SOSOfferingCapabilities generateCapabilities() throws ServiceException
     {
         SOSOfferingCapabilities capabilities = super.generateCapabilities();
+        
+        // if storage does support FOIs, list the current ones
+        if (capabilities.getRelatedFeatures().isEmpty())
+            FoiUtils.updateFois(caps, producer, config.maxFois);
         
         // enable real-time requests only if streaming data source is enabled
         if (producer.isEnabled())
@@ -100,7 +108,21 @@ public class StreamWithStorageProviderFactory<ProducerType extends IDataProducer
             
             // if latest record is not too old, enable real-time
             if (lastRecordTime != Long.MIN_VALUE && now - lastRecordTime < liveDataTimeOut)
-                caps.getPhenomenonTime().setEndNow(true);      
+                caps.getPhenomenonTime().setEndNow(true);
+            
+            // if storage does support FOIs, list the current ones
+            if (!(storage instanceof IObsStorage))
+                FoiUtils.updateFois(caps, producer, config.maxFois);
         }
+    }
+
+
+    @Override
+    public Iterator<AbstractFeature> getFoiIterator(IFoiFilter filter) throws Exception
+    {
+        Iterator<AbstractFeature> foiIt = super.getFoiIterator(filter);
+        if (!foiIt.hasNext())
+            foiIt = FoiUtils.getFilteredFoiIterator(producer, filter);
+        return foiIt;
     }
 }
