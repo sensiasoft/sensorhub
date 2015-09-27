@@ -28,7 +28,6 @@ import net.opengis.swe.v20.Quantity;
 import net.opengis.swe.v20.Time;
 import org.sensorhub.api.sensor.SensorDataEvent;
 import org.sensorhub.api.sensor.SensorException;
-import org.sensorhub.impl.common.BasicEventHandler;
 import org.sensorhub.impl.sensor.AbstractSensorOutput;
 import org.vast.data.DataBlockDouble;
 import org.vast.data.DataRecordImpl;
