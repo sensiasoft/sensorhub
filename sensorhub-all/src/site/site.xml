@@ -65,9 +65,10 @@
       <menu name="Getting Started" inherit="top">
          <item name="Download" href="download.html" />
          <item name="Install" href="install.html" />
-         <item name="Dev Guide" href="dev-guide.html" />
+         <item name="User's Guide" href="user-guide.html" />
+         <item name="Developer's Guide" href="dev-guide.html" />
+         <item name="Your First Sensor Driver" href="sensorhub-core/your-first-sensor.html" />
          <item name="Javadocs" href="sensorhub-core/apidocs/index.html" />
-         <item name="First Sensor Driver" href="sensorhub-core/your-first-sensor.html" />
       </menu>
       
       <menu name="Components" inherit="top">

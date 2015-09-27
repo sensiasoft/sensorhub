@@ -1,4 +1,4 @@
-Download Open Sensor Hub
+How To Download
 ---
 
 

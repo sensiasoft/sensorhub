@@ -7,17 +7,21 @@ Don't forget to send us a Pull Request if you want to contribute your work back 
 
 Of course, contributing new modules to the community is optional as our license does not prevent proprietary and commercial derived work. However, keep in mind that **if you modify the source files we provide, you must make it available publicly in source form**. 
 
-This page provides instructions for three possible options: exploring the code, downloading and building the software, or contributing software and fixes to the project.
+This page provides instructions for three possible options, depending on your level of involvement:
+
+  * Exploring the code online
+  * Downloading and building from source with Maven or Eclipse
+  * Contributing software and fixes to the project
 
 
 
-### Option 1: Explore
+### Exploring the Code
 
 If you just want to explore the code, you can browse the source online directly on [Github](https://github.com/sensiasoft/sensorhub). Alternatively, you can download it to your computer using the *Download ZIP* link on GitHub or using the `git` program (please see the next section if you want to do just that).
 
 
 
-### Option 2: Download and Build
+### Downloading and Building from Source
 
 Below are the steps to download and build the code using either command line tools or the Eclipse IDE.
 
@@ -49,12 +53,14 @@ We provide Eclipse project configuration directly from the repository so it is t
 
 1. Pre-requisites
 
-  Make sure you have the following Eclipse components installed :
+Make sure you have the following Eclipse components installed :
+  
   * Eclipse Helios or newer (the exact steps described here are for Luna)
   * Egit plugin for Eclipse (included in "Eclipse IDE for Java Developers" release)
-  * Maven plugin for Eclipse M2E (you can install it using the "Help > Install New Software..". You will find it under the "Collaboration" section of the Kepler releases repository) 
+  * Maven plugin for Eclipse M2E (you can install it using the "Help > Install New Software..". You will find it under the "Collaboration" section of the Eclipse releases repository) 
 
 2. Clone the project in your Eclipse workspace
+
   * In the Package Explorer, right click and select "Import" from the popup menu
   * Open the "Git" category, select "Projects from Git" and click "Next"
   * Select "Clone URI" and click "Next"
@@ -69,7 +75,7 @@ We provide Eclipse project configuration directly from the repository so it is t
 
 
 
-### Option 3: Contribute
+### Contributing Code to the Project
 
 If you want to contribute, please follow the following steps:
 
@@ -77,7 +83,7 @@ If you want to contribute, please follow the following steps:
 
 The first step is to fork the project by clicking the [Fork](http://help.github.com/articles/fork-a-repo/) button on GitHub. This will clone the original code to your own GitHub account so you can then modify it and/or add to it as you wish. For this you'll need to have a GitHub account (it can be done in 30s using your email address) and log into it.
 
-Forking the project this way allows us to incorporate your contribution more easily to the main development branch, plus it lets us see who everybody is up to even before a pull request is submitted.
+Forking the project this way will allow you to send us [Pull Requests](http://help.github.com/articles/using-pull-requests/) via GitHub which makes it much easier for us to incorporate your contribution to the master branch. In addition, it creates a community around the software and lets others see what contributors are up to even before a patch is submitted. This can help you get the proper guidance when necessary.
 
 #### Clone your GitHub repository
 
@@ -154,6 +160,7 @@ and then push them to your remote GitHub repository:
 Within Eclipse, follow these steps:
 
 To commit your changes locally:
+
   * Right click on one of the Eclipse project with a name starting with "sensorhub"
   * Select "Team -> Commit" from the popup menu
   * Enter a commit message and select files you want to commit
@@ -161,6 +168,7 @@ To commit your changes locally:
   * If you have just pressed "Commit" you will see a arrow with a number on the right of the project names in the package explorer. This indicates that you have N local changes that need to be pushed to the remote repository (i.e. in git terms, your local repository is N commits ahead of your remote).
 
 If you only want to push your last committed changes to your remote repository:
+
   * Right click on one of the Eclipse project with a name starting with "sensorhub"
   * Select "Team -> Push to Upstream" from the popup menu
   * Click OK
@@ -174,3 +182,14 @@ When you feel you're ready to contribute all or some of your changes to the comm
 So that we can better evaluate your contribution, please describe your improvements in as much details as you can. We'll do our best to process *Pull Request* as fast as possible.
 
 **Thanks in advance for your contribution!**
+
+
+
+### Eclipse Tips
+
+One problem we have encountered several times with Eclipse is that the POM files and Projects Settings get out of sync and it causes various Java and/or Maven related dependency errors (e.g. dependency YYY cannot be found, etc). If you get such errors although everything seems fine in your POM and code, you may have to follow these steps to resync eveything:
+
+  * Click one of the SensorHub module project
+  * Select "Maven > Update Project..." from the context menu
+  * Click the "Select All" button
+  * Confirm by clicking "OK" 
