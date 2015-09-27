@@ -309,7 +309,7 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
     @Override
     public void handleEvent(Event<?> e)
     {
-        if (isEnabled())
+        if (config.processEvents)
         {
             // new data events
             if (e instanceof DataEvent)
