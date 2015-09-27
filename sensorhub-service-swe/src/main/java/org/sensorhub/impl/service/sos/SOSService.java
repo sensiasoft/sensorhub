@@ -181,7 +181,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
      * Generates the SOSServiceCapabilities object with info from data source
      * @return
      */
-    protected SOSServiceCapabilities generateCapabilities()
+    protected SOSServiceCapabilities generateCapabilities() throws SensorHubException
     {
         dataProviders.clear();
         procedureToOfferingMap.clear();
@@ -290,7 +290,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
                 }
                 catch (Exception e)
                 {
-                    log.error("Error while initializing provider " + providerConf.uri, e);
+                    throw new SensorHubException("Error while initializing provider " + providerConf.uri, e);
                 }
             }
         }
@@ -341,7 +341,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     
     
     @Override
-    public void start()
+    public void start() throws SensorHubException
     {
         this.dataConsumers = new LinkedHashMap<String, ISOSDataConsumer>();
         this.procedureToOfferingMap = new HashMap<String, String>();
@@ -416,7 +416,17 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
         {
             // start when HTTP server is enabled
             if (((ModuleEvent) e).type == ModuleEvent.Type.ENABLED)
-                start();
+            {
+                try
+                {
+                    if (config.enabled)
+                        start();
+                }
+                catch (SensorHubException e1)
+                {
+                    log.error("SOS Service could not be restarted", e);
+                }
+            }
             
             // stop when HTTP server is disabled
             else if (((ModuleEvent) e).type == ModuleEvent.Type.DISABLED)

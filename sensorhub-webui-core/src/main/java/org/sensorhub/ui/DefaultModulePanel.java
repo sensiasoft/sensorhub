@@ -20,6 +20,7 @@ import org.sensorhub.ui.api.IModuleConfigForm;
 import org.sensorhub.ui.api.IModuleAdminPanel;
 import org.sensorhub.ui.api.UIConstants;
 import org.sensorhub.ui.data.MyBeanItem;
+import com.vaadin.server.Page;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
@@ -80,8 +81,11 @@ public class DefaultModulePanel<ModuleType extends IModule<? extends ModuleConfi
                 }
                 catch (Exception e)
                 {
-                    AdminUI.log.error("Error while updating module configuration", e);
-                    Notification.show("Error", e.getMessage(), Notification.Type.ERROR_MESSAGE);
+                    String msg = "Error while updating module configuration";
+                    Page page = AdminUI.getInstance().getPage();
+                    new Notification("Error", msg + '\n' + e.getMessage(), Notification.Type.ERROR_MESSAGE).show(page);
+                    //Notification.show("Error", msg + '\n' + e.getMessage(), Notification.Type.ERROR_MESSAGE);
+                    AdminUI.log.error(msg, e);
                 }
             }
         });
