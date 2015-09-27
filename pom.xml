@@ -52,4 +52,7 @@
          </modules>
       </profile>
    </profiles>
+   <properties>
+      <stagingDir>${session.executionRootDirectory}/../sensorhub-site</stagingDir>
+   </properties>
 </project>
