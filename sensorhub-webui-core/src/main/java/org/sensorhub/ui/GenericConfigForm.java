@@ -233,7 +233,8 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
     protected Field<?> buildAndBindField(String label, String propId, Property<?> prop)
     {
         Field<?> field = fieldGroup.buildAndBind(label, propId);
-
+        Class<?> propType = prop.getType();
+        
         if (propId.equals(PROP_ID))
             field.setReadOnly(true);
         else if (propId.endsWith("." + PROP_ID))
@@ -245,13 +246,15 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
         else if (propId.endsWith(PROP_MODULECLASS))
             field.setReadOnly(true);        
         
-        if (prop.getType().equals(String.class))
+        if (propType.equals(String.class))
             field.setWidth(500, Unit.PIXELS);
-        else if (prop.getType().equals(int.class) || prop.getType().equals(Integer.class) ||
-                prop.getType().equals(float.class) || prop.getType().equals(Float.class) ||
-                prop.getType().equals(double.class) || prop.getType().equals(Double.class))
+        else if (propType.equals(int.class) || propType.equals(Integer.class) ||
+                propType.equals(float.class) || propType.equals(Float.class) ||
+                propType.equals(double.class) || propType.equals(Double.class))
             field.setWidth(200, Unit.PIXELS);
-                
+        else if (Enum.class.isAssignableFrom(propType))
+            ((ListSelect)field).setRows(3);
+        
         if (field instanceof TextField) {
             ((TextField)field).setNullSettingAllowed(true);
             ((TextField)field).setNullRepresentation("");
