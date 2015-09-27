@@ -87,7 +87,7 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
     public void build(String propId, ComplexProperty prop)
     {
         String title = prop.getLabel();
-        if (title == null)
+        if (title == null || title.length() == 0)
             title = DisplayUtils.getPrettyName(propId);
         
         build(title, prop.getValue());

@@ -345,7 +345,7 @@ public class AdminUI extends com.vaadin.ui.UI
         MyBeanItemContainer<ModuleConfig> container = new MyBeanItemContainer<ModuleConfig>(ModuleConfig.class);
         for (IModule<?> module: reg.getLoadedModules())
         {
-            ModuleConfig config = module.getConfiguration();
+            ModuleConfig config = module.getConfiguration().clone();
             if (configType.isAssignableFrom(config.getClass()))
                 container.addBean(config);
         }

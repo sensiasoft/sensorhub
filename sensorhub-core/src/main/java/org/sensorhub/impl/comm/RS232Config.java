@@ -41,6 +41,6 @@ public class RS232Config extends CommConfig
 	
 	public Parity parity = Parity.PARITY_NONE;
 	
-	@DisplayInfo(desc="Timeout after which serial port data is made available if at least one byte is available")
+	@DisplayInfo(desc="Timeout after which serial port data is made available if at least one byte was received (in ms)")
 	public int receiveTimeout = 100;
 }
