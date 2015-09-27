@@ -301,7 +301,8 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
     @Override
     public void cleanup() throws SensorHubException
     {
-        storage.cleanup();
+        if (storage != null)
+            storage.cleanup();
     }
     
     
@@ -401,6 +402,8 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
     @Override
     public void addRecordStore(String name, DataComponent recordStructure, DataEncoding recommendedEncoding)
     {
+        checkStarted();
+        
         // register new record type with underlying storage
         if (!storage.getRecordStores().containsKey(name))
             storage.addRecordStore(name, recordStructure, recommendedEncoding);
@@ -415,6 +418,7 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
     @Override
     public void backup(OutputStream os) throws IOException
     {
+        checkStarted();
         storage.backup(os);        
     }
 
@@ -422,6 +426,7 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
     @Override
     public void restore(InputStream is) throws IOException
     {
+        checkStarted();
         storage.restore(is);        
     }
 
@@ -429,6 +434,7 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
     @Override
     public void setAutoCommit(boolean autoCommit)
     {
+        checkStarted();
         storage.setAutoCommit(autoCommit);        
     }
 
@@ -436,6 +442,7 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
     @Override
     public boolean isAutoCommit()
     {
+        checkStarted();
         return storage.isAutoCommit();
     }
 
@@ -443,6 +450,7 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
     @Override
     public void commit()
     {
+        checkStarted();
         storage.commit();        
     }
 
@@ -450,6 +458,7 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
     @Override
     public void rollback()
     {
+        checkStarted();
         storage.rollback();        
     }
 
@@ -457,13 +466,15 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
     @Override
     public void sync(IStorageModule<?> storage) throws StorageException
     {
-        storage.sync(storage);        
+        checkStarted();
+        this.storage.sync(storage);        
     }
 
 
     @Override
     public AbstractProcess getLatestDataSourceDescription()
     {
+        checkStarted();
         return storage.getLatestDataSourceDescription();
     }
 
@@ -471,6 +482,7 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
     @Override
     public List<AbstractProcess> getDataSourceDescriptionHistory(double startTime, double endTime)
     {
+        checkStarted();
         return storage.getDataSourceDescriptionHistory(startTime, endTime);
     }
 
@@ -478,6 +490,7 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
     @Override
     public AbstractProcess getDataSourceDescriptionAtTime(double time)
     {
+        checkStarted();
         return storage.getDataSourceDescriptionAtTime(time);
     }
 
@@ -485,6 +498,7 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
     @Override
     public void storeDataSourceDescription(AbstractProcess process)
     {
+        checkStarted();
         storage.storeDataSourceDescription(process);        
     }
 
@@ -492,6 +506,7 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
     @Override
     public void updateDataSourceDescription(AbstractProcess process)
     {
+        checkStarted();
         storage.updateDataSourceDescription(process);        
     }
 
@@ -499,6 +514,7 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
     @Override
     public void removeDataSourceDescription(double time)
     {
+        checkStarted();
         storage.removeDataSourceDescription(time);        
     }
 
@@ -506,6 +522,7 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
     @Override
     public void removeDataSourceDescriptionHistory(double startTime, double endTime)
     {
+        checkStarted();
         storage.removeDataSourceDescriptionHistory(startTime, endTime);
     }
 
@@ -513,12 +530,14 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
     @Override
     public Map<String, ? extends IRecordStoreInfo> getRecordStores()
     {
+        checkStarted();
         return storage.getRecordStores();
     }
 
 
     public DataBlock getDataBlock(DataKey key)
     {
+        checkStarted();
         return storage.getDataBlock(key);
     }
 
@@ -526,6 +545,7 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
     @Override
     public Iterator<DataBlock> getDataBlockIterator(IDataFilter filter)
     {
+        checkStarted();
         return storage.getDataBlockIterator(filter);
     }
 
@@ -533,6 +553,7 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
     @Override
     public Iterator<? extends IDataRecord> getRecordIterator(IDataFilter filter)
     {
+        checkStarted();
         return storage.getRecordIterator(filter);
     }
 
@@ -540,6 +561,7 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
     @Override
     public int getNumMatchingRecords(IDataFilter filter)
     {
+        checkStarted();
         return storage.getNumMatchingRecords(filter);
     }
 
@@ -547,6 +569,7 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
     @Override
     public int getNumRecords(String recordType)
     {
+        checkStarted();
         return storage.getNumRecords(recordType);
     }
 
@@ -554,6 +577,7 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
     @Override
     public double[] getRecordsTimeRange(String recordType)
     {
+        checkStarted();
         return storage.getRecordsTimeRange(recordType);
     }
     
@@ -561,6 +585,7 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
     @Override
     public Iterator<double[]> getRecordsTimeClusters(String recordType)
     {
+        checkStarted();
         return storage.getRecordsTimeClusters(recordType);
     }
 
@@ -568,6 +593,7 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
     @Override
     public void storeRecord(DataKey key, DataBlock data)
     {
+        checkStarted();
         storage.storeRecord(key, data);
     }
 
@@ -575,6 +601,7 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
     @Override
     public void updateRecord(DataKey key, DataBlock data)
     {
+        checkStarted();
         storage.updateRecord(key, data);
     }
 
@@ -582,6 +609,7 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
     @Override
     public void removeRecord(DataKey key)
     {
+        checkStarted();
         storage.removeRecord(key);
     }
 
@@ -589,6 +617,7 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
     @Override
     public int removeRecords(IDataFilter filter)
     {
+        checkStarted();
         return storage.removeRecords(filter);
     }
 
@@ -596,6 +625,8 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
     @Override
     public int getNumFois(IFoiFilter filter)
     {
+        checkStarted();
+        
         if (storage instanceof IObsStorage)
             return ((IObsStorage) storage).getNumFois(filter);
         
@@ -606,6 +637,8 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
     @Override
     public Bbox getFoisSpatialExtent()
     {
+        checkStarted();
+        
         if (storage instanceof IObsStorage)
             return ((IObsStorage) storage).getFoisSpatialExtent();
         
@@ -616,6 +649,8 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
     @Override
     public Iterator<String> getFoiIDs(IFoiFilter filter)
     {
+        checkStarted();
+        
         if (storage instanceof IObsStorage)
             return ((IObsStorage) storage).getFoiIDs(filter);
         
@@ -626,6 +661,8 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
     @Override
     public Iterator<AbstractFeature> getFois(IFoiFilter filter)
     {
+        checkStarted();
+        
         if (storage instanceof IObsStorage)
             return ((IObsStorage) storage).getFois(filter);
         
@@ -636,7 +673,15 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
     @Override
     public void storeFoi(String producerID, AbstractFeature foi)
     {
+        checkStarted();
         if (storage instanceof IObsStorage)
             storeFoi(producerID, foi);        
+    }
+    
+    
+    private void checkStarted()
+    {
+        if (storage == null)
+            throw new RuntimeException("Storage is disabled");
     }
 }

@@ -118,36 +118,39 @@ public class StorageAdminPanel extends DefaultModulePanel<IRecordStorageModule<?
     protected void buildDataPanel(GridLayout form, IRecordStorageModule<?> storage)
     {        
         // measurement outputs
-        int i = 1;
-        for (IRecordStoreInfo dsInfo: storage.getRecordStores().values())
+        int i = 1;        
+        if (storage.isEnabled())
         {
-            Panel panel = newPanel("Stream #" + i++);                
-            GridLayout panelLayout = ((GridLayout)panel.getContent());
-            panelLayout.setSpacing(true);
-            
-            // stored time period
-            double[] timeRange = storage.getRecordsTimeRange(dsInfo.getName());
-            Label l = new Label("<b>Time Range:</b> " + new DateTimeFormat().formatIso(timeRange[0], 0)
-                                 + " / " + new DateTimeFormat().formatIso(timeRange[1], 0));
-            l.setContentMode(ContentMode.HTML);
-            panelLayout.addComponent(l, 0, 0, 1, 0);
-            
-            // time line
-            panelLayout.addComponent(buildGantt(storage, dsInfo), 0, 1, 1, 1);
-            
-            // data structure
-            DataComponent dataStruct = dsInfo.getRecordDescription();
-            Component sweForm = new SWECommonForm(dataStruct);
-            panelLayout.addComponent(sweForm);
-            
-            // data table
-            panelLayout.addComponent(buildTable(storage, dsInfo));
-            
-            if (oldPanel != null)
-                form.replaceComponent(oldPanel, panel);
-            else
-                form.addComponent(panel);
-            oldPanel = panel;
+            for (IRecordStoreInfo dsInfo: storage.getRecordStores().values())
+            {
+                Panel panel = newPanel("Stream #" + i++);                
+                GridLayout panelLayout = ((GridLayout)panel.getContent());
+                panelLayout.setSpacing(true);
+                
+                // stored time period
+                double[] timeRange = storage.getRecordsTimeRange(dsInfo.getName());
+                Label l = new Label("<b>Time Range:</b> " + new DateTimeFormat().formatIso(timeRange[0], 0)
+                                     + " / " + new DateTimeFormat().formatIso(timeRange[1], 0));
+                l.setContentMode(ContentMode.HTML);
+                panelLayout.addComponent(l, 0, 0, 1, 0);
+                
+                // time line
+                panelLayout.addComponent(buildGantt(storage, dsInfo), 0, 1, 1, 1);
+                
+                // data structure
+                DataComponent dataStruct = dsInfo.getRecordDescription();
+                Component sweForm = new SWECommonForm(dataStruct);
+                panelLayout.addComponent(sweForm);
+                
+                // data table
+                panelLayout.addComponent(buildTable(storage, dsInfo));
+                
+                if (oldPanel != null)
+                    form.replaceComponent(oldPanel, panel);
+                else
+                    form.addComponent(panel);
+                oldPanel = panel;
+            }
         }
     }
     
