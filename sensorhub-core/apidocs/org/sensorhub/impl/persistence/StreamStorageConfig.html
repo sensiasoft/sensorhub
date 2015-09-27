@@ -223,7 +223,9 @@ extends <a href="../../../../org/sensorhub/api/persistence/StorageConfig.html" t
 <ul class="blockList">
 <li class="blockList">
 <h4>storageConfig</h4>
-<pre>public&nbsp;<a href="../../../../org/sensorhub/api/persistence/StorageConfig.html" title="class in org.sensorhub.api.persistence">StorageConfig</a> storageConfig</pre>
+<pre><a href="../../../../org/sensorhub/api/config/DisplayInfo.html" title="annotation in org.sensorhub.api.config">@DisplayInfo</a>(<a href="../../../../org/sensorhub/api/config/DisplayInfo.html#label()">label</a>="Storage Config",
+             <a href="../../../../org/sensorhub/api/config/DisplayInfo.html#desc()">desc</a>="Configuration of underlying storage")
+public&nbsp;<a href="../../../../org/sensorhub/api/persistence/StorageConfig.html" title="class in org.sensorhub.api.persistence">StorageConfig</a> storageConfig</pre>
 </li>
 </ul>
 <a name="dataSourceID">
@@ -232,7 +234,9 @@ extends <a href="../../../../org/sensorhub/api/persistence/StorageConfig.html" t
 <ul class="blockList">
 <li class="blockList">
 <h4>dataSourceID</h4>
-<pre>public&nbsp;<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a> dataSourceID</pre>
+<pre><a href="../../../../org/sensorhub/api/config/DisplayInfo.html" title="annotation in org.sensorhub.api.config">@DisplayInfo</a>(<a href="../../../../org/sensorhub/api/config/DisplayInfo.html#label()">label</a>="Data Source ID",
+             <a href="../../../../org/sensorhub/api/config/DisplayInfo.html#desc()">desc</a>="Local ID of streaming data source which data will be store.")
+public&nbsp;<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a> dataSourceID</pre>
 </li>
 </ul>
 <a name="selectedOutputs">
@@ -241,7 +245,9 @@ extends <a href="../../../../org/sensorhub/api/persistence/StorageConfig.html" t
 <ul class="blockList">
 <li class="blockList">
 <h4>selectedOutputs</h4>
-<pre>public&nbsp;<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>[] selectedOutputs</pre>
+<pre><a href="../../../../org/sensorhub/api/config/DisplayInfo.html" title="annotation in org.sensorhub.api.config">@DisplayInfo</a>(<a href="../../../../org/sensorhub/api/config/DisplayInfo.html#label()">label</a>="Selected Outputs",
+             <a href="../../../../org/sensorhub/api/config/DisplayInfo.html#desc()">desc</a>="Names of data source outputs to save to storage")
+public&nbsp;<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>[] selectedOutputs</pre>
 </li>
 </ul>
 <a name="autoPurgeConfig">
@@ -250,7 +256,9 @@ extends <a href="../../../../org/sensorhub/api/persistence/StorageConfig.html" t
 <ul class="blockList">
 <li class="blockList">
 <h4>autoPurgeConfig</h4>
-<pre>public&nbsp;<a href="../../../../org/sensorhub/impl/persistence/StorageAutoPurgeConfig.html" title="class in org.sensorhub.impl.persistence">StorageAutoPurgeConfig</a> autoPurgeConfig</pre>
+<pre><a href="../../../../org/sensorhub/api/config/DisplayInfo.html" title="annotation in org.sensorhub.api.config">@DisplayInfo</a>(<a href="../../../../org/sensorhub/api/config/DisplayInfo.html#label()">label</a>="Automatic Purge Policy",
+             <a href="../../../../org/sensorhub/api/config/DisplayInfo.html#desc()">desc</a>="Policy for automatically purging stored data")
+public&nbsp;<a href="../../../../org/sensorhub/impl/persistence/StorageAutoPurgeConfig.html" title="class in org.sensorhub.impl.persistence">StorageAutoPurgeConfig</a> autoPurgeConfig</pre>
 </li>
 </ul>
 <a name="minCommitPeriod">
@@ -259,7 +267,8 @@ extends <a href="../../../../org/sensorhub/api/persistence/StorageConfig.html" t
 <ul class="blockListLast">
 <li class="blockList">
 <h4>minCommitPeriod</h4>
-<pre>public&nbsp;int minCommitPeriod</pre>
+<pre><a href="../../../../org/sensorhub/api/config/DisplayInfo.html" title="annotation in org.sensorhub.api.config">@DisplayInfo</a>(<a href="../../../../org/sensorhub/api/config/DisplayInfo.html#desc()">desc</a>="Minimum period between database commits (in ms)")
+public&nbsp;int minCommitPeriod</pre>
 </li>
 </ul>
 </li>

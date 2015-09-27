@@ -169,39 +169,44 @@ extends <a href="../../../../org/sensorhub/impl/module/AbstractModule.html" titl
 </tr>
 <tr class="altColor">
 <td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><strong><a href="../../../../org/sensorhub/impl/service/HttpServer.html#addServletSecurity(java.lang.String,%20java.lang.String...)">addServletSecurity</a></strong>(<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;pathSpec,
+                  <a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>...&nbsp;roles)</code>&nbsp;</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><strong><a href="../../../../org/sensorhub/impl/service/HttpServer.html#cleanup()">cleanup</a></strong>()</code>
 <div class="block">Cleans up all ressources used by the module when deleted
  All persistent resources created by the module should be cleaned
  when this is called</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><strong><a href="../../../../org/sensorhub/impl/service/HttpServer.html#deployServlet(javax.servlet.http.HttpServlet,%20java.util.Map,%20java.lang.String...)">deployServlet</a></strong>(javax.servlet.http.HttpServlet&nbsp;servlet,
              <a href="http://docs.oracle.com/javase/7/docs/api/java/util/Map.html?is-external=true" title="class or interface in java.util">Map</a>&lt;<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>,<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&gt;&nbsp;initParams,
              <a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>...&nbsp;paths)</code>&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><strong><a href="../../../../org/sensorhub/impl/service/HttpServer.html#deployServlet(javax.servlet.http.HttpServlet,%20java.lang.String)">deployServlet</a></strong>(javax.servlet.http.HttpServlet&nbsp;servlet,
              <a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;path)</code>&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>static <a href="../../../../org/sensorhub/impl/service/HttpServer.html" title="class in org.sensorhub.impl.service">HttpServer</a></code></td>
 <td class="colLast"><code><strong><a href="../../../../org/sensorhub/impl/service/HttpServer.html#getInstance()">getInstance</a></strong>()</code>&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>org.eclipse.jetty.server.Server</code></td>
 <td class="colLast"><code><strong><a href="../../../../org/sensorhub/impl/service/HttpServer.html#getJettyServer()">getJettyServer</a></strong>()</code>&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><strong><a href="../../../../org/sensorhub/impl/service/HttpServer.html#start()">start</a></strong>()</code>
 <div class="block">Starts the module with the current configuration.<br/>
  init() should always be called before start().</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><strong><a href="../../../../org/sensorhub/impl/service/HttpServer.html#stop()">stop</a></strong>()</code>
 <div class="block">Stops the module.<br/>
@@ -210,11 +215,11 @@ extends <a href="../../../../org/sensorhub/impl/module/AbstractModule.html" titl
  stop() can be called right after init() even if start() hasn't been called.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><strong><a href="../../../../org/sensorhub/impl/service/HttpServer.html#undeployServlet(javax.servlet.http.HttpServlet)">undeployServlet</a></strong>(javax.servlet.http.HttpServlet&nbsp;servlet)</code>&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><strong><a href="../../../../org/sensorhub/impl/service/HttpServer.html#updateConfig(org.sensorhub.impl.service.HttpServerConfig)">updateConfig</a></strong>(<a href="../../../../org/sensorhub/impl/service/HttpServerConfig.html" title="class in org.sensorhub.impl.service">HttpServerConfig</a>&nbsp;config)</code>
 <div class="block">Updates the module's configuration dynamically.<br/>
@@ -375,6 +380,16 @@ extends <a href="../../../../org/sensorhub/impl/module/AbstractModule.html" titl
 <li class="blockList">
 <h4>undeployServlet</h4>
 <pre>public&nbsp;void&nbsp;undeployServlet(javax.servlet.http.HttpServlet&nbsp;servlet)</pre>
+</li>
+</ul>
+<a name="addServletSecurity(java.lang.String, java.lang.String...)">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>addServletSecurity</h4>
+<pre>public&nbsp;void&nbsp;addServletSecurity(<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;pathSpec,
+                      <a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>...&nbsp;roles)</pre>
 </li>
 </ul>
 <a name="cleanup()">

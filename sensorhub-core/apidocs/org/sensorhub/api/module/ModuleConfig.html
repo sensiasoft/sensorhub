@@ -219,7 +219,9 @@ implements <a href="http://docs.oracle.com/javase/7/docs/api/java/lang/Cloneable
 <ul class="blockList">
 <li class="blockList">
 <h4>id</h4>
-<pre>public&nbsp;<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a> id</pre>
+<pre><a href="../../../../org/sensorhub/api/config/DisplayInfo.html" title="annotation in org.sensorhub.api.config">@DisplayInfo</a>(<a href="../../../../org/sensorhub/api/config/DisplayInfo.html#label()">label</a>="Module ID",
+             <a href="../../../../org/sensorhub/api/config/DisplayInfo.html#desc()">desc</a>="Unique local ID of the module")
+public&nbsp;<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a> id</pre>
 <div class="block">Unique ID of the module. It must be unique within the SensorHub instance
  and remain the same during the whole life-time of the module</div>
 </li>
@@ -230,7 +232,9 @@ implements <a href="http://docs.oracle.com/javase/7/docs/api/java/lang/Cloneable
 <ul class="blockList">
 <li class="blockList">
 <h4>moduleClass</h4>
-<pre>public&nbsp;<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a> moduleClass</pre>
+<pre><a href="../../../../org/sensorhub/api/config/DisplayInfo.html" title="annotation in org.sensorhub.api.config">@DisplayInfo</a>(<a href="../../../../org/sensorhub/api/config/DisplayInfo.html#label()">label</a>="Module Class",
+             <a href="../../../../org/sensorhub/api/config/DisplayInfo.html#desc()">desc</a>="Module implementation class")
+public&nbsp;<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a> moduleClass</pre>
 <div class="block">Class implementing the module (will be instantiated when module is loaded)</div>
 </li>
 </ul>
@@ -240,7 +244,8 @@ implements <a href="http://docs.oracle.com/javase/7/docs/api/java/lang/Cloneable
 <ul class="blockList">
 <li class="blockList">
 <h4>name</h4>
-<pre>public&nbsp;<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a> name</pre>
+<pre><a href="../../../../org/sensorhub/api/config/DisplayInfo.html" title="annotation in org.sensorhub.api.config">@DisplayInfo</a>(<a href="../../../../org/sensorhub/api/config/DisplayInfo.html#label()">label</a>="Module Name")
+public&nbsp;<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a> name</pre>
 <div class="block">User chosen name for the module</div>
 </li>
 </ul>
@@ -250,7 +255,9 @@ implements <a href="http://docs.oracle.com/javase/7/docs/api/java/lang/Cloneable
 <ul class="blockListLast">
 <li class="blockList">
 <h4>enabled</h4>
-<pre>public&nbsp;boolean enabled</pre>
+<pre><a href="../../../../org/sensorhub/api/config/DisplayInfo.html" title="annotation in org.sensorhub.api.config">@DisplayInfo</a>(<a href="../../../../org/sensorhub/api/config/DisplayInfo.html#label()">label</a>="Enable",
+             <a href="../../../../org/sensorhub/api/config/DisplayInfo.html#desc()">desc</a>="Module state (enabled or disabled)")
+public&nbsp;boolean enabled</pre>
 <div class="block">Reflects state of the module (enable/disable)</div>
 </li>
 </ul>

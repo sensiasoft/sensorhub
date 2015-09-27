@@ -147,6 +147,10 @@ extends <a href="../../../../org/sensorhub/api/module/ModuleConfig.html" title="
 <td class="colFirst"><code><a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a></code></td>
 <td class="colLast"><code><strong><a href="../../../../org/sensorhub/impl/service/HttpServerConfig.html#staticDocRootUrl">staticDocRootUrl</a></strong></code>&nbsp;</td>
 </tr>
+<tr class="altColor">
+<td class="colFirst"><code><a href="http://docs.oracle.com/javase/7/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</a>&lt;<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&gt;</code></td>
+<td class="colLast"><code><strong><a href="../../../../org/sensorhub/impl/service/HttpServerConfig.html#users">users</a></strong></code>&nbsp;</td>
+</tr>
 </table>
 <ul class="blockList">
 <li class="blockList"><a name="fields_inherited_from_class_org.sensorhub.api.module.ModuleConfig">
@@ -237,7 +241,8 @@ extends <a href="../../../../org/sensorhub/api/module/ModuleConfig.html" title="
 <ul class="blockList">
 <li class="blockList">
 <h4>httpPort</h4>
-<pre>public&nbsp;int httpPort</pre>
+<pre><a href="../../../../org/sensorhub/api/config/DisplayInfo.html" title="annotation in org.sensorhub.api.config">@DisplayInfo</a>(<a href="../../../../org/sensorhub/api/config/DisplayInfo.html#desc()">desc</a>="TCP port where HTTP server will listen")
+public&nbsp;int httpPort</pre>
 </li>
 </ul>
 <a name="staticDocRootUrl">
@@ -246,7 +251,8 @@ extends <a href="../../../../org/sensorhub/api/module/ModuleConfig.html" title="
 <ul class="blockList">
 <li class="blockList">
 <h4>staticDocRootUrl</h4>
-<pre>public&nbsp;<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a> staticDocRootUrl</pre>
+<pre><a href="../../../../org/sensorhub/api/config/DisplayInfo.html" title="annotation in org.sensorhub.api.config">@DisplayInfo</a>(<a href="../../../../org/sensorhub/api/config/DisplayInfo.html#desc()">desc</a>="Root URL where static web content will be served.")
+public&nbsp;<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a> staticDocRootUrl</pre>
 </li>
 </ul>
 <a name="servletsRootUrl">
@@ -255,16 +261,28 @@ extends <a href="../../../../org/sensorhub/api/module/ModuleConfig.html" title="
 <ul class="blockList">
 <li class="blockList">
 <h4>servletsRootUrl</h4>
-<pre>public&nbsp;<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a> servletsRootUrl</pre>
+<pre><a href="../../../../org/sensorhub/api/config/DisplayInfo.html" title="annotation in org.sensorhub.api.config">@DisplayInfo</a>(<a href="../../../../org/sensorhub/api/config/DisplayInfo.html#desc()">desc</a>="Root URL where the server will accept requests. This will be the prefix to all servlet URLs.")
+public&nbsp;<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a> servletsRootUrl</pre>
 </li>
 </ul>
 <a name="maxRequestsPerSecond">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>maxRequestsPerSecond</h4>
-<pre>public&nbsp;int maxRequestsPerSecond</pre>
+<pre><a href="../../../../org/sensorhub/api/config/DisplayInfo.html" title="annotation in org.sensorhub.api.config">@DisplayInfo</a>(<a href="../../../../org/sensorhub/api/config/DisplayInfo.html#desc()">desc</a>="Maximum number of requests per second allowed per session/connection")
+public&nbsp;int maxRequestsPerSecond</pre>
+</li>
+</ul>
+<a name="users">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>users</h4>
+<pre><a href="../../../../org/sensorhub/api/config/DisplayInfo.html" title="annotation in org.sensorhub.api.config">@DisplayInfo</a>(<a href="../../../../org/sensorhub/api/config/DisplayInfo.html#desc()">desc</a>="List of users with passwords and roles (format is user: password[, role1, role2 ...]")
+public&nbsp;<a href="http://docs.oracle.com/javase/7/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</a>&lt;<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&gt; users</pre>
 </li>
 </ul>
 </li>
