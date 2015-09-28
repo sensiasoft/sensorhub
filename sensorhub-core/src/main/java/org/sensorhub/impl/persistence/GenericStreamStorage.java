@@ -53,7 +53,6 @@ import org.sensorhub.api.persistence.IRecordStoreInfo;
 import org.sensorhub.api.persistence.ObsKey;
 import org.sensorhub.api.persistence.StorageConfig;
 import org.sensorhub.api.persistence.StorageException;
-import org.sensorhub.api.sensor.ISensorModule;
 import org.sensorhub.api.sensor.SensorEvent;
 import org.sensorhub.impl.SensorHub;
 import org.sensorhub.impl.module.AbstractModule;
@@ -190,15 +189,8 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
         if (storage.getRecordStores().size() > 0)
             throw new RuntimeException("Storage " + MsgUtils.moduleString(storage) + " is already configured");
         
-        // copy sensor description (only current or full history if supported)
-        if (dataSource instanceof ISensorModule<?> && ((ISensorModule<?>)dataSource).isSensorDescriptionHistorySupported())
-        {
-            ISensorModule<?> sensor = ((ISensorModule<?>)dataSource);
-            for (AbstractProcess sensorDesc: sensor.getSensorDescriptionHistory())
-                storage.storeDataSourceDescription(sensorDesc);
-        }
-        else
-            storage.storeDataSourceDescription(dataSource.getCurrentDescription());
+        // copy data source description
+        storage.storeDataSourceDescription(dataSource.getCurrentDescription());
             
         // for multi-source producers, prepare data stores for all entities
         if (dataSource instanceof IMultiSourceDataProducer && storage instanceof IMultiSourceStorage)

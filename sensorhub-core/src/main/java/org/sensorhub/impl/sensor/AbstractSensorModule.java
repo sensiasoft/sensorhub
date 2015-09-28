@@ -54,7 +54,6 @@ import org.vast.swe.SWEHelper;
 /**
  * <p>
  * Class providing default implementation of common sensor API methods.
- * By default, sensor description history and updates are reported as unsupported.<br/>
  * This can be used as the base for most sensor driver implementations.
  * </p>
  *
@@ -135,20 +134,6 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
         controlInputs.clear();
     }
     
-    
-    @Override
-    public boolean isSensorDescriptionUpdateSupported()
-    {
-        return false;
-    }
-
-
-    @Override
-    public boolean isSensorDescriptionHistorySupported()
-    {
-        return false;
-    }
-
 
     @Override
     public AbstractProcess getCurrentDescription()
@@ -355,27 +340,6 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
             return null;
         
         return refFrames.get(0).getId();
-    }
-
-
-    @Override
-    public AbstractProcess getSensorDescription(double time)
-    {
-        throw new UnsupportedOperationException(ERROR_NO_HISTORY + MsgUtils.moduleClassAndId(this));
-    }
-
-
-    @Override
-    public List<AbstractProcess> getSensorDescriptionHistory()
-    {
-        throw new UnsupportedOperationException(ERROR_NO_HISTORY + MsgUtils.moduleClassAndId(this));
-    }
-
-
-    @Override
-    public void updateSensorDescription(AbstractProcess systemDesc, boolean recordHistory) throws SensorException
-    {
-        throw new UnsupportedOperationException(ERROR_NO_UPDATE + MsgUtils.moduleClassAndId(this));
     }
 
 
