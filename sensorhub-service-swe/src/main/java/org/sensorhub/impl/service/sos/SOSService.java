@@ -81,6 +81,7 @@ import org.vast.cdm.common.DataStreamWriter;
 import org.vast.data.DataBlockMixed;
 import org.vast.ogc.OGCRegistry;
 import org.vast.ogc.gml.GMLStaxBindings;
+import org.vast.ogc.gml.GenericFeature;
 import org.vast.ogc.om.IObservation;
 import org.vast.ows.GetCapabilitiesRequest;
 import org.vast.ows.OWSExceptionReport;
@@ -693,7 +694,13 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
                 // write namespace on root because in most cases it is common to all features
                 if (first)
                 {
-                    xmlWriter.writeNamespace("ns1", f.getQName().getNamespaceURI());
+                    gmlBindings.ensureNamespaceDecl(xmlWriter, f.getQName());
+                    if (f instanceof GenericFeature)
+                    {
+                        for (Entry<QName, Object> prop: ((GenericFeature)f).getProperties().entrySet())
+                            gmlBindings.ensureNamespaceDecl(xmlWriter, prop.getKey());
+                    }
+                    
                     first = false;
                 }
                 

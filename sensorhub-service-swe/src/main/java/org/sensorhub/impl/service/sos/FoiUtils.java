@@ -16,6 +16,7 @@ package org.sensorhub.impl.service.sos;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import net.opengis.gml.v32.AbstractFeature;
 import net.opengis.gml.v32.AbstractGeometry;
@@ -82,8 +83,10 @@ public class FoiUtils
         Iterator<? extends AbstractFeature> allFois;
         if (producer instanceof IMultiSourceDataProducer)
             allFois = ((IMultiSourceDataProducer)producer).getFeaturesOfInterest().iterator();
-        else
+        else if (producer.getCurrentFeatureOfInterest() != null)
             allFois = Arrays.asList(producer.getCurrentFeatureOfInterest()).iterator();
+        else
+            allFois = Collections.EMPTY_LIST.iterator();
         
         // return all features if no filter is used
         if ((filter.getFeatureIDs() == null || filter.getFeatureIDs().isEmpty()) && filter.getRoi() == null)
