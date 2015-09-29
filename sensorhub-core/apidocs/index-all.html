@@ -1290,18 +1290,6 @@
 </dd>
 <dt><span class="strong"><a href="./org/sensorhub/api/persistence/ObsFilter.html#getRoi()">getRoi()</a></span> - Method in class org.sensorhub.api.persistence.<a href="./org/sensorhub/api/persistence/ObsFilter.html" title="class in org.sensorhub.api.persistence">ObsFilter</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="strong"><a href="./org/sensorhub/api/sensor/ISensorModule.html#getSensorDescription(double)">getSensorDescription(double)</a></span> - Method in interface org.sensorhub.api.sensor.<a href="./org/sensorhub/api/sensor/ISensorModule.html" title="interface in org.sensorhub.api.sensor">ISensorModule</a></dt>
-<dd>
-<div class="block">Retrieves historic sensor description valid at time t</div>
-</dd>
-<dt><span class="strong"><a href="./org/sensorhub/impl/sensor/AbstractSensorModule.html#getSensorDescription(double)">getSensorDescription(double)</a></span> - Method in class org.sensorhub.impl.sensor.<a href="./org/sensorhub/impl/sensor/AbstractSensorModule.html" title="class in org.sensorhub.impl.sensor">AbstractSensorModule</a></dt>
-<dd>&nbsp;</dd>
-<dt><span class="strong"><a href="./org/sensorhub/api/sensor/ISensorModule.html#getSensorDescriptionHistory()">getSensorDescriptionHistory()</a></span> - Method in interface org.sensorhub.api.sensor.<a href="./org/sensorhub/api/sensor/ISensorModule.html" title="interface in org.sensorhub.api.sensor">ISensorModule</a></dt>
-<dd>
-<div class="block">Gets the whole history of sensor descriptions</div>
-</dd>
-<dt><span class="strong"><a href="./org/sensorhub/impl/sensor/AbstractSensorModule.html#getSensorDescriptionHistory()">getSensorDescriptionHistory()</a></span> - Method in class org.sensorhub.impl.sensor.<a href="./org/sensorhub/impl/sensor/AbstractSensorModule.html" title="class in org.sensorhub.impl.sensor">AbstractSensorModule</a></dt>
-<dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/sensorhub/api/sensor/SensorConfig.html#getSensorDescriptionURL()">getSensorDescriptionURL()</a></span> - Method in class org.sensorhub.api.sensor.<a href="./org/sensorhub/api/sensor/SensorConfig.html" title="class in org.sensorhub.api.sensor">SensorConfig</a></dt>
 <dd>
 <div class="block">Gets the URL of the SensorML template.<br/>
@@ -1737,20 +1725,6 @@
 </dd>
 <dt><span class="strong"><a href="./org/sensorhub/impl/sensor/AbstractSensorControl.html#isSchedulingSupported()">isSchedulingSupported()</a></span> - Method in class org.sensorhub.impl.sensor.<a href="./org/sensorhub/impl/sensor/AbstractSensorControl.html" title="class in org.sensorhub.impl.sensor">AbstractSensorControl</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="strong"><a href="./org/sensorhub/api/sensor/ISensorModule.html#isSensorDescriptionHistorySupported()">isSensorDescriptionHistorySupported()</a></span> - Method in interface org.sensorhub.api.sensor.<a href="./org/sensorhub/api/sensor/ISensorModule.html" title="interface in org.sensorhub.api.sensor">ISensorModule</a></dt>
-<dd>
-<div class="block">Checks sensor description history capability
- If true, the getSensorDescription(DateTime t) method should be implemented</div>
-</dd>
-<dt><span class="strong"><a href="./org/sensorhub/impl/sensor/AbstractSensorModule.html#isSensorDescriptionHistorySupported()">isSensorDescriptionHistorySupported()</a></span> - Method in class org.sensorhub.impl.sensor.<a href="./org/sensorhub/impl/sensor/AbstractSensorModule.html" title="class in org.sensorhub.impl.sensor">AbstractSensorModule</a></dt>
-<dd>&nbsp;</dd>
-<dt><span class="strong"><a href="./org/sensorhub/api/sensor/ISensorModule.html#isSensorDescriptionUpdateSupported()">isSensorDescriptionUpdateSupported()</a></span> - Method in interface org.sensorhub.api.sensor.<a href="./org/sensorhub/api/sensor/ISensorModule.html" title="interface in org.sensorhub.api.sensor">ISensorModule</a></dt>
-<dd>
-<div class="block">Checks sensor description update capability
- If true, the updateSensorDescription method should be implemented</div>
-</dd>
-<dt><span class="strong"><a href="./org/sensorhub/impl/sensor/AbstractSensorModule.html#isSensorDescriptionUpdateSupported()">isSensorDescriptionUpdateSupported()</a></span> - Method in class org.sensorhub.impl.sensor.<a href="./org/sensorhub/impl/sensor/AbstractSensorModule.html" title="class in org.sensorhub.impl.sensor">AbstractSensorModule</a></dt>
-<dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/sensorhub/api/sensor/ISensorControlInterface.html#isStatusHistorySupported()">isStatusHistorySupported()</a></span> - Method in interface org.sensorhub.api.sensor.<a href="./org/sensorhub/api/sensor/ISensorControlInterface.html" title="interface in org.sensorhub.api.sensor">ISensorControlInterface</a></dt>
 <dd>
 <div class="block">Checks status history capability</div>
@@ -2069,6 +2043,8 @@
  Data source configuration to get process input data from another process</div>
 </dd>
 <dt><span class="strong"><a href="./org/sensorhub/api/processing/ProcessDataSourceConfig.html#ProcessDataSourceConfig()">ProcessDataSourceConfig()</a></span> - Constructor for class org.sensorhub.api.processing.<a href="./org/sensorhub/api/processing/ProcessDataSourceConfig.html" title="class in org.sensorhub.api.processing">ProcessDataSourceConfig</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="strong"><a href="./org/sensorhub/impl/persistence/StreamStorageConfig.html#processEvents">processEvents</a></span> - Variable in class org.sensorhub.impl.persistence.<a href="./org/sensorhub/impl/persistence/StreamStorageConfig.html" title="class in org.sensorhub.impl.persistence">StreamStorageConfig</a></dt>
 <dd>&nbsp;</dd>
 <dt><a href="./org/sensorhub/api/processing/ProcessException.html" title="class in org.sensorhub.api.processing"><span class="strong">ProcessException</span></a> - Exception in <a href="./org/sensorhub/api/processing/package-summary.html">org.sensorhub.api.processing</a></dt>
 <dd>
@@ -2815,12 +2791,6 @@
 <dt><span class="strong"><a href="./org/sensorhub/impl/persistence/GenericStreamStorage.html#updateRecord(org.sensorhub.api.persistence.DataKey,%20net.opengis.swe.v20.DataBlock)">updateRecord(DataKey, DataBlock)</a></span> - Method in class org.sensorhub.impl.persistence.<a href="./org/sensorhub/impl/persistence/GenericStreamStorage.html" title="class in org.sensorhub.impl.persistence">GenericStreamStorage</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/sensorhub/impl/persistence/InMemoryBasicStorage.html#updateRecord(org.sensorhub.api.persistence.DataKey,%20net.opengis.swe.v20.DataBlock)">updateRecord(DataKey, DataBlock)</a></span> - Method in class org.sensorhub.impl.persistence.<a href="./org/sensorhub/impl/persistence/InMemoryBasicStorage.html" title="class in org.sensorhub.impl.persistence">InMemoryBasicStorage</a></dt>
-<dd>&nbsp;</dd>
-<dt><span class="strong"><a href="./org/sensorhub/api/sensor/ISensorModule.html#updateSensorDescription(net.opengis.sensorml.v20.AbstractProcess,%20boolean)">updateSensorDescription(AbstractProcess, boolean)</a></span> - Method in interface org.sensorhub.api.sensor.<a href="./org/sensorhub/api/sensor/ISensorModule.html" title="interface in org.sensorhub.api.sensor">ISensorModule</a></dt>
-<dd>
-<div class="block">Updates and historizes system description</div>
-</dd>
-<dt><span class="strong"><a href="./org/sensorhub/impl/sensor/AbstractSensorModule.html#updateSensorDescription(net.opengis.sensorml.v20.AbstractProcess,%20boolean)">updateSensorDescription(AbstractProcess, boolean)</a></span> - Method in class org.sensorhub.impl.sensor.<a href="./org/sensorhub/impl/sensor/AbstractSensorModule.html" title="class in org.sensorhub.impl.sensor">AbstractSensorModule</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/sensorhub/api/common/CommandStatus.html#updateTime">updateTime</a></span> - Variable in class org.sensorhub.api.common.<a href="./org/sensorhub/api/common/CommandStatus.html" title="class in org.sensorhub.api.common">CommandStatus</a></dt>
 <dd>&nbsp;</dd>

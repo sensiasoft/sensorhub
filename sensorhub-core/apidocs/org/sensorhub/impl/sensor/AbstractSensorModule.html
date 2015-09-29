@@ -110,7 +110,6 @@ extends <a href="../../../../org/sensorhub/impl/module/AbstractModule.html" titl
 implements <a href="../../../../org/sensorhub/api/sensor/ISensorModule.html" title="interface in org.sensorhub.api.sensor">ISensorModule</a>&lt;ConfigType&gt;</pre>
 <div class="block"><p>
  Class providing default implementation of common sensor API methods.
- By default, sensor description history and updates are reported as unsupported.<br/>
  This can be used as the base for most sensor driver implementations.
  </p></div>
 <dl><dt><span class="strong">Since:</span></dt>
@@ -210,35 +209,9 @@ implements <a href="../../../../org/sensorhub/api/sensor/ISensorModule.html" tit
 </td>
 </tr>
 <tr class="altColor">
-<td class="colFirst"><code><a href="http://docs.opensensorhub.org/sensorml-core/apidocs/net/opengis/sensorml/v20/AbstractProcess.html?is-external=true" title="class or interface in net.opengis.sensorml.v20">AbstractProcess</a></code></td>
-<td class="colLast"><code><strong><a href="../../../../org/sensorhub/impl/sensor/AbstractSensorModule.html#getSensorDescription(double)">getSensorDescription</a></strong>(double&nbsp;time)</code>
-<div class="block">Retrieves historic sensor description valid at time t</div>
-</td>
-</tr>
-<tr class="rowColor">
-<td class="colFirst"><code><a href="http://docs.oracle.com/javase/7/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</a>&lt;<a href="http://docs.opensensorhub.org/sensorml-core/apidocs/net/opengis/sensorml/v20/AbstractProcess.html?is-external=true" title="class or interface in net.opengis.sensorml.v20">AbstractProcess</a>&gt;</code></td>
-<td class="colLast"><code><strong><a href="../../../../org/sensorhub/impl/sensor/AbstractSensorModule.html#getSensorDescriptionHistory()">getSensorDescriptionHistory</a></strong>()</code>
-<div class="block">Gets the whole history of sensor descriptions</div>
-</td>
-</tr>
-<tr class="altColor">
 <td class="colFirst"><code><a href="http://docs.oracle.com/javase/7/docs/api/java/util/Map.html?is-external=true" title="class or interface in java.util">Map</a>&lt;<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>,<a href="../../../../org/sensorhub/api/sensor/ISensorDataInterface.html" title="interface in org.sensorhub.api.sensor">ISensorDataInterface</a>&gt;</code></td>
 <td class="colLast"><code><strong><a href="../../../../org/sensorhub/impl/sensor/AbstractSensorModule.html#getStatusOutputs()">getStatusOutputs</a></strong>()</code>
 <div class="block">Retrieves the list of interface to sensor status outputs</div>
-</td>
-</tr>
-<tr class="rowColor">
-<td class="colFirst"><code>boolean</code></td>
-<td class="colLast"><code><strong><a href="../../../../org/sensorhub/impl/sensor/AbstractSensorModule.html#isSensorDescriptionHistorySupported()">isSensorDescriptionHistorySupported</a></strong>()</code>
-<div class="block">Checks sensor description history capability
- If true, the getSensorDescription(DateTime t) method should be implemented</div>
-</td>
-</tr>
-<tr class="altColor">
-<td class="colFirst"><code>boolean</code></td>
-<td class="colLast"><code><strong><a href="../../../../org/sensorhub/impl/sensor/AbstractSensorModule.html#isSensorDescriptionUpdateSupported()">isSensorDescriptionUpdateSupported</a></strong>()</code>
-<div class="block">Checks sensor description update capability
- If true, the updateSensorDescription method should be implemented</div>
 </td>
 </tr>
 <tr class="rowColor">
@@ -258,13 +231,6 @@ implements <a href="../../../../org/sensorhub/api/sensor/ISensorModule.html" tit
 <td class="colLast"><code><strong><a href="../../../../org/sensorhub/impl/sensor/AbstractSensorModule.html#updateConfig(ConfigType)">updateConfig</a></strong>(<a href="../../../../org/sensorhub/impl/sensor/AbstractSensorModule.html" title="type parameter in AbstractSensorModule">ConfigType</a>&nbsp;config)</code>
 <div class="block">Updates the module's configuration dynamically.<br/>
  The module must honor this new configuration unless an error is detected.</div>
-</td>
-</tr>
-<tr class="altColor">
-<td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><strong><a href="../../../../org/sensorhub/impl/sensor/AbstractSensorModule.html#updateSensorDescription(net.opengis.sensorml.v20.AbstractProcess,%20boolean)">updateSensorDescription</a></strong>(<a href="http://docs.opensensorhub.org/sensorml-core/apidocs/net/opengis/sensorml/v20/AbstractProcess.html?is-external=true" title="class or interface in net.opengis.sensorml.v20">AbstractProcess</a>&nbsp;systemDesc,
-                       boolean&nbsp;recordHistory)</code>
-<div class="block">Updates and historizes system description</div>
 </td>
 </tr>
 </table>
@@ -345,38 +311,6 @@ implements <a href="../../../../org/sensorhub/api/sensor/ISensorModule.html" tit
 <!--   -->
 </a>
 <h3>Method Detail</h3>
-<a name="isSensorDescriptionUpdateSupported()">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>isSensorDescriptionUpdateSupported</h4>
-<pre>public&nbsp;boolean&nbsp;isSensorDescriptionUpdateSupported()</pre>
-<div class="block"><strong>Description copied from interface:&nbsp;<code><a href="../../../../org/sensorhub/api/sensor/ISensorModule.html#isSensorDescriptionUpdateSupported()">ISensorModule</a></code></strong></div>
-<div class="block">Checks sensor description update capability
- If true, the updateSensorDescription method should be implemented</div>
-<dl>
-<dt><strong>Specified by:</strong></dt>
-<dd><code><a href="../../../../org/sensorhub/api/sensor/ISensorModule.html#isSensorDescriptionUpdateSupported()">isSensorDescriptionUpdateSupported</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../org/sensorhub/api/sensor/ISensorModule.html" title="interface in org.sensorhub.api.sensor">ISensorModule</a>&lt;<a href="../../../../org/sensorhub/impl/sensor/AbstractSensorModule.html" title="type parameter in AbstractSensorModule">ConfigType</a> extends <a href="../../../../org/sensorhub/api/sensor/SensorConfig.html" title="class in org.sensorhub.api.sensor">SensorConfig</a>&gt;</code></dd>
-<dt><span class="strong">Returns:</span></dt><dd>true if sensor description updates is supported, false otherwise</dd></dl>
-</li>
-</ul>
-<a name="isSensorDescriptionHistorySupported()">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>isSensorDescriptionHistorySupported</h4>
-<pre>public&nbsp;boolean&nbsp;isSensorDescriptionHistorySupported()</pre>
-<div class="block"><strong>Description copied from interface:&nbsp;<code><a href="../../../../org/sensorhub/api/sensor/ISensorModule.html#isSensorDescriptionHistorySupported()">ISensorModule</a></code></strong></div>
-<div class="block">Checks sensor description history capability
- If true, the getSensorDescription(DateTime t) method should be implemented</div>
-<dl>
-<dt><strong>Specified by:</strong></dt>
-<dd><code><a href="../../../../org/sensorhub/api/sensor/ISensorModule.html#isSensorDescriptionHistorySupported()">isSensorDescriptionHistorySupported</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../org/sensorhub/api/sensor/ISensorModule.html" title="interface in org.sensorhub.api.sensor">ISensorModule</a>&lt;<a href="../../../../org/sensorhub/impl/sensor/AbstractSensorModule.html" title="type parameter in AbstractSensorModule">ConfigType</a> extends <a href="../../../../org/sensorhub/api/sensor/SensorConfig.html" title="class in org.sensorhub.api.sensor">SensorConfig</a>&gt;</code></dd>
-<dt><span class="strong">Returns:</span></dt><dd>true if sensor description history is supported, false otherwise</dd></dl>
-</li>
-</ul>
 <a name="getCurrentDescription()">
 <!--   -->
 </a>
@@ -410,57 +344,6 @@ implements <a href="../../../../org/sensorhub/api/sensor/ISensorModule.html" tit
 <dd><code><a href="../../../../org/sensorhub/api/data/IModuleWithDescription.html#getLastDescriptionUpdate()">getLastDescriptionUpdate</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../org/sensorhub/api/data/IModuleWithDescription.html" title="interface in org.sensorhub.api.data">IModuleWithDescription</a></code></dd>
 <dt><span class="strong">Returns:</span></dt><dd>Date/time of last description update as unix time (ms since 1970) or
  <a href="http://docs.oracle.com/javase/7/docs/api/java/lang/Long.html?is-external=true#MIN_VALUE" title="class or interface in java.lang"><code>Long.MIN_VALUE</code></a> if description was never updated.</dd></dl>
-</li>
-</ul>
-<a name="getSensorDescription(double)">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>getSensorDescription</h4>
-<pre>public&nbsp;<a href="http://docs.opensensorhub.org/sensorml-core/apidocs/net/opengis/sensorml/v20/AbstractProcess.html?is-external=true" title="class or interface in net.opengis.sensorml.v20">AbstractProcess</a>&nbsp;getSensorDescription(double&nbsp;time)</pre>
-<div class="block"><strong>Description copied from interface:&nbsp;<code><a href="../../../../org/sensorhub/api/sensor/ISensorModule.html#getSensorDescription(double)">ISensorModule</a></code></strong></div>
-<div class="block">Retrieves historic sensor description valid at time t</div>
-<dl>
-<dt><strong>Specified by:</strong></dt>
-<dd><code><a href="../../../../org/sensorhub/api/sensor/ISensorModule.html#getSensorDescription(double)">getSensorDescription</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../org/sensorhub/api/sensor/ISensorModule.html" title="interface in org.sensorhub.api.sensor">ISensorModule</a>&lt;<a href="../../../../org/sensorhub/impl/sensor/AbstractSensorModule.html" title="type parameter in AbstractSensorModule">ConfigType</a> extends <a href="../../../../org/sensorhub/api/sensor/SensorConfig.html" title="class in org.sensorhub.api.sensor">SensorConfig</a>&gt;</code></dd>
-<dt><span class="strong">Parameters:</span></dt><dd><code>time</code> - julian time (1970) at which description is valid</dd>
-<dt><span class="strong">Returns:</span></dt><dd>SMLSytem object containing sensor metadata valid at time t</dd></dl>
-</li>
-</ul>
-<a name="getSensorDescriptionHistory()">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>getSensorDescriptionHistory</h4>
-<pre>public&nbsp;<a href="http://docs.oracle.com/javase/7/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</a>&lt;<a href="http://docs.opensensorhub.org/sensorml-core/apidocs/net/opengis/sensorml/v20/AbstractProcess.html?is-external=true" title="class or interface in net.opengis.sensorml.v20">AbstractProcess</a>&gt;&nbsp;getSensorDescriptionHistory()</pre>
-<div class="block"><strong>Description copied from interface:&nbsp;<code><a href="../../../../org/sensorhub/api/sensor/ISensorModule.html#getSensorDescriptionHistory()">ISensorModule</a></code></strong></div>
-<div class="block">Gets the whole history of sensor descriptions</div>
-<dl>
-<dt><strong>Specified by:</strong></dt>
-<dd><code><a href="../../../../org/sensorhub/api/sensor/ISensorModule.html#getSensorDescriptionHistory()">getSensorDescriptionHistory</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../org/sensorhub/api/sensor/ISensorModule.html" title="interface in org.sensorhub.api.sensor">ISensorModule</a>&lt;<a href="../../../../org/sensorhub/impl/sensor/AbstractSensorModule.html" title="type parameter in AbstractSensorModule">ConfigType</a> extends <a href="../../../../org/sensorhub/api/sensor/SensorConfig.html" title="class in org.sensorhub.api.sensor">SensorConfig</a>&gt;</code></dd>
-<dt><span class="strong">Returns:</span></dt><dd>list of process descriptions (with disjoint time validity periods)</dd></dl>
-</li>
-</ul>
-<a name="updateSensorDescription(net.opengis.sensorml.v20.AbstractProcess, boolean)">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>updateSensorDescription</h4>
-<pre>public&nbsp;void&nbsp;updateSensorDescription(<a href="http://docs.opensensorhub.org/sensorml-core/apidocs/net/opengis/sensorml/v20/AbstractProcess.html?is-external=true" title="class or interface in net.opengis.sensorml.v20">AbstractProcess</a>&nbsp;systemDesc,
-                           boolean&nbsp;recordHistory)
-                             throws <a href="../../../../org/sensorhub/api/sensor/SensorException.html" title="class in org.sensorhub.api.sensor">SensorException</a></pre>
-<div class="block"><strong>Description copied from interface:&nbsp;<code><a href="../../../../org/sensorhub/api/sensor/ISensorModule.html#updateSensorDescription(net.opengis.sensorml.v20.AbstractProcess,%20boolean)">ISensorModule</a></code></strong></div>
-<div class="block">Updates and historizes system description</div>
-<dl>
-<dt><strong>Specified by:</strong></dt>
-<dd><code><a href="../../../../org/sensorhub/api/sensor/ISensorModule.html#updateSensorDescription(net.opengis.sensorml.v20.AbstractProcess,%20boolean)">updateSensorDescription</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../org/sensorhub/api/sensor/ISensorModule.html" title="interface in org.sensorhub.api.sensor">ISensorModule</a>&lt;<a href="../../../../org/sensorhub/impl/sensor/AbstractSensorModule.html" title="type parameter in AbstractSensorModule">ConfigType</a> extends <a href="../../../../org/sensorhub/api/sensor/SensorConfig.html" title="class in org.sensorhub.api.sensor">SensorConfig</a>&gt;</code></dd>
-<dt><span class="strong">Parameters:</span></dt><dd><code>systemDesc</code> - SMLSystem object with validity period</dd><dd><code>recordHistory</code> - if true, older versions of the descriptions will be retained
- and made accessible by time</dd>
-<dt><span class="strong">Throws:</span></dt>
-<dd><code><a href="../../../../org/sensorhub/api/sensor/SensorException.html" title="class in org.sensorhub.api.sensor">SensorException</a></code></dd></dl>
 </li>
 </ul>
 <a name="getAllOutputs()">

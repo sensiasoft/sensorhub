@@ -142,10 +142,14 @@ extends <a href="../../../../org/sensorhub/api/persistence/StorageConfig.html" t
 <td class="colLast"><code><strong><a href="../../../../org/sensorhub/impl/persistence/StreamStorageConfig.html#minCommitPeriod">minCommitPeriod</a></strong></code>&nbsp;</td>
 </tr>
 <tr class="rowColor">
+<td class="colFirst"><code>boolean</code></td>
+<td class="colLast"><code><strong><a href="../../../../org/sensorhub/impl/persistence/StreamStorageConfig.html#processEvents">processEvents</a></strong></code>&nbsp;</td>
+</tr>
+<tr class="altColor">
 <td class="colFirst"><code><a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>[]</code></td>
 <td class="colLast"><code><strong><a href="../../../../org/sensorhub/impl/persistence/StreamStorageConfig.html#selectedOutputs">selectedOutputs</a></strong></code>&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code><a href="../../../../org/sensorhub/api/persistence/StorageConfig.html" title="class in org.sensorhub.api.persistence">StorageConfig</a></code></td>
 <td class="colLast"><code><strong><a href="../../../../org/sensorhub/impl/persistence/StreamStorageConfig.html#storageConfig">storageConfig</a></strong></code>&nbsp;</td>
 </tr>
@@ -264,11 +268,21 @@ public&nbsp;<a href="../../../../org/sensorhub/impl/persistence/StorageAutoPurge
 <a name="minCommitPeriod">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>minCommitPeriod</h4>
 <pre><a href="../../../../org/sensorhub/api/config/DisplayInfo.html" title="annotation in org.sensorhub.api.config">@DisplayInfo</a>(<a href="../../../../org/sensorhub/api/config/DisplayInfo.html#desc()">desc</a>="Minimum period between database commits (in ms)")
 public&nbsp;int minCommitPeriod</pre>
+</li>
+</ul>
+<a name="processEvents">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>processEvents</h4>
+<pre><a href="../../../../org/sensorhub/api/config/DisplayInfo.html" title="annotation in org.sensorhub.api.config">@DisplayInfo</a>(<a href="../../../../org/sensorhub/api/config/DisplayInfo.html#desc()">desc</a>="Set to false to stop storing data of received events in underlying storage")
+public&nbsp;boolean processEvents</pre>
 </li>
 </ul>
 </li>
