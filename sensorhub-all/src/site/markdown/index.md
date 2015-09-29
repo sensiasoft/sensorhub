@@ -11,7 +11,7 @@ Low level functions of SensorHub (send commands and read data from sensor) are c
 
 SensorHub is pure java software but we have plans to release parts of this software in other languages (Arduino, C++) to be used on low power micro-controllers (note that some more powerful ARM micro-controllers can also run the Java version directly using [Java ME®][Java ME]).
 
-If you're interested in knowing more, this [presentation](https://drive.google.com/open?id=0B41B4izqa7n_Zlc5Qi1YaE1Ubm8) gives an overview of SensorHub's architecture.
+If you're interested in knowing more, this [FOSS4G Presentation](https://drive.google.com/open?id=0B3EZQJqOfG9sUFQxVFd0d2ZEbDQ) gives an overview of SensorHub's architecture and APIs. We also encourage you to read through the technical documentation accessible from the _Getting Started_ menu.
 
 
 [Java ME]: http://www.oracle.com/us/technologies/java/embedded/micro-edition/overview/index.html

@@ -42,6 +42,7 @@
             <module>sensorhub-comm-dio</module>
             <module>sensorhub-process-vecmath</module> 
             <module>sensorhub-process-geoloc</module>
+            <module>sensorhub-process-sat</module> 
             <module>sensorhub-driver-v4l</module>
             <module>sensorhub-driver-axis</module>
             <module>sensorhub-driver-weatherStation</module>
