@@ -8,7 +8,7 @@
 
 	<head>
 		<meta charset="UTF-8" />
-		<title>OpenSensorHub &#x2013; Welcome to SensorHubs Documentation Website</title>
+		<title>OpenSensorHub &#x2013; How to Report Errors in the Documentation</title>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<meta name="description" content="" />
 		<meta http-equiv="content-language" content="en" />
@@ -49,7 +49,7 @@
 		</script>
 		</head>
 
-	<body class="page-index project-sensorhub-all" data-spy="scroll" data-offset="60" data-target="#toc-scroll-target">
+	<body class="page-report-errors project-sensorhub-all" data-spy="scroll" data-offset="60" data-target="#toc-scroll-target">
 
 		<div class="navbar navbar-fixed-top">
 			<div class="navbar-inner">
@@ -63,7 +63,7 @@
 					<div class="nav-collapse collapse" id="top-nav-collapse">
 						<ul class="nav pull-right">
 							<li ><a href="https://github.com/sensiasoft/sensorhub/tree/master" title="GitHub" class="externalLink">GitHub</a></li>
-							<li ><a href="report-errors.html" title="Report an Error">Report an Error</a></li>
+							<li class="active"><a href="" title="Report an Error">Report an Error</a></li>
 							<li class="dropdown">
 								<a href="#" class="dropdown-toggle" data-toggle="dropdown">Getting Started <b class="caret"></b></a>
 								<ul class="dropdown-menu">
@@ -109,29 +109,33 @@
 	</div>
 		<div>
 			<ul class="breadcrumb">
-				<li><a href="" title="Docs">Docs</a></li>
+				<li><a href="index.html" title="Docs">Docs</a></li>
 				<li class="divider">/</li>
-				<li>Welcome to SensorHubs Documentation Website</li>
+				<li>How to Report Errors in the Documentation</li>
 			</ul>
 		</div>
 	</header>
 
 	<div class="main-body">
 	<div class="row">
-		<div class="span12">
+		<div class="span8">
 			<div class="body-content">
 <div class="section"> 
  <div class="page-header">
-  <h2 id="Welcome_to_SensorHubs_Documentation_Website">Welcome to SensorHub’s Documentation Website</h2>
+  <h2 id="How_to_Report_Errors_in_the_Documentation">How to Report Errors in the Documentation</h2>
  </div> 
- <p>SensorHub software allows one to easily build interoperable and evolutive sensor networks, based on open-standards for all data exchanges, and providing advanced processing capabilities. The open-standards used are mostly <a class="externalLink" href="http://www.opengeospatial.org">OGC</a> standards from the <a class="externalLink" href="http://www.opengeospatial.org/projects/groups/sensorwebdwg">Sensor Web Enablement</a> (SWE) initiative and are key to design sensor networks that can largely evolve with time (addition of new types of sensors, reconfigurations, etc.).</p> 
- <p>The Java framework allows one to connect any kind of sensors and actuators to a common bus via a simple yet generic driver API. Sensors can be connected through any available hardware interface such as <a class="externalLink" href="http://en.wikipedia.org/wiki/RS-232">RS232/422</a>, <a class="externalLink" href="http://en.wikipedia.org/wiki/Serial_Peripheral_Interface_Bus">SPI</a>, <a class="externalLink" href="http://en.wikipedia.org/wiki/I%C2%B2C">I2C</a>, <a class="externalLink" href="http://en.wikipedia.org/wiki/USB">USB</a>, <a class="externalLink" href="http://en.wikipedia.org/wiki/Ethernet">Ethernet</a>, <a class="externalLink" href="http://en.wikipedia.org/wiki/Wi-Fi">Wifi</a>, <a class="externalLink" href="http://en.wikipedia.org/wiki/Bluetooth">Bluetooth</a>, <a class="externalLink" href="http://en.wikipedia.org/wiki/ZigBee">ZigBee</a>, <a class="externalLink" href="http://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol">HTTP</a>, etc… Once drivers are available for a specific sensor, it is automatically connected to the bus and it is then trivial to send commands and read data from it. An intuitive user interface allows the user to configure the network to suit its needs and more advanced processing capabilities are available via a plugin system.</p> 
- <p>SensorHub embeds the full power of OGC web services (<a class="externalLink" href="http://www.opengeospatial.org/standards/sos">Sensor Observation Service</a> or SOS, <a class="externalLink" href="http://www.opengeospatial.org/standards/sps">Sensor Planning Service</a> or SPS) to communicate with all connected sensors in the network and provide robust metadata (owner, location and orientation, calibration, etc.). Through these standards, several SensorHub instances can also communicate with each other to form larger networks.</p> 
- <p>Low level functions of SensorHub (send commands and read data from sensor) are coded efficiently and can be used on embedded hardware running <a class="externalLink" href="http://www.oracle.com/technetwork/java/javase">Java SE&reg;</a>, <a class="externalLink" href="http://www.oracle.com/us/technologies/java/embedded/micro-edition/overview/index.html">Java ME&reg;</a> or <a class="externalLink" href="http://www.android.com">Android&reg;</a> while more advanced data processing capabilities are fully multi-threaded and can thus benefit from a more powerful hardware platform (e.g. multi-processor servers or even clusters).</p> 
- <p>SensorHub is pure java software but we have plans to release parts of this software in other languages (Arduino, C++) to be used on low power micro-controllers (note that some more powerful ARM micro-controllers can also run the Java version directly using <a class="externalLink" href="http://www.oracle.com/us/technologies/java/embedded/micro-edition/overview/index.html">Java ME&reg;</a>).</p> 
- <p>If you’re interested in knowing more, this <a class="externalLink" href="https://drive.google.com/open?id=0B3EZQJqOfG9sUFQxVFd0d2ZEbDQ">FOSS4G Presentation</a> gives an overview of SensorHub’s architecture and APIs. We also encourage you to read through the technical documentation accessible from the <i>Getting Started</i> menu.</p> 
  <p>Please report all problems related to the SensorHub software including documentation errors via the <a class="externalLink" href="https://github.com/sensiasoft/sensorhub/issues">GitHub Issue Tracker</a>.</p> 
 </div>
+			</div>
+		</div>
+		<div class="span4">
+			<div id="toc-sidebar">
+				<div class="well">
+					<ul class="nav nav-list">
+						<li class="nav-header">Table of Contents</li>
+		<li><a href="#How_to_Report_Errors_in_the_Documentation" title="How to Report Errors in the Documentation">How to Report Errors in the Documentation</a>
+					</ul>
+				</div>
 			</div>
 		</div>
 	</div>
