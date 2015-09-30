@@ -2,3 +2,5 @@
 /sensorhub-api-weather/
 /sensorhub-webui-charts/
 /sensorhub-webui-sensorml/
+**/.DStore
+**/.DS_Store
