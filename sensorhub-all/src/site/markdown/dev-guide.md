@@ -51,15 +51,15 @@ If you want to add other modules than the ones included in the default build, go
 
 We provide Eclipse project configuration directly from the repository so it is the easiest way to get started, especially if you're already familiar with Eclipse. 
 
-1. Pre-requisites
+##### Pre-requisites
 
-Make sure you have the following Eclipse components installed :
+Make sure you have the following Eclipse components installed:
   
   * Eclipse Helios or newer (the exact steps described here are for Luna)
   * Egit plugin for Eclipse (included in "Eclipse IDE for Java Developers" release)
   * Maven plugin for Eclipse M2E (you can install it using the "Help > Install New Software..". You will find it under the "Collaboration" section of the Eclipse releases repository) 
 
-2. Clone the project in your Eclipse workspace
+##### Clone the project in your Eclipse workspace
 
   * In the Package Explorer, right click and select "Import" from the popup menu
   * Open the "Git" category, select "Projects from Git" and click "Next"
@@ -93,7 +93,11 @@ Clone your new GitHub repository locally by following the steps in the [Download
 
 You can then start modifying the code and/or add new modules/features. We don't have coding guidelines yet but try to mimic the code that is already there. Don't forget to include Javadoc especially on public parts of your APIs.
 
-Don't hesitate to tell us early-on what you're planning to work on. We may be able to point you in the right direction or maybe to somebody who has similar needs than you.
+Whether you're trying to fix bugs or adding a brand new functionality, don't hesitate to tell us early-on what you're planning to work on. We may be able to point you in the right direction or maybe to somebody who has similar needs than you.
+
+You can start by reading the instructions to [Create a New Module](sensorhub-core/adding-new-modules.html) and [Add a New Sensor Driver](sensorhub-core/your-first-sensor.html) for instance.
+
+Also see the [Eclipse Tips](#Eclipse_Tips) section if you encounter problems while creating a new module.
 
 #### Get the latest updates from us
 
@@ -187,7 +191,9 @@ So that we can better evaluate your contribution, please describe your improveme
 
 ### Eclipse Tips
 
-One problem we have encountered several times with Eclipse is that the POM files and Projects Settings get out of sync and it causes various Java and/or Maven related dependency errors (e.g. dependency YYY cannot be found, etc). If you get such errors although everything seems fine in your POM and code, you may have to follow these steps to resync eveything:
+##### Update Maven Settings
+
+One problem we have encountered several times with Eclipse is that the POM files and Projects Settings get out of sync and it causes various Java and/or Maven related dependency errors (e.g. dependency YYY cannot be found, etc). If you get such errors even though everything seems fine in your POM and code, you may have to follow these steps to resync eveything:
 
   * Click one of the SensorHub module project
   * Select "Maven > Update Project..." from the context menu

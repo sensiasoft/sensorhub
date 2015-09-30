@@ -13,5 +13,7 @@ SensorHub is pure java software but we have plans to release parts of this softw
 
 If you're interested in knowing more, this [FOSS4G Presentation](https://drive.google.com/open?id=0B3EZQJqOfG9sUFQxVFd0d2ZEbDQ) gives an overview of SensorHub's architecture and APIs. We also encourage you to read through the technical documentation accessible from the _Getting Started_ menu.
 
+Please report all problems related to the SensorHub software including documentation errors via the [GitHub Issue Tracker](https://github.com/sensiasoft/sensorhub/issues).
+
 
 [Java ME]: http://www.oracle.com/us/technologies/java/embedded/micro-edition/overview/index.html

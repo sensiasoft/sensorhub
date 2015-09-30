@@ -50,7 +50,8 @@
       </head>
 
       <links>
-         <item name="GitHub" position="left" href="${project.scm.url}" />
+         <item name="GitHub" position="right" href="${project.scm.url}" />
+         <item name="Report an Error" position="right" href="report-errors.html" />
       </links>
 
       <breadcrumbs>
@@ -75,7 +76,7 @@
          <item name="Core APIs" href="sensorhub-core/index.html" />
          <item name="SWE Services" href="sensorhub-service-swe/index.html" />
       </menu>
-
+      
    </body>
 
 </project>
