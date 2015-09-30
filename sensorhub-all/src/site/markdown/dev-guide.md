@@ -134,7 +134,7 @@ Then pull changes from the "upstream" remote:
   * Select the "sensiasoft" remote in the "Configured remote repository" item and click "Finish"
   * Right click on the "Submodules" folder and select "Update submodule" from the popup menu
   
-You'll then eventually have to merge our changes with yours using the Egit merge command.
+You'll then eventually have to merge our changes with yours using the Egit merge command. Please see [Git Documentation](https://git-scm.com/book/en/v2/Git-Branching-Basic-Branching-and-Merging#Basic-Merge-Conflicts) for more details
 
 Note: Also don't forget to import new Eclipse projects that may have been added since your last update. For this, follow these steps:
 
