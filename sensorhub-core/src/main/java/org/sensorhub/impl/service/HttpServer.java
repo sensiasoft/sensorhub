@@ -25,6 +25,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.eclipse.jetty.security.Authenticator;
 import org.eclipse.jetty.security.ConstraintMapping;
 import org.eclipse.jetty.security.ConstraintSecurityHandler;
 import org.eclipse.jetty.security.HashLoginService;
@@ -133,7 +134,8 @@ public class HttpServer extends AbstractModule<HttpServerConfig>
                 if (config.users != null && !config.users.isEmpty())
                 {
                     securityHandler = new ConstraintSecurityHandler();
-                    securityHandler.setAuthenticator(new DigestAuthenticator());
+                    //securityHandler.setAuthenticator(new DigestAuthenticator());
+                    securityHandler.setAuthenticator((Authenticator)Class.forName("org.sensorhub.impl.security.oauth.OAuthAuthenticator").newInstance());
                     securityHandler.setLoginService(loginService);
                     servletHandler.setSecurityHandler(securityHandler);
                 }
