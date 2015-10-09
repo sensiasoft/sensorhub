@@ -83,7 +83,7 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
     IRecordStorageModule<StorageConfig> storage;
     WeakReference<IDataProducerModule<?>> dataSourceRef;
     Map<String, ScalarIndexer> timeStampIndexers = new HashMap<String, ScalarIndexer>();
-    Map<String, String> currentFoiMap = new HashMap<String, String>();
+    Map<String, String> currentFoiMap = new HashMap<String, String>(); // entity ID -> current FOI ID
     
     long lastCommitTime = Long.MIN_VALUE;
     String currentFoi;
@@ -150,6 +150,7 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
                 if (foi != null)
                 {
                     currentFoi = foi.getUniqueIdentifier();
+                    currentFoiMap.put(producerID, currentFoi);
                     if (storage instanceof IObsStorage)
                         ((IObsStorage)storage).storeFoi(producerID, foi);
                 }

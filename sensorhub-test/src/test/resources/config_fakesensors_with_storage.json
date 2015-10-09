@@ -6,7 +6,12 @@
     "moduleClass": "org.sensorhub.impl.service.HttpServer",
     "httpPort": 8181,
     "servletsRootUrl": "/sensorhub",
-    "staticDocRootUrl": "web"
+    "staticDocRootUrl": "web",
+    "users":
+    [
+        "117311392852364959203: NONE, test, admin",
+        "isa: pwd, admin"
+    ]
   },
   {
     "objClass": "org.sensorhub.ui.AdminUIConfig",
@@ -65,7 +70,7 @@
     "storageConfig":    
     {
       "objClass": "org.sensorhub.impl.persistence.perst.BasicStorageConfig",
-      "moduleClass": "org.sensorhub.impl.persistence.perst.BasicStorageImpl",
+      "moduleClass": "org.sensorhub.impl.persistence.perst.ObsStorageImpl",
       "memoryCacheSize": 1024,
       "storagePath": "weather_obs.dat"
     }

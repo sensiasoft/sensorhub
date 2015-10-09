@@ -110,5 +110,15 @@
         <artifactId>sensorhub-driver-avl-911</artifactId>
         <version>0.1-SNAPSHOT</version>
      </dependency>
+     <dependency>
+        <groupId>org.sensorhub</groupId>
+        <artifactId>sensorhub-driver-ahrs</artifactId>
+        <version>0.1</version>
+     </dependency>
+     <dependency>
+        <groupId>org.sensorhub</groupId>
+        <artifactId>sensorhub-security-oauth</artifactId>
+        <version>0.1-SNAPSHOT</version>
+     </dependency>
   </dependencies>
 </project>

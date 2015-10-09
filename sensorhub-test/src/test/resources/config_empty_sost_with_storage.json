@@ -2,8 +2,9 @@
   {
     "objClass": "org.sensorhub.impl.service.HttpServerConfig",
     "httpPort": 8181,
-    "servletsRootUrl": "/sensorhub",
     "staticDocRootUrl": "web",
+    "servletsRootUrl": "/sensorhub",
+    "maxRequestsPerSecond": 10,
     "id": "5cb05c9c-9e08-4fa1-8731-ffaa5846bdc1",
     "moduleClass": "org.sensorhub.impl.service.HttpServer",
     "name": "HTTP Server",
@@ -11,6 +12,7 @@
   },
   {
     "objClass": "org.sensorhub.ui.AdminUIConfig",
+    "widgetSet": "org.sensorhub.ui.SensorHubWidgetSet",
     "customPanels": [],
     "customForms": [],
     "id": "5cb05c9c-9123-4fa1-8731-ffaa51489678",
@@ -30,23 +32,41 @@
     "dataProviders": [
       {
         "objClass": "org.sensorhub.impl.service.sos.SensorDataProviderConfig",
-        "sensorID": "6eef751c-dbed-4105-a545-3916061847b0",
-        "storageID": "4596f121-d4ff-4544-ae35-b7d5cdd3038c",
+        "sensorID": "urn:android:device:a0e0eac2fea3f614",
+        "storageID": "urn:android:device:a0e0eac2fea3f614#storage",
         "hiddenOutputs": [],
         "activateNotifications": false,
         "liveDataTimeout": 10.0,
         "enabled": true,
         "uri": "urn:android:device:a0e0eac2fea3f614-sos",
         "maxFois": 10
+      },
+      {
+        "objClass": "org.sensorhub.impl.service.sos.SensorDataProviderConfig",
+        "sensorID": "urn:test:sensors:trupulse360",
+        "storageID": "urn:test:sensors:trupulse360#storage",
+        "hiddenOutputs": [],
+        "activateNotifications": false,
+        "liveDataTimeout": 10.0,
+        "enabled": true,
+        "uri": "urn:test:sensors:trupulse360-sos",
+        "maxFois": 10
       }
     ],
     "dataConsumers": [
       {
         "objClass": "org.sensorhub.impl.service.sos.SensorConsumerConfig",
-        "sensorID": "6eef751c-dbed-4105-a545-3916061847b0",
-        "storageID": "4596f121-d4ff-4544-ae35-b7d5cdd3038c",
+        "sensorID": "urn:android:device:a0e0eac2fea3f614",
+        "storageID": "urn:android:device:a0e0eac2fea3f614#storage",
         "enabled": true,
         "offering": "urn:android:device:a0e0eac2fea3f614-sos"
+      },
+      {
+        "objClass": "org.sensorhub.impl.service.sos.SensorConsumerConfig",
+        "sensorID": "urn:test:sensors:trupulse360",
+        "storageID": "urn:test:sensors:trupulse360#storage",
+        "enabled": true,
+        "offering": "urn:test:sensors:trupulse360-sos"
       }
     ],
     "ogcCapabilitiesInfo": {
@@ -85,10 +105,9 @@
   },
   {
     "objClass": "org.sensorhub.impl.sensor.sost.SOSVirtualSensorConfig",
-    "sensorUID": "urn:android:device:a0e0eac2fea3f614",
     "autoActivate": true,
     "enableHistory": true,
-    "id": "6eef751c-dbed-4105-a545-3916061847b0",
+    "id": "urn:android:device:a0e0eac2fea3f614",
     "moduleClass": "org.sensorhub.impl.sensor.sost.SOSVirtualSensor",
     "name": "Alex's Phone Sensors",
     "enabled": true
@@ -102,10 +121,36 @@
       "moduleClass": "org.sensorhub.impl.persistence.perst.ObsStorageImpl",
       "enabled": true
     },
-    "dataSourceID": "6eef751c-dbed-4105-a545-3916061847b0",
-    "id": "4596f121-d4ff-4544-ae35-b7d5cdd3038c",
+    "dataSourceID": "urn:android:device:a0e0eac2fea3f614",
+    "minCommitPeriod": 10000,
+    "id": "urn:android:device:a0e0eac2fea3f614#storage",
     "moduleClass": "org.sensorhub.impl.persistence.GenericStreamStorage",
     "name": "Alex's Phone Sensors Storage",
+    "enabled": true
+  },
+  {
+    "objClass": "org.sensorhub.impl.sensor.sost.SOSVirtualSensorConfig",
+    "autoActivate": true,
+    "enableHistory": true,
+    "id": "urn:test:sensors:trupulse360",
+    "moduleClass": "org.sensorhub.impl.sensor.sost.SOSVirtualSensor",
+    "name": "TruPulse",
+    "enabled": true
+  },
+  {
+    "objClass": "org.sensorhub.impl.persistence.StreamStorageConfig",
+    "storageConfig": {
+      "objClass": "org.sensorhub.impl.persistence.perst.BasicStorageConfig",
+      "memoryCacheSize": 10240,
+      "storagePath": "urn:test:sensors:trupulse360.dat",
+      "moduleClass": "org.sensorhub.impl.persistence.perst.ObsStorageImpl",
+      "enabled": true
+    },
+    "dataSourceID": "urn:test:sensors:trupulse360",
+    "minCommitPeriod": 10000,
+    "id": "urn:test:sensors:trupulse360#storage",
+    "moduleClass": "org.sensorhub.impl.persistence.GenericStreamStorage",
+    "name": "TruPulse Storage",
     "enabled": true
   }
 ]

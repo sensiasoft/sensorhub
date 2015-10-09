@@ -60,40 +60,36 @@ public class ObsSeriesImpl extends TimeSeriesImpl
     Set<FoiTimePeriod> getFoiTimePeriods(IDataFilter filter)
     {
         // FOI ID list
-        Collection<String> foiIDs = ((IObsFilter)filter).getFoiIDs();
+        Collection<String> foiIDs = null;
+        if (filter instanceof IObsFilter)
+            foiIDs = ((IObsFilter)filter).getFoiIDs();
+        Set<FoiTimePeriod> foiTimes = foiTimesStore.getSortedFoiTimes(foiIDs);
+        
+        // trim periods to filter time range if specified
+        double[] timeRange = filter.getTimeStampRange();
+        if (timeRange != null)
+        {
+            Iterator<FoiTimePeriod> it = foiTimes.iterator();
+            while (it.hasNext())
+            {
+                FoiTimePeriod foiTime = it.next();
+                
+                // trim foi period to filter time range
+                if (foiTime.timePeriod[0] < timeRange[0])
+                    foiTime.timePeriod[0] = timeRange[0];
+                
+                if (foiTime.timePeriod[1] > timeRange[1])
+                    foiTime.timePeriod[1] = timeRange[1];
+                                
+                // case period is completely outside of time range
+                if (foiTime.timePeriod[0] > foiTime.timePeriod[1])
+                    it.remove();
+            }
+        }
         
         // TODO FOI spatial filter
         
-        if (!foiIDs.isEmpty())
-        {
-            Set<FoiTimePeriod> foiTimes = foiTimesStore.getSortedFoiTimes(foiIDs);
-            
-            // trim periods to filter time range if specified
-            double[] timeRange = filter.getTimeStampRange();
-            if (timeRange != null)
-            {
-                Iterator<FoiTimePeriod> it = foiTimes.iterator();
-                while (it.hasNext())
-                {
-                    FoiTimePeriod foiTime = it.next();
-                    
-                    // trim foi period to filter time range
-                    if (foiTime.timePeriod[0] < timeRange[0])
-                        foiTime.timePeriod[0] = timeRange[0];
-                    
-                    if (foiTime.timePeriod[1] > timeRange[1])
-                        foiTime.timePeriod[1] = timeRange[1];
-                                    
-                    // case period is completely outside of time range
-                    if (foiTime.timePeriod[0] > foiTime.timePeriod[1])
-                        it.remove();
-                }
-            }
-            
-            return foiTimes;
-        }
-        
-        return null;
+        return foiTimes;
     }
 
 
@@ -146,52 +142,44 @@ public class ObsSeriesImpl extends TimeSeriesImpl
     @Override
     Iterator<DBRecord> getRecordIterator(IDataFilter filter)
     {
-        if (filter instanceof IObsFilter)
+        // FoI ID list
+        final Set<FoiTimePeriod> foiTimePeriods = getFoiTimePeriods(filter);
+                    
+        // scan through each time range sequentially
+        // but wrap the process with a single iterator
+        return new Iterator<DBRecord>()
         {
-            // FoI ID list
-            final Set<FoiTimePeriod> foiTimePeriods = getFoiTimePeriods(filter);
-                        
-            if (foiTimePeriods != null)
+            Iterator<FoiTimePeriod> periodIt = foiTimePeriods.iterator();
+            Iterator<Entry<Object, DataBlock>> recordIt;
+            String currentFoiID;
+                                
+            public final boolean hasNext()
             {
-                // scan through each time range sequentially
-                // but wrap the process with a single iterator
-                return new Iterator<DBRecord>()
-                {
-                    Iterator<FoiTimePeriod> periodIt = foiTimePeriods.iterator();
-                    Iterator<Entry<Object, DataBlock>> recordIt;
-                    String currentFoiID;
-                                        
-                    public final boolean hasNext()
-                    {
-                        return periodIt.hasNext() || (recordIt != null && recordIt.hasNext());
-                    }
-        
-                    public final DBRecord next()
-                    {
-                        if (recordIt == null || !recordIt.hasNext())
-                        {
-                            // process next time range
-                            FoiTimePeriod nextPeriod = periodIt.next();
-                            currentFoiID = nextPeriod.uid;
-                            double[] timeRange = nextPeriod.timePeriod;
-                            recordIt = recordIndex.entryIterator(new Key(timeRange[0]), new Key(timeRange[1]), Index.ASCENT_ORDER);
-                        }
-                        
-                        // continue processing time range
-                        Entry<Object, DataBlock> entry = recordIt.next();
-                        ObsKey key = new ObsKey(recordDescription.getName(), currentFoiID, (double)entry.getKey());
-                        return new DBRecord(key, entry.getValue());
-                    }
-                
-                    public final void remove()
-                    {
-                        recordIt.remove();
-                    }
-                };
+                return periodIt.hasNext() || (recordIt != null && recordIt.hasNext());
             }
-        }
 
-        return super.getRecordIterator(filter);
+            public final DBRecord next()
+            {
+                if (recordIt == null || !recordIt.hasNext())
+                {
+                    // process next time range
+                    FoiTimePeriod nextPeriod = periodIt.next();
+                    currentFoiID = nextPeriod.uid;
+                    double[] timeRange = nextPeriod.timePeriod;
+                    recordIt = recordIndex.entryIterator(new Key(timeRange[0]), new Key(timeRange[1]), Index.ASCENT_ORDER);
+                }
+                
+                // continue processing time range
+                Entry<Object, DataBlock> entry = recordIt.next();
+                ObsKey key = new ObsKey(recordDescription.getName(), currentFoiID, (double)entry.getKey());
+                return new DBRecord(key, entry.getValue());
+            }
+        
+            public final void remove()
+            {
+                recordIt.remove();
+            }
+        };
     }
 
 
