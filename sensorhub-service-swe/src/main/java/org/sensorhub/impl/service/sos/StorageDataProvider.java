@@ -55,7 +55,6 @@ public class StorageDataProvider implements ISOSDataProvider
 {
     IBasicStorage storage;
     List<StorageState> dataStoresStates;
-    DataComponentFilter recordFilter;
     String foiID;
     
     // replay stuff 
@@ -76,7 +75,6 @@ public class StorageDataProvider implements ISOSDataProvider
     {
         this.storage = storage;
         this.dataStoresStates = new ArrayList<StorageState>();
-        this.recordFilter = new DataComponentFilter(filter);
         this.replaySpeedFactor = filter.getReplaySpeedFactor();
         this.requestSystemTime = System.currentTimeMillis();
                         
@@ -251,7 +249,7 @@ public class StorageDataProvider implements ISOSDataProvider
         }        
         
         // return record properly filtered according to selected observables
-        return recordFilter.getFilteredRecord(state.recordInfo.getRecordDescription(), datablk);
+        return datablk;
     }
     
 
