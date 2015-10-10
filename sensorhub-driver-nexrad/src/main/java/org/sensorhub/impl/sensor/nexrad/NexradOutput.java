@@ -95,7 +95,7 @@ public class NexradOutput extends AbstractSensorOutput<NexradSensor>
 		SWEFactory fac = new SWEFactory();
 		Count numBins = fac.newCount(DataType.INT);
 		numBins.setDefinition("http://sensorml.com/ont/swe/property/NumberOfSamples"); 
-//		numBins.setId("NUM_BINS");
+		numBins.setId("NUM_BINS");
 		numBins.setValue(NUM_BINS);  // this needs to be variable but not working as configured below
 		nexradStruct.addComponent("count",numBins);
 
