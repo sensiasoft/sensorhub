@@ -90,15 +90,30 @@ class FoiTimesStoreImpl extends Persistent
         TreeSet<FoiTimePeriod> foiTimes = new TreeSet<FoiTimePeriod>(new FoiTimePeriodComparator());
         
         // TODO handle case of overlaping FOI periods?
-        for (String uid: uids)
+        
+        if (uids != null && uids.size() > 0)
         {
-            FeatureEntry fEntry = idIndex.get(uid);
-            if (fEntry == null)
-                continue;
-            
-            // add each period to sorted set
-            for (double[] timePeriod: fEntry.timePeriods)
-                foiTimes.add(new FoiTimePeriod(uid, timePeriod));
+            for (String uid: uids)
+            {
+                FeatureEntry fEntry = idIndex.get(uid);
+                if (fEntry == null)
+                    continue;
+                
+                // add each period to sorted set
+                for (double[] timePeriod: fEntry.timePeriods)
+                    foiTimes.add(new FoiTimePeriod(uid, timePeriod));
+            }
+        }
+        else // no filtering on FOI ID -> select them all
+        {
+            for (FeatureEntry fEntry: idIndex.values())
+            {
+                String uid = fEntry.uid;
+                
+                // add each period to sorted set
+                for (double[] timePeriod: fEntry.timePeriods)
+                    foiTimes.add(new FoiTimePeriod(uid, timePeriod));
+            }
         }
         
         return foiTimes;

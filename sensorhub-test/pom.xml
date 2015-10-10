@@ -11,24 +11,24 @@
      <dependency>
         <groupId>org.sensorhub</groupId>
         <artifactId>sensorhub-core</artifactId>
-        <version>1.0</version>
+        <version>${project.version}</version>
         <type>bundle</type>
      </dependency>
      <dependency>
         <groupId>org.sensorhub</groupId>
         <artifactId>sensorhub-webui-core</artifactId>
-        <version>1.0</version>
+        <version>${project.version}</version>
      </dependency>
      <dependency>
         <groupId>org.sensorhub</groupId>
         <artifactId>sensorhub-service-swe</artifactId>
-        <version>1.0</version>
+        <version>${project.version}</version>
         <type>bundle</type>
      </dependency>
      <dependency>
         <groupId>org.sensorhub</groupId>
         <artifactId>sensorhub-storage-perst</artifactId>
-        <version>1.0</version>
+        <version>${project.version}</version>
         <type>bundle</type>
      </dependency>
      <dependency>
@@ -110,6 +110,21 @@
         <artifactId>sensorhub-service-sensorthings</artifactId>
         <version>0.1-SNAPSHOT</version>
 >>>>>>> 209fd0c688502a09146dd294679463e87e6157b0
+     </dependency>
+     <dependency>
+        <groupId>org.sensorhub</groupId>
+        <artifactId>sensorhub-driver-avl-911</artifactId>
+        <version>0.1-SNAPSHOT</version>
+     </dependency>
+     <dependency>
+        <groupId>org.sensorhub</groupId>
+        <artifactId>sensorhub-driver-ahrs</artifactId>
+        <version>0.1</version>
+     </dependency>
+     <dependency>
+        <groupId>org.sensorhub</groupId>
+        <artifactId>sensorhub-security-oauth</artifactId>
+        <version>0.1-SNAPSHOT</version>
      </dependency>
   </dependencies>
 </project>

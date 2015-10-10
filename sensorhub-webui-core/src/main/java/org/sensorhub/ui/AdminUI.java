@@ -345,7 +345,7 @@ public class AdminUI extends com.vaadin.ui.UI
         MyBeanItemContainer<ModuleConfig> container = new MyBeanItemContainer<ModuleConfig>(ModuleConfig.class);
         for (IModule<?> module: reg.getLoadedModules())
         {
-            ModuleConfig config = module.getConfiguration();
+            ModuleConfig config = module.getConfiguration().clone();
             if (configType.isAssignableFrom(config.getClass()))
                 container.addBean(config);
         }
@@ -467,7 +467,8 @@ public class AdminUI extends com.vaadin.ui.UI
                             }
                             catch (Exception e)
                             {
-                                Notification.show("Error", "The module could not be initialized\n" + e.getMessage(), Notification.Type.ERROR_MESSAGE);
+                                String msg = "The module could not be initialized";
+                                Notification.show("Error", msg + '\n' + e.getMessage(), Notification.Type.ERROR_MESSAGE);
                             }
                             
                             MyBeanItem<ModuleConfig> newBeanItem = container.addBean(config);
@@ -501,7 +502,9 @@ public class AdminUI extends com.vaadin.ui.UI
                                     }
                                     catch (SensorHubException ex)
                                     {                        
-                                        Notification.show("Error", "The module could not be removed", Notification.Type.ERROR_MESSAGE);
+                                        String msg = "The module could not be removed";
+                                        Notification.show("Error", msg + '\n' + ex.getMessage(), Notification.Type.ERROR_MESSAGE);
+                                        AdminUI.log.debug(msg, e);
                                     }
                                 }
                             }                        
@@ -527,7 +530,8 @@ public class AdminUI extends com.vaadin.ui.UI
                                     }
                                     catch (SensorHubException ex)
                                     {
-                                        Notification.show("Error", "The module could not be enabled\n" + ex.getMessage(), Notification.Type.ERROR_MESSAGE);
+                                        String msg = "The module could not be enabled";
+                                        Notification.show("Error", msg + '\n' + ex.getMessage(), Notification.Type.ERROR_MESSAGE);
                                     }
                                 }
                             }                        
@@ -551,7 +555,8 @@ public class AdminUI extends com.vaadin.ui.UI
                                     }
                                     catch (SensorHubException ex)
                                     {
-                                        Notification.show("Error", "The module could not be disabled" + ex.getMessage(), Notification.Type.ERROR_MESSAGE);
+                                        String msg = "The module could not be disabled";
+                                        Notification.show("Error", msg + '\n' + ex.getMessage(), Notification.Type.ERROR_MESSAGE);
                                     }
                                 }
                             }                        

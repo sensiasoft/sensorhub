@@ -18,7 +18,6 @@ import org.sensorhub.impl.sensor.AbstractSensorOutput;
 import org.sensorhub.api.comm.ICommProvider;
 import org.sensorhub.api.sensor.SensorDataEvent;
 import java.io.DataInputStream;
-import java.io.EOFException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import net.opengis.swe.v20.DataBlock;
@@ -38,7 +37,7 @@ public class MtiOutput extends AbstractSensorOutput<MtiSensor>
     
     DataComponent imuData;
     DataEncoding dataEncoding;
-    boolean sendData;
+    boolean started;
     
     DataInputStream dataIn;
     byte[] msgBytes = new byte[MSG_SIZE];
@@ -139,7 +138,7 @@ public class MtiOutput extends AbstractSensorOutput<MtiSensor>
     }
     
     
-    protected synchronized boolean decodeNextMessage()
+    protected boolean decodeNextMessage()
     {
         try
         {
@@ -196,14 +195,13 @@ public class MtiOutput extends AbstractSensorOutput<MtiSensor>
             quat[2] = msgBuf.getFloat();
             quat[3] = msgBuf.getFloat();
         }
-        catch (EOFException e)
-        {
-            stop();
-        }
         catch (IOException e)
         {
-            MtiSensor.log.error("Error while decoding IMU stream. Stopping", e);
-            stop();
+            // log error except when stopping voluntarily
+            if (started)
+                MtiSensor.log.error("Error while decoding IMU stream. Stopping", e);
+            started = false;
+            return false;
         }
         
         return true;
@@ -212,10 +210,10 @@ public class MtiOutput extends AbstractSensorOutput<MtiSensor>
 
     protected void start(ICommProvider<?> commProvider)
     {
-        if (sendData)
+        if (started)
             return;
         
-        sendData = true;
+        started = true;
         sampleCounter = -1;
         
         // connect to data stream
@@ -223,6 +221,15 @@ public class MtiOutput extends AbstractSensorOutput<MtiSensor>
         {
             dataIn = new DataInputStream(commProvider.getInputStream());
             MtiSensor.log.info("Connected to IMU data stream");
+            
+            // remove old data from input buffers
+            int counter = 0;
+            while (dataIn.available() > MSG_SIZE)
+            {
+                dataIn.read();
+                counter++;
+            }
+            MtiSensor.log.debug("{} bytes flushed from input buffers", counter);
         }
         catch (IOException e)
         {
@@ -234,25 +241,26 @@ public class MtiOutput extends AbstractSensorOutput<MtiSensor>
         {
             public void run()
             {
-                while (sendData)
+                while (started)
                 {
                     pollAndSendMeasurement();
-                }
+                }                
+
+                dataIn = null;
             }
         });
         t.start();
     }
 
 
-    protected synchronized void stop()
+    protected void stop()
     {
-        sendData = false;
+        started = false;
         
         if (dataIn != null)
         {
             try { dataIn.close(); }
             catch (IOException e) { }
-            dataIn = null;
         }
     }
 

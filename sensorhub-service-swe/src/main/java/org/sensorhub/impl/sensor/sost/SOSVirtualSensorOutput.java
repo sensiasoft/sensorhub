@@ -38,7 +38,7 @@ public class SOSVirtualSensorOutput extends AbstractSensorOutput<SOSVirtualSenso
     
     public SOSVirtualSensorOutput(SOSVirtualSensor sensor, DataComponent recordStructure, DataEncoding recordEncoding)
     {
-        super(sensor);
+        super(recordStructure.getName(), sensor);
         this.recordStructure = recordStructure;
         this.recordEncoding = recordEncoding;
         
@@ -53,13 +53,6 @@ public class SOSVirtualSensorOutput extends AbstractSensorOutput<SOSVirtualSenso
     protected void init() throws SensorException
     {
         
-    }
-
-
-    @Override
-    public String getName()
-    {
-        return recordStructure.getName();
     }
 
 

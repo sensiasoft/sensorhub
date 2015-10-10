@@ -14,7 +14,6 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.api.sensor;
 
-import java.util.List;
 import java.util.Map;
 import net.opengis.sensorml.v20.AbstractProcess;
 import org.sensorhub.api.common.IEventProducer;
@@ -32,52 +31,12 @@ import org.sensorhub.api.data.IDataProducerModule;
  */
 public interface ISensorModule<ConfigType extends SensorConfig> extends IDataProducerModule<ConfigType>, IEventProducer
 {
-    /**
-     * Checks sensor description update capability
-     * If true, the updateSensorDescription method should be implemented
-     * @return true if sensor description updates is supported, false otherwise
-     */
-    public boolean isSensorDescriptionUpdateSupported();
-
-
-    /**
-     * Checks sensor description history capability
-     * If true, the getSensorDescription(DateTime t) method should be implemented
-     * @return true if sensor description history is supported, false otherwise
-     */
-    public boolean isSensorDescriptionHistorySupported();
-
-
+    
     /**
      * Retrieves most current sensor description.
      */
     @Override
     public AbstractProcess getCurrentDescription();
-
-
-    /**
-     * Retrieves historic sensor description valid at time t
-     * @param time julian time (1970) at which description is valid
-     * @return SMLSytem object containing sensor metadata valid at time t
-     */
-    public AbstractProcess getSensorDescription(double time);
-    
-    
-    /**
-     * Gets the whole history of sensor descriptions
-     * @return list of process descriptions (with disjoint time validity periods)
-     */
-    public List<AbstractProcess> getSensorDescriptionHistory();
-
-
-    /**
-     * Updates and historizes system description
-     * @param systemDesc SMLSystem object with validity period
-     * @param recordHistory if true, older versions of the descriptions will be retained
-     * and made accessible by time
-     * @throws SensorException 
-     */
-    public void updateSensorDescription(AbstractProcess systemDesc, boolean recordHistory) throws SensorException;
 
 
     /**

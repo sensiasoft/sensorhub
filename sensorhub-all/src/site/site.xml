@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<project name="OpenSensorHub">
+
+   <skin>
+      <groupId>lt.velykis.maven.skins</groupId>
+      <artifactId>reflow-maven-skin</artifactId>
+      <version>1.1.1</version>
+   </skin>
+
+   <custom>
+      <reflowSkin>
+         <theme>bootswatch-spacelab</theme>
+         <absoluteResourceURL>http://docs.opensensorhub.org</absoluteResourceURL>
+         <skinAttribution>false</skinAttribution>
+         <highlightJs>true</highlightJs>
+         <imgLightbox>true</imgLightbox>
+         <brand>
+            <name><![CDATA[ OpenSensorHub ]]></name>
+         </brand>
+         <slogan position="bannerLeft">Software For Building Smart Sensor Networks</slogan>
+         <toc>sidebar</toc>
+         <pages>
+            <index>
+                <toc/>
+            </index>
+         </pages>
+         <bottomNav maxSpan="0">
+            <column>nomenu</column>
+         </bottomNav>
+      </reflowSkin>
+   </custom>
+
+   <publishDate position="bottom" />
+   <version position="bottom" />
+   <googleAnalyticsAccountId>UA-5799482-4</googleAnalyticsAccountId>
+
+   <bannerLeft>
+      <name>Open Sensor Hub</name>
+      <href>http://www.opensensorhub.org/</href>
+   </bannerLeft>
+
+   <bannerRight>
+      <src>images/logo.png</src>
+   </bannerRight>
+
+   <body>
+
+      <head>
+         <link rel="icon" href="../images/favicon.ico?v=1" />         
+      </head>
+
+      <links>
+         <item name="GitHub" position="right" href="${project.scm.url}" />
+         <item name="Report an Error" position="right" href="report-errors.html" />
+      </links>
+
+      <breadcrumbs>
+         <item name="Docs" position="left" href="index.html" />
+      </breadcrumbs>
+
+      <!-- <menu name="Project" inherit="top">
+         <item name="Release Notes" href="release-notes.html" />
+         <item name="Road Map" href="roadmap.html" />
+      </menu> -->
+      
+      <menu name="Getting Started" inherit="top">
+         <item name="Download" href="download.html" />
+         <item name="Install" href="install.html" />
+         <item name="User's Guide" href="user-guide.html" />
+         <item name="Developer's Guide" href="dev-guide.html" />
+         <item name="Your First Sensor Driver" href="sensorhub-core/your-first-sensor.html" />
+         <item name="Javadocs" href="sensorhub-core/apidocs/index.html" />
+      </menu>
+      
+      <menu name="Components" inherit="top">
+         <item name="Core APIs" href="sensorhub-core/index.html" />
+         <item name="SWE Services" href="sensorhub-service-swe/index.html" />
+      </menu>
+      
+   </body>
+
+</project>

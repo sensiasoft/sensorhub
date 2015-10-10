@@ -14,16 +14,12 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.impl.service.sos;
 
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Map.Entry;
 import java.util.Set;
 import net.opengis.gml.v32.AbstractFeature;
-import net.opengis.gml.v32.AbstractGeometry;
-import net.opengis.gml.v32.Envelope;
 import net.opengis.sensorml.v20.AbstractProcess;
 import net.opengis.swe.v20.DataArray;
 import net.opengis.swe.v20.DataComponent;
@@ -33,21 +29,16 @@ import org.sensorhub.api.common.Event;
 import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.data.IDataProducerModule;
-import org.sensorhub.api.data.IMultiSourceDataProducer;
 import org.sensorhub.api.data.IStreamingDataInterface;
 import org.sensorhub.api.persistence.IFoiFilter;
 import org.sensorhub.api.service.ServiceException;
 import org.sensorhub.utils.MsgUtils;
 import org.vast.data.DataIterator;
-import org.vast.ogc.gml.GMLUtils;
-import org.vast.ogc.gml.JTSUtils;
 import org.vast.ogc.om.IObservation;
 import org.vast.ows.sos.SOSOfferingCapabilities;
 import org.vast.ows.swe.SWESOfferingCapabilities;
 import org.vast.swe.SWEConstants;
-import org.vast.util.Bbox;
 import org.vast.util.TimeExtent;
-import com.vividsolutions.jts.geom.Geometry;
 
 
 /**
@@ -99,8 +90,9 @@ public abstract class StreamDataProviderFactory<ProducerType extends IDataProduc
             
             // phenomenon time
             TimeExtent phenTime = new TimeExtent();
-            phenTime.setBaseAtNow(true);
-            phenTime.setTimeStep(getLowestSamplingPeriodFromProducer());
+            phenTime.setBeginNow(true);
+            phenTime.setEndNow(true);
+            //phenTime.setTimeStep(getLowestSamplingPeriodFromProducer());
             caps.setPhenomenonTime(phenTime);
         
             // use producer uniqueID as procedure ID
@@ -111,7 +103,7 @@ public abstract class StreamDataProviderFactory<ProducerType extends IDataProduc
             caps.getProcedureFormats().add(SWESOfferingCapabilities.FORMAT_SML2);
             
             // FOI IDs and BBOX
-            updateFois();
+            FoiUtils.updateFois(caps, producer, config.maxFois);
             
             // obs types
             Set<String> obsTypes = getObservationTypesFromProducer();
@@ -142,56 +134,11 @@ public abstract class StreamDataProviderFactory<ProducerType extends IDataProduc
     }
     
     
-    protected void updateFois()
-    {
-        caps.getRelatedFeatures().clear();
-        caps.getObservedAreas().clear();        
-        
-        if (producer instanceof IMultiSourceDataProducer)
-        {
-            Collection<? extends AbstractFeature> fois = ((IMultiSourceDataProducer)producer).getFeaturesOfInterest();
-            int numFois = fois.size();
-            
-            Bbox boundingRect = new Bbox();
-            for (AbstractFeature foi: fois)
-            {
-                if (numFois < config.maxFois)
-                    caps.getRelatedFeatures().add(foi.getUniqueIdentifier());
-                
-                AbstractGeometry geom = foi.getLocation();
-                if (geom != null)
-                {
-                    Envelope env = geom.getGeomEnvelope();
-                    boundingRect.add(GMLUtils.envelopeToBbox(env));
-                }
-            }
-            
-            caps.getObservedAreas().add(boundingRect);
-        }
-        else
-        {
-            AbstractFeature foi = producer.getCurrentFeatureOfInterest();
-            if (foi != null)
-            {
-                caps.getRelatedFeatures().add(foi.getUniqueIdentifier());
-                
-                AbstractGeometry geom = foi.getLocation();
-                if (geom != null)
-                {
-                    Envelope env = geom.getGeomEnvelope();
-                    Bbox bbox = GMLUtils.envelopeToBbox(env);
-                    caps.getObservedAreas().add(bbox);
-                }
-            }
-        }
-    }
-    
-    
     @Override
     public synchronized void updateCapabilities() throws Exception
     {
         updateNameAndDescription();
-        updateFois();
+        FoiUtils.updateFois(caps, producer, config.maxFois);
     }
 
 
@@ -281,64 +228,7 @@ public abstract class StreamDataProviderFactory<ProducerType extends IDataProduc
     public Iterator<AbstractFeature> getFoiIterator(final IFoiFilter filter) throws Exception
     {
         checkEnabled();
-        
-        // get all fois from producer
-        final Iterator<? extends AbstractFeature> allFois;        
-        if (producer instanceof IMultiSourceDataProducer)
-            allFois = ((IMultiSourceDataProducer)producer).getFeaturesOfInterest().iterator();
-        else
-            allFois = Arrays.asList(producer.getCurrentFeatureOfInterest()).iterator();
-        
-        // return all features if no filter is used
-        if ((filter.getFeatureIDs() == null || filter.getFeatureIDs().isEmpty()) && filter.getRoi() == null)
-            return (Iterator<AbstractFeature>)allFois;
-        
-        // otherwise apply filter
-        return new Iterator<AbstractFeature>()
-        {
-            AbstractFeature nextFeature;
-            
-            public boolean hasNext()
-            {
-                while (allFois.hasNext())
-                {
-                    AbstractFeature f = allFois.next();
-                    boolean keep = true;
-                    
-                    // filter on feature ID
-                    if (filter.getFeatureIDs() != null && !filter.getFeatureIDs().isEmpty())
-                    {
-                        if (!filter.getFeatureIDs().contains(f.getUniqueIdentifier()))
-                            keep = false;
-                    }
-                    
-                    // filter on feature geometry
-                    if (keep && filter.getRoi() != null && f.getLocation() != null)
-                    {
-                        Geometry fGeom = JTSUtils.getAsJTSGeometry(f.getLocation());
-                        if (fGeom.disjoint(filter.getRoi()))
-                            keep = false;
-                    }
-                    
-                    if (keep)
-                    {
-                        nextFeature = f;
-                        break;
-                    }
-                }
-                
-                return false;
-            }
-
-            public AbstractFeature next()
-            {
-                return nextFeature;
-            }
-
-            public void remove()
-            {                
-            }
-        };
+        return FoiUtils.getFilteredFoiIterator(producer, filter);
     }
     
     

@@ -49,11 +49,7 @@ public class SensorDataProviderFactory extends StreamDataProviderFactory<ISensor
     public AbstractProcess generateSensorMLDescription(double time) throws ServiceException
     {
         checkEnabled();
-        
-        if (Double.isNaN(time) || !producer.isSensorDescriptionHistorySupported())
-            return producer.getCurrentDescription();
-        else
-            return producer.getSensorDescription(time);
+        return producer.getCurrentDescription();
     }
 
     

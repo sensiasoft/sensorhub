@@ -260,8 +260,15 @@ public class ModuleConfigJsonFile implements IModuleConfigRepository
             Type collectionType = new TypeToken<List<ModuleConfig>>(){}.getType();
             JsonReader jsonReader = new JsonReader(reader);
             List<ModuleConfig> configList = gson.fromJson(jsonReader, collectionType);
+            
+            // build module map
+            configMap.clear();
             for (ModuleConfig config: configList)
+            {
+                if (configMap.containsKey(config.id))
+                    throw new RuntimeException("Duplicate module ID " + config.id);
                 configMap.put(config.id, config);
+            }
         }
         catch (Exception e)
         {

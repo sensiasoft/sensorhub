@@ -23,34 +23,44 @@ import org.sensorhub.api.module.ModuleConfig;
 import org.sensorhub.ui.ModuleInstanceSelectionPopup.ModuleInstanceSelectionCallback;
 import org.sensorhub.ui.ModuleTypeSelectionPopup.ModuleTypeSelectionCallback;
 import org.sensorhub.ui.ObjectTypeSelectionPopup.ObjectTypeSelectionCallback;
+import org.sensorhub.ui.ValueEntryPopup.ValueCallback;
 import org.sensorhub.ui.api.IModuleConfigForm;
 import org.sensorhub.ui.api.UIConstants;
 import org.sensorhub.ui.data.ComplexProperty;
 import org.sensorhub.ui.data.ContainerProperty;
 import org.sensorhub.ui.data.FieldProperty;
 import org.sensorhub.ui.data.MyBeanItem;
+import org.sensorhub.ui.data.MyBeanItemContainer;
 import com.vaadin.data.Property;
+import com.vaadin.data.Validator.InvalidValueException;
 import com.vaadin.data.fieldgroup.FieldGroup;
+import com.vaadin.data.fieldgroup.FieldGroup.CommitEvent;
 import com.vaadin.data.fieldgroup.FieldGroup.CommitException;
+import com.vaadin.data.fieldgroup.FieldGroup.CommitHandler;
 import com.vaadin.shared.ui.MarginInfo;
+import com.vaadin.ui.AbstractComponent;
 import com.vaadin.ui.AbstractField;
+import com.vaadin.ui.AbstractSelect.ItemCaptionMode;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.ComponentContainer;
-import com.vaadin.ui.CustomField;
 import com.vaadin.ui.Field;
 import com.vaadin.ui.FormLayout;
 import com.vaadin.ui.GridLayout;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
+import com.vaadin.ui.ListSelect;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.TabSheet;
+import com.vaadin.ui.TabSheet.CloseHandler;
 import com.vaadin.ui.TabSheet.SelectedTabChangeEvent;
 import com.vaadin.ui.TabSheet.SelectedTabChangeListener;
 import com.vaadin.ui.TabSheet.Tab;
+import com.vaadin.ui.Window.CloseEvent;
+import com.vaadin.ui.Window.CloseListener;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Button.ClickEvent;
@@ -77,7 +87,7 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
     public void build(String propId, ComplexProperty prop)
     {
         String title = prop.getLabel();
-        if (title == null)
+        if (title == null || title.length() == 0)
             title = DisplayUtils.getPrettyName(propId);
         
         build(title, prop.getValue());
@@ -89,6 +99,7 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
     {
         List<Field<?>> labels = new ArrayList<Field<?>>();
         List<Field<?>> textBoxes = new ArrayList<Field<?>>();
+        List<Field<?>> listBoxes = new ArrayList<Field<?>>();
         List<Field<?>> numberBoxes = new ArrayList<Field<?>>();
         List<Field<?>> checkBoxes = new ArrayList<Field<?>>();
         List<Component> otherWidgets = new ArrayList<Component>();
@@ -112,7 +123,7 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
         // add widget for each visible attribute
         if (beanItem != null)
         {
-            fieldGroup = new FieldGroup(beanItem);
+            fieldGroup = new FieldGroup(beanItem);            
             for (Object propId: fieldGroup.getUnboundPropertyIds())
             {
                 Property<?> prop = fieldGroup.getItemDataSource().getItemProperty(propId);
@@ -120,9 +131,20 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
                 // sub objects with multiplicity > 1
                 if (prop instanceof ContainerProperty)
                 {
-                    if (!((ContainerProperty)prop).getValue().getItemIds().isEmpty())
+                    Class<?> eltType = ((ContainerProperty)prop).getValue().getBeanType();
+                    
+                    // use simple table for string lists
+                    if (eltType == String.class)
                     {
-                        Component subform = buildTabs((String)propId, (ContainerProperty)prop);
+                        Component list = buildSimpleTable((String)propId, (ContainerProperty)prop);
+                        fieldGroup.bind((Field<?>)list, propId);
+                        listBoxes.add((Field<?>)list);
+                    }
+                    
+                    // else use tab sheet
+                    else if (!((ContainerProperty)prop).getValue().getItemIds().isEmpty())
+                    {
+                        Component subform = buildTabs((String)propId, (ContainerProperty)prop, fieldGroup);
                         otherWidgets.add(subform);
                     }
                 }
@@ -161,15 +183,18 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
                     }
                     
                     // add to one of the widget lists so we can order by widget type
-                    if (field instanceof Label)
-                        labels.add(field);
-                    else if (field instanceof TextField || field instanceof CustomField)
+                    Class<?> propType = prop.getType();
+                    if (propType.equals(String.class))
                     {
-                        if (prop.getType().equals(String.class))
-                            textBoxes.add(field);
+                        if (field instanceof Label)
+                            labels.add(field);
                         else
-                            numberBoxes.add(field);
+                            textBoxes.add(field);
                     }
+                    else if (Enum.class.isAssignableFrom(propType))
+                        numberBoxes.add(field);
+                    else if (Number.class.isAssignableFrom(propType))
+                        numberBoxes.add(field);
                     else if (field instanceof CheckBox)
                         checkBoxes.add(field);
                     else
@@ -182,6 +207,8 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
         for (Field<?> w: labels)
             form.addComponent(w);
         for (Field<?> w: textBoxes)
+            form.addComponent(w);
+        for (Field<?> w: listBoxes)
             form.addComponent(w);
         for (Field<?> w: numberBoxes)
             form.addComponent(w);
@@ -206,7 +233,8 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
     protected Field<?> buildAndBindField(String label, String propId, Property<?> prop)
     {
         Field<?> field = fieldGroup.buildAndBind(label, propId);
-
+        Class<?> propType = prop.getType();
+        
         if (propId.equals(PROP_ID))
             field.setReadOnly(true);
         else if (propId.endsWith("." + PROP_ID))
@@ -218,15 +246,19 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
         else if (propId.endsWith(PROP_MODULECLASS))
             field.setReadOnly(true);        
         
-        if (prop.getType().equals(String.class))
+        if (propType.equals(String.class))
             field.setWidth(500, Unit.PIXELS);
-        else if (prop.getType().equals(int.class) || prop.getType().equals(Integer.class) ||
-                prop.getType().equals(float.class) || prop.getType().equals(Float.class) ||
-                prop.getType().equals(double.class) || prop.getType().equals(Double.class))
+        else if (propType.equals(int.class) || propType.equals(Integer.class) ||
+                propType.equals(float.class) || propType.equals(Float.class) ||
+                propType.equals(double.class) || propType.equals(Double.class))
             field.setWidth(200, Unit.PIXELS);
-                
-        if (field instanceof TextField)
+        else if (Enum.class.isAssignableFrom(propType))
+            ((ListSelect)field).setRows(3);
+        
+        if (field instanceof TextField) {
+            ((TextField)field).setNullSettingAllowed(true);
             ((TextField)field).setNullRepresentation("");
+        }
         
         return field;
     } 
@@ -352,7 +384,92 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
     }
     
     
-    protected Component buildTabs(final String propId, final ContainerProperty prop)
+    protected Component buildSimpleTable(final String propId, final ContainerProperty prop)
+    {
+        String label = prop.getLabel();
+        if (label == null)
+            label = DisplayUtils.getPrettyName((String)propId);
+        
+        final MyBeanItemContainer<Object> container = prop.getValue();
+        final ListSelect listBox = new ListSelect(label, container);
+        listBox.setValue(container);
+        listBox.setItemCaptionMode(ItemCaptionMode.PROPERTY);
+        listBox.setItemCaptionPropertyId(MyBeanItem.PROP_VALUE);
+        listBox.setImmediate(true);
+        listBox.setBuffered(true);
+        listBox.setNullSelectionAllowed(false);
+        listBox.setDescription(prop.getDescription());
+        listBox.setWidth(500, Unit.PIXELS);
+        listBox.setRows(Math.max(2, Math.min(5, container.size())));
+        
+        FieldWrapper<Object> field = new FieldWrapper<Object>(listBox) {
+            private static final long serialVersionUID = 1499878131611223989L;
+            protected Component initContent()
+            {
+                HorizontalLayout layout = new HorizontalLayout();
+                layout.setSpacing(true);
+                
+                // inner field
+                layout.addComponent(innerField);
+                layout.setComponentAlignment(innerField, Alignment.MIDDLE_LEFT);
+                
+                VerticalLayout buttons = new VerticalLayout();
+                layout.addComponent(buttons);
+                
+                // add button
+                Button addBtn = new Button(ADD_ICON);
+                addBtn.addStyleName(STYLE_QUIET);
+                addBtn.addStyleName(STYLE_SMALL);
+                buttons.addComponent(addBtn);
+                addBtn.addClickListener(new ClickListener() {
+                    private static final long serialVersionUID = 1L;
+                    public void buttonClick(ClickEvent event)
+                    {
+                        ValueEntryPopup popup = new ValueEntryPopup(500, new ValueCallback() {
+                            @Override
+                            public void newValue(String value)
+                            {
+                                container.addBean(value);
+                                // grow list size with max at 5
+                                listBox.setRows(Math.max(2, Math.min(5, container.size())));
+                            }
+                        });
+                        popup.setModal(true);
+                        AdminUI.getInstance().addWindow(popup);
+                    }
+                });
+                
+                // remove button
+                Button delBtn = new Button(DEL_ICON);
+                delBtn.addStyleName(STYLE_QUIET);
+                delBtn.addStyleName(STYLE_SMALL);
+                buttons.addComponent(delBtn);
+                delBtn.addClickListener(new ClickListener() {
+                    private static final long serialVersionUID = 1L;
+                    public void buttonClick(ClickEvent event)
+                    {
+                        Object itemId = listBox.getValue();
+                        container.removeItem(itemId);
+                    }
+                });
+                                
+                return layout;
+            }
+            
+            @Override
+            public void commit() throws SourceException, InvalidValueException
+            {
+                // override commit here because the ListSelect setValue() method
+                // only sets the index of the selected item, and not the list content
+                prop.setValue(container);
+            }             
+        };
+        
+        return field;
+    }
+    
+    
+    protected Component buildTabs(final String propId, final ContainerProperty prop, final FieldGroup fieldGroup)
     {
         GridLayout layout = new GridLayout();
         layout.setWidth(100.0f, Unit.PERCENTAGE);
@@ -364,36 +481,86 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
         String label = prop.getLabel();
         if (label == null)
             label = DisplayUtils.getPrettyName((String)propId);
-        
+                
         Label sectionLabel = new Label(label);
+        sectionLabel.setDescription(prop.getDescription());
         sectionLabel.addStyleName(STYLE_H3);
         sectionLabel.addStyleName(STYLE_COLORED);
         titleBar.addComponent(sectionLabel);
         layout.addComponent(titleBar);
         
         // create one tab per item in container
+        final MyBeanItemContainer<Object> container = prop.getValue();
         final TabSheet tabs = new TabSheet();
         tabs.setSizeFull();
         int i = 1;
-        for (Object itemId: prop.getValue().getItemIds())
+        for (Object itemId: container.getItemIds())
         {
-            MyBeanItem<Object> childBeanItem = (MyBeanItem<Object>)prop.getValue().getItem(itemId);
+            MyBeanItem<Object> childBeanItem = (MyBeanItem<Object>)container.getItem(itemId);
             IModuleConfigForm subform = AdminUI.getInstance().generateForm(childBeanItem.getBean().getClass());
             subform.build(null, childBeanItem);
             ((MarginHandler)subform).setMargin(new MarginInfo(true, false, true, false));
             allForms.add(subform);
-            tabs.addTab(subform, "Item #" + (i++));
+            Tab tab = tabs.addTab(subform, "Item #" + (i++));
+            tab.setClosable(true);
+            
+            // store item id so we can map a tab with the corresponding bean item
+            ((AbstractComponent)subform).setData(itemId);
         }
         
+        // draw icon on last tab to add new items
+        tabs.addTab(new VerticalLayout(), "", UIConstants.ADD_ICON);
+        
+        // catch close event to delete item
+        tabs.setCloseHandler(new CloseHandler() {
+            private static final long serialVersionUID = 1L;
+            @Override
+            public void onTabClose(TabSheet tabsheet, Component tabContent)
+            {
+                final Tab tab = tabs.getTab(tabContent);
+                
+                final ConfirmDialog popup = new ConfirmDialog("Are you sure you want to delete " + tab.getCaption() + "?</br>All settings will be lost.");
+                popup.addCloseListener(new CloseListener() {
+                    private static final long serialVersionUID = 1L;
+                    @Override
+                    public void windowClose(CloseEvent e)
+                    {
+                        if (popup.isConfirmed())
+                        {                    
+                            // retrieve id of item shown on tab
+                            AbstractComponent tabContent = (AbstractComponent)tab.getComponent();
+                            Object itemId = tabContent.getData();
+                            
+                            // remove from UI
+                            int deletedTabPos = tabs.getTabPosition(tab);
+                            tabs.removeTab(tab);
+                            tabs.setSelectedTab(deletedTabPos-1);
+                            
+                            // remove from container
+                            container.removeItem(itemId);
+                        }
+                    }                        
+                });
+                
+                popup.setModal(true);
+                AdminUI.getInstance().addWindow(popup);
+            }
+        });
+        
+        // catch select event on '+' tab to add new item
         tabs.addSelectedTabChangeListener(new SelectedTabChangeListener() {
             private static final long serialVersionUID = 1L;
             public void selectedTabChange(SelectedTabChangeEvent event)
             {
                 Component selectedTab = event.getTabSheet().getSelectedTab();
                 final Tab tab = tabs.getTab(selectedTab);
-                
+                final int selectedTabPos = tabs.getTabPosition(tab);
+                                
+                // case of + tab to add new item
                 if (tab.getCaption().equals(""))
                 {
+                    tabs.setSelectedTab(selectedTabPos-1);
+                    
                     try
                     {
                         // show popup to select among available module types
@@ -404,15 +571,19 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
                             {
                                 try
                                 {
-                                    MyBeanItem<Object> childBeanItem = prop.getValue().addBean(objectType.newInstance(), ((String)propId) + PROP_SEP);
-                                    prop.setValue(prop.getValue());
+                                    // add new item to container
+                                    MyBeanItem<Object> childBeanItem = container.addBean(objectType.newInstance(), ((String)propId) + PROP_SEP);
+                                                                        
+                                    // generate form for new item
                                     IModuleConfigForm subform = AdminUI.getInstance().generateForm(childBeanItem.getBean().getClass());
                                     subform.build(null, childBeanItem);
                                     ((MarginHandler)subform).setMargin(new MarginInfo(true, false, true, false));
                                     allForms.add(subform);
-                                    int newTabPos = tabs.getTabPosition(tab);
-                                    tabs.addTab(subform, "Item #" + (newTabPos+1), null, newTabPos);
-                                    tabs.setSelectedTab(newTabPos);
+                                    
+                                    // add new tab and select it
+                                    Tab newTab = tabs.addTab(subform, "Item #" + (selectedTabPos+1), null, selectedTabPos);
+                                    newTab.setClosable(true);
+                                    tabs.setSelectedTab(newTab);
                                 }
                                 catch (Exception e)
                                 {
@@ -431,8 +602,21 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
             }
         });
         
-        // add icon on last tab
-        tabs.addTab(new VerticalLayout(), "", UIConstants.ADD_ICON);
+        // also register commit handler
+        fieldGroup.addCommitHandler(new CommitHandler() {
+            private static final long serialVersionUID = 1L;
+            @Override
+            public void preCommit(CommitEvent commitEvent) throws CommitException
+            {                               
+            }
+
+            @Override
+            public void postCommit(CommitEvent commitEvent) throws CommitException
+            {
+                // make sure new items are transfered to model
+                prop.setValue(prop.getValue());
+            }
+        });
         
         layout.addComponent(tabs);
         return layout;

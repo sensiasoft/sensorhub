@@ -110,7 +110,9 @@ public class ModuleTypeSelectionPopup extends Window
                 {
                     close();
                     String version = (String)table.getContainerProperty(selectedItemId, PROP_VERSION).getValue();
-                    Notification.show("Cannot instantiate module " + name + " v" + version, null, Notification.Type.ERROR_MESSAGE);
+                    String msg = "Cannot instantiate module " + name + " v" + version;
+                    Notification.show(msg, null, Notification.Type.ERROR_MESSAGE);
+                    AdminUI.log.error(msg, e);
                 }
                 finally
                 {

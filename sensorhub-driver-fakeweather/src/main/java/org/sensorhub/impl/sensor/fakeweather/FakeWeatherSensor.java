@@ -15,9 +15,14 @@ Developer are Copyright (C) 2014 the Initial Developer. All Rights Reserved.
 
 package org.sensorhub.impl.sensor.fakeweather;
 
+import net.opengis.gml.v32.AbstractFeature;
+import net.opengis.gml.v32.Point;
+import net.opengis.gml.v32.impl.GMLFactory;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.impl.sensor.AbstractSensorModule;
 import org.sensorhub.impl.sensor.fakeweather.FakeWeatherOutput;
+import org.vast.ogc.om.SamplingPoint;
+import org.vast.swe.SWEHelper;
 
 
 /**
@@ -33,17 +38,46 @@ import org.sensorhub.impl.sensor.fakeweather.FakeWeatherOutput;
  */
 public class FakeWeatherSensor extends AbstractSensorModule<FakeWeatherConfig>
 {
+    private static final String UID_PREFIX = "urn:test:sensors:simweather:";
+    
     FakeWeatherOutput dataInterface;
+    SamplingPoint foi;
     
     
     public FakeWeatherSensor()
-    {
-        dataInterface = new FakeWeatherOutput(this);
-        addOutput(dataInterface, false);
-        dataInterface.init();
+    {        
     }
     
     
+    @Override
+    public void init(FakeWeatherConfig config) throws SensorHubException
+    {
+        super.init(config);
+        
+        // init main data interface
+        dataInterface = new FakeWeatherOutput(this);
+        addOutput(dataInterface, false);
+        dataInterface.init();
+        
+        // create FoI
+        GMLFactory gml = new GMLFactory();
+        foi = new SamplingPoint();
+        foi.setUniqueIdentifier(UID_PREFIX + config.serialNumber + ":foi");
+        foi.setName("Weather Station Location");
+        Point p = gml.newPoint();
+        p.setSrsName(SWEHelper.REF_FRAME_4979);
+        p.setPos(new double[] {config.stationLat, config.stationLon, config.stationAlt});
+        foi.setShape(p);
+    }
+    
+    
+    @Override
+    public AbstractFeature getCurrentFeatureOfInterest()
+    {
+        return foi;
+    }
+
+
     @Override
     protected void updateSensorDescription()
     {
@@ -51,7 +85,7 @@ public class FakeWeatherSensor extends AbstractSensorModule<FakeWeatherConfig>
         {
             super.updateSensorDescription();
             sensorDescription.setId("WEATHER_STATION");
-            sensorDescription.setUniqueIdentifier("urn:test:sensors:simweather:" + config.serialNumber);
+            sensorDescription.setUniqueIdentifier(UID_PREFIX + config.serialNumber);
             sensorDescription.setDescription("Simulated weather station generating randomly increasing and decreasing measurements");
         }
     }

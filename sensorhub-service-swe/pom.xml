@@ -27,20 +27,20 @@
       <dependency>
          <groupId>org.sensorhub</groupId>
          <artifactId>sensorhub-core</artifactId>
-         <version>1.0</version>
+         <version>${project.version}</version>
          <type>bundle</type>
       </dependency>
       <dependency>
          <groupId>org.sensorhub</groupId>
          <artifactId>sensorhub-core</artifactId>
-         <version>1.0</version>
+         <version>${project.version}</version>
          <type>test-jar</type>
          <scope>test</scope>
       </dependency>
       <dependency>
          <groupId>org.sensorhub</groupId>
          <artifactId>sensorhub-storage-perst</artifactId>
-         <version>1.0</version>
+         <version>${project.version}</version>
          <type>bundle</type>
          <scope>test</scope>
       </dependency>
@@ -53,6 +53,16 @@
          <artifactId>amused-core</artifactId>
          <groupId>org.n52.amused</groupId>
          <version>1.0.0</version>
+         <exclusions>
+            <exclusion>
+               <artifactId>xalan</artifactId>
+               <groupId>xalan</groupId>
+            </exclusion>
+            <exclusion>
+               <artifactId>xercesImpl</artifactId>
+               <groupId>xerces</groupId>
+            </exclusion>
+         </exclusions>
       </dependency>
       <dependency>
          <artifactId>amused-wsn-impl</artifactId>

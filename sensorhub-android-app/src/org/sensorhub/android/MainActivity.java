@@ -354,8 +354,8 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback
     {
         this.camPreviewSurfaceHolder = holder;
 
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        /*SharedPreferences.Editor editor = prefs.edit();
+        /*SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences.Editor editor = prefs.edit();
         editor.clear();
         editor.commit();
         PreferenceManager.setDefaultValues(this, R.xml.pref_general, true);*/

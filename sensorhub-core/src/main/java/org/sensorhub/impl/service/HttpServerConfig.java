@@ -14,6 +14,7 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.impl.service;
 
+import java.util.List;
 import org.sensorhub.api.config.DisplayInfo;
 import org.sensorhub.api.module.ModuleConfig;
 
@@ -43,6 +44,10 @@ public class HttpServerConfig extends ModuleConfig
     
     @DisplayInfo(desc="Maximum number of requests per second allowed per session/connection")
     public int maxRequestsPerSecond = 10;
+    
+    
+    @DisplayInfo(desc="List of users with passwords and roles (format is user: password[, role1, role2 ...]")
+    public List<String> users;
     
 
     public HttpServerConfig()

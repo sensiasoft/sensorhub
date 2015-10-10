@@ -19,6 +19,7 @@ import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -28,6 +29,7 @@ import java.util.Map;
 import com.vaadin.data.Item;
 import com.vaadin.data.Property;
 import com.vaadin.data.util.MethodProperty;
+import com.vaadin.data.util.ObjectProperty;
 
 
 /**
@@ -45,6 +47,8 @@ public class MyBeanItem<BeanType> implements Item
 {
     public static final String NO_PREFIX = "";
     public static final char PROP_SEPARATOR = '.';
+    public static final String PROP_VALUE = "val";
+    
     
     BeanType bean;
     Map<Object, Property<?>> properties = new LinkedHashMap<Object, Property<?>>();
@@ -62,22 +66,20 @@ public class MyBeanItem<BeanType> implements Item
         this.bean = bean;
         addProperties(prefix, bean);
     }
-
-
-    public MyBeanItem(BeanType bean, String... propertyIds)
-    {
-        this.bean = bean;
-        
-        // use reflection to generate properties from class attributes
-        addProperties(NO_PREFIX, bean);
-    }
     
     
     protected void addProperties(String prefix, Object bean)
     {
-        //System.out.println(bean.getClass());
-        addFieldProperties(prefix, bean);
-        addMethodProperties(prefix, bean);
+        // special case for String
+        if (bean instanceof String)
+        {
+            properties.put(PROP_VALUE, new ObjectProperty<Object>(bean));
+        }
+        else
+        {
+            addFieldProperties(prefix, bean);
+            addMethodProperties(prefix, bean);
+        }
     }
     
     
@@ -90,6 +92,15 @@ public class MyBeanItem<BeanType> implements Item
             
             String fullName = prefix + f.getName();
             Class<?> fieldType = f.getType();
+            Object fieldVal = null;
+            try
+            {
+                fieldVal = f.get(bean);
+            }
+            catch (Exception e)
+            {
+                throw new RuntimeException("Cannot access field " + fullName);
+            }
             
             // case of simple types
             if (isSimpleType(f))
@@ -101,22 +112,12 @@ public class MyBeanItem<BeanType> implements Item
             // case of collections
             else if (Collection.class.isAssignableFrom(fieldType))
             {
-                try
-                {
-                    MyBeanItemContainer<Object> container = new MyBeanItemContainer<Object>(Object.class);
-                    Collection<?> listObj = (Collection<?>)f.get(bean);
-                    if (listObj != null)
-                    {
-                        for (Object o: listObj)
-                            container.addBean(o, fullName + PROP_SEPARATOR);
-                    }
-                    
-                    addItemProperty(fullName, new ContainerProperty(bean, f, container));
-                }
-                catch (Exception e)
-                {
-                    e.printStackTrace();
-                }
+                ParameterizedType listType = (ParameterizedType)f.getGenericType();
+                Class<?> eltType = (Class<?>)listType.getActualTypeArguments()[0];
+                
+                Collection<?> listObj = (Collection<?>)fieldVal;
+                MyBeanItemContainer<Object> container = new MyBeanItemContainer<Object>(listObj, eltType, fullName + PROP_SEPARATOR);
+                addItemProperty(fullName, new ContainerProperty(bean, f, container));
             }
             
             // case of arrays
@@ -146,18 +147,10 @@ public class MyBeanItem<BeanType> implements Item
             // case of nested objects
             else
             {
-                try
-                {
-                    Object complexVal = f.get(bean);
-                    MyBeanItem<Object> beanItem = null;
-                    if (complexVal != null)
-                        beanItem = new MyBeanItem<Object>(complexVal, fullName + PROP_SEPARATOR);
-                    addItemProperty(fullName, new ComplexProperty(bean, f, beanItem));
-                }
-                catch (Exception e)
-                {
-                    e.printStackTrace();
-                }
+                MyBeanItem<Object> beanItem = null;
+                if (fieldVal != null)
+                    beanItem = new MyBeanItem<Object>(fieldVal, fullName + PROP_SEPARATOR);
+                addItemProperty(fullName, new ComplexProperty(bean, f, beanItem));
             }
         }
     }
@@ -185,13 +178,18 @@ public class MyBeanItem<BeanType> implements Item
     
     protected boolean isSimpleType(Field f)
     {
-        if (f.getType().isPrimitive())
+        Class<?> fType = f.getType();
+        
+        if (fType.isPrimitive())
             return true;
         
-        if (Number.class.isAssignableFrom(f.getType()))
+        if (fType == String.class)
             return true;
         
-        if (f.getType() == String.class)
+        if (Number.class.isAssignableFrom(fType))
+            return true;
+        
+        if (Enum.class.isAssignableFrom(fType))
             return true;
         
         return false;

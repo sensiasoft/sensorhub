@@ -28,7 +28,6 @@ import net.opengis.swe.v20.Quantity;
 import net.opengis.swe.v20.Time;
 import org.sensorhub.api.sensor.SensorDataEvent;
 import org.sensorhub.api.sensor.SensorException;
-import org.sensorhub.impl.common.BasicEventHandler;
 import org.sensorhub.impl.sensor.AbstractSensorOutput;
 import org.vast.data.DataBlockDouble;
 import org.vast.data.DataRecordImpl;
@@ -65,22 +64,13 @@ public class FakeSensorData extends AbstractSensorOutput<FakeSensor> implements 
     
     public FakeSensorData(FakeSensor sensor, final String name, final int bufferSize, final double samplingPeriod, final int maxSampleCount)
     {
-        super(sensor);
+        super(name, sensor);
         this.name = name;
         this.bufferSize = bufferSize;
         this.samplingPeriod = samplingPeriod;
         this.dataQueue = new LinkedBlockingDeque<DataBlock>(bufferSize);
-        this.maxSampleCount = maxSampleCount;
-        this.eventHandler = new BasicEventHandler();
-        
+        this.maxSampleCount = maxSampleCount;        
         init();
-    }
-    
-    
-    @Override
-    public String getName()
-    {
-        return name;
     }
 
 

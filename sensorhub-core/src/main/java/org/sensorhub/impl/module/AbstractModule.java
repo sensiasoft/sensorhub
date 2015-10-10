@@ -20,7 +20,7 @@ import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.module.IModule;
 import org.sensorhub.api.module.IModuleStateManager;
 import org.sensorhub.api.module.ModuleConfig;
-import org.sensorhub.impl.common.BasicEventHandler;
+import org.sensorhub.impl.common.EventBus;
 
 
 /**
@@ -39,8 +39,7 @@ public abstract class AbstractModule<ConfigType extends ModuleConfig> implements
 
 
     public AbstractModule()
-    {
-        this.eventHandler = new BasicEventHandler();
+    {        
     }
     
     
@@ -76,6 +75,7 @@ public abstract class AbstractModule<ConfigType extends ModuleConfig> implements
     public void init(ConfigType config) throws SensorHubException
     {
         this.config = config;
+        this.eventHandler = EventBus.getInstance().registerProducer(config.id, EventBus.MAIN_TOPIC);
     }
 
 

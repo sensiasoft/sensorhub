@@ -6,7 +6,12 @@
     "moduleClass": "org.sensorhub.impl.service.HttpServer",
     "httpPort": 8181,
     "servletsRootUrl": "/sensorhub",
-    "staticDocRootUrl": "web"
+    "staticDocRootUrl": "web",
+    "users":
+    [
+        "117311392852364959203: NONE, test, admin",
+        "isa: pwd, admin"
+    ]
   },
   {
     "objClass": "org.sensorhub.ui.AdminUIConfig",
@@ -65,7 +70,7 @@
     "storageConfig":    
     {
       "objClass": "org.sensorhub.impl.persistence.perst.BasicStorageConfig",
-      "moduleClass": "org.sensorhub.impl.persistence.perst.BasicStorageImpl",
+      "moduleClass": "org.sensorhub.impl.persistence.perst.ObsStorageImpl",
       "memoryCacheSize": 1024,
       "storagePath": "weather_obs.dat"
     }
@@ -110,14 +115,14 @@
         "individualName": "Alex Robin",
         "organizationName": "Sensia Software LLC",
         "positionName": "Engineer",
-        "voiceNumber": "+33 5 23 56 89 78",
-        "faxNumber": "+33 5 23 56 89 77",
-        "deliveryPoint": "12 rue Voltaire",
+        "voiceNumbers": ["+33 5 23 56 89 78"],
+        "faxNumbers": ["+33 5 23 56 89 77"],
+        "deliveryPoints": ["12 rue Voltaire"],
         "city": "Toulouse",
         "administrativeArea": null,
         "postalCode": "30000",
         "country": "France",
-        "email": "admin@sensiasoft.com",
+        "emails": ["admin@sensiasoft.com"],
         "website": null,
         "hoursOfService": null,
         "contactInstructions": null

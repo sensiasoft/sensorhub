@@ -25,6 +25,7 @@ import net.opengis.sensorml.v20.AbstractProcess;
 import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataEncoding;
+import org.garret.perst.MappedFile;
 import org.garret.perst.Persistent;
 import org.garret.perst.Storage;
 import org.garret.perst.StorageFactory;
@@ -66,14 +67,16 @@ public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> impleme
         {
             this.autoCommit = true;
             
-            // first make sure it's not already opened
-            if (db != null && db.isOpened())
-                throw new StorageException("Storage " + getLocalID() + " is already opened");
+            // acquire file lock on DB file
+            MappedFile dbFile = new MappedFile(config.storagePath, 100*1024, false);
+            //OSFile dbFile = new OSFile(config.storagePath, false, false);
+            if (!dbFile.tryLock(false))
+                throw new StorageException("Storage file " + config.storagePath + " is already opened by another SensorHub process");
             
             db = StorageFactory.getInstance().createStorage();    
             db.setProperty("perst.concurrent.iterator", true);
             //db.setProperty("perst.alternative.btree", true);
-            db.open(config.storagePath, config.memoryCacheSize*1024);
+            db.open(dbFile, config.memoryCacheSize*1024);
             dbRoot = (BasicStorageRoot)db.getRoot();
             
             if (dbRoot == null)

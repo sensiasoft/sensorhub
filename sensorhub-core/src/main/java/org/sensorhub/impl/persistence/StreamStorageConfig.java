@@ -41,6 +41,10 @@ public class StreamStorageConfig extends StorageConfig
     public int minCommitPeriod = 10000;
     
     
+    @DisplayInfo(desc="Set to false to stop storing data of received events in underlying storage")
+    public boolean processEvents = true;
+    
+    
     public StreamStorageConfig()
     {
         // set default associated implementation

@@ -284,13 +284,6 @@ public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfi
 
 
     @Override
-    public boolean isSensorDescriptionUpdateSupported()
-    {
-        return true;
-    }
-
-
-    @Override
     protected void updateSensorDescription()
     {
         sensorDescription.setUniqueIdentifier(config.id);
@@ -300,7 +293,6 @@ public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfi
     }
     
     
-    @Override
     public void updateSensorDescription(AbstractProcess systemDesc, boolean recordHistory) throws SensorException
     {
         sensorDescription = systemDesc;

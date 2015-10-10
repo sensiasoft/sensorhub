@@ -15,6 +15,7 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 package org.sensorhub.impl.service;
 
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
@@ -24,6 +25,11 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.eclipse.jetty.security.Authenticator;
+import org.eclipse.jetty.security.ConstraintMapping;
+import org.eclipse.jetty.security.ConstraintSecurityHandler;
+import org.eclipse.jetty.security.HashLoginService;
+import org.eclipse.jetty.security.authentication.DigestAuthenticator;
 import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.eclipse.jetty.servlets.DoSFilter;
 import org.eclipse.jetty.server.Server;
@@ -34,6 +40,8 @@ import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.servlet.ServletMapping;
+import org.eclipse.jetty.util.security.Constraint;
+import org.eclipse.jetty.util.security.Credential;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.impl.module.AbstractModule;
 import org.slf4j.Logger;
@@ -56,6 +64,8 @@ public class HttpServer extends AbstractModule<HttpServerConfig>
         
     Server server;
     ServletContextHandler servletHandler;
+    ConstraintSecurityHandler securityHandler;
+    HashLoginService loginService;
     
     
     public HttpServer()
@@ -64,25 +74,6 @@ public class HttpServer extends AbstractModule<HttpServerConfig>
             throw new RuntimeException("Cannot start several HTTP server instances");
         
         instance = this;
-        
-        // create servlet handler
-        this.servletHandler = new ServletContextHandler(ServletContextHandler.SESSIONS);
-        
-        // add default test servlet
-        servletHandler.addServlet(new ServletHolder(new HttpServlet() {
-            private static final long serialVersionUID = 1L;
-            protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException
-            {
-                try
-                {
-                    resp.getOutputStream().print(TEST_MSG);
-                }
-                catch (IOException e)
-                {
-                    throw new ServletException(e);
-                }
-            }
-        }),"/test");
     }
     
     
@@ -107,8 +98,12 @@ public class HttpServer extends AbstractModule<HttpServerConfig>
         try
         {
             server = new Server(config.httpPort);
-            
             HandlerList handlers = new HandlerList();
+            
+            // load user list
+            loginService = new HashLoginService();
+            loginService.setName("Authentication Required");
+            loadUsers();
             
             // static content
             if (config.staticDocRootUrl != null)
@@ -122,6 +117,8 @@ public class HttpServer extends AbstractModule<HttpServerConfig>
             // servlets
             if (config.servletsRootUrl != null)
             {
+                // create servlet handler
+                this.servletHandler = new ServletContextHandler(ServletContextHandler.SESSIONS);                
                 servletHandler.setContextPath(config.servletsRootUrl);
                 handlers.addHandler(servletHandler);
                 log.info("Servlets root is " + config.servletsRootUrl);
@@ -133,8 +130,36 @@ public class HttpServer extends AbstractModule<HttpServerConfig>
                 holder.setInitParameter("insertHeaders", "false");
                 holder.setInitParameter("maxRequestMs", Long.toString(24*3600*1000L)); // we need persistent requests!
                 
+                // security handler
+                /*if (config.users != null && !config.users.isEmpty())
+                {
+                    securityHandler = new ConstraintSecurityHandler();
+                    //securityHandler.setAuthenticator(new DigestAuthenticator());
+                    securityHandler.setAuthenticator((Authenticator)Class.forName("org.sensorhub.impl.security.oauth.OAuthAuthenticator").newInstance());
+                    securityHandler.setLoginService(loginService);
+                    servletHandler.setSecurityHandler(securityHandler);
+                }*/
+                
                 // filter to add proper cross-origin headers
                 servletHandler.addFilter(CrossOriginFilter.class, "/*", EnumSet.of(DispatcherType.REQUEST));
+                
+                // add default test servlet
+                servletHandler.addServlet(new ServletHolder(new HttpServlet() {
+                    private static final long serialVersionUID = 1L;
+                    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException
+                    {
+                        try
+                        {
+                            log.debug("user = " + req.getRemoteUser() + ", admin = " + req.isUserInRole("admin"));
+                            resp.getOutputStream().print(TEST_MSG);
+                        }
+                        catch (IOException e)
+                        {
+                            throw new ServletException(e);
+                        }
+                    }
+                }),"/test");
+                addServletSecurity("/test", "admin");
             }
             
             server.setHandler(handlers);
@@ -148,13 +173,36 @@ public class HttpServer extends AbstractModule<HttpServerConfig>
     }
     
     
+    private void loadUsers() throws ParseException
+    {
+        if (config.users != null)
+        {            
+            for (String userSpec: config.users)
+            {
+                String[] tokens = userSpec.split(":|,");
+                if (tokens.length < 2)
+                    throw new ParseException("Invalid user spec: " + userSpec, 0);
+                String username = tokens[0].trim();
+                String password = tokens[1].trim();
+                String[] roles = new String[tokens.length-2];
+                for (int i = 0; i < roles.length; i++)
+                    roles[i] = tokens[i+2].trim();
+                loginService.putUser(username, Credential.getCredential(password), roles);
+            }
+        }
+    }
+    
+    
     @Override
     public void stop() throws SensorHubException
     {
         try
         {
             if (server != null)
+            {
                 server.stop();
+                servletHandler = null;
+            }
             log.info("HTTP server stopped");
         }
         catch (Exception e)
@@ -182,6 +230,7 @@ public class HttpServer extends AbstractModule<HttpServerConfig>
         
         servletHandler.getServletHandler().addServlet(holder);
         servletHandler.getServletHandler().addServletMapping(mapping);
+        log.debug("Servlet deployed " + mapping.toString());
     }
     
     
@@ -222,6 +271,22 @@ public class HttpServer extends AbstractModule<HttpServerConfig>
         {
             log.error("Error while undeploying servlet", e);
         }       
+    }
+    
+    
+    public void addServletSecurity(String pathSpec, String... roles)
+    {
+        if (securityHandler != null)
+        {
+            Constraint constraint = new Constraint();
+            constraint.setName(Constraint.__DIGEST_AUTH);
+            constraint.setRoles(roles);
+            constraint.setAuthenticate(true);         
+            ConstraintMapping cm = new ConstraintMapping();
+            cm.setConstraint(constraint);
+            cm.setPathSpec(pathSpec);
+            securityHandler.addConstraintMapping(cm);
+        }
     }
 
 

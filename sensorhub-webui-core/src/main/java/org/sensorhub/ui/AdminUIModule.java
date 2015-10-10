@@ -46,6 +46,7 @@ public class AdminUIModule extends AbstractModule<AdminUIConfig>
             initParams.put(WIDGETSET, config.widgetSet);
         initParams.put("productionMode", "true");  // set to false to compile theme on-the-fly       
         HttpServer.getInstance().deployServlet(vaadinServlet, initParams, "/admin/*", "/VAADIN/*");
+        HttpServer.getInstance().addServletSecurity("/admin/*", "admin");
     }
     
 

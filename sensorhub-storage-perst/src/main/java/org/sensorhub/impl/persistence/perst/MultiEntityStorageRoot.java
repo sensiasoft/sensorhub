@@ -15,7 +15,6 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 package org.sensorhub.impl.persistence.perst;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -30,7 +29,6 @@ import org.sensorhub.api.persistence.IDataRecord;
 import org.sensorhub.api.persistence.IFoiFilter;
 import org.sensorhub.api.persistence.IMultiSourceStorage;
 import org.sensorhub.api.persistence.IObsStorage;
-import org.sensorhub.api.persistence.IRecordStoreInfo;
 import org.sensorhub.impl.persistence.perst.TimeSeriesImpl.DBRecord;
 import org.vast.util.Bbox;
 
@@ -187,17 +185,6 @@ class MultiEntityStorageRoot extends ObsStorageRoot implements IObsStorage, IMul
         // also add record type to all data stores
         for (ObsStorageRoot dataStore: obsStores.values())
             dataStore.addRecordStore(name, recordStructure, recommendedEncoding);
-    }
-
-
-    @Override
-    public Map<String, ? extends IRecordStoreInfo> getRecordStores()
-    {
-        // for now just return the ones from the first data store
-        for (ObsStorageRoot dataStore: obsStores.values())
-            return dataStore.getRecordStores();
-        
-        return Collections.EMPTY_MAP;
     }
 
 
@@ -360,8 +347,14 @@ class MultiEntityStorageRoot extends ObsStorageRoot implements IObsStorage, IMul
     {
         Bbox bbox = new Bbox();
         for (String producerID: getProducerIDs())
-            bbox.add(getEntityStorage(producerID).getFoisSpatialExtent());
+        {
+            Bbox entityBbox = getEntityStorage(producerID).getFoisSpatialExtent();
+            if (entityBbox != null)
+                bbox.add(entityBbox);
+        }
         
+        if (bbox.isNull())
+            return null;
         return bbox;
     }
 
@@ -411,7 +404,10 @@ class MultiEntityStorageRoot extends ObsStorageRoot implements IObsStorage, IMul
     @Override
     public void storeFoi(String producerID, AbstractFeature foi)
     {
-        getEntityStorage(producerID).storeFoi(producerID, foi);
+        if (producerID == null)
+            featureStore.store(foi);
+        else
+            getEntityStorage(producerID).storeFoi(producerID, foi);
     }
     
 }

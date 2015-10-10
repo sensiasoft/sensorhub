@@ -23,7 +23,7 @@ import org.sensorhub.api.data.DataEvent;
 import org.sensorhub.api.data.IStreamingDataInterface;
 import org.sensorhub.api.module.IModule;
 import org.sensorhub.api.processing.ProcessException;
-import org.sensorhub.impl.common.BasicEventHandler;
+import org.sensorhub.impl.common.EventBus;
 import org.vast.process.DataQueue;
 import org.vast.swe.SWEHelper;
 
@@ -77,7 +77,6 @@ class SMLOutputInterface implements IStreamingDataInterface
         this.parentProcess = parentProcess;
         this.outputDef = outputDef;
         this.outputEncoding = SWEHelper.getDefaultEncoding(outputDef);
-        this.eventHandler = new BasicEventHandler();
         
         try
         {
@@ -87,6 +86,11 @@ class SMLOutputInterface implements IStreamingDataInterface
         {
             throw new ProcessException("Error while connecting output " + outputDef.getName(), e);
         }
+        
+        // obtain an event handler for this output
+        String moduleID = parentProcess.getLocalID();
+        String topic = getName();
+        this.eventHandler = EventBus.getInstance().registerProducer(moduleID, topic);
     }
     
 

@@ -14,6 +14,7 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.ui.data;
 
+import java.lang.reflect.Modifier;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -27,18 +28,42 @@ public class MyBeanItemContainer<BeanType> extends AbstractInMemoryContainer<Obj
 {
     final Map<Object, MyBeanItem<BeanType>> itemIdToItem = new HashMap<Object, MyBeanItem<BeanType>>();
     final MyBeanItem<BeanType> templateItem;
+    final Class<? extends BeanType> actualBeanType;
     
     
     public MyBeanItemContainer(Class<BeanType> beanType) throws IllegalArgumentException
     {
+        this(null, beanType, MyBeanItem.NO_PREFIX);
+    }
+    
+    
+    public MyBeanItemContainer(Collection<?> beanCollection, Class<? extends BeanType> beanType, String prefix) throws IllegalArgumentException
+    {
         try
         {
-            templateItem = new MyBeanItem<BeanType>(beanType.newInstance());
+            this.actualBeanType = beanType;
+            if ((beanType.getModifiers() & Modifier.ABSTRACT) == 0)
+                this.templateItem = new MyBeanItem<BeanType>(beanType.newInstance());
+            else
+                this.templateItem = null;
+            
+            // add collection members as bean items
+            if (beanCollection != null)
+            {
+                for (BeanType o: (Collection<BeanType>)beanCollection)
+                    addBean(o, prefix);
+            }
         }
         catch (Exception e)
         {
             throw new RuntimeException(e);
         }
+    }
+    
+    
+    public Class<? extends BeanType> getBeanType()
+    {
+        return actualBeanType;
     }
     
     
