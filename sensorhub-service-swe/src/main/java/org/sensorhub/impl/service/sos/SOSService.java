@@ -143,6 +143,8 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     static final byte[] MIME_BOUNDARY_JPEG = new String("--myboundary\r\nContent-Type: image/jpeg\r\nContent-Length: ").getBytes();
     static final byte[] END_MIME = new byte[] {0xD, 0xA, 0xD, 0xA};
     
+    public static final String DEFAULT_VERSION = "2.0.0";
+    
     String endpointUrl;
     SOSServiceConfig config;
     SOSServiceCapabilities capabilitiesCache;
@@ -192,7 +194,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
         // get main capabilities info from config
         CapabilitiesInfo serviceInfo = config.ogcCapabilitiesInfo;
         SOSServiceCapabilities capabilities = new SOSServiceCapabilities();
-        capabilities.getSupportedVersions().add("2.0.0");
+        capabilities.getSupportedVersions().add(DEFAULT_VERSION);
         capabilities.getIdentification().setTitle(serviceInfo.title);
         capabilities.getIdentification().setDescription(serviceInfo.description);
         capabilities.setFees(serviceInfo.fees);
@@ -534,6 +536,16 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     @Override
     protected void handleRequest(GetCapabilitiesRequest request) throws Exception
     {
+        // check that version 2.0.0 is supported by client
+        if (!request.getAcceptedVersions().isEmpty())
+        {
+            if (!request.getAcceptedVersions().contains(DEFAULT_VERSION))
+                throw new SOSException(SOSException.version_nego_failed_code);
+        }
+        
+        // set selected version
+        request.setVersion(DEFAULT_VERSION);
+        
         // update operation URLs
         if (endpointUrl == null)
         {
@@ -657,7 +669,13 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
         // init xml document writing
         OutputStream os = new BufferedOutputStream(request.getResponseStream());
         XMLOutputFactory factory = XMLImplFinder.getStaxOutputFactory();
+        factory.setProperty(XMLOutputFactory.IS_REPAIRING_NAMESPACES, true);
         XMLStreamWriter xmlWriter = factory.createXMLStreamWriter(os, "UTF-8");
+        
+        // prepare GML features writing
+        GMLStaxBindings gmlBindings = new GMLStaxBindings();
+        gmlBindings.registerFeatureBindings(new SMLStaxBindings());
+        gmlBindings.declareNamespacesOnRootElement();        
         
         // write response root element
         String sosNsUri = OGCRegistry.getNamespaceURI(SOSUtils.SOS, "2.0");
@@ -665,12 +683,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
         xmlWriter.writeStartDocument();        
         xmlWriter.writeStartElement(sosPrefix, "GetFeatureOfInterestResponse", sosNsUri);
         xmlWriter.writeNamespace(sosPrefix, sosNsUri);
-        
-        // prepare GML writing
-        GMLStaxBindings gmlBindings = new GMLStaxBindings();
-        gmlBindings.registerFeatureBindings(new SMLStaxBindings());
-        gmlBindings.declareNamespacesOnRootElement();
-        gmlBindings.writeNamespaces(xmlWriter);
+        gmlBindings.writeNamespaces(xmlWriter);        
         
         // scan offering corresponding to each selected procedure
         boolean first = true;
@@ -691,7 +704,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
                     continue;
                 returnedFids.add(f.getUniqueIdentifier());
                 
-                // write namespace on root because in most cases it is common to all features
+                // write namespace on root because in many cases it is common to all features
                 if (first)
                 {
                     gmlBindings.ensureNamespaceDecl(xmlWriter, f.getQName());
