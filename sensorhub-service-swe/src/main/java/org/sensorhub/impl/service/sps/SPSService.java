@@ -318,17 +318,22 @@ public class SPSService extends OWSServlet implements IServiceModule<SPSServiceC
         {
             InputStream xmlRequest = new PostRequestFilter(new BufferedInputStream(req.getInputStream()));
             DOMHelper dom = new DOMHelper(xmlRequest, false);
-            Element requestElt = owsUtils.skipSoapEnvelope(dom, dom.getBaseElement());
             
-            // check to see if it is a tasking request
-            String procID = dom.getElementValue(requestElt, "procedure");
+            Element requestElt = dom.getBaseElement();
+            OWSRequest owsRequest;
+            
+            // detect and skip SOAP envelope if present
+            String soapVersion = getSoapVersion(dom);
+            if (soapVersion != null)
+                requestElt = getSoapBody(dom);
             
             // case of tasking request, need to get tasking params for the selected procedure
-            if (procID != null)
+            if (isTaskingRequest(requestElt))
             {
+                String procID = dom.getElementValue(requestElt, "procedure");
                 SPSOfferingCapabilities offering = procedureToOfferingMap.get(procID);
                 if (offering == null)
-                    throw new SPSException(SPSException.invalid_param_code, "procedure", procID);           
+                    throw new SPSException(SPSException.invalid_param_code, "procedure", procID);
                 DescribeTaskingResponse paramDesc = offering.getParametersDescription();
                 
                 // use full tasking params or updatable subset
@@ -338,17 +343,37 @@ public class SPSService extends OWSServlet implements IServiceModule<SPSServiceC
                 else
                     taskingParams = paramDesc.getTaskingParameters();
                 
-                return ((SPSUtils)owsUtils).readSpsRequest(dom, requestElt, taskingParams);
+                owsRequest = ((SPSUtils)owsUtils).readSpsRequest(dom, requestElt, taskingParams);
             }
             
             // case of normal request
             else
-                return super.parseRequest(req, resp, post);
+                owsRequest = super.parseRequest(req, resp, post);
+            
+            if (soapVersion != null)
+                owsRequest.setSoapVersion(soapVersion);
+            
+            return owsRequest;
         }
         else
         {
             return super.parseRequest(req, resp, post);
         }
+    }
+    
+    
+    protected boolean isTaskingRequest(Element requestElt)
+    {
+        String localName = requestElt.getLocalName();
+        
+        if (localName.equals("GetFeasibility"))
+            return true;
+        if (localName.equals("Submit"))
+            return true;
+        if (localName.equals("Submit"))
+            return true;
+        
+        return false;
     }
     
     

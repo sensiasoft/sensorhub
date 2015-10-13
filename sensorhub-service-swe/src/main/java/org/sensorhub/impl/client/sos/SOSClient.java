@@ -42,6 +42,7 @@ import org.vast.ows.swe.DescribeSensorRequest;
 import org.vast.sensorML.SMLUtils;
 import org.vast.swe.SWEHelper;
 import org.vast.xml.DOMHelper;
+import org.w3c.dom.Element;
 
 
 /**
@@ -115,7 +116,8 @@ public class SOSClient
             InputStream is = sosUtils.sendGetRequest(req).getInputStream();
             DOMHelper dom = new DOMHelper(new BufferedInputStream(is), false);
             OWSExceptionReader.checkException(dom, dom.getBaseElement());
-            AbstractProcess smlDesc = new SMLUtils(SMLUtils.V2_0).readProcess(dom, dom.getBaseElement());
+            Element smlElt = dom.getElement("description/SensorDescription/data/*");
+            AbstractProcess smlDesc = new SMLUtils(SMLUtils.V2_0).readProcess(dom, smlElt);
             log.debug("Retrieved sensor description for sensor {}", sensorUID);
             
             return smlDesc;

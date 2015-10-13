@@ -19,6 +19,7 @@ import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -114,11 +115,11 @@ import org.vast.ows.swe.SWESOfferingCapabilities;
 import org.vast.ows.swe.UpdateSensorRequest;
 import org.vast.ows.swe.UpdateSensorResponse;
 import org.vast.sensorML.SMLStaxBindings;
-import org.vast.sensorML.SMLUtils;
 import org.vast.swe.DataSourceDOM;
 import org.vast.swe.SWEHelper;
 import org.vast.util.ReaderException;
 import org.vast.util.TimeExtent;
+import org.vast.xml.IndentingXMLStreamWriter;
 import org.vast.xml.XMLImplFinder;
 import com.vividsolutions.jts.geom.Polygon;
 
@@ -137,13 +138,16 @@ import com.vividsolutions.jts.geom.Polygon;
 public class SOSService extends SOSServlet implements IServiceModule<SOSServiceConfig>, IEventListener
 {
     private static final Logger log = LoggerFactory.getLogger(SOSService.class);
-    protected static final String invalidWSRequestMsg = "Invalid WebSocket request: ";
+    private static final String invalidWSRequestMsg = "Invalid WebSocket request: ";
     
-    static final String MIME_TYPE_MULTIPART = "multipart/x-mixed-replace; boundary=--myboundary"; 
-    static final byte[] MIME_BOUNDARY_JPEG = new String("--myboundary\r\nContent-Type: image/jpeg\r\nContent-Length: ").getBytes();
-    static final byte[] END_MIME = new byte[] {0xD, 0xA, 0xD, 0xA};
+    private static final String MIME_TYPE_MULTIPART = "multipart/x-mixed-replace; boundary=--myboundary"; 
+    private static final byte[] MIME_BOUNDARY_JPEG = new String("--myboundary\r\nContent-Type: image/jpeg\r\nContent-Length: ").getBytes();
+    private static final byte[] END_MIME = new byte[] {0xD, 0xA, 0xD, 0xA};
     
-    public static final String DEFAULT_VERSION = "2.0.0";
+    private static final String DEFAULT_VERSION = "2.0.0";
+    private static final String SOS_PREFIX = "sos";
+    private static final String SWES_PREFIX = "swe";
+    private static final String SOAP_PREFIX = "soap";
     
     String endpointUrl;
     SOSServiceConfig config;
@@ -540,7 +544,8 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
         if (!request.getAcceptedVersions().isEmpty())
         {
             if (!request.getAcceptedVersions().contains(DEFAULT_VERSION))
-                throw new SOSException(SOSException.version_nego_failed_code);
+                throw new SOSException(SOSException.version_nego_failed_code, "AcceptVersions", null,
+                        "Only version " + DEFAULT_VERSION + " is supported by this server");
         }
         
         // set selected version
@@ -578,12 +583,61 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
         checkQueryProcedureFormat(procedureToOfferingMap.get(sensorID), request.getFormat(), report);
         report.process();
         
-        // serialize and send SensorML description
-        OutputStream os = new BufferedOutputStream(request.getResponseStream());
+        // get procedure description
         AbstractProcess processDesc = generateSensorML(sensorID, request.getTime());
         if (processDesc == null)
             throw new SOSException(SOSException.invalid_param_code, "validTime"); 
-        new SMLUtils(SMLUtils.V2_0).writeProcess(os, processDesc, true);
+        
+        // init xml document writing
+        OutputStream os = new BufferedOutputStream(request.getResponseStream());
+        XMLOutputFactory factory = XMLImplFinder.getStaxOutputFactory();
+        XMLStreamWriter xmlWriter = factory.createXMLStreamWriter(os, StandardCharsets.UTF_8.name());
+        xmlWriter = new IndentingXMLStreamWriter(xmlWriter);
+        
+        // prepare SensorML writing
+        SMLStaxBindings smlBindings = new SMLStaxBindings();
+        smlBindings.setNamespacePrefixes(xmlWriter);
+        smlBindings.declareNamespacesOnRootElement();
+        
+        // start XML response
+        xmlWriter.writeStartDocument();
+        
+        // wrap with SOAP envelope if requested
+        String soapUri = request.getSoapVersion(); 
+        if (soapUri != null)
+        {
+            xmlWriter.writeStartElement(SOAP_PREFIX, "Envelope", soapUri);
+            xmlWriter.writeNamespace(SOAP_PREFIX, soapUri);
+            xmlWriter.writeStartElement(SOAP_PREFIX, "Body", soapUri);
+        }
+        
+        String swesNsUri = OGCRegistry.getNamespaceURI(SOSUtils.SWES, DEFAULT_VERSION);
+        xmlWriter.writeStartElement(SWES_PREFIX, "DescribeSensorResponse", swesNsUri);
+        xmlWriter.writeNamespace(SWES_PREFIX, swesNsUri);
+        
+        xmlWriter.writeStartElement(SWES_PREFIX, "procedureDescriptionFormat", swesNsUri);
+        xmlWriter.writeCharacters(DescribeSensorRequest.DEFAULT_FORMAT);
+        xmlWriter.writeEndElement();
+        
+        xmlWriter.writeStartElement(SWES_PREFIX, "description", swesNsUri);
+        xmlWriter.writeStartElement(SWES_PREFIX, "SensorDescription", swesNsUri);
+        xmlWriter.writeStartElement(SWES_PREFIX, "data", swesNsUri);
+        smlBindings.writeAbstractProcess(xmlWriter, processDesc);
+        xmlWriter.writeEndElement();
+        xmlWriter.writeEndElement();
+        xmlWriter.writeEndElement();
+        
+        xmlWriter.writeEndElement();
+        
+        // close SOAP elements
+        if (soapUri != null)
+        {
+            xmlWriter.writeEndElement();
+            xmlWriter.writeEndElement();
+        }
+        
+        xmlWriter.writeEndDocument();
+        xmlWriter.close();
     }
     
     
@@ -670,19 +724,29 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
         OutputStream os = new BufferedOutputStream(request.getResponseStream());
         XMLOutputFactory factory = XMLImplFinder.getStaxOutputFactory();
         factory.setProperty(XMLOutputFactory.IS_REPAIRING_NAMESPACES, true);
-        XMLStreamWriter xmlWriter = factory.createXMLStreamWriter(os, "UTF-8");
+        XMLStreamWriter xmlWriter = factory.createXMLStreamWriter(os, StandardCharsets.UTF_8.name());
         
         // prepare GML features writing
         GMLStaxBindings gmlBindings = new GMLStaxBindings();
         gmlBindings.registerFeatureBindings(new SMLStaxBindings());
         gmlBindings.declareNamespacesOnRootElement();        
         
+        // start XML response
+        xmlWriter.writeStartDocument();
+        
+        // wrap with SOAP envelope if requested
+        String soapUri = request.getSoapVersion(); 
+        if (soapUri != null)
+        {
+            xmlWriter.writeStartElement(SOAP_PREFIX, "Envelope", soapUri);
+            xmlWriter.writeNamespace(SOAP_PREFIX, soapUri);
+            xmlWriter.writeStartElement(SOAP_PREFIX, "Body", soapUri);
+        }
+        
         // write response root element
-        String sosNsUri = OGCRegistry.getNamespaceURI(SOSUtils.SOS, "2.0");
-        String sosPrefix = "sos";
-        xmlWriter.writeStartDocument();        
-        xmlWriter.writeStartElement(sosPrefix, "GetFeatureOfInterestResponse", sosNsUri);
-        xmlWriter.writeNamespace(sosPrefix, sosNsUri);
+        String sosNsUri = OGCRegistry.getNamespaceURI(SOSUtils.SOS, DEFAULT_VERSION);
+        xmlWriter.writeStartElement(SOS_PREFIX, "GetFeatureOfInterestResponse", sosNsUri);
+        xmlWriter.writeNamespace(SOS_PREFIX, sosNsUri);
         gmlBindings.writeNamespaces(xmlWriter);        
         
         // scan offering corresponding to each selected procedure
@@ -723,6 +787,13 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
                 xmlWriter.flush();
                 os.write('\n');
             }
+        }
+        
+        // close SOAP elements
+        if (soapUri != null)
+        {
+            xmlWriter.writeEndElement();
+            xmlWriter.writeEndElement();
         }
         
         xmlWriter.writeEndDocument();
@@ -1374,6 +1445,6 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     @Override
     protected String getDefaultVersion()
     {
-        return "2.0";
+        return DEFAULT_VERSION;
     }
 }

@@ -52,6 +52,7 @@ import org.vast.data.QuantityImpl;
 import org.vast.data.TextEncodingImpl;
 import org.vast.ogc.OGCException;
 import org.vast.ogc.OGCExceptionReader;
+import org.vast.ows.GetCapabilitiesRequest;
 import org.vast.ows.OWSException;
 import org.vast.ows.OWSExceptionReader;
 import org.vast.ows.OWSRequest;
@@ -61,6 +62,7 @@ import org.vast.ows.sos.GetObservationRequest;
 import org.vast.ows.sos.InsertResultRequest;
 import org.vast.ows.sos.SOSOfferingCapabilities;
 import org.vast.ows.sos.SOSServiceCapabilities;
+import org.vast.ows.swe.DescribeSensorRequest;
 import org.vast.swe.SWEData;
 import org.vast.util.Bbox;
 import org.vast.util.TimeExtent;
@@ -230,7 +232,22 @@ public class TestSOSService
     {
         OWSUtils utils = new OWSUtils();
         System.out.println(utils.buildURLQuery(request));
-        InputStream is = utils.sendGetRequest(request).getInputStream();
+        InputStream is;
+        if (usePost)
+            is = utils.sendPostRequest(request).getInputStream();
+        else
+            is = utils.sendGetRequest(request).getInputStream();
+        DOMHelper dom = new DOMHelper(is, false);
+        dom.serialize(dom.getBaseElement(), System.out, true);
+        OWSExceptionReader.checkException(dom, dom.getBaseElement());
+        return dom;
+    }
+    
+    
+    protected DOMHelper sendSoapRequest(OWSRequest request) throws Exception
+    {
+        OWSUtils utils = new OWSUtils();
+        InputStream is = utils.sendSoapRequest(request).getInputStream();
         DOMHelper dom = new DOMHelper(is, false);
         dom.serialize(dom.getBaseElement(), System.out, true);
         OWSExceptionReader.checkException(dom, dom.getBaseElement());
@@ -303,6 +320,79 @@ public class TestSOSService
         
         assertEquals("Wrong offering id", URI_OFFERING2, dom.getElementValue((Element)offeringElts.item(1), "identifier"));
         assertEquals("Wrong offering name", NAME_OFFERING2, dom.getElementValue((Element)offeringElts.item(1), "name"));
+    }
+    
+    
+    @Test
+    public void testGetCapabilitiesSoap12() throws Exception
+    {
+        deployService(buildSensorProvider1());
+        
+        GetCapabilitiesRequest getCaps = new GetCapabilitiesRequest();
+        getCaps.setPostServer(SERVICE_ENDPOINT);
+        getCaps.setSoapVersion(OWSUtils.SOAP12_URI);
+        DOMHelper dom = sendSoapRequest(getCaps);
+        
+        assertEquals(OWSUtils.SOAP12_URI, dom.getBaseElement().getNamespaceURI());
+                
+        NodeList offeringElts = dom.getElements("Body/Capabilities/contents/Contents/offering/*");
+        assertEquals("Wrong number of offerings", 1, offeringElts.getLength());
+        assertEquals("Wrong offering id", URI_OFFERING1, dom.getElementValue((Element)offeringElts.item(0), "identifier"));
+        assertEquals("Wrong offering name", NAME_OFFERING1, dom.getElementValue((Element)offeringElts.item(0), "name"));
+    }
+    
+    
+    @Test
+    public void testGetCapabilitiesSoap11() throws Exception
+    {
+        deployService(buildSensorProvider1(), buildSensorProvider2());
+        
+        GetCapabilitiesRequest getCaps = new GetCapabilitiesRequest();
+        getCaps.setPostServer(SERVICE_ENDPOINT);
+        getCaps.setSoapVersion(OWSUtils.SOAP11_URI);
+        DOMHelper dom = sendSoapRequest(getCaps);
+        
+        assertEquals(OWSUtils.SOAP11_URI, dom.getBaseElement().getNamespaceURI());
+        
+        NodeList offeringElts = dom.getElements("Body/Capabilities/contents/Contents/offering/*");
+        assertEquals("Wrong number of offerings", 2, offeringElts.getLength());
+        
+        assertEquals("Wrong offering id", URI_OFFERING1, dom.getElementValue((Element)offeringElts.item(0), "identifier"));
+        assertEquals("Wrong offering name", NAME_OFFERING1, dom.getElementValue((Element)offeringElts.item(0), "name"));
+        
+        assertEquals("Wrong offering id", URI_OFFERING2, dom.getElementValue((Element)offeringElts.item(1), "identifier"));
+        assertEquals("Wrong offering name", NAME_OFFERING2, dom.getElementValue((Element)offeringElts.item(1), "name"));
+    }
+    
+    
+    @Test
+    public void testDescribeSensor() throws Exception
+    {
+        deployService(buildSensorProvider1(), buildSensorProvider2());
+        OWSRequest dsReq;
+        DOMHelper dom;
+        
+        dsReq = generateDescribeSensor(UID_SENSOR1);
+        dom = sendRequest(dsReq, false);        
+        assertEquals(UID_SENSOR1, dom.getElementValue("description/SensorDescription/data/PhysicalSystem/identifier"));
+        
+        dsReq = generateDescribeSensor(UID_SENSOR2);
+        dom = sendRequest(dsReq, false);        
+        assertEquals(UID_SENSOR2, dom.getElementValue("description/SensorDescription/data/PhysicalSystem/identifier"));
+    }
+    
+    
+    @Test
+    public void testDescribeSensorSoap11() throws Exception
+    {
+        deployService(buildSensorProvider1(), buildSensorProvider2());
+        
+        OWSRequest request = generateDescribeSensor(UID_SENSOR1);
+        request.setSoapVersion(OWSUtils.SOAP11_URI);
+        DOMHelper dom = sendSoapRequest(request);
+        
+        assertEquals(OWSUtils.SOAP11_URI, dom.getBaseElement().getNamespaceURI());        
+        assertEquals(UID_SENSOR1, dom.getElementValue("Body/DescribeSensorResponse/description/SensorDescription/data/PhysicalSystem/identifier"));
     }
     
     
@@ -452,6 +542,16 @@ public class TestSOSService
     }
     
     
+    protected DescribeSensorRequest generateDescribeSensor(String procId)
+    {
+        DescribeSensorRequest ds = new DescribeSensorRequest();
+        ds.setGetServer(SERVICE_ENDPOINT);
+        ds.setVersion("2.0");
+        ds.setProcedureID(procId);
+        return ds;
+    }
+    
+    
     protected GetObservationRequest generateGetObs(String offeringId, String obsProp)
     {
         GetObservationRequest getObs = new GetObservationRequest();
@@ -523,6 +623,23 @@ public class TestSOSService
         testGetFoisByID(3, 2);
         testGetFoisByID(1, 2, 3);
         testGetFoisByID(2, 3, 1);
+    }
+    
+    
+    @Test
+    public void testGetFoisByIDSoap() throws Exception
+    {
+        deployService(buildSensorProvider2WithObsStorage());
+                
+        GetFeatureOfInterestRequest req = new GetFeatureOfInterestRequest();
+        req.setGetServer(SERVICE_ENDPOINT);
+        req.setVersion("2.0");
+        req.setSoapVersion(OWSUtils.SOAP12_URI);
+        req.getFoiIDs().add(FakeSensorWithFoi.FOI_UID_PREFIX+1);
+        DOMHelper dom = sendSoapRequest(req);
+        
+        assertEquals(OWSUtils.SOAP12_URI, dom.getBaseElement().getNamespaceURI());
+        assertEquals("Wrong number of features returned", 1, dom.getElements("*/*").getLength());
     }
     
     
