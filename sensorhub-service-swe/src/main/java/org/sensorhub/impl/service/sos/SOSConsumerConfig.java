@@ -15,7 +15,6 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 package org.sensorhub.impl.service.sos;
 
 import org.sensorhub.api.common.SensorHubException;
-import org.vast.ows.sos.ISOSDataConsumer;
 
 
 public abstract class SOSConsumerConfig

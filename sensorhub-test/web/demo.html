@@ -5,7 +5,8 @@
 
     <p>&nbsp;</p>
     <h4>SOS Capabilities</h4>
-    <p><a href="sensorhub/sos?service=SOS&version=2.0&request=GetCapabilities">Capabilities</a></p>
+    <p><a href="sensorhub/sos?service=SOS&acceptVersions=2.0.0&request=GetCapabilities">Capabilities</a></p>
+    <p><a href="sensorhub/sos?service=SOS&version=2.0&request=GetFeatureOfInterest">Features of Interest</a></p>
 
     <p>&nbsp;</p>
     <h4>Simulated GPS</h4>
@@ -18,9 +19,18 @@
     <h4>Simulated Weather</h4>
     <p><a href="sensorhub/sos?service=SOS&version=2.0&request=GetResult&offering=urn:mysos:offering03&observedProperty=http://sensorml.com/ont/swe/property/Weather&temporalFilter=phenomenonTime,now">GetResult Latest Weather</a></p>
     <p><a href="sensorhub/sos?service=SOS&version=2.0&request=GetObservation&offering=urn:mysos:offering03&observedProperty=http://sensorml.com/ont/swe/property/Weather&temporalFilter=phenomenonTime,2015-08-12T00:00:00Z/2015-08-12T00:01:00Z">GetObservation Historical Weather</a></p>
-    <p><a href="sensorhub/sos?service=SOS&version=2.0&request=GetResult&offering=urn:mysos:offering03&observedProperty=http://sensorml.com/ont/swe/property/Weather&temporalFilter=phenomenonTime,2015-08-12T00:00:00Z/2015-08-12T02:00:00Z">GetResult Historical Weather</a></p>
-    <p><a href="sensorhub/sos?service=SOS&version=2.0&request=GetResultTemplate&offering=urn:mysos:offering03&observedProperty=http://sensorml.com/ont/swe/property/Weather">GetResultTemplate Weather</a></p>
+    <p><a href="sensorhub/sos?service=SOS&version=2.0&request=GetResultTemplate&offering=urn:mysos:offering03&observedProperty=http://sensorml.com/ont/swe/property/Weather">GetResultTemplate Weather (all measured properties)</a></p>
+    <p><a href="sensorhub/sos?service=SOS&version=2.0&request=GetResult&offering=urn:mysos:offering03&observedProperty=http://sensorml.com/ont/swe/property/Weather&temporalFilter=phenomenonTime,2015-08-12T00:00:00Z/2015-08-12T02:00:00Z">GetResult Historical Weather (all measured properties)</a></p>
+    <p><a href="sensorhub/sos?service=SOS&version=2.0&request=GetResultTemplate&offering=urn:mysos:offering03&observedProperty=http://sensorml.com/ont/swe/property/AirTemperature">GetResultTemplate (only temperature)</a></p>
+    <p><a href="sensorhub/sos?service=SOS&version=2.0&request=GetResult&offering=urn:mysos:offering03&observedProperty=http://sensorml.com/ont/swe/property/AirTemperature&temporalFilter=phenomenonTime,2015-08-12T00:00:00Z/2015-08-12T02:00:00Z">GetResult Historical Weather (only temperature)</a></p>
+    <p><a href="sensorhub/sos?service=SOS&version=2.0&request=GetFeatureOfInterest&procedure=urn:test:sensors:simweather:0123456879">GetFeatureOfInterest Weather</a></p>
     
+    <p>&nbsp;</p>
+    <h4>Aautomatic Vehicle Location (AVL) Data</h4>
+    <p><a href="sensorhub/sos?service=SOS&version=2.0&request=GetResultTemplate&offering=urn:mysos:avl&observedProperty=http://www.opengis.net/def/property/OGC/0/SensorLocation">GetResultTemplate AVL</a></p>
+    <p><a href="sensorhub/sos?service=SOS&version=2.0&request=GetResult&offering=urn:mysos:avl&observedProperty=http://www.opengis.net/def/property/OGC/0/SensorLocation">GetResult AVL</a></p>
+    <p><a href="sensorhub/sos?service=SOS&version=2.0&request=GetFeatureOfInterest&procedure=urn:osh:sensors:avl:911:fleet">GetFeatureOfInterest AVL</a></p>
+        
     <p>&nbsp;</p>
     <h4>Android Video + GPS</h4>
     <p><a href="sensorhub/sos?service=SOS&version=2.0&request=DescribeSensor&procedure=urn:android:device:060693280a28e015">DescribeSensor Android Phone</a></p>

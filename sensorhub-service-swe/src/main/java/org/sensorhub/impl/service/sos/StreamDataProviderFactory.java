@@ -49,7 +49,7 @@ import org.vast.util.TimeExtent;
  * @param <ProducerType> Type of producer handled by this provider
  * @since Feb 28, 2015
  */
-public abstract class StreamDataProviderFactory<ProducerType extends IDataProducerModule<?>> implements IDataProviderFactory, IEventListener
+public abstract class StreamDataProviderFactory<ProducerType extends IDataProducerModule<?>> implements ISOSDataProviderFactory, IEventListener
 {
     final StreamDataProviderConfig config;
     final String producerType;

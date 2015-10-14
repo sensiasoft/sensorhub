@@ -21,7 +21,6 @@ import org.sensorhub.api.persistence.IBasicStorage;
 import org.sensorhub.impl.SensorHub;
 import org.sensorhub.impl.module.ModuleRegistry;
 import org.vast.ogc.om.IObservation;
-import org.vast.ows.sos.ISOSDataConsumer;
 
 
 /**

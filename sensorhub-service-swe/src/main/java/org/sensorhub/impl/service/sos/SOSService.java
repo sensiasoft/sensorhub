@@ -88,6 +88,7 @@ import org.sensorhub.impl.sensor.sost.SOSVirtualSensorConfig;
 import org.sensorhub.impl.sensor.sost.SOSVirtualSensor;
 import org.sensorhub.impl.service.HttpServer;
 import org.sensorhub.impl.service.ogc.OGCServiceConfig.CapabilitiesInfo;
+import org.sensorhub.impl.service.sos.ISOSDataConsumer.Template;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vast.cdm.common.DataSource;
@@ -107,14 +108,10 @@ import org.vast.ows.OWSRequest;
 import org.vast.ows.OWSUtils;
 import org.vast.ows.sos.GetFeatureOfInterestRequest;
 import org.vast.ows.sos.GetResultRequest;
-import org.vast.ows.sos.ISOSDataConsumer;
-import org.vast.ows.sos.ISOSDataConsumer.Template;
 import org.vast.ows.sos.DataStructFilter;
 import org.vast.ows.sos.GetObservationRequest;
 import org.vast.ows.sos.GetResultTemplateRequest;
 import org.vast.ows.sos.GetResultTemplateResponse;
-import org.vast.ows.sos.ISOSDataProvider;
-import org.vast.ows.sos.ISOSDataProviderFactory;
 import org.vast.ows.sos.InsertObservationRequest;
 import org.vast.ows.sos.InsertObservationResponse;
 import org.vast.ows.sos.InsertResultRequest;
@@ -123,7 +120,6 @@ import org.vast.ows.sos.InsertResultTemplateRequest;
 import org.vast.ows.sos.InsertResultTemplateResponse;
 import org.vast.ows.sos.InsertSensorRequest;
 import org.vast.ows.sos.InsertSensorResponse;
-import org.vast.ows.sos.SOSDataFilter;
 import org.vast.ows.sos.SOSException;
 import org.vast.ows.sos.SOSOfferingCapabilities;
 import org.vast.ows.sos.SOSServiceCapabilities;
@@ -167,8 +163,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     private static final Logger log = LoggerFactory.getLogger(SOSService.class);
     private static final String INVALID_WS_REQ_MSG = "Invalid WebSocket request: ";
     private static final String INVALID_SML_MSG = "Invalid SensorML description: ";
-    //private static final String TOO_MANY_OBS_MSG = "Too many observations. Please further restrict your filtering options";
-    
+        
     private static final String MIME_TYPE_MULTIPART = "multipart/x-mixed-replace; boundary=--myboundary"; 
     private static final byte[] MIME_BOUNDARY_JPEG = new String("--myboundary\r\nContent-Type: image/jpeg\r\nContent-Length: ").getBytes();
     private static final byte[] END_MIME = new byte[] {0xD, 0xA, 0xD, 0xA};
@@ -304,7 +299,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
                 try
                 {
                     // instantiate provider factories and map them to offering URIs
-                    IDataProviderFactory provider = providerConf.getFactory();
+                    ISOSDataProviderFactory provider = providerConf.getFactory();
                     if (!provider.isEnabled())
                         continue;
                                     
@@ -361,7 +356,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     {
         try
         {
-            IDataProviderFactory factory = getDataProviderFactoryBySensorID(uri);
+            ISOSDataProviderFactory factory = getDataProviderFactoryBySensorID(uri);
             double time = Double.NaN;
             if (timeExtent != null)
                 time = timeExtent.getBaseTime();
@@ -405,7 +400,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
         
         // clean all providers
         for (ISOSDataProviderFactory provider: dataProviders.values())
-            ((IDataProviderFactory)provider).cleanup();
+            ((ISOSDataProviderFactory)provider).cleanup();
     }
    
     
@@ -593,7 +588,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
         // we don't always do it when changes occur because high frequency changes 
         // would trigger too many updates (e.g. new measurements changing time periods)
         for (ISOSDataProviderFactory provider: dataProviders.values())
-            ((IDataProviderFactory)provider).updateCapabilities();
+            ((ISOSDataProviderFactory)provider).updateCapabilities();
         
         sendResponse(request, capabilitiesCache);
     }
@@ -721,7 +716,6 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
             
             // send obs from each selected offering
             // TODO sort by time by multiplexing obs from different offerings?
-            // TODO protect server by sending exception when too many obs are requested
             boolean firstObs = true;
             for (String offering: selectedOfferings)
             {
@@ -740,6 +734,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
                 
                 // setup data provider
                 SOSDataFilter filter = new SOSDataFilter(request.getFoiIDs(), selectedObservables, request.getTime());
+                filter.setMaxObsCount(config.maxObsCount);
                 dataProvider = getDataProvider(offering, filter);
                 
                 // write each observation in stream
@@ -871,6 +866,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
             
             // setup data filter (including extensions)
             SOSDataFilter filter = new SOSDataFilter(request.getFoiIDs(), request.getObservables(), request.getTime());
+            filter.setMaxObsCount(config.maxRecordCount);
             if (request.getExtensions().containsKey(EXT_REPLAY))
             {
                 String replaySpeed = (String)request.getExtensions().get(EXT_REPLAY);
@@ -1062,7 +1058,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
         
         for (String procID: selectedProcedures)
         {
-            IDataProviderFactory provider = getDataProviderFactoryBySensorID(procID);
+            ISOSDataProviderFactory provider = getDataProviderFactoryBySensorID(procID);
             
             // output selected features
             Iterator<AbstractFeature> it2 = provider.getFoiIterator(filter);
@@ -1202,7 +1198,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
                 }
                 
                 // instantiate provider and consumer instances
-                IDataProviderFactory provider = providerConfig.getFactory();
+                ISOSDataProviderFactory provider = providerConfig.getFactory();
                 ISOSDataConsumer consumer = consumerConfig.getConsumerInstance();
                 
                 // register provider and consumer
@@ -1235,7 +1231,6 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     }
     
     
-    @Override
     protected boolean writeCustomFormatStream(GetResultRequest request, ISOSDataProvider dataProvider, OutputStream os) throws Exception
     {
         DataComponent resultStructure = dataProvider.getResultStructure();
@@ -1462,7 +1457,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
                 templateToOfferingMap.put(templateID, offering);
                 
                 // re-generate capabilities
-                IDataProviderFactory provider = getDataProviderFactoryByOfferingID(offering);
+                ISOSDataProviderFactory provider = getDataProviderFactoryByOfferingID(offering);
                 SOSOfferingCapabilities newCaps = provider.generateCapabilities();
                 int oldIndex = 0;
                 for (OWSLayerCapabilities offCaps: capabilitiesCache.getLayers())
@@ -1639,7 +1634,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
         // refresh offering capabilities if needed
         try
         {
-            IDataProviderFactory provider = (IDataProviderFactory)dataProviders.get(offeringID);
+            ISOSDataProviderFactory provider = (ISOSDataProviderFactory)dataProviders.get(offeringID);
             provider.updateCapabilities();
         }
         catch (Exception e)
@@ -1726,16 +1721,16 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     }
     
     
-    protected IDataProviderFactory getDataProviderFactoryByOfferingID(String offering) throws Exception
+    protected ISOSDataProviderFactory getDataProviderFactoryByOfferingID(String offering) throws Exception
     {
         ISOSDataProviderFactory factory = dataProviders.get(offering);
         if (factory == null)
             throw new IllegalStateException("No valid data provider factory found for offering " + offering);
-        return (IDataProviderFactory)factory;
+        return (ISOSDataProviderFactory)factory;
     }
     
     
-    protected IDataProviderFactory getDataProviderFactoryBySensorID(String sensorID) throws Exception
+    protected ISOSDataProviderFactory getDataProviderFactoryBySensorID(String sensorID) throws Exception
     {
         String offering = procedureToOfferingMap.get(sensorID);
         return getDataProviderFactoryByOfferingID(offering);

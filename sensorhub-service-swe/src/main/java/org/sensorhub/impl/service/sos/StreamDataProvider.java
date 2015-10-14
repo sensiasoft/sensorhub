@@ -37,8 +37,6 @@ import org.vast.ogc.gml.FeatureRef;
 import org.vast.ogc.om.IObservation;
 import org.vast.ogc.om.ObservationImpl;
 import org.vast.ogc.om.ProcedureRef;
-import org.vast.ows.sos.ISOSDataProvider;
-import org.vast.ows.sos.SOSDataFilter;
 import org.vast.swe.SWEConstants;
 import org.vast.util.TimeExtent;
 

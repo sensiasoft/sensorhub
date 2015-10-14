@@ -36,8 +36,6 @@ import org.sensorhub.impl.SensorHub;
 import org.sensorhub.utils.MsgUtils;
 import org.vast.data.DataIterator;
 import org.vast.ogc.om.IObservation;
-import org.vast.ows.sos.ISOSDataProvider;
-import org.vast.ows.sos.SOSDataFilter;
 import org.vast.ows.sos.SOSOfferingCapabilities;
 import org.vast.ows.swe.SWESOfferingCapabilities;
 import org.vast.swe.SWEConstants;
@@ -62,7 +60,7 @@ import org.vast.util.TimeExtent;
  * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @since Sep 15, 2013
  */
-public class StorageDataProviderFactory implements IDataProviderFactory
+public class StorageDataProviderFactory implements ISOSDataProviderFactory
 {
     final StorageDataProviderConfig config;
     final IRecordStorageModule<?> storage;
@@ -293,7 +291,7 @@ public class StorageDataProviderFactory implements IDataProviderFactory
     
     
     @Override
-    public ISOSDataProvider getNewDataProvider(SOSDataFilter filter) throws ServiceException
+    public ISOSDataProvider getNewDataProvider(SOSDataFilter filter) throws Exception
     {
         checkEnabled();
         return new StorageDataProvider(storage, config, filter);

@@ -36,6 +36,14 @@ public class SOSServiceConfig extends OGCServiceConfig
     public boolean enableTransactional = false;
     
     
+    @DisplayInfo(label="Max Observations Returned", desc="Maximum number of observations returned by a historical GetObservation request (for each selected offering)")
+    public int maxObsCount = 100;
+    
+    
+    @DisplayInfo(label="Max Records Returned", desc="Maximum number of result records returned by a historical GetResult request")
+    public int maxRecordCount = 100000;
+    
+    
     @DisplayInfo(desc="Storage configuration to use for newly registered sensors")
     public StorageConfig newStorageConfig;
     

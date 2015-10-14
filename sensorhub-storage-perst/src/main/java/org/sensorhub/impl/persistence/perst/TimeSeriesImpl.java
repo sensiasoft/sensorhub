@@ -143,7 +143,7 @@ class TimeSeriesImpl extends Persistent implements IRecordStoreInfo
     }
 
 
-    Iterator<DataBlock> getDataBlockIterator(IDataFilter filter)
+    IterableIterator<DataBlock> getDataBlockIterator(IDataFilter filter)
     {
         double[] timeRange = filter.getTimeStampRange();
         Key keyFirst = new Key(timeRange == null ? Double.NEGATIVE_INFINITY : timeRange[0]);

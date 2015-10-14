@@ -35,8 +35,7 @@ import org.vast.ogc.gml.FeatureRef;
 import org.vast.ogc.om.IObservation;
 import org.vast.ogc.om.ObservationImpl;
 import org.vast.ogc.om.ProcedureRef;
-import org.vast.ows.sos.ISOSDataProvider;
-import org.vast.ows.sos.SOSDataFilter;
+import org.vast.ows.sos.SOSException;
 import org.vast.swe.SWEConstants;
 import org.vast.util.TimeExtent;
 import com.vividsolutions.jts.geom.Polygon;
@@ -53,6 +52,8 @@ import com.vividsolutions.jts.geom.Polygon;
  */
 public class StorageDataProvider implements ISOSDataProvider
 {
+    private static final String TOO_MANY_OBS_MSG = "Too many observations requested. Please further restrict your filtering options";
+    
     IBasicStorage storage;
     List<StorageState> dataStoresStates;
     String foiID;
@@ -71,7 +72,7 @@ public class StorageDataProvider implements ISOSDataProvider
     }
     
     
-    public StorageDataProvider(IBasicStorage storage, StorageDataProviderConfig config, final SOSDataFilter filter)
+    public StorageDataProvider(IBasicStorage storage, StorageDataProviderConfig config, final SOSDataFilter filter) throws Exception
     {
         this.storage = storage;
         this.dataStoresStates = new ArrayList<StorageState>();
@@ -115,6 +116,11 @@ public class StorageDataProvider implements ISOSDataProvider
                         public Set<String> getFoiIDs() { return filter.getFoiIds(); }
                         public Polygon getRoi() {return filter.getRoi(); }
                     };
+                    
+                    // check obs count is not too large
+                    int obsCount = storage.getNumMatchingRecords(storageFilter);
+                    if (obsCount > filter.getMaxObsCount())
+                        throw new SOSException(SOSException.response_too_big_code, null, null, TOO_MANY_OBS_MSG);
                     
                     StorageState state = new StorageState();
                     state.recordInfo = recordInfo;

@@ -19,8 +19,6 @@ import org.sensorhub.api.sensor.ISensorModule;
 import org.sensorhub.api.service.ServiceException;
 import org.sensorhub.impl.SensorHub;
 import org.sensorhub.utils.MsgUtils;
-import org.vast.ows.sos.ISOSDataProvider;
-import org.vast.ows.sos.SOSDataFilter;
 import org.vast.util.TimeExtent;
 
 
@@ -51,7 +49,7 @@ public class SensorWithStorageProviderFactory extends StreamWithStorageProviderF
 
 
     @Override
-    public ISOSDataProvider getNewDataProvider(SOSDataFilter filter) throws ServiceException
+    public ISOSDataProvider getNewDataProvider(SOSDataFilter filter) throws Exception
     {
         TimeExtent timeRange = filter.getTimeRange();
         

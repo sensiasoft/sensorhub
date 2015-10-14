@@ -17,8 +17,6 @@ package org.sensorhub.impl.service.sos;
 import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.processing.IStreamProcessModule;
 import org.sensorhub.api.service.ServiceException;
-import org.vast.ows.sos.ISOSDataProvider;
-import org.vast.ows.sos.SOSDataFilter;
 
 
 /**

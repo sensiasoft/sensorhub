@@ -18,7 +18,6 @@ import java.util.Iterator;
 import net.opengis.gml.v32.AbstractFeature;
 import net.opengis.sensorml.v20.AbstractProcess;
 import org.sensorhub.api.persistence.IFoiFilter;
-import org.vast.ows.sos.ISOSDataProviderFactory;
 import org.vast.ows.sos.SOSOfferingCapabilities;
 
 
@@ -39,7 +38,7 @@ import org.vast.ows.sos.SOSOfferingCapabilities;
  * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @since Sep 7, 2013
  */
-public interface IDataProviderFactory extends ISOSDataProviderFactory
+public interface ISOSDataProviderFactory
 {
 
     /**
@@ -82,6 +81,15 @@ public interface IDataProviderFactory extends ISOSDataProviderFactory
      * @throws Exception
      */
     public Iterator<AbstractFeature> getFoiIterator(IFoiFilter filter) throws Exception;
+    
+    
+    /**
+     * Instantiates a new data provider
+     * @param filter
+     * @return sos data provider
+     * @throws Exception
+     */
+    public ISOSDataProvider getNewDataProvider(SOSDataFilter filter) throws Exception;
     
     
     /**
