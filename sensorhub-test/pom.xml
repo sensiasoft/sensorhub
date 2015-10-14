@@ -32,41 +32,10 @@
         <type>bundle</type>
      </dependency>
      <dependency>
-        <groupId>org.sensorhub</groupId>
-        <artifactId>sensorhub-driver-v4l</artifactId>
-        <version>0.1</version>
-        <type>bundle</type>
-     </dependency>
-     <dependency>
-        <groupId>org.sensorhub</groupId>
-        <artifactId>sensorhub-driver-fakegps</artifactId>
-        <version>0.1</version>
-     </dependency>
-     <dependency>
-        <groupId>org.sensorhub</groupId>
-        <artifactId>sensorhub-driver-fakeweather</artifactId>
-        <version>0.1</version>
-     </dependency>
-     <dependency>
-        <groupId>org.sensorhub</groupId>
-        <artifactId>sensorhub-driver-fakecam</artifactId>
-        <version>0.1</version>
-     </dependency>
-     <dependency>
-        <groupId>org.sensorhub</groupId>
-        <artifactId>sensorhub-driver-weatherStation</artifactId>
-        <version>0.1</version>
-     </dependency>
-     <dependency>
-        <groupId>org.sensorhub</groupId>
-        <artifactId>sensorhub-driver-axis</artifactId>
-        <version>0.1</version>
-        <type>bundle</type>
-     </dependency>
-     <dependency>
-        <groupId>org.sensorhub</groupId>
-        <artifactId>sensorhub-driver-trupulse</artifactId>
-        <version>0.1</version>
+        <groupId>org.vast.opengis</groupId>
+        <artifactId>sensorml-core</artifactId>
+        <version>${project.version}</version>
+        <type>test-jar</type>
      </dependency>
      <dependency>
         <groupId>org.vast.opengis</groupId>
@@ -75,10 +44,41 @@
         <scope>test</scope>
      </dependency>
      <dependency>
-        <groupId>org.vast.opengis</groupId>
-        <artifactId>sensorml-core</artifactId>
-        <version>1.0</version>
-        <type>test-jar</type>
+        <groupId>org.sensorhub</groupId>
+        <artifactId>sensorhub-driver-v4l</artifactId>
+        <version>0.1-SNAPSHOT</version>
+        <type>bundle</type>
+     </dependency>
+     <dependency>
+        <groupId>org.sensorhub</groupId>
+        <artifactId>sensorhub-driver-fakegps</artifactId>
+        <version>0.1-SNAPSHOT</version>
+     </dependency>
+     <dependency>
+        <groupId>org.sensorhub</groupId>
+        <artifactId>sensorhub-driver-fakeweather</artifactId>
+        <version>0.1-SNAPSHOT</version>
+     </dependency>
+     <dependency>
+        <groupId>org.sensorhub</groupId>
+        <artifactId>sensorhub-driver-fakecam</artifactId>
+        <version>0.1-SNAPSHOT</version>
+     </dependency>
+     <dependency>
+        <groupId>org.sensorhub</groupId>
+        <artifactId>sensorhub-driver-weatherStation</artifactId>
+        <version>0.1-SNAPSHOT</version>
+     </dependency>
+     <dependency>
+        <groupId>org.sensorhub</groupId>
+        <artifactId>sensorhub-driver-axis</artifactId>
+        <version>0.1-SNAPSHOT</version>
+        <type>bundle</type>
+     </dependency>
+     <dependency>
+        <groupId>org.sensorhub</groupId>
+        <artifactId>sensorhub-driver-trupulse</artifactId>
+        <version>0.1-SNAPSHOT</version>
      </dependency>
      <dependency>
         <groupId>org.jcodec</groupId>
@@ -93,12 +93,12 @@
      <dependency>
         <groupId>org.sensorhub</groupId>
         <artifactId>sensorhub-driver-mti</artifactId>
-        <version>0.1</version>
+        <version>0.1-SNAPSHOT</version>
      </dependency>
      <dependency>
         <groupId>org.sensorhub</groupId>
         <artifactId>sensorhub-comm-rxtx</artifactId>
-        <version>0.1</version>
+        <version>0.1-SNAPSHOT</version>
      </dependency>
      <dependency>
         <groupId>org.sensorhub</groupId>
