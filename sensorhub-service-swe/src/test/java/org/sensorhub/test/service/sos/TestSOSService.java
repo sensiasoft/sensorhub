@@ -231,12 +231,19 @@ public class TestSOSService
     protected DOMHelper sendRequest(OWSRequest request, boolean usePost) throws Exception
     {
         OWSUtils utils = new OWSUtils();
-        System.out.println(utils.buildURLQuery(request));
         InputStream is;
+        
         if (usePost)
+        {
             is = utils.sendPostRequest(request).getInputStream();
+            utils.writeXMLQuery(System.out, request);
+        }
         else
+        {
             is = utils.sendGetRequest(request).getInputStream();
+            System.out.println(utils.buildURLQuery(request));
+        }
+        
         DOMHelper dom = new DOMHelper(is, false);
         dom.serialize(dom.getBaseElement(), System.out, true);
         OWSExceptionReader.checkException(dom, dom.getBaseElement());

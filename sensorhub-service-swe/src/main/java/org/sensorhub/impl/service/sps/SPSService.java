@@ -348,7 +348,7 @@ public class SPSService extends OWSServlet implements IServiceModule<SPSServiceC
             
             // case of normal request
             else
-                owsRequest = super.parseRequest(req, resp, post);
+                owsRequest = owsUtils.readXMLQuery(dom, requestElt);
             
             if (soapVersion != null)
                 owsRequest.setSoapVersion(soapVersion);
@@ -368,9 +368,11 @@ public class SPSService extends OWSServlet implements IServiceModule<SPSServiceC
         
         if (localName.equals("GetFeasibility"))
             return true;
-        if (localName.equals("Submit"))
+        else if (localName.equals("Submit"))
             return true;
-        if (localName.equals("Submit"))
+        else if (localName.equals("Update"))
+            return true;
+        else if (localName.equals("Reserve"))
             return true;
         
         return false;
