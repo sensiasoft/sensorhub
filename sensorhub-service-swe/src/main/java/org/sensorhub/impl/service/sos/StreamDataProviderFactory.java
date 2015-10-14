@@ -24,7 +24,6 @@ import net.opengis.sensorml.v20.AbstractProcess;
 import net.opengis.swe.v20.DataArray;
 import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataRecord;
-import net.opengis.swe.v20.SimpleComponent;
 import org.sensorhub.api.common.Event;
 import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.common.SensorHubException;
@@ -79,7 +78,7 @@ public abstract class StreamDataProviderFactory<ProducerType extends IDataProduc
             if (config.uri != null)
                 caps.setIdentifier(config.uri);
             else
-                caps.setIdentifier("baseURL#" + producer.getLocalID()); // TODO obtain baseURL
+                caps.setIdentifier("urn:offering:" + producer.getLocalID());
             
             // name + description
             updateNameAndDescription();
@@ -173,6 +172,7 @@ public abstract class StreamDataProviderFactory<ProducerType extends IDataProduc
     {
         HashSet<String> obsTypes = new HashSet<String>();
         obsTypes.add(IObservation.OBS_TYPE_GENERIC);
+        obsTypes.add(IObservation.OBS_TYPE_SCALAR);
         
         // process outputs descriptions
         for (Entry<String, ? extends IStreamingDataInterface> entry: producer.getAllOutputs().entrySet())
@@ -184,9 +184,7 @@ public abstract class StreamDataProviderFactory<ProducerType extends IDataProduc
             // obs type depends on top-level component
             IStreamingDataInterface output = entry.getValue();
             DataComponent dataStruct = output.getRecordDescription();
-            if (dataStruct instanceof SimpleComponent)
-                obsTypes.add(IObservation.OBS_TYPE_SCALAR);
-            else if (dataStruct instanceof DataRecord)
+            if (dataStruct instanceof DataRecord)
                 obsTypes.add(IObservation.OBS_TYPE_RECORD);
             else if (dataStruct instanceof DataArray)
                 obsTypes.add(IObservation.OBS_TYPE_ARRAY);

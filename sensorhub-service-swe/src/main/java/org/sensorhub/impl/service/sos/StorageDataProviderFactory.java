@@ -23,7 +23,6 @@ import net.opengis.sensorml.v20.AbstractProcess;
 import net.opengis.swe.v20.DataArray;
 import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataRecord;
-import net.opengis.swe.v20.SimpleComponent;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.persistence.FoiFilter;
 import org.sensorhub.api.persistence.IFoiFilter;
@@ -101,7 +100,7 @@ public class StorageDataProviderFactory implements IDataProviderFactory
             if (config.uri != null)
                 caps.setIdentifier(config.uri);
             else
-                caps.setIdentifier("baseURL#" + storage.getLocalID()); // TODO obtain baseURL
+                caps.setIdentifier("urn:offering:" + storage.getLocalID());
             
             // name
             if (config.name != null)
@@ -264,6 +263,7 @@ public class StorageDataProviderFactory implements IDataProviderFactory
     protected void getObservationTypesFromStorage(Set<String> obsTypes)
     {
         obsTypes.add(IObservation.OBS_TYPE_GENERIC);
+        obsTypes.add(IObservation.OBS_TYPE_SCALAR);
         
         // process outputs descriptions
         for (Entry<String, ? extends IRecordStoreInfo> entry: storage.getRecordStores().entrySet())
@@ -274,9 +274,7 @@ public class StorageDataProviderFactory implements IDataProviderFactory
             
             // obs type depends on top-level component
             DataComponent recordStruct = entry.getValue().getRecordDescription();
-            if (recordStruct instanceof SimpleComponent)
-                obsTypes.add(IObservation.OBS_TYPE_SCALAR);
-            else if (recordStruct instanceof DataRecord)
+            if (recordStruct instanceof DataRecord)
                 obsTypes.add(IObservation.OBS_TYPE_RECORD);
             else if (recordStruct instanceof DataArray)
                 obsTypes.add(IObservation.OBS_TYPE_ARRAY);

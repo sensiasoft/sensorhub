@@ -35,8 +35,14 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.namespace.QName;
+import javax.xml.stream.XMLEventFactory;
+import javax.xml.stream.XMLEventReader;
+import javax.xml.stream.XMLEventWriter;
+import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamWriter;
+import javax.xml.stream.events.XMLEvent;
+import javax.xml.transform.dom.DOMSource;
 import net.opengis.fes.v20.Conformance;
 import net.opengis.fes.v20.FilterCapabilities;
 import net.opengis.fes.v20.SpatialCapabilities;
@@ -51,9 +57,17 @@ import net.opengis.sensorml.v20.AbstractProcess;
 import net.opengis.swe.v20.BinaryBlock;
 import net.opengis.swe.v20.BinaryEncoding;
 import net.opengis.swe.v20.BinaryMember;
+import net.opengis.swe.v20.DataArray;
 import net.opengis.swe.v20.DataBlock;
+import net.opengis.swe.v20.DataChoice;
 import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataEncoding;
+import net.opengis.swe.v20.DataRecord;
+import net.opengis.swe.v20.JSONEncoding;
+import net.opengis.swe.v20.SimpleComponent;
+import net.opengis.swe.v20.TextEncoding;
+import net.opengis.swe.v20.Vector;
+import net.opengis.swe.v20.XMLEncoding;
 import org.eclipse.jetty.websocket.server.WebSocketServerFactory;
 import org.eclipse.jetty.websocket.servlet.WebSocketServletFactory;
 import org.sensorhub.api.common.Event;
@@ -81,17 +95,24 @@ import org.vast.cdm.common.DataStreamParser;
 import org.vast.cdm.common.DataStreamWriter;
 import org.vast.data.DataBlockMixed;
 import org.vast.ogc.OGCRegistry;
+import org.vast.ogc.def.DefinitionRef;
 import org.vast.ogc.gml.GMLStaxBindings;
 import org.vast.ogc.gml.GenericFeature;
 import org.vast.ogc.om.IObservation;
+import org.vast.ogc.om.OMUtils;
 import org.vast.ows.GetCapabilitiesRequest;
 import org.vast.ows.OWSExceptionReport;
 import org.vast.ows.OWSLayerCapabilities;
 import org.vast.ows.OWSRequest;
+import org.vast.ows.OWSUtils;
 import org.vast.ows.sos.GetFeatureOfInterestRequest;
 import org.vast.ows.sos.GetResultRequest;
 import org.vast.ows.sos.ISOSDataConsumer;
 import org.vast.ows.sos.ISOSDataConsumer.Template;
+import org.vast.ows.sos.DataStructFilter;
+import org.vast.ows.sos.GetObservationRequest;
+import org.vast.ows.sos.GetResultTemplateRequest;
+import org.vast.ows.sos.GetResultTemplateResponse;
 import org.vast.ows.sos.ISOSDataProvider;
 import org.vast.ows.sos.ISOSDataProviderFactory;
 import org.vast.ows.sos.InsertObservationRequest;
@@ -115,12 +136,18 @@ import org.vast.ows.swe.SWESOfferingCapabilities;
 import org.vast.ows.swe.UpdateSensorRequest;
 import org.vast.ows.swe.UpdateSensorResponse;
 import org.vast.sensorML.SMLStaxBindings;
+import org.vast.swe.AbstractDataWriter;
 import org.vast.swe.DataSourceDOM;
+import org.vast.swe.FilteredWriter;
+import org.vast.swe.SWEConstants;
 import org.vast.swe.SWEHelper;
 import org.vast.util.ReaderException;
 import org.vast.util.TimeExtent;
+import org.vast.xml.DOMHelper;
+import org.vast.xml.IXMLWriterDOM;
 import org.vast.xml.IndentingXMLStreamWriter;
 import org.vast.xml.XMLImplFinder;
+import org.w3c.dom.Element;
 import com.vividsolutions.jts.geom.Polygon;
 
 
@@ -138,23 +165,23 @@ import com.vividsolutions.jts.geom.Polygon;
 public class SOSService extends SOSServlet implements IServiceModule<SOSServiceConfig>, IEventListener
 {
     private static final Logger log = LoggerFactory.getLogger(SOSService.class);
-    private static final String invalidWSRequestMsg = "Invalid WebSocket request: ";
+    private static final String INVALID_WS_REQ_MSG = "Invalid WebSocket request: ";
+    private static final String INVALID_SML_MSG = "Invalid SensorML description: ";
+    //private static final String TOO_MANY_OBS_MSG = "Too many observations. Please further restrict your filtering options";
     
     private static final String MIME_TYPE_MULTIPART = "multipart/x-mixed-replace; boundary=--myboundary"; 
     private static final byte[] MIME_BOUNDARY_JPEG = new String("--myboundary\r\nContent-Type: image/jpeg\r\nContent-Length: ").getBytes();
     private static final byte[] END_MIME = new byte[] {0xD, 0xA, 0xD, 0xA};
     
-    private static final String DEFAULT_VERSION = "2.0.0";
-    private static final String SOS_PREFIX = "sos";
-    private static final String SWES_PREFIX = "swe";
-    private static final String SOAP_PREFIX = "soap";
+    private static final QName EXT_REPLAY = new QName("replayspeed"); // kvp params are always lower case
     
     String endpointUrl;
     SOSServiceConfig config;
     SOSServiceCapabilities capabilitiesCache;
     Map<String, SOSOfferingCapabilities> offeringCaps;
     Map<String, String> procedureToOfferingMap;
-    Map<String, String> templateToOfferingMap;
+    Map<String, String> templateToOfferingMap;    
+    Map<String, ISOSDataProviderFactory> dataProviders = new LinkedHashMap<String, ISOSDataProviderFactory>();
     Map<String, ISOSDataConsumer> dataConsumers;
         
     boolean needCapabilitiesTimeUpdate = false;
@@ -499,7 +526,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
                     // send error if request is not supported via websockets
                     if (!(owsReq instanceof GetResultRequest))
                     {
-                        String errorMsg = invalidWSRequestMsg + owsReq.getOperation() + " is not supported via this protocol.";
+                        String errorMsg = INVALID_WS_REQ_MSG + owsReq.getOperation() + " is not supported via this protocol.";
                         resp.sendError(400, errorMsg);
                         log.trace(errorMsg);
                         owsReq = null;
@@ -638,6 +665,286 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
         
         xmlWriter.writeEndDocument();
         xmlWriter.close();
+    }
+    
+    
+    @Override
+    protected void handleRequest(GetObservationRequest request) throws Exception
+    {
+        ISOSDataProvider dataProvider = null;
+        
+        try
+        {
+            // set default format
+            if (request.getFormat() == null)
+                request.setFormat(GetObservationRequest.DEFAULT_FORMAT);
+            
+            // build offering set (also from procedures ID)
+            Set<String> selectedOfferings = new HashSet<String>();
+            for (String procID: request.getProcedures())
+            {
+                String offering = procedureToOfferingMap.get(procID);
+                if (offering != null)
+                    selectedOfferings.add(offering);                
+            }
+            if (selectedOfferings.isEmpty())
+                selectedOfferings.addAll(request.getOfferings());
+            else if (!request.getOfferings().isEmpty())
+                selectedOfferings.retainAll(request.getOfferings());
+            
+            // if no offering or procedure specified scan all offerings
+            if (selectedOfferings.isEmpty())
+                selectedOfferings.addAll(offeringCaps.keySet());
+            
+            // check query parameters
+            OWSExceptionReport report = new OWSExceptionReport();
+            checkQueryOfferings(request.getOfferings(), report);
+            checkQueryObservables(request.getObservables(), report);
+            checkQueryProcedures(request.getProcedures(), report);
+            for (String offering: selectedOfferings)
+                checkQueryFormat(offering, request.getFormat(), report);
+            report.process();
+            
+            // prepare obs stream writer for requested O&M version
+            String format = request.getFormat();
+            String omVersion = format.substring(format.lastIndexOf('/') + 1);
+            IXMLWriterDOM<IObservation> obsWriter = (IXMLWriterDOM<IObservation>)OGCRegistry.createWriter(OMUtils.OM, OMUtils.OBSERVATION, omVersion);
+            String sosNsUri = OGCRegistry.getNamespaceURI(SOSUtils.SOS, DEFAULT_VERSION);
+            
+            // init xml document writing
+            OutputStream os = new BufferedOutputStream(request.getResponseStream());
+            XMLEventFactory xmlFactory = XMLEventFactory.newInstance();
+            XMLEventWriter xmlWriter = XMLOutputFactory.newInstance().createXMLEventWriter(os, "UTF-8");
+            xmlWriter.add(xmlFactory.createStartDocument());
+            xmlWriter.add(xmlFactory.createStartElement(SOS_PREFIX, sosNsUri, "GetObservationResponse"));
+            xmlWriter.add(xmlFactory.createNamespace(SOS_PREFIX, sosNsUri));
+            
+            // send obs from each selected offering
+            // TODO sort by time by multiplexing obs from different offerings?
+            // TODO protect server by sending exception when too many obs are requested
+            boolean firstObs = true;
+            for (String offering: selectedOfferings)
+            {
+                List<String> selectedObservables = request.getObservables();
+                                
+                // if no observables were selected, add all of them
+                // we'll filter redundant one later
+                boolean sendAllObservables = false;
+                if (selectedObservables.isEmpty())
+                {
+                   SOSOfferingCapabilities caps = offeringCaps.get(offering);
+                   selectedObservables = new ArrayList<String>();
+                   selectedObservables.addAll(caps.getObservableProperties());
+                   sendAllObservables = true;
+                }
+                
+                // setup data provider
+                SOSDataFilter filter = new SOSDataFilter(request.getFoiIDs(), selectedObservables, request.getTime());
+                dataProvider = getDataProvider(offering, filter);
+                
+                // write each observation in stream
+                // we use stream writer to limit memory usage
+                IObservation obs;
+                while ((obs = dataProvider.getNextObservation()) != null)
+                {
+                    DataComponent obsResult = obs.getResult();
+                    
+                    // write a different obs for each requested observable
+                    for (String observable: selectedObservables)
+                    {                    
+                        obs.setObservedProperty(new DefinitionRef(observable));
+                        
+                        // filter obs result
+                        if (!observable.equals(obsResult.getDefinition()))
+                        {
+                            DataComponent singleResult = SWEHelper.findComponentByDefinition(obsResult, observable);
+                            obs.setResult(singleResult);
+                        }
+                        else
+                        {
+                            // make sure we reset the whole result in case it was trimmed during previous iteration
+                            obs.setResult(obsResult);
+                        }
+                        
+                        // remove redundant obs in wildcard case
+                        DataComponent result = obs.getResult();
+                        if (sendAllObservables)
+                        {
+                            if (result instanceof DataRecord || result instanceof DataChoice)
+                                continue;
+                        }
+                        
+                        // set correct obs type depending on final result structure                        
+                        if (result instanceof SimpleComponent)
+                            obs.setType(IObservation.OBS_TYPE_SCALAR);
+                        else if (result instanceof DataRecord || result instanceof Vector)
+                            obs.setType(IObservation.OBS_TYPE_RECORD);
+                        else if (result instanceof DataArray)
+                            obs.setType(IObservation.OBS_TYPE_ARRAY);
+                        
+                        // first write obs as DOM
+                        DOMHelper dom = new DOMHelper();
+                        Element obsElt = obsWriter.write(dom, obs);
+                        
+                        // write common namespaces on root element
+                        if (firstObs)
+                        {
+                            for (Entry<String, String> nsDef: dom.getXmlDocument().getNSTable().entrySet())
+                                xmlWriter.add(xmlFactory.createNamespace(nsDef.getKey(), nsDef.getValue()));        
+                            firstObs = false;
+                        }
+                        
+                        // serialize observation DOM tree into stream writer
+                        xmlWriter.add(xmlFactory.createStartElement(SOS_PREFIX, sosNsUri, "observationData"));                        
+                        XMLInputFactory factory = XMLImplFinder.getStaxInputFactory();
+                        XMLEventReader domReader = factory.createXMLEventReader(new DOMSource(obsElt));
+                        while (domReader.hasNext())
+                        {
+                            XMLEvent event = domReader.nextEvent();
+                            if (!event.isStartDocument() && !event.isEndDocument())
+                                xmlWriter.add(event);
+                        }                        
+                        xmlWriter.add(xmlFactory.createEndElement(SOS_PREFIX, sosNsUri, "observationData"));
+                        xmlWriter.flush();
+                        os.write('\n');
+                    }
+                }
+            }
+            
+            xmlWriter.add(xmlFactory.createEndDocument());
+            xmlWriter.close();
+        }
+        finally
+        {
+            if (dataProvider != null)
+                dataProvider.close();
+        }
+    }
+    
+    
+    protected void handleRequest(GetResultTemplateRequest request) throws Exception
+    {
+        ISOSDataProvider dataProvider = null;
+        
+        try
+        {
+            // check query parameters        
+            OWSExceptionReport report = new OWSExceptionReport();
+            checkQueryObservables(request.getOffering(), request.getObservables(), report);
+            report.process();
+            
+            // setup data provider
+            SOSDataFilter filter = new SOSDataFilter(request.getObservables().get(0));
+            dataProvider = getDataProvider(request.getOffering(), filter);
+            
+            // build filtered component tree
+            DataComponent filteredStruct = dataProvider.getResultStructure().copy();
+            request.getObservables().add(SWEConstants.DEF_SAMPLING_TIME); // always keep sampling time
+            filteredStruct.accept(new DataStructFilter(request.getObservables()));
+            
+            // build and send response 
+            GetResultTemplateResponse resp = new GetResultTemplateResponse();
+            resp.setResultStructure(filteredStruct);
+            resp.setResultEncoding(dataProvider.getDefaultResultEncoding());
+            sendResponse(request, resp);            
+        }
+        finally
+        {
+            if (dataProvider != null)
+                dataProvider.close();
+        }
+    }
+    
+    
+    protected void handleRequest(GetResultRequest request) throws Exception
+    {
+        ISOSDataProvider dataProvider = null;
+                
+        try
+        {
+            // check query parameters
+            OWSExceptionReport report = new OWSExceptionReport();
+            checkQueryObservables(request.getOffering(), request.getObservables(), report);
+            checkQueryProcedures(request.getOffering(), request.getProcedures(), report);
+            checkQueryTime(request.getOffering(), request.getTime(), report);
+            report.process();
+            
+            // setup data filter (including extensions)
+            SOSDataFilter filter = new SOSDataFilter(request.getFoiIDs(), request.getObservables(), request.getTime());
+            if (request.getExtensions().containsKey(EXT_REPLAY))
+            {
+                String replaySpeed = (String)request.getExtensions().get(EXT_REPLAY);
+                filter.setReplaySpeedFactor(Double.parseDouble(replaySpeed));
+            }
+            
+            // setup data provider
+            dataProvider = getDataProvider(request.getOffering(), filter);
+            DataComponent resultStructure = dataProvider.getResultStructure();
+            DataEncoding resultEncoding = dataProvider.getDefaultResultEncoding();
+            
+            // write response with SWE common data stream
+            OutputStream os = new BufferedOutputStream(request.getResponseStream());
+            
+            // write small xml wrapper if requested
+            if (((GetResultRequest) request).isXmlWrapper())
+            {
+                String nsUri = OGCRegistry.getNamespaceURI(SOSUtils.SOS, request.getVersion());
+                os.write(new String("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n").getBytes());
+                os.write(new String("<GetResultResponse xmlns=\"" + nsUri + "\">\n<resultValues>\n").getBytes());
+            }
+            
+            // set response headers in case of HTTP response
+            else if (request.getHttpResponse() != null)
+            {
+                if (resultEncoding instanceof TextEncoding)
+                    request.getHttpResponse().setContentType(TEXT_MIME_TYPE);
+                else if (resultEncoding instanceof JSONEncoding)
+                    request.getHttpResponse().setContentType(OWSUtils.JSON_MIME_TYPE);
+                else if (resultEncoding instanceof XMLEncoding)
+                    request.getHttpResponse().setContentType(OWSUtils.XML_MIME_TYPE);
+                else if (resultEncoding instanceof BinaryEncoding)
+                    request.getHttpResponse().setContentType(BINARY_MIME_TYPE);
+                else
+                    throw new RuntimeException("Unsupported encoding: " + resultEncoding.getClass().getCanonicalName());
+            }
+            
+            // use specific format handler if available
+            boolean dataWritten = false;
+            if (resultEncoding instanceof BinaryEncoding)
+                dataWritten = writeCustomFormatStream(request, dataProvider, os);
+            
+            // otherwise use default
+            if (!dataWritten)
+            {
+                // prepare writer for selected encoding
+                DataStreamWriter writer = SWEHelper.createDataWriter(resultEncoding);
+                
+                // we also do filtering here in case data provider hasn't modified the datablocks
+                request.getObservables().add(SWEConstants.DEF_SAMPLING_TIME); // always keep sampling time
+                writer = new FilteredWriter((AbstractDataWriter)writer, request.getObservables());
+                writer.setDataComponents(resultStructure);
+                writer.setOutput(os);
+                
+                // write each record in output stream
+                DataBlock nextRecord;
+                while ((nextRecord = dataProvider.getNextResultRecord()) != null)
+                {
+                    writer.write(nextRecord);
+                    writer.flush();
+                }
+                
+                // close xml wrapper
+                if (((GetResultRequest) request).isXmlWrapper())
+                    os.write(new String("\n</resultValues>\n</GetResultResponse>").getBytes());          
+                        
+                os.flush();
+            }
+        }
+        finally
+        {
+            if (dataProvider != null)
+                dataProvider.close();
+        }
     }
     
     
@@ -1236,7 +1543,16 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     }
 
 
-    @Override
+    protected void checkQueryOfferings(List<String> offerings, OWSExceptionReport report) throws SOSException
+    {
+        for (String offering: offerings)
+        {
+            if (!offeringCaps.containsKey(offering))
+                report.add(new SOSException(SOSException.invalid_param_code, "offering", offering, "Offering " + offering + " is not available on this server"));
+        }   
+    }
+    
+    
     protected void checkQueryObservables(String offeringID, List<String> observables, OWSExceptionReport report) throws SOSException
     {
         SWESOfferingCapabilities offering = checkAndGetOffering(offeringID);
@@ -1246,9 +1562,29 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
                 report.add(new SOSException(SOSException.invalid_param_code, "observedProperty", obsProp, "Observed property " + obsProp + " is not available for offering " + offeringID));
         }
     }
+    
+    
+    protected void checkQueryObservables(List<String> observables, OWSExceptionReport report) throws SOSException
+    {
+        for (String obsProp: observables)
+        {
+            boolean found = false;
+            
+            for (SOSOfferingCapabilities offering: offeringCaps.values())
+            {            
+                if (offering.getObservableProperties().contains(obsProp))
+                {
+                    found = true;
+                    break;
+                }
+            }
+            
+            if (!found)
+                report.add(new SOSException(SOSException.invalid_param_code, "observedProperty", obsProp, "Observed property " + obsProp + " is not available on this server"));
+        }   
+    }
 
 
-    @Override
     protected void checkQueryProcedures(String offeringID, List<String> procedures, OWSExceptionReport report) throws SOSException
     {
         SWESOfferingCapabilities offering = checkAndGetOffering(offeringID);
@@ -1258,9 +1594,29 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
                 report.add(new SOSException(SOSException.invalid_param_code, "procedure", procID, "Procedure " + procID + " is not available for offering " + offeringID));
         }
     }
+    
+    
+    protected void checkQueryProcedures(List<String> procedures, OWSExceptionReport report) throws SOSException
+    {
+        for (String procID: procedures)
+        {
+            boolean found = false;
+            
+            for (SOSOfferingCapabilities offering: offeringCaps.values())
+            {            
+                if (offering.getProcedures().contains(procID))
+                {
+                    found = true;
+                    break;
+                }
+            }
+            
+            if (!found)
+                report.add(new SOSException(SOSException.invalid_param_code, "procedure", procID, "Procedure " + procID + " is not available on this server"));
+        }   
+    }
 
 
-    @Override
     protected void checkQueryFormat(String offeringID, String format, OWSExceptionReport report) throws SOSException
     {
         SOSOfferingCapabilities offering = checkAndGetOffering(offeringID);
@@ -1269,7 +1625,6 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     }
 
 
-    @Override
     protected void checkQueryTime(String offeringID, TimeExtent requestTime, OWSExceptionReport report) throws SOSException
     {
         SOSOfferingCapabilities offering = checkAndGetOffering(offeringID);
@@ -1346,7 +1701,6 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     }
     
     
-    static String INVALID_SML_MSG = "Invalid SensorML description: ";
     protected void checkSensorML(AbstractProcess smlProcess, OWSExceptionReport report) throws Exception
     {
         String sensorUID = smlProcess.getUniqueIdentifier();
@@ -1362,11 +1716,13 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     }
     
     
-    @Override
     protected ISOSDataProvider getDataProvider(String offering, SOSDataFilter filter) throws Exception
     {
         checkAndGetOffering(offering);
-        return super.getDataProvider(offering, filter);
+        ISOSDataProviderFactory factory = dataProviders.get(offering);
+        if (factory == null)
+            throw new IllegalStateException("No valid data provider factory found for offering " + offering);
+        return factory.getNewDataProvider(filter);
     }
     
     
@@ -1431,14 +1787,12 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     @Override
     public void registerListener(IEventListener listener)
     {
-        // TODO Auto-generated method stub        
     }
 
 
     @Override
     public void unregisterListener(IEventListener listener)
     {
-        // TODO Auto-generated method stub        
     }
 
 
