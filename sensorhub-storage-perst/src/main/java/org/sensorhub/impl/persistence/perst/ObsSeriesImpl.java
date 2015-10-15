@@ -22,6 +22,7 @@ import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataEncoding;
 import org.garret.perst.Index;
+import org.garret.perst.IterableIterator;
 import org.garret.perst.Key;
 import org.garret.perst.Storage;
 import org.sensorhub.api.persistence.DataKey;
@@ -43,6 +44,12 @@ import org.sensorhub.impl.persistence.perst.FoiTimesStoreImpl.FoiTimePeriod;
 public class ObsSeriesImpl extends TimeSeriesImpl
 {
     FoiTimesStoreImpl foiTimesStore;
+    
+    
+    static abstract class IteratorWithFoi extends IterableIterator<Entry<Object,DataBlock>>
+    {
+        public abstract String getCurrentFoiID();
+    }
     
     
     // default constructor needed by PERST on Android JVM
@@ -72,17 +79,17 @@ public class ObsSeriesImpl extends TimeSeriesImpl
             Iterator<FoiTimePeriod> it = foiTimes.iterator();
             while (it.hasNext())
             {
-                FoiTimePeriod foiTime = it.next();
+                FoiTimePeriod foiPeriod = it.next();
                 
                 // trim foi period to filter time range
-                if (foiTime.timePeriod[0] < timeRange[0])
-                    foiTime.timePeriod[0] = timeRange[0];
+                if (foiPeriod.start < timeRange[0])
+                    foiPeriod.start = timeRange[0];
                 
-                if (foiTime.timePeriod[1] > timeRange[1])
-                    foiTime.timePeriod[1] = timeRange[1];
+                if (foiPeriod.stop > timeRange[1])
+                    foiPeriod.stop = timeRange[1];
                                 
                 // case period is completely outside of time range
-                if (foiTime.timePeriod[0] > foiTime.timePeriod[1])
+                if (foiPeriod.start > foiPeriod.stop)
                     it.remove();
             }
         }
@@ -94,100 +101,78 @@ public class ObsSeriesImpl extends TimeSeriesImpl
 
 
     @Override
-    Iterator<DataBlock> getDataBlockIterator(final IDataFilter filter)
-    {
-        if (filter instanceof IObsFilter)
-        {
-            // FoI ID list
-            final Set<FoiTimePeriod> foiTimePeriods = getFoiTimePeriods(filter);
-                        
-            if (foiTimePeriods != null && !foiTimePeriods.isEmpty())
-            {
-                // scan through each time range sequentially
-                // but wrap the proces with a single iterator
-                return new Iterator<DataBlock>()
-                {
-                    Iterator<FoiTimePeriod> periodIt = foiTimePeriods.iterator();
-                    Iterator<DataBlock> recordIt;
-                                        
-                    public final boolean hasNext()
-                    {
-                        return periodIt.hasNext() || recordIt.hasNext();
-                    }
-        
-                    public final DataBlock next()
-                    {
-                        if (recordIt == null || !recordIt.hasNext())
-                        {
-                            // process next time range
-                            double[] timeRange = periodIt.next().timePeriod;
-                            recordIt = recordIndex.iterator(new Key(timeRange[0]), new Key(timeRange[1]), Index.ASCENT_ORDER);
-                        }
-                        
-                        // continue processing time range
-                        return recordIt.next();
-                    }
-                
-                    public final void remove()
-                    {
-                    }
-                };
-            }
-        }
-
-        return super.getDataBlockIterator(filter);
-    }
-
-
-    @Override
     Iterator<DBRecord> getRecordIterator(IDataFilter filter)
+    {
+        // here, even when IObsFilter is not used we scan through FOIs time periods 
+        // because we need to read the FOI ID anyway
+        
+        final IteratorWithFoi it = getEntryIterator(filter);
+        
+        return new Iterator<DBRecord>()
+        {
+            public final boolean hasNext()
+            {
+                return it.hasNext();
+            }
+
+            public final DBRecord next()
+            {
+                Entry<Object, DataBlock> entry = it.next();
+                String currentFoiID = it.getCurrentFoiID();
+                ObsKey key = new ObsKey(recordDescription.getName(), currentFoiID, (double)entry.getKey());
+                return new DBRecord(key, entry.getValue());
+            }
+
+            public final void remove()
+            {
+                it.remove();
+            }
+        };
+    }
+    
+    
+    protected IteratorWithFoi getEntryIterator(IDataFilter filter)
     {
         // FoI ID list
         final Set<FoiTimePeriod> foiTimePeriods = getFoiTimePeriods(filter);
-                    
+            
         // scan through each time range sequentially
         // but wrap the process with a single iterator
-        return new Iterator<DBRecord>()
+        return new IteratorWithFoi()
         {
             Iterator<FoiTimePeriod> periodIt = foiTimePeriods.iterator();
             Iterator<Entry<Object, DataBlock>> recordIt;
-            String currentFoiID;
+            protected String currentFoiID;
                                 
             public final boolean hasNext()
             {
                 return periodIt.hasNext() || (recordIt != null && recordIt.hasNext());
             }
 
-            public final DBRecord next()
+            public final Entry<Object,DataBlock> next()
             {
                 if (recordIt == null || !recordIt.hasNext())
                 {
                     // process next time range
                     FoiTimePeriod nextPeriod = periodIt.next();
                     currentFoiID = nextPeriod.uid;
-                    double[] timeRange = nextPeriod.timePeriod;
-                    recordIt = recordIndex.entryIterator(new Key(timeRange[0]), new Key(timeRange[1]), Index.ASCENT_ORDER);
+                    recordIt = recordIndex.entryIterator(new Key(nextPeriod.start), new Key(nextPeriod.stop), Index.ASCENT_ORDER);
                 }
                 
                 // continue processing time range
-                Entry<Object, DataBlock> entry = recordIt.next();
-                ObsKey key = new ObsKey(recordDescription.getName(), currentFoiID, (double)entry.getKey());
-                return new DBRecord(key, entry.getValue());
+                return recordIt.next();
             }
         
             public final void remove()
             {
                 recordIt.remove();
             }
+
+            public String getCurrentFoiID()
+            {
+                return currentFoiID;
+            }
         };
-    }
-
-
-    @Override
-    int getNumMatchingRecords(IDataFilter filter)
-    {
-        // TODO Auto-generated method stub
-        return super.getNumMatchingRecords(filter);
     }
 
 

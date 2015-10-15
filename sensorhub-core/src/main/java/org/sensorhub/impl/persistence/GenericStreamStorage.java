@@ -552,10 +552,10 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
 
 
     @Override
-    public int getNumMatchingRecords(IDataFilter filter)
+    public int getNumMatchingRecords(IDataFilter filter, long maxCount)
     {
         checkStarted();
-        return storage.getNumMatchingRecords(filter);
+        return storage.getNumMatchingRecords(filter, maxCount);
     }
 
     

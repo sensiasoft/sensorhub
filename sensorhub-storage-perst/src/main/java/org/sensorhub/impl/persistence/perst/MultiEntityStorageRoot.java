@@ -278,12 +278,20 @@ class MultiEntityStorageRoot extends ObsStorageRoot implements IObsStorage, IMul
 
 
     @Override
-    public int getNumMatchingRecords(IDataFilter filter)
+    public int getNumMatchingRecords(IDataFilter filter, long maxCount)
     {
-        int numRecords = 0;
+        // use producer list from filter or use all producers
+        Collection<String> producerIDs = filter.getProducerIDs();
+        if (producerIDs == null || producerIDs.isEmpty())
+            producerIDs = this.getProducerIDs();
         
-        for (String producerID: filter.getProducerIDs())
-            numRecords += getEntityStorage(producerID).getNumMatchingRecords(filter);
+        int numRecords = 0;
+        for (String producerID: producerIDs)
+        {
+            numRecords += getEntityStorage(producerID).getNumMatchingRecords(filter, maxCount);
+            if (numRecords > maxCount)
+                return numRecords;
+        }
         
         return numRecords;
     }

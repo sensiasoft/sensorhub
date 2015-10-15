@@ -143,30 +143,51 @@ class TimeSeriesImpl extends Persistent implements IRecordStoreInfo
     }
 
 
-    IterableIterator<DataBlock> getDataBlockIterator(IDataFilter filter)
+    Iterator<DataBlock> getDataBlockIterator(IDataFilter filter)
     {
-        double[] timeRange = filter.getTimeStampRange();
-        Key keyFirst = new Key(timeRange == null ? Double.NEGATIVE_INFINITY : timeRange[0]);
-        Key keyLast = new Key(timeRange == null ? Double.POSITIVE_INFINITY : timeRange[1]);
+        final Iterator<Entry<Object, DataBlock>> it = getEntryIterator(filter);
         
-        return recordIndex.iterator(keyFirst, keyLast, Index.ASCENT_ORDER);
+        return new Iterator<DataBlock>()
+        {
+            public final boolean hasNext()
+            {
+                return it.hasNext();
+            }
+
+            public final DataBlock next()
+            {
+                Entry<Object, DataBlock> entry = it.next();
+                return entry.getValue();
+            }
+
+            public final void remove()
+            {
+                it.remove();
+            }
+        };
     }
 
 
-    int getNumMatchingRecords(IDataFilter filter)
+    int getNumMatchingRecords(IDataFilter filter, long maxCount)
     {
-        IterableIterator<?> it = (IterableIterator<?>)getDataBlockIterator(filter);
-        return it.size();
+        // use entry iterator so datablocks are not loaded during scan
+        IterableIterator<Entry<Object, DataBlock>> it = getEntryIterator(filter);
+        
+        int count = 0;
+        while (it.hasNext() && count <= maxCount)
+        {
+            it.next();
+            count++;
+        }
+        
+        return count;
     }
 
 
     Iterator<DBRecord> getRecordIterator(IDataFilter filter)
     {
-        double[] timeRange = filter.getTimeStampRange();
-        Key keyFirst = new Key(timeRange == null ? Double.NEGATIVE_INFINITY : timeRange[0]);
-        Key keyLast = new Key(timeRange == null ? Double.POSITIVE_INFINITY : timeRange[1]);
+        final Iterator<Entry<Object, DataBlock>> it = getEntryIterator(filter);
         
-        final IterableIterator<Entry<Object, DataBlock>> it = recordIndex.entryIterator(keyFirst, keyLast, Index.ASCENT_ORDER);
         return new Iterator<DBRecord>()
         {
             public final boolean hasNext()
@@ -186,6 +207,15 @@ class TimeSeriesImpl extends Persistent implements IRecordStoreInfo
                 it.remove();
             }
         };
+    }
+    
+    
+    protected IterableIterator<Entry<Object,DataBlock>> getEntryIterator(IDataFilter filter)
+    {
+        double[] timeRange = filter.getTimeStampRange();
+        Key keyFirst = new Key(timeRange == null ? Double.NEGATIVE_INFINITY : timeRange[0]);
+        Key keyLast = new Key(timeRange == null ? Double.POSITIVE_INFINITY : timeRange[1]);
+        return recordIndex.entryIterator(keyFirst, keyLast, Index.ASCENT_ORDER);
     }
 
 

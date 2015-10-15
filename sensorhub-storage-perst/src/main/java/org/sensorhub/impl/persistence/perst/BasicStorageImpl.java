@@ -291,9 +291,9 @@ public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> impleme
 
 
     @Override
-    public int getNumMatchingRecords(IDataFilter filter)
+    public int getNumMatchingRecords(IDataFilter filter, long maxCount)
     {
-        return ((BasicStorageRoot)dbRoot).getNumMatchingRecords(filter);
+        return ((BasicStorageRoot)dbRoot).getNumMatchingRecords(filter, maxCount);
     }
     
 

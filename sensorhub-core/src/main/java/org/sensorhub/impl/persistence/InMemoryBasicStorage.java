@@ -274,7 +274,7 @@ public class InMemoryBasicStorage extends AbstractModule<StorageConfig> implemen
 
 
     @Override
-    public int getNumMatchingRecords(IDataFilter filter)
+    public int getNumMatchingRecords(IDataFilter filter, long maxCount)
     {
         TimeSeriesImpl dataStore = dataStores.get(filter.getRecordType());
         if (dataStore == null)

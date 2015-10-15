@@ -50,12 +50,14 @@ class FoiTimesStoreImpl extends Persistent
     class FoiTimePeriod
     {
         String uid;
-        double[] timePeriod;
+        double start;
+        double stop;
         
-        FoiTimePeriod(String uid, double[] timePeriod)
+        FoiTimePeriod(String uid, double start, double stop)
         {
             this.uid = uid;
-            this.timePeriod = timePeriod;
+            this.start = start;
+            this.stop = stop;
         }
     }
     
@@ -64,7 +66,7 @@ class FoiTimesStoreImpl extends Persistent
     {
         public int compare(FoiTimePeriod p0, FoiTimePeriod p1)
         {
-            return (int)Math.signum(p0.timePeriod[0] - p1.timePeriod[0]);
+            return (int)Math.signum(p0.start - p1.start);
         }        
     }
         
@@ -101,7 +103,7 @@ class FoiTimesStoreImpl extends Persistent
                 
                 // add each period to sorted set
                 for (double[] timePeriod: fEntry.timePeriods)
-                    foiTimes.add(new FoiTimePeriod(uid, timePeriod));
+                    foiTimes.add(new FoiTimePeriod(uid, timePeriod[0], timePeriod[1]));
             }
         }
         else // no filtering on FOI ID -> select them all
@@ -112,7 +114,7 @@ class FoiTimesStoreImpl extends Persistent
                 
                 // add each period to sorted set
                 for (double[] timePeriod: fEntry.timePeriods)
-                    foiTimes.add(new FoiTimePeriod(uid, timePeriod));
+                    foiTimes.add(new FoiTimePeriod(uid, timePeriod[0], timePeriod[1]));
             }
         }
         

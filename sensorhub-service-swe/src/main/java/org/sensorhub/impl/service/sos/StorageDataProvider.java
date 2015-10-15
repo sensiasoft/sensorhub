@@ -118,7 +118,7 @@ public class StorageDataProvider implements ISOSDataProvider
                     };
                     
                     // check obs count is not too large
-                    int obsCount = storage.getNumMatchingRecords(storageFilter);
+                    int obsCount = storage.getNumMatchingRecords(storageFilter, filter.getMaxObsCount());
                     if (obsCount > filter.getMaxObsCount())
                         throw new SOSException(SOSException.response_too_big_code, null, null, TOO_MANY_OBS_MSG);
                     

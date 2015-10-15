@@ -245,9 +245,9 @@ class BasicStorageRoot extends Persistent implements IBasicStorage
 
 
     @Override
-    public int getNumMatchingRecords(IDataFilter filter)
+    public int getNumMatchingRecords(IDataFilter filter, long maxCount)
     {
-        return getRecordStore(filter.getRecordType()).getNumMatchingRecords(filter);
+        return getRecordStore(filter.getRecordType()).getNumMatchingRecords(filter, maxCount);
     }
     
 

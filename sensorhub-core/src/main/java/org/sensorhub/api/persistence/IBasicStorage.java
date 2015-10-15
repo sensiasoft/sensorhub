@@ -168,9 +168,10 @@ public interface IBasicStorage
      * only be obtained by counting the records returned by the iterator next()
      * function.
      * @param filter filtering parameters
+     * @param maxCount counting will stop once this threshold is reached
      * @return number of matching records
      */
-    public int getNumMatchingRecords(IDataFilter filter);
+    public int getNumMatchingRecords(IDataFilter filter, long maxCount);
     
     
     /**
