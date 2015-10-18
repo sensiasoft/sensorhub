@@ -1,7 +1,7 @@
 Creating a new Maven module
 ---
 
-So that it can be more easily integrated to SensorHub build process, we advise you to package each SensorHub module (or set of similar modules) as a separate eclipse project and corresponding Maven module. 
+So that it can be more easily integrated to OpenSensorHub build process, we advise you to package each OSH module (or set of similar modules) as a separate eclipse project and corresponding Maven module. 
 
 If you are using Eclipse with the M2E plugin as described in the [Developer's Guide](../dev-guide.html), you can create the new project by following the steps below:
 
@@ -18,11 +18,11 @@ If you are using Eclipse with the M2E plugin as described in the [Developer's Gu
 
 ### Move the project inside the sensorhub main folder
 
-By default your project should have been created at the root of the workspace. To move it into the sensorhub folder, follow these steps:
+By default your project should have been created at the root of the workspace. To move it into the correct sub-folder, follow these steps:
 
   * Right click on the newly created project
   * Select _"Refactor > Move"_ from the popup menu
-  * In the location field, insert "sensorhub/" before the project name in order to obtain the following path: _"path/to/your/workspace/sensorhub/sensorhub-{moduletype}-{modulename}"_ 
+  * In the location field, insert "osh-xxx/" before the project name in order to obtain the following path: _"path/to/your/workspace/osh-xxx/sensorhub-{moduletype}-{modulename}"_ 
 
 
 ### Add dependency to SensorHub core software module

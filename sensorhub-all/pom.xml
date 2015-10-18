@@ -22,14 +22,8 @@
       <name>Sensia Software LLC</name>
       <url>http://www.sensiasoftware.com</url>
    </organization>
-   <scm>
-      <url>https://github.com/sensiasoft/sensorhub/tree/master</url>
-      <connection>scm:git:https://github.com/sensiasoft/sensorhub.git</connection>
-      <developerConnection>scm:git:https://github.com/sensiasoft/sensorhub.git</developerConnection>
-      <tag>HEAD</tag>
-   </scm>
    <issueManagement>
-      <url>https://github.com/sensiasoft/sensorhub/issues</url>
+      <url>https://github.com/opensensorhub/core/issues</url>
       <system>GitHub</system>
    </issueManagement>
    <dependencies>

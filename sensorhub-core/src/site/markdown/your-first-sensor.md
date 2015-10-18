@@ -4,7 +4,7 @@ Your First Sensor Driver
 
 This is a tutorial to help you write your first sensor driver, based on the [Fake Weather][] demo module that is provided with SensorHub source and binary releases. You may also find it easier to follow these steps in a [presentation](https://drive.google.com/open?id=0B3EZQJqOfG9sUFlPMkRZZ056VGc) with screenshots that we made during a FOSS4G workshop in July 2015.
 
-[Fake Weather]: https://github.com/sensiasoft/sensorhub/tree/master/sensorhub-driver-fakeweather/src/main/java/org/sensorhub/impl/sensor/fakeweather
+[Fake Weather]: https://github.com/opensensorhub/osh-sensors/tree/master/sensorhub-driver-fakeweather/src/main/java/org/sensorhub/impl/sensor/fakeweather
 
 
 ### Maven Project

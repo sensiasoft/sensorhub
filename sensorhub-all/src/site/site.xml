@@ -50,7 +50,7 @@
       </head>
 
       <links>
-         <item name="GitHub" position="right" href="${project.scm.url}" />
+         <item name="GitHub" position="right" href="https://github.com/opensensorhub" />
          <item name="Report an Error" position="right" href="report-errors.html" />
       </links>
 

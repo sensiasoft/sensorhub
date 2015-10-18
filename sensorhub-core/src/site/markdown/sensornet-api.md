@@ -3,7 +3,7 @@ Sensor Network API
 
 This page presents an extension of the base [Sensor API](sensor-api.html) that allows one to implement drivers for sensor networks of any size as a single SensorHub module. This API is used in addition to the base sensor API when one needs to wrap such a sensor network instead of just a single sensor.
 
-In addition to the base sensor API methods, a sensor network module would have to implement the ['IMultiSourceDataProducer'](https://github.com/sensiasoft/sensorhub/blob/master/sensorhub-core/src/main/java/org/sensorhub/api/data/IMultiSourceDataProducer.java) interface which allows providing [Sensor Descriptions](#Sensor_Descriptions) and [Features of Interest](#Features_of_Interest) (FOI) for multiple [Entities](#Entities):
+In addition to the base sensor API methods, a sensor network module would have to implement the ['IMultiSourceDataProducer'](https://github.com/opensensorhub/osh-core/blob/master/sensorhub-core/src/main/java/org/sensorhub/api/data/IMultiSourceDataProducer.java) interface which allows providing [Sensor Descriptions](#Sensor_Descriptions) and [Features of Interest](#Features_of_Interest) (FOI) for multiple [Entities](#Entities):
  
 
 ### Entities
@@ -19,7 +19,7 @@ The sensor network driver is responsible for providing sensor descriptions for e
 
 Since the driver also inherits the original methods from the base [Sensor API](sensor-api.html), the `getCurrentDescription()` method shall be used to provide a description of the network as a whole. This description usually contains the list of sensors that are part of the network as SensorML components (for large networks, this will be preferably done by reference). It is also important to include discovery related information in this description since it is the only one directly referenced by the capabilities document of SWE services.
 
-Changes in the network or in a given entity configuration are notified using a [SensorEvent](https://github.com/sensiasoft/sensorhub/blob/master/sensorhub-core/src/main/java/org/sensorhub/api/sensor/SensorEvent.java). In the case of an entity change, use the constructor with the sensorID.
+Changes in the network or in a given entity configuration are notified using a [SensorEvent](https://github.com/opensensorhub/osh-core/sensorhub/blob/master/sensorhub-core/src/main/java/org/sensorhub/api/sensor/SensorEvent.java). In the case of an entity change, use the constructor with the sensorID.
 
 _Note: As for single sensors, the driver is only required to provide the most current sensor descriptions. Maintenance of the history of descriptions is done by storage modules in SensorHub._
 
@@ -30,7 +30,7 @@ In a sensor network, there can be as many features of interest (FOI) as there ar
 
 Since the driver also inherits the original methods from the base [Sensor API](sensor-api.html), the `getCurrentFeatureOfInterest()` method shall be used to provide a FOI for the network as a whole (e.g. The FOI for a river monitoring sensor network is the river itself, while the FOI for each station/entity would be a sampling point at the station location). This corresponds to the sampled feature in the O&M model.
 
-When one of the features of interest changes (as usually happens in networks of mobile sensors), this can be notified using an [FoiEvent](https://github.com/sensiasoft/sensorhub/blob/master/sensorhub-core/src/main/java/org/sensorhub/api/data/FoiEvent.java). If the FOI observed by one of the sensor changes (e.g. the sensor was moved to a new location), use the constructor with the entityID.
+When one of the features of interest changes (as usually happens in networks of mobile sensors), this can be notified using an [FoiEvent](https://github.com/opensensorhub/osh-core/sensorhub/blob/master/sensorhub-core/src/main/java/org/sensorhub/api/data/FoiEvent.java). If the FOI observed by one of the sensor changes (e.g. the sensor was moved to a new location), use the constructor with the entityID.
 
 _Note: As for single sensors, the driver is only required to provide the feature of interest currently being observed. Maintenance of the history of FOIs is done by storage modules in SensorHub._
 

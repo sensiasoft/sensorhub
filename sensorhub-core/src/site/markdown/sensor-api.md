@@ -20,7 +20,7 @@ _Note: Several sensor drivers can be packaged in a single Maven module, although
 
 ### ISensorModule
 
-The [`ISensorModule`](https://github.com/sensiasoft/sensorhub/blob/master/sensorhub-core/src/main/java/org/sensorhub/api/sensor/ISensorModule.java) interface is the top-level one to be implemented by sensor drivers. It provides methods for:
+The [`ISensorModule`](https://github.com/opensensorhub/osh-core/blob/master/sensorhub-core/src/main/java/org/sensorhub/api/sensor/ISensorModule.java) interface is the top-level one to be implemented by sensor drivers. It provides methods for:
 
   * Getting the SensorML description of an installed sensor or actuator
   * Getting the feature of interest (FOI) currently observed by the sensor
@@ -43,7 +43,7 @@ In order to help you implement the API, we provide the [`AbstractSensorModule`](
 
 ### ISensorDataInterface
 
-Data produced by each output must be made available by an implementation of [`ISensorDataInterface`](https://github.com/sensiasoft/sensorhub/blob/master/sensorhub-core/src/main/java/org/sensorhub/api/sensor/ISensorDataInterface.java) that provides methods for:
+Data produced by each output must be made available by an implementation of [`ISensorDataInterface`](https://github.com/opensensorhub/osh-core/blob/master/sensorhub-core/src/main/java/org/sensorhub/api/sensor/ISensorDataInterface.java) that provides methods for:
 
   * Describing the data structure of each measurement record
   * Reading data produced by a sensor (poll mode)
@@ -58,18 +58,18 @@ These components and encodings are provided by the _lib-swe-common_ module.
 
 All data streamed through the same data interface must be synchronous and time-tagged together.
 
-The [`AbstractSensorOutput`](https://github.com/sensiasoft/sensorhub/blob/master/sensorhub-core/src/main/java/org/sensorhub/impl/sensor/AbstractSensorOutput.java) class is provided to reduce redundant code and help you get started. It is a basic partial implementation of `ISensorDataInterface` that can be used as the base for most sensor modules.
+The [`AbstractSensorOutput`](https://github.com/opensensorhub/osh-core/blob/master/sensorhub-core/src/main/java/org/sensorhub/impl/sensor/AbstractSensorOutput.java) class is provided to reduce redundant code and help you get started. It is a basic partial implementation of `ISensorDataInterface` that can be used as the base for most sensor modules.
 
 
 ### ISensorControlInterface
 
-Commands can be sent to the sensor via implementations of [`ISensorControlInterface`](https://github.com/sensiasoft/sensorhub/blob/master/sensorhub-core/src/main/java/org/sensorhub/api/sensor/ISensorControlInterface.java) that provides methods for:
+Commands can be sent to the sensor via implementations of [`ISensorControlInterface`](https://github.com/opensensorhub/osh-core/blob/master/sensorhub-core/src/main/java/org/sensorhub/api/sensor/ISensorControlInterface.java) that provides methods for:
 
   * Sending commands to the sensor/actuator (synchronous or asynchronous)
   * Scheduling commands to be sent asynchronously and/or at specific times
   * Subscribing to events related to a command that is executed asynchronously
 
-The [`AbstractSensorControl`](https://github.com/sensiasoft/sensorhub/blob/master/sensorhub-core/src/main/java/org/sensorhub/impl/sensor/AbstractSensorControl.java) class is provided to reduce redundant code and help you get started. It is a basic partial implementation of `ISensorControlInterface` that can be used as the base for most sensor modules.
+The [`AbstractSensorControl`](https://github.com/opensensorhub/osh-core/blob/master/sensorhub-core/src/main/java/org/sensorhub/impl/sensor/AbstractSensorControl.java) class is provided to reduce redundant code and help you get started. It is a basic partial implementation of `ISensorControlInterface` that can be used as the base for most sensor modules.
 
 
 ### SensorConfig
@@ -78,7 +78,7 @@ A configuration class derived from SensorConfig must be provided with the new dr
 
 All public fields in this class are used to automatically generate the administration user interface of this particular driver. Nesting configuration classes is supported.
 
-You can use the [`DisplayInfo`](https://github.com/sensiasoft/sensorhub/blob/master/sensorhub-core/src/main/java/org/sensorhub/api/config/DisplayInfo.java) annotation to give hints to the UI renderer, by providing:
+You can use the [`DisplayInfo`](https://github.com/opensensorhub/osh-core/blob/master/sensorhub-core/src/main/java/org/sensorhub/api/config/DisplayInfo.java) annotation to give hints to the UI renderer, by providing:
 
   * A more readable label (if non is provided, the label is automatically derived from the field name)
   * A description that will show up in a popup
@@ -86,7 +86,7 @@ You can use the [`DisplayInfo`](https://github.com/sensiasoft/sensorhub/blob/mas
 
 ### AbstractSensorModule
 
-The [`AbstractSensorModule`](https://github.com/sensiasoft/sensorhub/blob/master/sensorhub-core/src/main/java/org/sensorhub/impl/sensor/AbstractSensorModule.java) class can serve as a base to develop most sensor drivers. It provides default implementation for the following aspects:
+The [`AbstractSensorModule`](https://github.com/opensensorhub/osh-core/blob/master/sensorhub-core/src/main/java/org/sensorhub/impl/sensor/AbstractSensorModule.java) class can serve as a base to develop most sensor drivers. It provides default implementation for the following aspects:
 
   - Keeping maps of outputs and command inputs. Derived classes should thus call the `addOutput()` and `addControlInput()` methods
   - Generation of SensorML description (more details are given below)
