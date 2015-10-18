@@ -69,7 +69,7 @@ Below is a JSON snippet to be included in the main SensorHub configuration file,
 }
 ```
 
-[FakeWeatherConfig]: https://github.com/sensiasoft/sensorhub/blob/master/sensorhub-driver-fakeweather/src/main/java/org/sensorhub/impl/sensor/fakeweather/FakeWeatherConfig.java
+[FakeWeatherConfig]: https://github.com/opensensorhub/osh-sensors/blob/master/sensorhub-driver-fakeweather/src/main/java/org/sensorhub/impl/sensor/fakeweather/FakeWeatherConfig.java
 
 
 
@@ -110,13 +110,13 @@ public void stop() throws SensorHubException
 }
 ```
 
-[ISensorModule]: https://github.com/sensiasoft/sensorhub/blob/master/sensorhub-core/src/main/java/org/sensorhub/api/sensor/ISensorModule.java
+[ISensorModule]: https://github.com/opensensorhub/osh-core/blob/master/sensorhub-core/src/main/java/org/sensorhub/api/sensor/ISensorModule.java
 
-[AbstractSensorModule]: https://github.com/sensiasoft/sensorhub/blob/master/sensorhub-core/src/main/java/org/sensorhub/impl/sensor/AbstractSensorModule.java
+[AbstractSensorModule]: https://github.com/opensensorhub/osh-core/blob/master/sensorhub-core/src/main/java/org/sensorhub/impl/sensor/AbstractSensorModule.java
 
-[FakeWeatherSensor]: https://github.com/sensiasoft/sensorhub/blob/master/sensorhub-driver-fakeweather/src/main/java/org/sensorhub/impl/sensor/fakeweather/FakeWeatherSensor.java
+[FakeWeatherSensor]: https://github.com/opensensorhub/osh-sensors/blob/master/sensorhub-driver-fakeweather/src/main/java/org/sensorhub/impl/sensor/fakeweather/FakeWeatherSensor.java
 
-[ISensorDataInterface]: https://github.com/sensiasoft/sensorhub/blob/master/sensorhub-core/src/main/java/org/sensorhub/api/sensor/ISensorDataInterface.java
+[ISensorDataInterface]: https://github.com/opensensorhub/osh-core/blob/master/sensorhub-core/src/main/java/org/sensorhub/api/sensor/ISensorDataInterface.java
 
 
 
@@ -187,7 +187,7 @@ public double getAverageSamplingPeriod()
 
 When the rate is not known a-priori and/or can vary, an average can be computed online (This is what is done in the [SOS-T Virtual Sensor][] for example since there is no way to know the rate of incoming data in advance).
 
-[SOS-T Virtual Sensor]: https://github.com/sensiasoft/sensorhub/blob/master/sensorhub-service-swe/src/main/java/org/sensorhub/impl/sensor/sost/SOSVirtualSensorOutput.java
+[SOS-T Virtual Sensor]: https://github.com/opensensorhub/osh-core/blob/master/sensorhub-service-swe/src/main/java/org/sensorhub/impl/sensor/sost/SOSVirtualSensorOutput.java
 
 
 #### Start/stop measurement collection thread
@@ -258,9 +258,9 @@ protected void stop()
 ```
 
 
-[FakeWeatherOutput]: https://github.com/sensiasoft/sensorhub/blob/master/sensorhub-driver-fakeweather/src/main/java/org/sensorhub/impl/sensor/fakeweather/FakeWeatherOutput.java
+[FakeWeatherOutput]: https://github.com/opensensorhub/osh-sensors/blob/master/sensorhub-driver-fakeweather/src/main/java/org/sensorhub/impl/sensor/fakeweather/FakeWeatherOutput.java
 
-[AbstractSensorOutput]: https://github.com/sensiasoft/sensorhub/blob/master/sensorhub-core/src/main/java/org/sensorhub/impl/sensor/AbstractSensorOutput.java
+[AbstractSensorOutput]: https://github.com/opensensorhub/osh-core/blob/master/sensorhub-core/src/main/java/org/sensorhub/impl/sensor/AbstractSensorOutput.java
 
 [DataBlock]: https://github.com/sensiasoft/lib-swe-common/blob/master/swe-common-core/src/main/java/net/opengis/swe/v20/DataBlock.java
 
@@ -315,12 +315,12 @@ public class FakeWeatherModuleDescriptor implements IModuleProvider
 }
 ```
 
-In order to be discoverable by the [ServiceLoader][] API, the module descriptor class also needs to be advertised in a provider-configuration file called `org.sensorhub.api.module.IModuleProvider` in the resource directory `META-INF/services` (see [ServiceLoader][] documentation on Oracle website). For instance, the Fake Weather sensor module includes [this file](https://github.com/sensiasoft/sensorhub/blob/master/sensorhub-driver-fakeweather/src/main/resources/META-INF/services/org.sensorhub.api.module.IModuleProvider) file with the following line:
+In order to be discoverable by the [ServiceLoader][] API, the module descriptor class also needs to be advertised in a provider-configuration file called `org.sensorhub.api.module.IModuleProvider` in the resource directory `META-INF/services` (see [ServiceLoader][] documentation on Oracle website). For instance, the Fake Weather sensor module includes [this file](https://github.com/opensensorhub/osh-sensors/blob/master/sensorhub-driver-fakeweather/src/main/resources/META-INF/services/org.sensorhub.api.module.IModuleProvider) file with the following line:
 
 ```
 org.sensorhub.impl.sensor.fakeweather.FakeWeatherModuleDescriptor
 ```
 
-[SensorConfig]: https://github.com/sensiasoft/sensorhub/blob/master/sensorhub-core/src/main/java/org/sensorhub/api/sensor/SensorConfig.java
+[SensorConfig]: https://github.com/opensensorhub/osh-core/blob/master/sensorhub-core/src/main/java/org/sensorhub/api/sensor/SensorConfig.java
 
 [ServiceLoader]: http://docs.oracle.com/javase/7/docs/api/java/util/ServiceLoader.html
