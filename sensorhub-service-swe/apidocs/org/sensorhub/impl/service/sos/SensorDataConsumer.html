@@ -95,7 +95,7 @@
 <li class="blockList">
 <dl>
 <dt>All Implemented Interfaces:</dt>
-<dd><a href="http://docs.opensensorhub.org/ows-framework-bindings/apidocs/org/vast/ows/sos/ISOSDataConsumer.html?is-external=true" title="class or interface in org.vast.ows.sos">ISOSDataConsumer</a></dd>
+<dd><a href="../../../../../org/sensorhub/impl/service/sos/ISOSDataConsumer.html" title="interface in org.sensorhub.impl.service.sos">ISOSDataConsumer</a></dd>
 </dl>
 <dl>
 <dt>Direct Known Subclasses:</dt>
@@ -105,7 +105,7 @@
 <br>
 <pre>public class <span class="strong">SensorDataConsumer</span>
 extends <a href="http://docs.oracle.com/javase/7/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</a>
-implements <a href="http://docs.opensensorhub.org/ows-framework-bindings/apidocs/org/vast/ows/sos/ISOSDataConsumer.html?is-external=true" title="class or interface in org.vast.ows.sos">ISOSDataConsumer</a></pre>
+implements <a href="../../../../../org/sensorhub/impl/service/sos/ISOSDataConsumer.html" title="interface in org.sensorhub.impl.service.sos">ISOSDataConsumer</a></pre>
 <div class="block"><p>
  Wrapper data consumer for updating only a virtual sensor
  </p></div>
@@ -126,11 +126,11 @@ implements <a href="http://docs.opensensorhub.org/ows-framework-bindings/apidocs
 </a>
 <h3>Nested Class Summary</h3>
 <ul class="blockList">
-<li class="blockList"><a name="nested_classes_inherited_from_class_org.vast.ows.sos.ISOSDataConsumer">
+<li class="blockList"><a name="nested_classes_inherited_from_class_org.sensorhub.impl.service.sos.ISOSDataConsumer">
 <!--   -->
 </a>
-<h3>Nested classes/interfaces inherited from interface&nbsp;org.vast.ows.sos.<a href="http://docs.opensensorhub.org/ows-framework-bindings/apidocs/org/vast/ows/sos/ISOSDataConsumer.html?is-external=true" title="class or interface in org.vast.ows.sos">ISOSDataConsumer</a></h3>
-<code><a href="http://docs.opensensorhub.org/ows-framework-bindings/apidocs/org/vast/ows/sos/ISOSDataConsumer.Template.html?is-external=true" title="class or interface in org.vast.ows.sos">ISOSDataConsumer.Template</a></code></li>
+<h3>Nested classes/interfaces inherited from interface&nbsp;org.sensorhub.impl.service.sos.<a href="../../../../../org/sensorhub/impl/service/sos/ISOSDataConsumer.html" title="interface in org.sensorhub.impl.service.sos">ISOSDataConsumer</a></h3>
+<code><a href="../../../../../org/sensorhub/impl/service/sos/ISOSDataConsumer.Template.html" title="class in org.sensorhub.impl.service.sos">ISOSDataConsumer.Template</a></code></li>
 </ul>
 </li>
 </ul>
@@ -164,27 +164,38 @@ implements <a href="http://docs.opensensorhub.org/ows-framework-bindings/apidocs
 <th class="colLast" scope="col">Method and Description</th>
 </tr>
 <tr class="altColor">
-<td class="colFirst"><code><a href="http://docs.opensensorhub.org/ows-framework-bindings/apidocs/org/vast/ows/sos/ISOSDataConsumer.Template.html?is-external=true" title="class or interface in org.vast.ows.sos">ISOSDataConsumer.Template</a></code></td>
-<td class="colLast"><code><strong><a href="../../../../../org/sensorhub/impl/service/sos/SensorDataConsumer.html#getTemplate(java.lang.String)">getTemplate</a></strong>(<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;templateID)</code>&nbsp;</td>
+<td class="colFirst"><code><a href="../../../../../org/sensorhub/impl/service/sos/ISOSDataConsumer.Template.html" title="class in org.sensorhub.impl.service.sos">ISOSDataConsumer.Template</a></code></td>
+<td class="colLast"><code><strong><a href="../../../../../org/sensorhub/impl/service/sos/SensorDataConsumer.html#getTemplate(java.lang.String)">getTemplate</a></strong>(<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;templateID)</code>
+<div class="block">Retrieve previously registered template information</div>
+</td>
 </tr>
 <tr class="rowColor">
 <td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><strong><a href="../../../../../org/sensorhub/impl/service/sos/SensorDataConsumer.html#newObservation(org.vast.ogc.om.IObservation...)">newObservation</a></strong>(org.vast.ogc.om.IObservation...&nbsp;observations)</code>&nbsp;</td>
+<td class="colLast"><code><strong><a href="../../../../../org/sensorhub/impl/service/sos/SensorDataConsumer.html#newObservation(org.vast.ogc.om.IObservation...)">newObservation</a></strong>(org.vast.ogc.om.IObservation...&nbsp;observations)</code>
+<div class="block">Requests consumer to process a list of new observations</div>
+</td>
 </tr>
 <tr class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><strong><a href="../../../../../org/sensorhub/impl/service/sos/SensorDataConsumer.html#newResultRecord(java.lang.String,%20net.opengis.swe.v20.DataBlock...)">newResultRecord</a></strong>(<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;templateID,
-               net.opengis.swe.v20.DataBlock...&nbsp;dataBlocks)</code>&nbsp;</td>
+               net.opengis.swe.v20.DataBlock...&nbsp;dataBlocks)</code>
+<div class="block">Requests consumer to process a list of new result records</div>
+</td>
 </tr>
 <tr class="rowColor">
 <td class="colFirst"><code><a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a></code></td>
 <td class="colLast"><code><strong><a href="../../../../../org/sensorhub/impl/service/sos/SensorDataConsumer.html#newResultTemplate(net.opengis.swe.v20.DataComponent,%20net.opengis.swe.v20.DataEncoding,%20org.vast.ogc.om.IObservation)">newResultTemplate</a></strong>(net.opengis.swe.v20.DataComponent&nbsp;component,
                  net.opengis.swe.v20.DataEncoding&nbsp;encoding,
-                 org.vast.ogc.om.IObservation&nbsp;obsTemplate)</code>&nbsp;</td>
+                 org.vast.ogc.om.IObservation&nbsp;obsTemplate)</code>
+<div class="block">Requests consumer to prepare for receiving new result records with given
+ data structure and encoding</div>
+</td>
 </tr>
 <tr class="altColor">
 <td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><strong><a href="../../../../../org/sensorhub/impl/service/sos/SensorDataConsumer.html#updateSensor(net.opengis.sensorml.v20.AbstractProcess)">updateSensor</a></strong>(net.opengis.sensorml.v20.AbstractProcess&nbsp;newSensorDescription)</code>&nbsp;</td>
+<td class="colLast"><code><strong><a href="../../../../../org/sensorhub/impl/service/sos/SensorDataConsumer.html#updateSensor(net.opengis.sensorml.v20.AbstractProcess)">updateSensor</a></strong>(net.opengis.sensorml.v20.AbstractProcess&nbsp;newSensorDescription)</code>
+<div class="block">Requests consumer to update sensor description</div>
+</td>
 </tr>
 </table>
 <ul class="blockList">
@@ -236,9 +247,11 @@ implements <a href="http://docs.opensensorhub.org/ows-framework-bindings/apidocs
 <h4>updateSensor</h4>
 <pre>public&nbsp;void&nbsp;updateSensor(net.opengis.sensorml.v20.AbstractProcess&nbsp;newSensorDescription)
                   throws <a href="http://docs.oracle.com/javase/7/docs/api/java/lang/Exception.html?is-external=true" title="class or interface in java.lang">Exception</a></pre>
+<div class="block"><strong>Description copied from interface:&nbsp;<code><a href="../../../../../org/sensorhub/impl/service/sos/ISOSDataConsumer.html#updateSensor(net.opengis.sensorml.v20.AbstractProcess)">ISOSDataConsumer</a></code></strong></div>
+<div class="block">Requests consumer to update sensor description</div>
 <dl>
 <dt><strong>Specified by:</strong></dt>
-<dd><code><a href="http://docs.opensensorhub.org/ows-framework-bindings/apidocs/org/vast/ows/sos/ISOSDataConsumer.html?is-external=true#updateSensor(net.opengis.sensorml.v20.AbstractProcess)" title="class or interface in org.vast.ows.sos">updateSensor</a></code>&nbsp;in interface&nbsp;<code><a href="http://docs.opensensorhub.org/ows-framework-bindings/apidocs/org/vast/ows/sos/ISOSDataConsumer.html?is-external=true" title="class or interface in org.vast.ows.sos">ISOSDataConsumer</a></code></dd>
+<dd><code><a href="../../../../../org/sensorhub/impl/service/sos/ISOSDataConsumer.html#updateSensor(net.opengis.sensorml.v20.AbstractProcess)">updateSensor</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../org/sensorhub/impl/service/sos/ISOSDataConsumer.html" title="interface in org.sensorhub.impl.service.sos">ISOSDataConsumer</a></code></dd>
 <dt><span class="strong">Throws:</span></dt>
 <dd><code><a href="http://docs.oracle.com/javase/7/docs/api/java/lang/Exception.html?is-external=true" title="class or interface in java.lang">Exception</a></code></dd></dl>
 </li>
@@ -251,9 +264,11 @@ implements <a href="http://docs.opensensorhub.org/ows-framework-bindings/apidocs
 <h4>newObservation</h4>
 <pre>public&nbsp;void&nbsp;newObservation(org.vast.ogc.om.IObservation...&nbsp;observations)
                     throws <a href="http://docs.oracle.com/javase/7/docs/api/java/lang/Exception.html?is-external=true" title="class or interface in java.lang">Exception</a></pre>
+<div class="block"><strong>Description copied from interface:&nbsp;<code><a href="../../../../../org/sensorhub/impl/service/sos/ISOSDataConsumer.html#newObservation(org.vast.ogc.om.IObservation...)">ISOSDataConsumer</a></code></strong></div>
+<div class="block">Requests consumer to process a list of new observations</div>
 <dl>
 <dt><strong>Specified by:</strong></dt>
-<dd><code><a href="http://docs.opensensorhub.org/ows-framework-bindings/apidocs/org/vast/ows/sos/ISOSDataConsumer.html?is-external=true#newObservation(org.vast.ogc.om.IObservation...)" title="class or interface in org.vast.ows.sos">newObservation</a></code>&nbsp;in interface&nbsp;<code><a href="http://docs.opensensorhub.org/ows-framework-bindings/apidocs/org/vast/ows/sos/ISOSDataConsumer.html?is-external=true" title="class or interface in org.vast.ows.sos">ISOSDataConsumer</a></code></dd>
+<dd><code><a href="../../../../../org/sensorhub/impl/service/sos/ISOSDataConsumer.html#newObservation(org.vast.ogc.om.IObservation...)">newObservation</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../org/sensorhub/impl/service/sos/ISOSDataConsumer.html" title="interface in org.sensorhub.impl.service.sos">ISOSDataConsumer</a></code></dd>
 <dt><span class="strong">Throws:</span></dt>
 <dd><code><a href="http://docs.oracle.com/javase/7/docs/api/java/lang/Exception.html?is-external=true" title="class or interface in java.lang">Exception</a></code></dd></dl>
 </li>
@@ -268,9 +283,13 @@ implements <a href="http://docs.opensensorhub.org/ows-framework-bindings/apidocs
                        net.opengis.swe.v20.DataEncoding&nbsp;encoding,
                        org.vast.ogc.om.IObservation&nbsp;obsTemplate)
                          throws <a href="http://docs.oracle.com/javase/7/docs/api/java/lang/Exception.html?is-external=true" title="class or interface in java.lang">Exception</a></pre>
+<div class="block"><strong>Description copied from interface:&nbsp;<code><a href="../../../../../org/sensorhub/impl/service/sos/ISOSDataConsumer.html#newResultTemplate(net.opengis.swe.v20.DataComponent,%20net.opengis.swe.v20.DataEncoding,%20org.vast.ogc.om.IObservation)">ISOSDataConsumer</a></code></strong></div>
+<div class="block">Requests consumer to prepare for receiving new result records with given
+ data structure and encoding</div>
 <dl>
 <dt><strong>Specified by:</strong></dt>
-<dd><code><a href="http://docs.opensensorhub.org/ows-framework-bindings/apidocs/org/vast/ows/sos/ISOSDataConsumer.html?is-external=true#newResultTemplate(net.opengis.swe.v20.DataComponent,%20net.opengis.swe.v20.DataEncoding,%20org.vast.ogc.om.IObservation)" title="class or interface in org.vast.ows.sos">newResultTemplate</a></code>&nbsp;in interface&nbsp;<code><a href="http://docs.opensensorhub.org/ows-framework-bindings/apidocs/org/vast/ows/sos/ISOSDataConsumer.html?is-external=true" title="class or interface in org.vast.ows.sos">ISOSDataConsumer</a></code></dd>
+<dd><code><a href="../../../../../org/sensorhub/impl/service/sos/ISOSDataConsumer.html#newResultTemplate(net.opengis.swe.v20.DataComponent,%20net.opengis.swe.v20.DataEncoding,%20org.vast.ogc.om.IObservation)">newResultTemplate</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../org/sensorhub/impl/service/sos/ISOSDataConsumer.html" title="interface in org.sensorhub.impl.service.sos">ISOSDataConsumer</a></code></dd>
+<dt><span class="strong">Returns:</span></dt><dd>new template ID</dd>
 <dt><span class="strong">Throws:</span></dt>
 <dd><code><a href="http://docs.oracle.com/javase/7/docs/api/java/lang/Exception.html?is-external=true" title="class or interface in java.lang">Exception</a></code></dd></dl>
 </li>
@@ -284,9 +303,11 @@ implements <a href="http://docs.opensensorhub.org/ows-framework-bindings/apidocs
 <pre>public&nbsp;void&nbsp;newResultRecord(<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;templateID,
                    net.opengis.swe.v20.DataBlock...&nbsp;dataBlocks)
                      throws <a href="http://docs.oracle.com/javase/7/docs/api/java/lang/Exception.html?is-external=true" title="class or interface in java.lang">Exception</a></pre>
+<div class="block"><strong>Description copied from interface:&nbsp;<code><a href="../../../../../org/sensorhub/impl/service/sos/ISOSDataConsumer.html#newResultRecord(java.lang.String,%20net.opengis.swe.v20.DataBlock...)">ISOSDataConsumer</a></code></strong></div>
+<div class="block">Requests consumer to process a list of new result records</div>
 <dl>
 <dt><strong>Specified by:</strong></dt>
-<dd><code><a href="http://docs.opensensorhub.org/ows-framework-bindings/apidocs/org/vast/ows/sos/ISOSDataConsumer.html?is-external=true#newResultRecord(java.lang.String,%20net.opengis.swe.v20.DataBlock...)" title="class or interface in org.vast.ows.sos">newResultRecord</a></code>&nbsp;in interface&nbsp;<code><a href="http://docs.opensensorhub.org/ows-framework-bindings/apidocs/org/vast/ows/sos/ISOSDataConsumer.html?is-external=true" title="class or interface in org.vast.ows.sos">ISOSDataConsumer</a></code></dd>
+<dd><code><a href="../../../../../org/sensorhub/impl/service/sos/ISOSDataConsumer.html#newResultRecord(java.lang.String,%20net.opengis.swe.v20.DataBlock...)">newResultRecord</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../org/sensorhub/impl/service/sos/ISOSDataConsumer.html" title="interface in org.sensorhub.impl.service.sos">ISOSDataConsumer</a></code></dd>
 <dt><span class="strong">Throws:</span></dt>
 <dd><code><a href="http://docs.oracle.com/javase/7/docs/api/java/lang/Exception.html?is-external=true" title="class or interface in java.lang">Exception</a></code></dd></dl>
 </li>
@@ -297,11 +318,14 @@ implements <a href="http://docs.opensensorhub.org/ows-framework-bindings/apidocs
 <ul class="blockListLast">
 <li class="blockList">
 <h4>getTemplate</h4>
-<pre>public&nbsp;<a href="http://docs.opensensorhub.org/ows-framework-bindings/apidocs/org/vast/ows/sos/ISOSDataConsumer.Template.html?is-external=true" title="class or interface in org.vast.ows.sos">ISOSDataConsumer.Template</a>&nbsp;getTemplate(<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;templateID)
+<pre>public&nbsp;<a href="../../../../../org/sensorhub/impl/service/sos/ISOSDataConsumer.Template.html" title="class in org.sensorhub.impl.service.sos">ISOSDataConsumer.Template</a>&nbsp;getTemplate(<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;templateID)
                                       throws <a href="http://docs.oracle.com/javase/7/docs/api/java/lang/Exception.html?is-external=true" title="class or interface in java.lang">Exception</a></pre>
+<div class="block"><strong>Description copied from interface:&nbsp;<code><a href="../../../../../org/sensorhub/impl/service/sos/ISOSDataConsumer.html#getTemplate(java.lang.String)">ISOSDataConsumer</a></code></strong></div>
+<div class="block">Retrieve previously registered template information</div>
 <dl>
 <dt><strong>Specified by:</strong></dt>
-<dd><code><a href="http://docs.opensensorhub.org/ows-framework-bindings/apidocs/org/vast/ows/sos/ISOSDataConsumer.html?is-external=true#getTemplate(java.lang.String)" title="class or interface in org.vast.ows.sos">getTemplate</a></code>&nbsp;in interface&nbsp;<code><a href="http://docs.opensensorhub.org/ows-framework-bindings/apidocs/org/vast/ows/sos/ISOSDataConsumer.html?is-external=true" title="class or interface in org.vast.ows.sos">ISOSDataConsumer</a></code></dd>
+<dd><code><a href="../../../../../org/sensorhub/impl/service/sos/ISOSDataConsumer.html#getTemplate(java.lang.String)">getTemplate</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../org/sensorhub/impl/service/sos/ISOSDataConsumer.html" title="interface in org.sensorhub.impl.service.sos">ISOSDataConsumer</a></code></dd>
+<dt><span class="strong">Returns:</span></dt><dd>stream description (structure +encoding)</dd>
 <dt><span class="strong">Throws:</span></dt>
 <dd><code><a href="http://docs.oracle.com/javase/7/docs/api/java/lang/Exception.html?is-external=true" title="class or interface in java.lang">Exception</a></code></dd></dl>
 </li>

@@ -215,18 +215,22 @@ extends <a href="../../../org/vast/data/AbstractArrayImpl.html" title="class in 
 </tr>
 <tr class="altColor">
 <td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><strong><a href="../../../org/vast/data/DataArrayImpl.html#accept(net.opengis.swe.v20.DataComponentVisitor)">accept</a></strong>(<a href="../../../net/opengis/swe/v20/DataComponentVisitor.html" title="interface in net.opengis.swe.v20">DataComponentVisitor</a>&nbsp;visitor)</code>&nbsp;</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/DataArrayImpl.html#clearData()">clearData</a></strong>()</code>
 <div class="block">Clear the datablock used by this component.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code><a href="../../../org/vast/data/DataArrayImpl.html" title="class in org.vast.data">DataArrayImpl</a></code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/DataArrayImpl.html#copy()">copy</a></strong>()</code>
 <div class="block">Return a structural copy of this component
  The copy is done recursively, but only the structure is copied (not the data)</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code><a href="../../../org/vast/data/AbstractDataBlock.html" title="class in org.vast.data">AbstractDataBlock</a></code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/DataArrayImpl.html#createDataBlock()">createDataBlock</a></strong>()</code>
 <div class="block">Create the right data block to carry this array data
@@ -234,67 +238,67 @@ extends <a href="../../../org/vast/data/AbstractArrayImpl.html" title="class in 
  or a group of mixed types parallel arrays (DataBlockMixed)</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code><a href="../../../org/vast/data/CountImpl.html" title="class in org.vast.data">CountImpl</a></code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/DataArrayImpl.html#getArraySizeComponent()">getArraySizeComponent</a></strong>()</code>&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code><a href="../../../org/vast/data/AbstractDataComponentImpl.html" title="class in org.vast.data">AbstractDataComponentImpl</a></code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/DataArrayImpl.html#getComponent(int)">getComponent</a></strong>(int&nbsp;index)</code>
 <div class="block">Get the sub-component located at the specified index</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code><a href="../../../org/vast/data/AbstractDataComponentImpl.html" title="class in org.vast.data">AbstractDataComponentImpl</a></code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/DataArrayImpl.html#getComponent(java.lang.String)">getComponent</a></strong>(<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;name)</code>
 <div class="block">Get the sub-component registered with the specified name</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>int</code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/DataArrayImpl.html#getComponentCount()">getComponentCount</a></strong>()</code>
 <div class="block">Returns number of sub-components in this component</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>int</code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/DataArrayImpl.html#getComponentIndex(java.lang.String)">getComponentIndex</a></strong>(<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;name)</code>
 <div class="block">Get the index of the sub-component registered with this name</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/DataArrayImpl.html#setData(net.opengis.swe.v20.DataBlock)">setData</a></strong>(<a href="../../../net/opengis/swe/v20/DataBlock.html" title="interface in net.opengis.swe.v20">DataBlock</a>&nbsp;dataBlock)</code>
 <div class="block">Assign a new datablock to this component.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/DataArrayImpl.html#setFixedSize(int)">setFixedSize</a></strong>(int&nbsp;newSize)</code>
 <div class="block">Set the size of this array to a new FIXED value</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code><a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a></code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/DataArrayImpl.html#toString(java.lang.String)">toString</a></strong>(<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;indent)</code>
 <div class="block">Returns String representation of this DataContainer</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/DataArrayImpl.html#updateSize()">updateSize</a></strong>()</code>
 <div class="block">Dynamically update size of a VARIABLE SIZE array
  Note that elementCount component must carry the right value at this time</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/DataArrayImpl.html#updateSize(int)">updateSize</a></strong>(int&nbsp;newSize)</code>
 <div class="block">Set the size of this VARIABLE SIZE array to a new value
  Automatically updates the sizeData component value.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/DataArrayImpl.html#validateData(java.util.List)">validateData</a></strong>(<a href="http://docs.oracle.com/javase/7/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</a>&lt;<a href="../../../net/opengis/swe/v20/ValidationException.html" title="class in net.opengis.swe.v20">ValidationException</a>&gt;&nbsp;errorList)</code>
 <div class="block">Validates dataBlock against constraints if any.</div>
@@ -637,10 +641,19 @@ extends <a href="../../../org/vast/data/AbstractArrayImpl.html" title="class in 
 <a name="getArraySizeComponent()">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>getArraySizeComponent</h4>
 <pre>public final&nbsp;<a href="../../../org/vast/data/CountImpl.html" title="class in org.vast.data">CountImpl</a>&nbsp;getArraySizeComponent()</pre>
+</li>
+</ul>
+<a name="accept(net.opengis.swe.v20.DataComponentVisitor)">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>accept</h4>
+<pre>public&nbsp;void&nbsp;accept(<a href="../../../net/opengis/swe/v20/DataComponentVisitor.html" title="interface in net.opengis.swe.v20">DataComponentVisitor</a>&nbsp;visitor)</pre>
 </li>
 </ul>
 </li>

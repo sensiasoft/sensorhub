@@ -105,7 +105,7 @@
 <li class="blockList">
 <dl>
 <dt>All Implemented Interfaces:</dt>
-<dd><a href="../../../../../org/sensorhub/impl/service/sos/IDataProviderFactory.html" title="interface in org.sensorhub.impl.service.sos">IDataProviderFactory</a>, <a href="http://docs.opensensorhub.org/ows-framework-bindings/apidocs/org/vast/ows/sos/ISOSDataProviderFactory.html?is-external=true" title="class or interface in org.vast.ows.sos">ISOSDataProviderFactory</a></dd>
+<dd><a href="../../../../../org/sensorhub/impl/service/sos/ISOSDataProviderFactory.html" title="interface in org.sensorhub.impl.service.sos">ISOSDataProviderFactory</a></dd>
 </dl>
 <hr>
 <br>
@@ -155,8 +155,10 @@ extends <a href="../../../../../org/sensorhub/impl/service/sos/StreamWithStorage
 <th class="colLast" scope="col">Method and Description</th>
 </tr>
 <tr class="altColor">
-<td class="colFirst"><code><a href="http://docs.opensensorhub.org/ows-framework-bindings/apidocs/org/vast/ows/sos/ISOSDataProvider.html?is-external=true" title="class or interface in org.vast.ows.sos">ISOSDataProvider</a></code></td>
-<td class="colLast"><code><strong><a href="../../../../../org/sensorhub/impl/service/sos/SensorWithStorageProviderFactory.html#getNewDataProvider(org.vast.ows.sos.SOSDataFilter)">getNewDataProvider</a></strong>(<a href="http://docs.opensensorhub.org/ows-framework-bindings/apidocs/org/vast/ows/sos/SOSDataFilter.html?is-external=true" title="class or interface in org.vast.ows.sos">SOSDataFilter</a>&nbsp;filter)</code>&nbsp;</td>
+<td class="colFirst"><code><a href="../../../../../org/sensorhub/impl/service/sos/ISOSDataProvider.html" title="interface in org.sensorhub.impl.service.sos">ISOSDataProvider</a></code></td>
+<td class="colLast"><code><strong><a href="../../../../../org/sensorhub/impl/service/sos/SensorWithStorageProviderFactory.html#getNewDataProvider(org.sensorhub.impl.service.sos.SOSDataFilter)">getNewDataProvider</a></strong>(<a href="../../../../../org/sensorhub/impl/service/sos/SOSDataFilter.html" title="class in org.sensorhub.impl.service.sos">SOSDataFilter</a>&nbsp;filter)</code>
+<div class="block">Instantiates a new data provider</div>
+</td>
 </tr>
 </table>
 <ul class="blockList">
@@ -214,21 +216,24 @@ extends <a href="../../../../../org/sensorhub/impl/service/sos/StreamWithStorage
 <!--   -->
 </a>
 <h3>Method Detail</h3>
-<a name="getNewDataProvider(org.vast.ows.sos.SOSDataFilter)">
+<a name="getNewDataProvider(org.sensorhub.impl.service.sos.SOSDataFilter)">
 <!--   -->
 </a>
 <ul class="blockListLast">
 <li class="blockList">
 <h4>getNewDataProvider</h4>
-<pre>public&nbsp;<a href="http://docs.opensensorhub.org/ows-framework-bindings/apidocs/org/vast/ows/sos/ISOSDataProvider.html?is-external=true" title="class or interface in org.vast.ows.sos">ISOSDataProvider</a>&nbsp;getNewDataProvider(<a href="http://docs.opensensorhub.org/ows-framework-bindings/apidocs/org/vast/ows/sos/SOSDataFilter.html?is-external=true" title="class or interface in org.vast.ows.sos">SOSDataFilter</a>&nbsp;filter)
-                                    throws <a href="http://docs.opensensorhub.org/sensorhub-core/apidocs/org/sensorhub/api/service/ServiceException.html?is-external=true" title="class or interface in org.sensorhub.api.service">ServiceException</a></pre>
+<pre>public&nbsp;<a href="../../../../../org/sensorhub/impl/service/sos/ISOSDataProvider.html" title="interface in org.sensorhub.impl.service.sos">ISOSDataProvider</a>&nbsp;getNewDataProvider(<a href="../../../../../org/sensorhub/impl/service/sos/SOSDataFilter.html" title="class in org.sensorhub.impl.service.sos">SOSDataFilter</a>&nbsp;filter)
+                                    throws <a href="http://docs.oracle.com/javase/7/docs/api/java/lang/Exception.html?is-external=true" title="class or interface in java.lang">Exception</a></pre>
+<div class="block"><strong>Description copied from interface:&nbsp;<code><a href="../../../../../org/sensorhub/impl/service/sos/ISOSDataProviderFactory.html#getNewDataProvider(org.sensorhub.impl.service.sos.SOSDataFilter)">ISOSDataProviderFactory</a></code></strong></div>
+<div class="block">Instantiates a new data provider</div>
 <dl>
 <dt><strong>Specified by:</strong></dt>
-<dd><code><a href="http://docs.opensensorhub.org/ows-framework-bindings/apidocs/org/vast/ows/sos/ISOSDataProviderFactory.html?is-external=true#getNewDataProvider(org.vast.ows.sos.SOSDataFilter)" title="class or interface in org.vast.ows.sos">getNewDataProvider</a></code>&nbsp;in interface&nbsp;<code><a href="http://docs.opensensorhub.org/ows-framework-bindings/apidocs/org/vast/ows/sos/ISOSDataProviderFactory.html?is-external=true" title="class or interface in org.vast.ows.sos">ISOSDataProviderFactory</a></code></dd>
+<dd><code><a href="../../../../../org/sensorhub/impl/service/sos/ISOSDataProviderFactory.html#getNewDataProvider(org.sensorhub.impl.service.sos.SOSDataFilter)">getNewDataProvider</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../org/sensorhub/impl/service/sos/ISOSDataProviderFactory.html" title="interface in org.sensorhub.impl.service.sos">ISOSDataProviderFactory</a></code></dd>
 <dt><strong>Overrides:</strong></dt>
-<dd><code><a href="../../../../../org/sensorhub/impl/service/sos/StorageDataProviderFactory.html#getNewDataProvider(org.vast.ows.sos.SOSDataFilter)">getNewDataProvider</a></code>&nbsp;in class&nbsp;<code><a href="../../../../../org/sensorhub/impl/service/sos/StorageDataProviderFactory.html" title="class in org.sensorhub.impl.service.sos">StorageDataProviderFactory</a></code></dd>
+<dd><code><a href="../../../../../org/sensorhub/impl/service/sos/StorageDataProviderFactory.html#getNewDataProvider(org.sensorhub.impl.service.sos.SOSDataFilter)">getNewDataProvider</a></code>&nbsp;in class&nbsp;<code><a href="../../../../../org/sensorhub/impl/service/sos/StorageDataProviderFactory.html" title="class in org.sensorhub.impl.service.sos">StorageDataProviderFactory</a></code></dd>
+<dt><span class="strong">Returns:</span></dt><dd>sos data provider</dd>
 <dt><span class="strong">Throws:</span></dt>
-<dd><code><a href="http://docs.opensensorhub.org/sensorhub-core/apidocs/org/sensorhub/api/service/ServiceException.html?is-external=true" title="class or interface in org.sensorhub.api.service">ServiceException</a></code></dd></dl>
+<dd><code><a href="http://docs.oracle.com/javase/7/docs/api/java/lang/Exception.html?is-external=true" title="class or interface in java.lang">Exception</a></code></dd></dl>
 </li>
 </ul>
 </li>

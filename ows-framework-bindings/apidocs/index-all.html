@@ -139,8 +139,6 @@
 </dd>
 <dt><span class="strong"><a href="./net/opengis/fes/v20/impl/ConformanceImpl.html#addConstraint(net.opengis.ows.v11.Domain)">addConstraint(Domain)</a></span> - Method in class net.opengis.fes.v20.impl.<a href="./net/opengis/fes/v20/impl/ConformanceImpl.html" title="class in net.opengis.fes.v20.impl">ConformanceImpl</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="strong"><a href="./org/vast/ows/sos/SOSServlet.html#addDataProvider(java.lang.String,%20org.vast.ows.sos.ISOSDataProviderFactory)">addDataProvider(String, ISOSDataProviderFactory)</a></span> - Method in class org.vast.ows.sos.<a href="./org/vast/ows/sos/SOSServlet.html" title="class in org.vast.ows.sos">SOSServlet</a></dt>
-<dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/vast/ows/server/WCSServlet.html#addDataSetHandler(java.lang.String,%20org.vast.ows.server.WCSHandler)">addDataSetHandler(String, WCSHandler)</a></span> - Method in class org.vast.ows.server.<a href="./org/vast/ows/server/WCSServlet.html" title="class in org.vast.ows.server">WCSServlet</a></dt>
 <dd>
 <div class="block">Adds a new handler for the given coverage ID</div>
@@ -618,11 +616,6 @@
 </dd>
 <dt><span class="strong"><a href="./org/vast/ows/sps/StatusReport.html#clone()">clone()</a></span> - Method in class org.vast.ows.sps.<a href="./org/vast/ows/sps/StatusReport.html" title="class in org.vast.ows.sps">StatusReport</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="strong"><a href="./org/vast/ows/sos/ISOSDataProvider.html#close()">close()</a></span> - Method in interface org.vast.ows.sos.<a href="./org/vast/ows/sos/ISOSDataProvider.html" title="interface in org.vast.ows.sos">ISOSDataProvider</a></dt>
-<dd>
-<div class="block">Properly releases all resources accessed by provider
- (for instance, when connection is ended by client)</div>
-</dd>
 <dt><a href="./org/vast/ows/sld/Color.html" title="class in org.vast.ows.sld"><span class="strong">Color</span></a> - Class in <a href="./org/vast/ows/sld/package-summary.html">org.vast.ows.sld</a></dt>
 <dd>
 <div class="block">
@@ -666,8 +659,6 @@
 <div class="block">POJO class for XML type ComparisonOpsType(@http://www.opengis.net/fes/2.0).</div>
 </dd>
 <dt><span class="strong"><a href="./net/opengis/fes/v20/impl/ComparisonOpsImpl.html#ComparisonOpsImpl()">ComparisonOpsImpl()</a></span> - Constructor for class net.opengis.fes.v20.impl.<a href="./net/opengis/fes/v20/impl/ComparisonOpsImpl.html" title="class in net.opengis.fes.v20.impl">ComparisonOpsImpl</a></dt>
-<dd>&nbsp;</dd>
-<dt><span class="strong"><a href="./org/vast/ows/sos/ISOSDataConsumer.Template.html#component">component</a></span> - Variable in class org.vast.ows.sos.<a href="./org/vast/ows/sos/ISOSDataConsumer.Template.html" title="class in org.vast.ows.sos">ISOSDataConsumer.Template</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/vast/ows/sld/functions/AbstractMappingFunction.html#compute(double)">compute(double)</a></span> - Method in class org.vast.ows.sld.functions.<a href="./org/vast/ows/sld/functions/AbstractMappingFunction.html" title="class in org.vast.ows.sld.functions">AbstractMappingFunction</a></dt>
 <dd>&nbsp;</dd>
@@ -814,6 +805,14 @@
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/vast/ows/sps/DescribeResultAccessResponse.html#DATA_SERVICE_NOT_AVAILABLE_CODE">DATA_SERVICE_NOT_AVAILABLE_CODE</a></span> - Static variable in class org.vast.ows.sps.<a href="./org/vast/ows/sps/DescribeResultAccessResponse.html" title="class in org.vast.ows.sps">DescribeResultAccessResponse</a></dt>
 <dd>&nbsp;</dd>
+<dt><a href="./org/vast/ows/sos/DataStructFilter.html" title="class in org.vast.ows.sos"><span class="strong">DataStructFilter</span></a> - Class in <a href="./org/vast/ows/sos/package-summary.html">org.vast.ows.sos</a></dt>
+<dd>
+<div class="block">
+ Data component visitor used to filter unwanted observables from the
+ SWE Common result structure.</div>
+</dd>
+<dt><span class="strong"><a href="./org/vast/ows/sos/DataStructFilter.html#DataStructFilter(java.util.Collection)">DataStructFilter(Collection&lt;String&gt;)</a></span> - Constructor for class org.vast.ows.sos.<a href="./org/vast/ows/sos/DataStructFilter.html" title="class in org.vast.ows.sos">DataStructFilter</a></dt>
+<dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/vast/ows/swe/InsertSensorRequest.html#DEFAULT_FEATURE_ROLE">DEFAULT_FEATURE_ROLE</a></span> - Static variable in class org.vast.ows.swe.<a href="./org/vast/ows/swe/InsertSensorRequest.html" title="class in org.vast.ows.swe">InsertSensorRequest</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/vast/ows/sos/GetObservationRequest.html#DEFAULT_FORMAT">DEFAULT_FORMAT</a></span> - Static variable in class org.vast.ows.sos.<a href="./org/vast/ows/sos/GetObservationRequest.html" title="class in org.vast.ows.sos">GetObservationRequest</a></dt>
@@ -821,13 +820,6 @@
 <dt><span class="strong"><a href="./org/vast/ows/swe/DescribeSensorRequest.html#DEFAULT_FORMAT">DEFAULT_FORMAT</a></span> - Static variable in class org.vast.ows.swe.<a href="./org/vast/ows/swe/DescribeSensorRequest.html" title="class in org.vast.ows.swe">DescribeSensorRequest</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/vast/ows/swe/InsertSensorRequest.html#DEFAULT_PROCEDURE_FORMAT">DEFAULT_PROCEDURE_FORMAT</a></span> - Static variable in class org.vast.ows.swe.<a href="./org/vast/ows/swe/InsertSensorRequest.html" title="class in org.vast.ows.swe">InsertSensorRequest</a></dt>
-<dd>&nbsp;</dd>
-<dt><a href="./org/vast/ows/sos/DefaultSOSProviderConfig.html" title="class in org.vast.ows.sos"><span class="strong">DefaultSOSProviderConfig</span></a> - Class in <a href="./org/vast/ows/sos/package-summary.html">org.vast.ows.sos</a></dt>
-<dd>
-<div class="block">
- Class holding information necessary to instantiate a new SOS data provider</div>
-</dd>
-<dt><span class="strong"><a href="./org/vast/ows/sos/DefaultSOSProviderConfig.html#DefaultSOSProviderConfig(java.lang.String,%20java.lang.String)">DefaultSOSProviderConfig(String, String)</a></span> - Constructor for class org.vast.ows.sos.<a href="./org/vast/ows/sos/DefaultSOSProviderConfig.html" title="class in org.vast.ows.sos">DefaultSOSProviderConfig</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/vast/ows/wcst/CoverageTransaction.html#DELETE">DELETE</a></span> - Static variable in class org.vast.ows.wcst.<a href="./org/vast/ows/wcst/CoverageTransaction.html" title="class in org.vast.ows.wcst">CoverageTransaction</a></dt>
 <dd>&nbsp;</dd>
@@ -1167,8 +1159,6 @@
 <dl>
 <dt><span class="strong"><a href="./org/vast/ows/wns/WNSUser.html#EMAIL">EMAIL</a></span> - Static variable in class org.vast.ows.wns.<a href="./org/vast/ows/wns/WNSUser.html" title="class in org.vast.ows.wns">WNSUser</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="strong"><a href="./org/vast/ows/sos/ISOSDataConsumer.Template.html#encoding">encoding</a></span> - Variable in class org.vast.ows.sos.<a href="./org/vast/ows/sos/ISOSDataConsumer.Template.html" title="class in org.vast.ows.sos">ISOSDataConsumer.Template</a></dt>
-<dd>&nbsp;</dd>
 <dt><a href="./net/opengis/fes/v20/EndedBy.html" title="interface in net.opengis.fes.v20"><span class="strong">EndedBy</span></a> - Interface in <a href="./net/opengis/fes/v20/package-summary.html">net.opengis.fes.v20</a></dt>
 <dd>
 <div class="block">A document containing one EndedBy(@http://www.opengis.net/fes/2.0) element.</div>
@@ -1418,6 +1408,8 @@
 </dd>
 <dt><span class="strong"><a href="./org/vast/ows/sos/InsertResultTemplateResponse.html#getAcceptedTemplateId()">getAcceptedTemplateId()</a></span> - Method in class org.vast.ows.sos.<a href="./org/vast/ows/sos/InsertResultTemplateResponse.html" title="class in org.vast.ows.sos">InsertResultTemplateResponse</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="strong"><a href="./org/vast/ows/GetCapabilitiesRequest.html#getAcceptedVersions()">getAcceptedVersions()</a></span> - Method in class org.vast.ows.<a href="./org/vast/ows/GetCapabilitiesRequest.html" title="class in org.vast.ows">GetCapabilitiesRequest</a></dt>
+<dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/vast/ows/OWSServiceCapabilities.html#getAccessConstraints()">getAccessConstraints()</a></span> - Method in class org.vast.ows.<a href="./org/vast/ows/OWSServiceCapabilities.html" title="class in org.vast.ows">OWSServiceCapabilities</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./net/opengis/ows/v11/impl/UnNamedDomainImpl.html#getAllowedValues()">getAllowedValues()</a></span> - Method in class net.opengis.ows.v11.impl.<a href="./net/opengis/ows/v11/impl/UnNamedDomainImpl.html" title="class in net.opengis.ows.v11.impl">UnNamedDomainImpl</a></dt>
@@ -1610,8 +1602,6 @@
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/vast/ows/wps/ExecuteProcessResponse.html#getDataEncoding()">getDataEncoding()</a></span> - Method in class org.vast.ows.wps.<a href="./org/vast/ows/wps/ExecuteProcessResponse.html" title="class in org.vast.ows.wps">ExecuteProcessResponse</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="strong"><a href="./org/vast/ows/sos/DefaultSOSProviderConfig.html#getDataFile()">getDataFile()</a></span> - Method in class org.vast.ows.sos.<a href="./org/vast/ows/sos/DefaultSOSProviderConfig.html" title="class in org.vast.ows.sos">DefaultSOSProviderConfig</a></dt>
-<dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/vast/ows/OWSReference.html#getDataHandler()">getDataHandler()</a></span> - Method in class org.vast.ows.<a href="./org/vast/ows/OWSReference.html" title="class in org.vast.ows">OWSReference</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/vast/ows/sas/SASAlertReader.html#getDataStream()">getDataStream()</a></span> - Method in class org.vast.ows.sas.<a href="./org/vast/ows/sas/SASAlertReader.html" title="class in org.vast.ows.sas">SASAlertReader</a></dt>
@@ -1636,11 +1626,6 @@
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/vast/ows/wcs/RangeField.html#getDefaultInterpolationMethod()">getDefaultInterpolationMethod()</a></span> - Method in class org.vast.ows.wcs.<a href="./org/vast/ows/wcs/RangeField.html" title="class in org.vast.ows.wcs">RangeField</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="strong"><a href="./org/vast/ows/sos/ISOSDataProvider.html#getDefaultResultEncoding()">getDefaultResultEncoding()</a></span> - Method in interface org.vast.ows.sos.<a href="./org/vast/ows/sos/ISOSDataProvider.html" title="interface in org.vast.ows.sos">ISOSDataProvider</a></dt>
-<dd>
-<div class="block">Requests provider to specify the preferred encoding for the
- underlying data, given the current config and filter</div>
-</dd>
 <dt><span class="strong"><a href="./net/opengis/ows/v11/impl/UnNamedDomainImpl.html#getDefaultValue()">getDefaultValue()</a></span> - Method in class net.opengis.ows.v11.impl.<a href="./net/opengis/ows/v11/impl/UnNamedDomainImpl.html" title="class in net.opengis.ows.v11.impl">UnNamedDomainImpl</a></dt>
 <dd>
 <div class="block">Gets the defaultValue property</div>
@@ -1839,8 +1824,6 @@
 <dt><span class="strong"><a href="./org/vast/ows/sos/GetObservationRequest.html#getFoiIDs()">getFoiIDs()</a></span> - Method in class org.vast.ows.sos.<a href="./org/vast/ows/sos/GetObservationRequest.html" title="class in org.vast.ows.sos">GetObservationRequest</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/vast/ows/sos/GetResultRequest.html#getFoiIDs()">getFoiIDs()</a></span> - Method in class org.vast.ows.sos.<a href="./org/vast/ows/sos/GetResultRequest.html" title="class in org.vast.ows.sos">GetResultRequest</a></dt>
-<dd>&nbsp;</dd>
-<dt><span class="strong"><a href="./org/vast/ows/sos/SOSDataFilter.html#getFoiIds()">getFoiIds()</a></span> - Method in class org.vast.ows.sos.<a href="./org/vast/ows/sos/SOSDataFilter.html" title="class in org.vast.ows.sos">SOSDataFilter</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/vast/ows/sas/SASSubscribeRequest.html#getfoiName()">getfoiName()</a></span> - Method in class org.vast.ows.sas.<a href="./org/vast/ows/sas/SASSubscribeRequest.html" title="class in org.vast.ows.sas">SASSubscribeRequest</a></dt>
 <dd>&nbsp;</dd>
@@ -2227,18 +2210,6 @@
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/vast/ows/wcs/CoverageDescription.html#getNativeFormat()">getNativeFormat()</a></span> - Method in class org.vast.ows.wcs.<a href="./org/vast/ows/wcs/CoverageDescription.html" title="class in org.vast.ows.wcs">CoverageDescription</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="strong"><a href="./org/vast/ows/sos/ISOSDataProviderFactory.html#getNewDataProvider(org.vast.ows.sos.SOSDataFilter)">getNewDataProvider(SOSDataFilter)</a></span> - Method in interface org.vast.ows.sos.<a href="./org/vast/ows/sos/ISOSDataProviderFactory.html" title="interface in org.vast.ows.sos">ISOSDataProviderFactory</a></dt>
-<dd>&nbsp;</dd>
-<dt><span class="strong"><a href="./org/vast/ows/sos/ISOSDataProvider.html#getNextObservation()">getNextObservation()</a></span> - Method in interface org.vast.ows.sos.<a href="./org/vast/ows/sos/ISOSDataProvider.html" title="interface in org.vast.ows.sos">ISOSDataProvider</a></dt>
-<dd>
-<div class="block">Requests provider to generate the next observation from the
- underlying data, given the current config and filter</div>
-</dd>
-<dt><span class="strong"><a href="./org/vast/ows/sos/ISOSDataProvider.html#getNextResultRecord()">getNextResultRecord()</a></span> - Method in interface org.vast.ows.sos.<a href="./org/vast/ows/sos/ISOSDataProvider.html" title="interface in org.vast.ows.sos">ISOSDataProvider</a></dt>
-<dd>
-<div class="block">Requests provider to generate the next CDM record from the
- underlying data, given the current config and filter</div>
-</dd>
 <dt><span class="strong"><a href="./net/opengis/fes/v20/impl/PropertyIsNilImpl.html#getNilReason()">getNilReason()</a></span> - Method in class net.opengis.fes.v20.impl.<a href="./net/opengis/fes/v20/impl/PropertyIsNilImpl.html" title="class in net.opengis.fes.v20.impl">PropertyIsNilImpl</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./net/opengis/fes/v20/PropertyIsNil.html#getNilReason()">getNilReason()</a></span> - Method in interface net.opengis.fes.v20.<a href="./net/opengis/fes/v20/PropertyIsNil.html" title="interface in net.opengis.fes.v20">PropertyIsNil</a></dt>
@@ -2286,8 +2257,6 @@
 <dt><span class="strong"><a href="./org/vast/ows/sos/GetResultRequest.html#getObservables()">getObservables()</a></span> - Method in class org.vast.ows.sos.<a href="./org/vast/ows/sos/GetResultRequest.html" title="class in org.vast.ows.sos">GetResultRequest</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/vast/ows/sos/GetResultTemplateRequest.html#getObservables()">getObservables()</a></span> - Method in class org.vast.ows.sos.<a href="./org/vast/ows/sos/GetResultTemplateRequest.html" title="class in org.vast.ows.sos">GetResultTemplateRequest</a></dt>
-<dd>&nbsp;</dd>
-<dt><span class="strong"><a href="./org/vast/ows/sos/SOSDataFilter.html#getObservables()">getObservables()</a></span> - Method in class org.vast.ows.sos.<a href="./org/vast/ows/sos/SOSDataFilter.html" title="class in org.vast.ows.sos">SOSDataFilter</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/vast/ows/server/SOSHandler.html#getObservation(org.vast.ows.sos.GetObservationRequest)">getObservation(GetObservationRequest)</a></span> - Method in interface org.vast.ows.server.<a href="./org/vast/ows/server/SOSHandler.html" title="interface in org.vast.ows.server">SOSHandler</a></dt>
 <dd>&nbsp;</dd>
@@ -2581,8 +2550,6 @@
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/vast/ows/sld/GraphicCustom.html#getRendererClass()">getRendererClass()</a></span> - Method in class org.vast.ows.sld.<a href="./org/vast/ows/sld/GraphicCustom.html" title="class in org.vast.ows.sld">GraphicCustom</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="strong"><a href="./org/vast/ows/sos/SOSDataFilter.html#getReplaySpeedFactor()">getReplaySpeedFactor()</a></span> - Method in class org.vast.ows.sos.<a href="./org/vast/ows/sos/SOSDataFilter.html" title="class in org.vast.ows.sos">SOSDataFilter</a></dt>
-<dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/vast/ows/sps/TaskingResponse.html#getReport()">getReport()</a></span> - Method in class org.vast.ows.sps.<a href="./org/vast/ows/sps/TaskingResponse.html" title="class in org.vast.ows.sps">TaskingResponse</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/vast/ows/sps/GetStatusResponse.html#getReportList()">getReportList()</a></span> - Method in class org.vast.ows.sps.<a href="./org/vast/ows/sps/GetStatusResponse.html" title="class in org.vast.ows.sps">GetStatusResponse</a></dt>
@@ -2644,11 +2611,6 @@
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/vast/ows/sos/InsertResultTemplateRequest.html#getResultStructure()">getResultStructure()</a></span> - Method in class org.vast.ows.sos.<a href="./org/vast/ows/sos/InsertResultTemplateRequest.html" title="class in org.vast.ows.sos">InsertResultTemplateRequest</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="strong"><a href="./org/vast/ows/sos/ISOSDataProvider.html#getResultStructure()">getResultStructure()</a></span> - Method in interface org.vast.ows.sos.<a href="./org/vast/ows/sos/ISOSDataProvider.html" title="interface in org.vast.ows.sos">ISOSDataProvider</a></dt>
-<dd>
-<div class="block">Requests provider to provide the result structure corresponding
- to the current config and filter</div>
-</dd>
 <dt><a href="./org/vast/ows/sos/GetResultTemplateReaderV20.html" title="class in org.vast.ows.sos"><span class="strong">GetResultTemplateReaderV20</span></a> - Class in <a href="./org/vast/ows/sos/package-summary.html">org.vast.ows.sos</a></dt>
 <dd>
 <div class="block">
@@ -2712,8 +2674,6 @@
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/vast/ows/wcs/GetCoverageRequest.html#getResZ()">getResZ()</a></span> - Method in class org.vast.ows.wcs.<a href="./org/vast/ows/wcs/GetCoverageRequest.html" title="class in org.vast.ows.wcs">GetCoverageRequest</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="strong"><a href="./org/vast/ows/sos/SOSDataFilter.html#getRoi()">getRoi()</a></span> - Method in class org.vast.ows.sos.<a href="./org/vast/ows/sos/SOSDataFilter.html" title="class in org.vast.ows.sos">SOSDataFilter</a></dt>
-<dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/vast/ows/OWSReference.html#getRole()">getRole()</a></span> - Method in class org.vast.ows.<a href="./org/vast/ows/OWSReference.html" title="class in org.vast.ows">OWSReference</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/vast/ows/sld/Graphic.html#getRotation()">getRotation()</a></span> - Method in class org.vast.ows.sld.<a href="./org/vast/ows/sld/Graphic.html" title="class in org.vast.ows.sld">Graphic</a></dt>
@@ -2763,6 +2723,8 @@
 <dt><span class="strong"><a href="./org/vast/ows/sld/Stroke.html#getSmooth()">getSmooth()</a></span> - Method in class org.vast.ows.sld.<a href="./org/vast/ows/sld/Stroke.html" title="class in org.vast.ows.sld">Stroke</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/vast/ows/wps/WPSUtils.html#getSoapConnectionFactory()">getSoapConnectionFactory()</a></span> - Method in class org.vast.ows.wps.<a href="./org/vast/ows/wps/WPSUtils.html" title="class in org.vast.ows.wps">WPSUtils</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="strong"><a href="./org/vast/ows/OWSRequest.html#getSoapVersion()">getSoapVersion()</a></span> - Method in class org.vast.ows.<a href="./org/vast/ows/OWSRequest.html" title="class in org.vast.ows">OWSRequest</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./net/opengis/ows/v11/impl/RangeImpl.html#getSpacing()">getSpacing()</a></span> - Method in class net.opengis.ows.v11.impl.<a href="./net/opengis/ows/v11/impl/RangeImpl.html" title="class in net.opengis.ows.v11.impl">RangeImpl</a></dt>
 <dd>
@@ -2895,8 +2857,6 @@
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/vast/ows/sas/SASLayerCapabilities.html#getSweDataComponentList()">getSweDataComponentList()</a></span> - Method in class org.vast.ows.sas.<a href="./org/vast/ows/sas/SASLayerCapabilities.html" title="class in org.vast.ows.sas">SASLayerCapabilities</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="strong"><a href="./org/vast/ows/sos/DefaultSOSProviderConfig.html#getSweTemplateFile()">getSweTemplateFile()</a></span> - Method in class org.vast.ows.sos.<a href="./org/vast/ows/sos/DefaultSOSProviderConfig.html" title="class in org.vast.ows.sos">DefaultSOSProviderConfig</a></dt>
-<dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/vast/ows/sld/Geometry.html#getT()">getT()</a></span> - Method in class org.vast.ows.sld.<a href="./org/vast/ows/sld/Geometry.html" title="class in org.vast.ows.sld">Geometry</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/vast/ows/sld/functions/DirectLookUpTable.html#getTableData()">getTableData()</a></span> - Method in class org.vast.ows.sld.functions.<a href="./org/vast/ows/sld/functions/DirectLookUpTable.html" title="class in org.vast.ows.sld.functions">DirectLookUpTable</a></dt>
@@ -2925,10 +2885,6 @@
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/vast/ows/sps/StatusReport.html#getTaskStatus()">getTaskStatus()</a></span> - Method in class org.vast.ows.sps.<a href="./org/vast/ows/sps/StatusReport.html" title="class in org.vast.ows.sps">StatusReport</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="strong"><a href="./org/vast/ows/sos/ISOSDataConsumer.html#getTemplate(java.lang.String)">getTemplate(String)</a></span> - Method in interface org.vast.ows.sos.<a href="./org/vast/ows/sos/ISOSDataConsumer.html" title="interface in org.vast.ows.sos">ISOSDataConsumer</a></dt>
-<dd>
-<div class="block">Retrieve previously registered template information</div>
-</dd>
 <dt><span class="strong"><a href="./org/vast/ows/sos/InsertResultRequest.html#getTemplateId()">getTemplateId()</a></span> - Method in class org.vast.ows.sos.<a href="./org/vast/ows/sos/InsertResultRequest.html" title="class in org.vast.ows.sos">InsertResultRequest</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./net/opengis/fes/v20/FilterCapabilities.html#getTemporalCapabilities()">getTemporalCapabilities()</a></span> - Method in interface net.opengis.fes.v20.<a href="./net/opengis/fes/v20/FilterCapabilities.html" title="interface in net.opengis.fes.v20">FilterCapabilities</a></dt>
@@ -2978,8 +2934,6 @@
 <dt><span class="strong"><a href="./org/vast/ows/wcs/WCSLayerCapabilities.html#getTimeList()">getTimeList()</a></span> - Method in class org.vast.ows.wcs.<a href="./org/vast/ows/wcs/WCSLayerCapabilities.html" title="class in org.vast.ows.wcs">WCSLayerCapabilities</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/vast/ows/wms/WMSLayerCapabilities.html#getTimeList()">getTimeList()</a></span> - Method in class org.vast.ows.wms.<a href="./org/vast/ows/wms/WMSLayerCapabilities.html" title="class in org.vast.ows.wms">WMSLayerCapabilities</a></dt>
-<dd>&nbsp;</dd>
-<dt><span class="strong"><a href="./org/vast/ows/sos/SOSDataFilter.html#getTimeRange()">getTimeRange()</a></span> - Method in class org.vast.ows.sos.<a href="./org/vast/ows/sos/SOSDataFilter.html" title="class in org.vast.ows.sos">SOSDataFilter</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/vast/ows/wcs/GetCoverageRequest.html#getTimes()">getTimes()</a></span> - Method in class org.vast.ows.wcs.<a href="./org/vast/ows/wcs/GetCoverageRequest.html" title="class in org.vast.ows.wcs">GetCoverageRequest</a></dt>
 <dd>&nbsp;</dd>
@@ -3499,22 +3453,6 @@
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/vast/ows/wms/WMSLayerCapabilities.html#isOpaque()">isOpaque()</a></span> - Method in class org.vast.ows.wms.<a href="./org/vast/ows/wms/WMSLayerCapabilities.html" title="class in org.vast.ows.wms">WMSLayerCapabilities</a></dt>
 <dd>&nbsp;</dd>
-<dt><a href="./org/vast/ows/sos/ISOSDataConsumer.html" title="interface in org.vast.ows.sos"><span class="strong">ISOSDataConsumer</span></a> - Interface in <a href="./org/vast/ows/sos/package-summary.html">org.vast.ows.sos</a></dt>
-<dd>
-<div class="block">
- Interface to be implemented for consuming data received by the SOS-T interface.</div>
-</dd>
-<dt><a href="./org/vast/ows/sos/ISOSDataConsumer.Template.html" title="class in org.vast.ows.sos"><span class="strong">ISOSDataConsumer.Template</span></a> - Class in <a href="./org/vast/ows/sos/package-summary.html">org.vast.ows.sos</a></dt>
-<dd>&nbsp;</dd>
-<dt><span class="strong"><a href="./org/vast/ows/sos/ISOSDataConsumer.Template.html#ISOSDataConsumer.Template()">ISOSDataConsumer.Template()</a></span> - Constructor for class org.vast.ows.sos.<a href="./org/vast/ows/sos/ISOSDataConsumer.Template.html" title="class in org.vast.ows.sos">ISOSDataConsumer.Template</a></dt>
-<dd>&nbsp;</dd>
-<dt><a href="./org/vast/ows/sos/ISOSDataProvider.html" title="interface in org.vast.ows.sos"><span class="strong">ISOSDataProvider</span></a> - Interface in <a href="./org/vast/ows/sos/package-summary.html">org.vast.ows.sos</a></dt>
-<dd>
-<div class="block">
- Interface to be implemented for providing data to the SOS engine.</div>
-</dd>
-<dt><a href="./org/vast/ows/sos/ISOSDataProviderFactory.html" title="interface in org.vast.ows.sos"><span class="strong">ISOSDataProviderFactory</span></a> - Interface in <a href="./org/vast/ows/sos/package-summary.html">org.vast.ows.sos</a></dt>
-<dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/vast/ows/wms/WMSLayerCapabilities.html#isResizable()">isResizable()</a></span> - Method in class org.vast.ows.wms.<a href="./org/vast/ows/wms/WMSLayerCapabilities.html" title="class in org.vast.ows.wms">WMSLayerCapabilities</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./net/opengis/ows/v11/impl/MetadataImpl.html#isSetAbout()">isSetAbout()</a></span> - Method in class net.opengis.ows.v11.impl.<a href="./net/opengis/ows/v11/impl/MetadataImpl.html" title="class in net.opengis.ows.v11.impl">MetadataImpl</a></dt>
@@ -3969,10 +3907,6 @@
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./net/opengis/fes/v20/impl/FESFactory.html#newNot()">newNot()</a></span> - Method in class net.opengis.fes.v20.impl.<a href="./net/opengis/fes/v20/impl/FESFactory.html" title="class in net.opengis.fes.v20.impl">FESFactory</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="strong"><a href="./org/vast/ows/sos/ISOSDataConsumer.html#newObservation(org.vast.ogc.om.IObservation...)">newObservation(IObservation...)</a></span> - Method in interface org.vast.ows.sos.<a href="./org/vast/ows/sos/ISOSDataConsumer.html" title="interface in org.vast.ows.sos">ISOSDataConsumer</a></dt>
-<dd>
-<div class="block">Requests consumer to process a list of new observations</div>
-</dd>
 <dt><span class="strong"><a href="./net/opengis/fes/v20/Factory.html#newOr()">newOr()</a></span> - Method in interface net.opengis.fes.v20.<a href="./net/opengis/fes/v20/Factory.html" title="interface in net.opengis.fes.v20">Factory</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./net/opengis/fes/v20/impl/FESFactory.html#newOr()">newOr()</a></span> - Method in class net.opengis.fes.v20.impl.<a href="./net/opengis/fes/v20/impl/FESFactory.html" title="class in net.opengis.fes.v20.impl">FESFactory</a></dt>
@@ -4025,15 +3959,6 @@
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./net/opengis/fes/v20/impl/FESFactory.html#newPropertyIsNull()">newPropertyIsNull()</a></span> - Method in class net.opengis.fes.v20.impl.<a href="./net/opengis/fes/v20/impl/FESFactory.html" title="class in net.opengis.fes.v20.impl">FESFactory</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="strong"><a href="./org/vast/ows/sos/ISOSDataConsumer.html#newResultRecord(java.lang.String,%20net.opengis.swe.v20.DataBlock...)">newResultRecord(String, DataBlock...)</a></span> - Method in interface org.vast.ows.sos.<a href="./org/vast/ows/sos/ISOSDataConsumer.html" title="interface in org.vast.ows.sos">ISOSDataConsumer</a></dt>
-<dd>
-<div class="block">Requests consumer to process a list of new result records</div>
-</dd>
-<dt><span class="strong"><a href="./org/vast/ows/sos/ISOSDataConsumer.html#newResultTemplate(net.opengis.swe.v20.DataComponent,%20net.opengis.swe.v20.DataEncoding,%20org.vast.ogc.om.IObservation)">newResultTemplate(DataComponent, DataEncoding, IObservation)</a></span> - Method in interface org.vast.ows.sos.<a href="./org/vast/ows/sos/ISOSDataConsumer.html" title="interface in org.vast.ows.sos">ISOSDataConsumer</a></dt>
-<dd>
-<div class="block">Requests consumer to prepare for receiving new result records with given
- data structure and encoding</div>
-</dd>
 <dt><span class="strong"><a href="./net/opengis/fes/v20/Factory.html#newScalarCapabilities()">newScalarCapabilities()</a></span> - Method in interface net.opengis.fes.v20.<a href="./net/opengis/fes/v20/Factory.html" title="interface in net.opengis.fes.v20">Factory</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./net/opengis/fes/v20/impl/FESFactory.html#newScalarCapabilities()">newScalarCapabilities()</a></span> - Method in class net.opengis.fes.v20.impl.<a href="./net/opengis/fes/v20/impl/FESFactory.html" title="class in net.opengis.fes.v20.impl">FESFactory</a></dt>
@@ -5404,8 +5329,6 @@
 </dd>
 <dt><span class="strong"><a href="./org/vast/ows/wns/RegisterWriterV10.html#RegisterWriterV10()">RegisterWriterV10()</a></span> - Constructor for class org.vast.ows.wns.<a href="./org/vast/ows/wns/RegisterWriterV10.html" title="class in org.vast.ows.wns">RegisterWriterV10</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="strong"><a href="./org/vast/ows/sos/SOSServlet.html#removeDataProvider(java.lang.String)">removeDataProvider(String)</a></span> - Method in class org.vast.ows.sos.<a href="./org/vast/ows/sos/SOSServlet.html" title="class in org.vast.ows.sos">SOSServlet</a></dt>
-<dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/vast/ows/server/WCSServlet.html#removeDataSetHandler(java.lang.String)">removeDataSetHandler(String)</a></span> - Method in class org.vast.ows.server.<a href="./org/vast/ows/server/WCSServlet.html" title="class in org.vast.ows.server">WCSServlet</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/vast/ows/sps/ReservationReport.html#reservationExpiration">reservationExpiration</a></span> - Variable in class org.vast.ows.sps.<a href="./org/vast/ows/sps/ReservationReport.html" title="class in org.vast.ows.sps">ReservationReport</a></dt>
@@ -5445,6 +5368,8 @@
 <dt><span class="strong"><a href="./org/vast/ows/sps/ReserveResponse.html#ReserveResponse()">ReserveResponse()</a></span> - Constructor for class org.vast.ows.sps.<a href="./org/vast/ows/sps/ReserveResponse.html" title="class in org.vast.ows.sps">ReserveResponse</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/vast/ows/fes/FESUtils.html#resetIdCounters()">resetIdCounters()</a></span> - Method in class org.vast.ows.fes.<a href="./org/vast/ows/fes/FESUtils.html" title="class in org.vast.ows.fes">FESUtils</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="strong"><a href="./org/vast/ows/sos/SOSException.html#response_too_big_code">response_too_big_code</a></span> - Static variable in exception org.vast.ows.sos.<a href="./org/vast/ows/sos/SOSException.html" title="class in org.vast.ows.sos">SOSException</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/vast/ows/wcs/CoverageRefGroup.html#ROLE_COV_DESCRIPTION">ROLE_COV_DESCRIPTION</a></span> - Static variable in class org.vast.ows.wcs.<a href="./org/vast/ows/wcs/CoverageRefGroup.html" title="class in org.vast.ows.wcs">CoverageRefGroup</a></dt>
 <dd>&nbsp;</dd>
@@ -6385,8 +6310,6 @@
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/vast/ows/sld/GraphicCustom.html#setRendererClass(java.lang.String)">setRendererClass(String)</a></span> - Method in class org.vast.ows.sld.<a href="./org/vast/ows/sld/GraphicCustom.html" title="class in org.vast.ows.sld">GraphicCustom</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="strong"><a href="./org/vast/ows/sos/SOSDataFilter.html#setReplaySpeedFactor(double)">setReplaySpeedFactor(double)</a></span> - Method in class org.vast.ows.sos.<a href="./org/vast/ows/sos/SOSDataFilter.html" title="class in org.vast.ows.sos">SOSDataFilter</a></dt>
-<dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/vast/ows/sps/TaskingResponse.html#setReport(Report)">setReport(Report)</a></span> - Method in class org.vast.ows.sps.<a href="./org/vast/ows/sps/TaskingResponse.html" title="class in org.vast.ows.sps">TaskingResponse</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/vast/ows/sps/GetStatusResponse.html#setReportList(java.util.List)">setReportList(List&lt;StatusReport&gt;)</a></span> - Method in class org.vast.ows.sps.<a href="./org/vast/ows/sps/GetStatusResponse.html" title="class in org.vast.ows.sps">GetStatusResponse</a></dt>
@@ -6439,8 +6362,6 @@
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/vast/ows/wcs/GetCoverageRequest.html#setResZ(double)">setResZ(double)</a></span> - Method in class org.vast.ows.wcs.<a href="./org/vast/ows/wcs/GetCoverageRequest.html" title="class in org.vast.ows.wcs">GetCoverageRequest</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="strong"><a href="./org/vast/ows/sos/SOSDataFilter.html#setRoi(com.vividsolutions.jts.geom.Polygon)">setRoi(Polygon)</a></span> - Method in class org.vast.ows.sos.<a href="./org/vast/ows/sos/SOSDataFilter.html" title="class in org.vast.ows.sos">SOSDataFilter</a></dt>
-<dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/vast/ows/OWSReference.html#setRole(java.lang.String)">setRole(String)</a></span> - Method in class org.vast.ows.<a href="./org/vast/ows/OWSReference.html" title="class in org.vast.ows">OWSReference</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/vast/ows/sld/Graphic.html#setRotation(org.vast.ows.sld.ScalarParameter)">setRotation(ScalarParameter)</a></span> - Method in class org.vast.ows.sld.<a href="./org/vast/ows/sld/Graphic.html" title="class in org.vast.ows.sld">Graphic</a></dt>
@@ -6488,6 +6409,8 @@
 <dt><span class="strong"><a href="./org/vast/ows/sld/Stroke.html#setSmooth(boolean)">setSmooth(boolean)</a></span> - Method in class org.vast.ows.sld.<a href="./org/vast/ows/sld/Stroke.html" title="class in org.vast.ows.sld">Stroke</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/vast/ows/wps/WPSUtils.html#setSoapConnectionFactory(javax.xml.soap.SOAPConnectionFactory)">setSoapConnectionFactory(SOAPConnectionFactory)</a></span> - Method in class org.vast.ows.wps.<a href="./org/vast/ows/wps/WPSUtils.html" title="class in org.vast.ows.wps">WPSUtils</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="strong"><a href="./org/vast/ows/OWSRequest.html#setSoapVersion(java.lang.String)">setSoapVersion(String)</a></span> - Method in class org.vast.ows.<a href="./org/vast/ows/OWSRequest.html" title="class in org.vast.ows">OWSRequest</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./net/opengis/ows/v11/impl/RangeImpl.html#setSpacing(java.lang.String)">setSpacing(String)</a></span> - Method in class net.opengis.ows.v11.impl.<a href="./net/opengis/ows/v11/impl/RangeImpl.html" title="class in net.opengis.ows.v11.impl">RangeImpl</a></dt>
 <dd>
@@ -6758,8 +6681,6 @@
 <dt><a href="./org/vast/ows/wns/SingleUser.html" title="class in org.vast.ows.wns"><span class="strong">SingleUser</span></a> - Class in <a href="./org/vast/ows/wns/package-summary.html">org.vast.ows.wns</a></dt>
 <dt><span class="strong"><a href="./org/vast/ows/wns/SingleUser.html#SingleUser()">SingleUser()</a></span> - Constructor for class org.vast.ows.wns.<a href="./org/vast/ows/wns/SingleUser.html" title="class in org.vast.ows.wns">SingleUser</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="strong"><a href="./org/vast/ows/OWSUtils.html#skipSoapEnvelope(org.vast.xml.DOMHelper,%20org.w3c.dom.Element)">skipSoapEnvelope(DOMHelper, Element)</a></span> - Method in class org.vast.ows.<a href="./org/vast/ows/OWSUtils.html" title="class in org.vast.ows">OWSUtils</a></dt>
-<dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/vast/ows/OWSUtils.html#SLD">SLD</a></span> - Static variable in class org.vast.ows.<a href="./org/vast/ows/OWSUtils.html" title="class in org.vast.ows">OWSUtils</a></dt>
 <dd>&nbsp;</dd>
 <dt><a href="./org/vast/ows/sld/SLD.html" title="interface in org.vast.ows.sld"><span class="strong">SLD</span></a> - Interface in <a href="./org/vast/ows/sld/package-summary.html">org.vast.ows.sld</a></dt>
@@ -6787,9 +6708,9 @@
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/vast/ows/wns/WNSUser.html#SMS">SMS</a></span> - Static variable in class org.vast.ows.wns.<a href="./org/vast/ows/wns/WNSUser.html" title="class in org.vast.ows.wns">WNSUser</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="strong"><a href="./org/vast/ows/OWSUtils.html#soap11Uri">soap11Uri</a></span> - Static variable in class org.vast.ows.<a href="./org/vast/ows/OWSUtils.html" title="class in org.vast.ows">OWSUtils</a></dt>
+<dt><span class="strong"><a href="./org/vast/ows/OWSUtils.html#SOAP11_URI">SOAP11_URI</a></span> - Static variable in class org.vast.ows.<a href="./org/vast/ows/OWSUtils.html" title="class in org.vast.ows">OWSUtils</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="strong"><a href="./org/vast/ows/OWSUtils.html#soap12Uri">soap12Uri</a></span> - Static variable in class org.vast.ows.<a href="./org/vast/ows/OWSUtils.html" title="class in org.vast.ows">OWSUtils</a></dt>
+<dt><span class="strong"><a href="./org/vast/ows/OWSUtils.html#SOAP12_URI">SOAP12_URI</a></span> - Static variable in class org.vast.ows.<a href="./org/vast/ows/OWSUtils.html" title="class in org.vast.ows">OWSUtils</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/vast/ows/OWSUtils.html#SOS">SOS</a></span> - Static variable in class org.vast.ows.<a href="./org/vast/ows/OWSUtils.html" title="class in org.vast.ows">OWSUtils</a></dt>
 <dd>&nbsp;</dd>
@@ -6810,19 +6731,6 @@
  objects for version 2.0</div>
 </dd>
 <dt><span class="strong"><a href="./org/vast/ows/sos/SOSCapabilitiesWriterV20.html#SOSCapabilitiesWriterV20()">SOSCapabilitiesWriterV20()</a></span> - Constructor for class org.vast.ows.sos.<a href="./org/vast/ows/sos/SOSCapabilitiesWriterV20.html" title="class in org.vast.ows.sos">SOSCapabilitiesWriterV20</a></dt>
-<dd>&nbsp;</dd>
-<dt><a href="./org/vast/ows/sos/SOSDataFilter.html" title="class in org.vast.ows.sos"><span class="strong">SOSDataFilter</span></a> - Class in <a href="./org/vast/ows/sos/package-summary.html">org.vast.ows.sos</a></dt>
-<dd>
-<div class="block">
- Filter to be used with SOS data provider</div>
-</dd>
-<dt><span class="strong"><a href="./org/vast/ows/sos/SOSDataFilter.html#SOSDataFilter(org.vast.util.TimeExtent)">SOSDataFilter(TimeExtent)</a></span> - Constructor for class org.vast.ows.sos.<a href="./org/vast/ows/sos/SOSDataFilter.html" title="class in org.vast.ows.sos">SOSDataFilter</a></dt>
-<dd>&nbsp;</dd>
-<dt><span class="strong"><a href="./org/vast/ows/sos/SOSDataFilter.html#SOSDataFilter(java.lang.String)">SOSDataFilter(String)</a></span> - Constructor for class org.vast.ows.sos.<a href="./org/vast/ows/sos/SOSDataFilter.html" title="class in org.vast.ows.sos">SOSDataFilter</a></dt>
-<dd>&nbsp;</dd>
-<dt><span class="strong"><a href="./org/vast/ows/sos/SOSDataFilter.html#SOSDataFilter(java.lang.String,%20org.vast.util.TimeExtent)">SOSDataFilter(String, TimeExtent)</a></span> - Constructor for class org.vast.ows.sos.<a href="./org/vast/ows/sos/SOSDataFilter.html" title="class in org.vast.ows.sos">SOSDataFilter</a></dt>
-<dd>&nbsp;</dd>
-<dt><span class="strong"><a href="./org/vast/ows/sos/SOSDataFilter.html#SOSDataFilter(java.util.List,%20java.util.List,%20org.vast.util.TimeExtent)">SOSDataFilter(List&lt;String&gt;, List&lt;String&gt;, TimeExtent)</a></span> - Constructor for class org.vast.ows.sos.<a href="./org/vast/ows/sos/SOSDataFilter.html" title="class in org.vast.ows.sos">SOSDataFilter</a></dt>
 <dd>&nbsp;</dd>
 <dt><a href="./org/vast/ows/sos/SOSException.html" title="class in org.vast.ows.sos"><span class="strong">SOSException</span></a> - Exception in <a href="./org/vast/ows/sos/package-summary.html">org.vast.ows.sos</a></dt>
 <dd>
@@ -7391,12 +7299,6 @@
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/vast/ows/server/OWSServlet.html#updateCapabilities(java.io.InputStream)">updateCapabilities(InputStream)</a></span> - Method in class org.vast.ows.server.<a href="./org/vast/ows/server/OWSServlet.html" title="class in org.vast.ows.server">OWSServlet</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="strong"><a href="./org/vast/ows/sos/SOSServlet.html#updateCapabilities(java.io.InputStream)">updateCapabilities(InputStream)</a></span> - Method in class org.vast.ows.sos.<a href="./org/vast/ows/sos/SOSServlet.html" title="class in org.vast.ows.sos">SOSServlet</a></dt>
-<dd>
-<div class="block">Load the Caps doc, and build a hashtable of SensorID<=>SensorMLUrl mappings
- NOTE : Any subclasses that override this method should call super.updateCaps() first,
-        or the SensorML hashtable won't be built.</div>
-</dd>
 <dt><a href="./org/vast/ows/sps/UpdateRequest.html" title="class in org.vast.ows.sps"><span class="strong">UpdateRequest</span></a> - Class in <a href="./org/vast/ows/sps/package-summary.html">org.vast.ows.sps</a></dt>
 <dd>
 <div class="block">
@@ -7427,10 +7329,6 @@
 </dd>
 <dt><span class="strong"><a href="./org/vast/ows/sps/UpdateResponse.html#UpdateResponse()">UpdateResponse()</a></span> - Constructor for class org.vast.ows.sps.<a href="./org/vast/ows/sps/UpdateResponse.html" title="class in org.vast.ows.sps">UpdateResponse</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="strong"><a href="./org/vast/ows/sos/ISOSDataConsumer.html#updateSensor(net.opengis.sensorml.v20.AbstractProcess)">updateSensor(AbstractProcess)</a></span> - Method in interface org.vast.ows.sos.<a href="./org/vast/ows/sos/ISOSDataConsumer.html" title="interface in org.vast.ows.sos">ISOSDataConsumer</a></dt>
-<dd>
-<div class="block">Requests consumer to update sensor description</div>
-</dd>
 <dt><a href="./org/vast/ows/swe/UpdateSensorRequest.html" title="class in org.vast.ows.swe"><span class="strong">UpdateSensorRequest</span></a> - Class in <a href="./org/vast/ows/swe/package-summary.html">org.vast.ows.swe</a></dt>
 <dd>
 <div class="block">
@@ -7614,10 +7512,20 @@ the order they are declared.</div>
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/vast/ows/OWSException.html#VERSION_11">VERSION_11</a></span> - Static variable in exception org.vast.ows.<a href="./org/vast/ows/OWSException.html" title="class in org.vast.ows">OWSException</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="strong"><a href="./org/vast/ows/OWSException.html#version_nego_failed_code">version_nego_failed_code</a></span> - Static variable in exception org.vast.ows.<a href="./org/vast/ows/OWSException.html" title="class in org.vast.ows">OWSException</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="strong"><a href="./org/vast/ows/OWSException.html#version_nego_failed_text">version_nego_failed_text</a></span> - Static variable in exception org.vast.ows.<a href="./org/vast/ows/OWSException.html" title="class in org.vast.ows">OWSException</a></dt>
+<dd>&nbsp;</dd>
 <dt><a href="./net/opengis/fes/v20/VersionActionTokens.html" title="enum in net.opengis.fes.v20"><span class="strong">VersionActionTokens</span></a> - Enum in <a href="./net/opengis/fes/v20/package-summary.html">net.opengis.fes.v20</a></dt>
 <dd>
 <div class="block">POJO class for XML type VersionActionTokens(@http://www.opengis.net/fes/2.0).</div>
 </dd>
+<dt><span class="strong"><a href="./org/vast/ows/sos/DataStructFilter.html#visit(net.opengis.swe.v20.DataRecord)">visit(DataRecord)</a></span> - Method in class org.vast.ows.sos.<a href="./org/vast/ows/sos/DataStructFilter.html" title="class in org.vast.ows.sos">DataStructFilter</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="strong"><a href="./org/vast/ows/sos/DataStructFilter.html#visit(net.opengis.swe.v20.Vector)">visit(Vector)</a></span> - Method in class org.vast.ows.sos.<a href="./org/vast/ows/sos/DataStructFilter.html" title="class in org.vast.ows.sos">DataStructFilter</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="strong"><a href="./org/vast/ows/sos/DataStructFilter.html#visit(net.opengis.swe.v20.DataChoice)">visit(DataChoice)</a></span> - Method in class org.vast.ows.sos.<a href="./org/vast/ows/sos/DataStructFilter.html" title="class in org.vast.ows.sos">DataStructFilter</a></dt>
+<dd>&nbsp;</dd>
 </dl>
 <a name="_W_">
 <!--   -->
@@ -8383,6 +8291,10 @@ the order they are declared.</div>
 <dd>
 <div class="block">Helper method to write any OWS XML response directly to an output stream.<br/>
  The version specified in the response object determines the version of writer to use</div>
+</dd>
+<dt><span class="strong"><a href="./org/vast/ows/OWSUtils.html#writeXMLResponse(java.io.OutputStream,%20org.vast.ows.OWSResponse,%20java.lang.String,%20java.lang.String)">writeXMLResponse(OutputStream, OWSResponse, String, String)</a></span> - Method in class org.vast.ows.<a href="./org/vast/ows/OWSUtils.html" title="class in org.vast.ows">OWSUtils</a></dt>
+<dd>
+<div class="block">Helper method to write any OWS XML response directly to an output stream</div>
 </dd>
 <dt><a href="./org/vast/ows/wrs/WRSQuery.html" title="class in org.vast.ows.wrs"><span class="strong">WRSQuery</span></a> - Class in <a href="./org/vast/ows/wrs/package-summary.html">org.vast.ows.wrs</a></dt>
 <dt><span class="strong"><a href="./org/vast/ows/wrs/WRSQuery.html#WRSQuery()">WRSQuery()</a></span> - Constructor for class org.vast.ows.wrs.<a href="./org/vast/ows/wrs/WRSQuery.html" title="class in org.vast.ows.wrs">WRSQuery</a></dt>

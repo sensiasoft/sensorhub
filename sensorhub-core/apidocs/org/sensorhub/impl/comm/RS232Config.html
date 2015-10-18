@@ -173,9 +173,13 @@ extends <a href="../../../../org/sensorhub/api/comm/CommConfig.html" title="clas
 </tr>
 <tr class="altColor">
 <td class="colFirst"><code>int</code></td>
-<td class="colLast"><code><strong><a href="../../../../org/sensorhub/impl/comm/RS232Config.html#receiveTimeout">receiveTimeout</a></strong></code>&nbsp;</td>
+<td class="colLast"><code><strong><a href="../../../../org/sensorhub/impl/comm/RS232Config.html#receiveThreshold">receiveThreshold</a></strong></code>&nbsp;</td>
 </tr>
 <tr class="rowColor">
+<td class="colFirst"><code>int</code></td>
+<td class="colLast"><code><strong><a href="../../../../org/sensorhub/impl/comm/RS232Config.html#receiveTimeout">receiveTimeout</a></strong></code>&nbsp;</td>
+</tr>
+<tr class="altColor">
 <td class="colFirst"><code>byte</code></td>
 <td class="colLast"><code><strong><a href="../../../../org/sensorhub/impl/comm/RS232Config.html#stopBits">stopBits</a></strong></code>&nbsp;</td>
 </tr>
@@ -296,11 +300,21 @@ public&nbsp;<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.h
 <a name="receiveTimeout">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>receiveTimeout</h4>
-<pre><a href="../../../../org/sensorhub/api/config/DisplayInfo.html" title="annotation in org.sensorhub.api.config">@DisplayInfo</a>(<a href="../../../../org/sensorhub/api/config/DisplayInfo.html#desc()">desc</a>="Timeout after which serial port data is made available if at least one byte was received (in ms)")
+<pre><a href="../../../../org/sensorhub/api/config/DisplayInfo.html" title="annotation in org.sensorhub.api.config">@DisplayInfo</a>(<a href="../../../../org/sensorhub/api/config/DisplayInfo.html#desc()">desc</a>="Timeout after which data is released to the caller if at least one byte was received (in ms)")
 public&nbsp;int receiveTimeout</pre>
+</li>
+</ul>
+<a name="receiveThreshold">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>receiveThreshold</h4>
+<pre><a href="../../../../org/sensorhub/api/config/DisplayInfo.html" title="annotation in org.sensorhub.api.config">@DisplayInfo</a>(<a href="../../../../org/sensorhub/api/config/DisplayInfo.html#desc()">desc</a>="Minimum number of bytes to receive before they are sent to the caller")
+public&nbsp;int receiveThreshold</pre>
 </li>
 </ul>
 </li>

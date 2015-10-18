@@ -159,24 +159,7 @@ extends <a href="../../../../org/vast/ows/server/OWSServlet.html" title="class i
 </tr>
 <tr class="altColor">
 <td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><strong><a href="../../../../org/vast/ows/sos/SOSServlet.html#addDataProvider(java.lang.String,%20org.vast.ows.sos.ISOSDataProviderFactory)">addDataProvider</a></strong>(<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;offeringID,
-               <a href="../../../../org/vast/ows/sos/ISOSDataProviderFactory.html" title="interface in org.vast.ows.sos">ISOSDataProviderFactory</a>&nbsp;dataProvider)</code>&nbsp;</td>
-</tr>
-<tr class="rowColor">
-<td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><strong><a href="../../../../org/vast/ows/sos/SOSServlet.html#handleRequest(org.vast.ows.OWSRequest)">handleRequest</a></strong>(<a href="../../../../org/vast/ows/OWSRequest.html" title="class in org.vast.ows">OWSRequest</a>&nbsp;request)</code>&nbsp;</td>
-</tr>
-<tr class="altColor">
-<td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><strong><a href="../../../../org/vast/ows/sos/SOSServlet.html#removeDataProvider(java.lang.String)">removeDataProvider</a></strong>(<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;offeringID)</code>&nbsp;</td>
-</tr>
-<tr class="rowColor">
-<td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><strong><a href="../../../../org/vast/ows/sos/SOSServlet.html#updateCapabilities(java.io.InputStream)">updateCapabilities</a></strong>(<a href="http://docs.oracle.com/javase/7/docs/api/java/io/InputStream.html?is-external=true" title="class or interface in java.io">InputStream</a>&nbsp;capFile)</code>
-<div class="block">Load the Caps doc, and build a hashtable of SensorID<=>SensorMLUrl mappings
- NOTE : Any subclasses that override this method should call super.updateCaps() first,
-        or the SensorML hashtable won't be built.</div>
-</td>
 </tr>
 </table>
 <ul class="blockList">
@@ -184,7 +167,7 @@ extends <a href="../../../../org/vast/ows/server/OWSServlet.html" title="class i
 <!--   -->
 </a>
 <h3>Methods inherited from class&nbsp;org.vast.ows.server.<a href="../../../../org/vast/ows/server/OWSServlet.html" title="class in org.vast.ows.server">OWSServlet</a></h3>
-<code><a href="../../../../org/vast/ows/server/OWSServlet.html#doGet(javax.servlet.http.HttpServletRequest,%20javax.servlet.http.HttpServletResponse)">doGet</a>, <a href="../../../../org/vast/ows/server/OWSServlet.html#doPost(javax.servlet.http.HttpServletRequest,%20javax.servlet.http.HttpServletResponse)">doPost</a></code></li>
+<code><a href="../../../../org/vast/ows/server/OWSServlet.html#doGet(javax.servlet.http.HttpServletRequest,%20javax.servlet.http.HttpServletResponse)">doGet</a>, <a href="../../../../org/vast/ows/server/OWSServlet.html#doPost(javax.servlet.http.HttpServletRequest,%20javax.servlet.http.HttpServletResponse)">doPost</a>, <a href="../../../../org/vast/ows/server/OWSServlet.html#updateCapabilities(java.io.InputStream)">updateCapabilities</a></code></li>
 </ul>
 <ul class="blockList">
 <li class="blockList"><a name="methods_inherited_from_class_javax.servlet.http.HttpServlet">
@@ -241,48 +224,13 @@ extends <a href="../../../../org/vast/ows/server/OWSServlet.html" title="class i
 <a name="handleRequest(org.vast.ows.OWSRequest)">
 <!--   -->
 </a>
-<ul class="blockList">
+<ul class="blockListLast">
 <li class="blockList">
 <h4>handleRequest</h4>
 <pre>public&nbsp;void&nbsp;handleRequest(<a href="../../../../org/vast/ows/OWSRequest.html" title="class in org.vast.ows">OWSRequest</a>&nbsp;request)
                    throws <a href="http://docs.oracle.com/javase/7/docs/api/java/lang/Exception.html?is-external=true" title="class or interface in java.lang">Exception</a></pre>
 <dl><dt><span class="strong">Throws:</span></dt>
 <dd><code><a href="http://docs.oracle.com/javase/7/docs/api/java/lang/Exception.html?is-external=true" title="class or interface in java.lang">Exception</a></code></dd></dl>
-</li>
-</ul>
-<a name="updateCapabilities(java.io.InputStream)">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>updateCapabilities</h4>
-<pre>public&nbsp;void&nbsp;updateCapabilities(<a href="http://docs.oracle.com/javase/7/docs/api/java/io/InputStream.html?is-external=true" title="class or interface in java.io">InputStream</a>&nbsp;capFile)</pre>
-<div class="block">Load the Caps doc, and build a hashtable of SensorID<=>SensorMLUrl mappings
- NOTE : Any subclasses that override this method should call super.updateCaps() first,
-        or the SensorML hashtable won't be built. TC</div>
-<dl>
-<dt><strong>Overrides:</strong></dt>
-<dd><code><a href="../../../../org/vast/ows/server/OWSServlet.html#updateCapabilities(java.io.InputStream)">updateCapabilities</a></code>&nbsp;in class&nbsp;<code><a href="../../../../org/vast/ows/server/OWSServlet.html" title="class in org.vast.ows.server">OWSServlet</a></code></dd>
-<dt><span class="strong">Parameters:</span></dt><dd><code>capFile</code> - - the Capabilites file</dd></dl>
-</li>
-</ul>
-<a name="addDataProvider(java.lang.String, org.vast.ows.sos.ISOSDataProviderFactory)">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>addDataProvider</h4>
-<pre>public&nbsp;void&nbsp;addDataProvider(<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;offeringID,
-                   <a href="../../../../org/vast/ows/sos/ISOSDataProviderFactory.html" title="interface in org.vast.ows.sos">ISOSDataProviderFactory</a>&nbsp;dataProvider)</pre>
-</li>
-</ul>
-<a name="removeDataProvider(java.lang.String)">
-<!--   -->
-</a>
-<ul class="blockListLast">
-<li class="blockList">
-<h4>removeDataProvider</h4>
-<pre>public&nbsp;void&nbsp;removeDataProvider(<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;offeringID)</pre>
 </li>
 </ul>
 </li>

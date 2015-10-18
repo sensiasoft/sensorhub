@@ -169,6 +169,14 @@ extends <a href="http://docs.opensensorhub.org/sensorhub-core/apidocs/org/sensor
 <td class="colLast"><code><strong><a href="../../../../../org/sensorhub/impl/service/sos/SOSServiceConfig.html#enableTransactional">enableTransactional</a></strong></code>&nbsp;</td>
 </tr>
 <tr class="rowColor">
+<td class="colFirst"><code>int</code></td>
+<td class="colLast"><code><strong><a href="../../../../../org/sensorhub/impl/service/sos/SOSServiceConfig.html#maxObsCount">maxObsCount</a></strong></code>&nbsp;</td>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><code>int</code></td>
+<td class="colLast"><code><strong><a href="../../../../../org/sensorhub/impl/service/sos/SOSServiceConfig.html#maxRecordCount">maxRecordCount</a></strong></code>&nbsp;</td>
+</tr>
+<tr class="rowColor">
 <td class="colFirst"><code><a href="http://docs.opensensorhub.org/sensorhub-core/apidocs/org/sensorhub/api/persistence/StorageConfig.html?is-external=true" title="class or interface in org.sensorhub.api.persistence">StorageConfig</a></code></td>
 <td class="colLast"><code><strong><a href="../../../../../org/sensorhub/impl/service/sos/SOSServiceConfig.html#newStorageConfig">newStorageConfig</a></strong></code>&nbsp;</td>
 </tr>
@@ -255,6 +263,28 @@ extends <a href="http://docs.opensensorhub.org/sensorhub-core/apidocs/org/sensor
 <h4>enableTransactional</h4>
 <pre><a href="http://docs.opensensorhub.org/sensorhub-core/apidocs/org/sensorhub/api/config/DisplayInfo.html?is-external=true" title="class or interface in org.sensorhub.api.config">@DisplayInfo</a>(<a href="http://docs.opensensorhub.org/sensorhub-core/apidocs/org/sensorhub/api/config/DisplayInfo.html?is-external=true#desc()" title="class or interface in org.sensorhub.api.config">desc</a>="Set to true to enable transactional operation support")
 public&nbsp;boolean enableTransactional</pre>
+</li>
+</ul>
+<a name="maxObsCount">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>maxObsCount</h4>
+<pre><a href="http://docs.opensensorhub.org/sensorhub-core/apidocs/org/sensorhub/api/config/DisplayInfo.html?is-external=true" title="class or interface in org.sensorhub.api.config">@DisplayInfo</a>(<a href="http://docs.opensensorhub.org/sensorhub-core/apidocs/org/sensorhub/api/config/DisplayInfo.html?is-external=true#label()" title="class or interface in org.sensorhub.api.config">label</a>="Max Observations Returned",
+             <a href="http://docs.opensensorhub.org/sensorhub-core/apidocs/org/sensorhub/api/config/DisplayInfo.html?is-external=true#desc()" title="class or interface in org.sensorhub.api.config">desc</a>="Maximum number of observations returned by a historical GetObservation request (for each selected offering)")
+public&nbsp;int maxObsCount</pre>
+</li>
+</ul>
+<a name="maxRecordCount">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>maxRecordCount</h4>
+<pre><a href="http://docs.opensensorhub.org/sensorhub-core/apidocs/org/sensorhub/api/config/DisplayInfo.html?is-external=true" title="class or interface in org.sensorhub.api.config">@DisplayInfo</a>(<a href="http://docs.opensensorhub.org/sensorhub-core/apidocs/org/sensorhub/api/config/DisplayInfo.html?is-external=true#label()" title="class or interface in org.sensorhub.api.config">label</a>="Max Records Returned",
+             <a href="http://docs.opensensorhub.org/sensorhub-core/apidocs/org/sensorhub/api/config/DisplayInfo.html?is-external=true#desc()" title="class or interface in org.sensorhub.api.config">desc</a>="Maximum number of result records returned by a historical GetResult request")
+public&nbsp;int maxRecordCount</pre>
 </li>
 </ul>
 <a name="newStorageConfig">

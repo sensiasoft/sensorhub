@@ -75,7 +75,21 @@
 </tr>
 <tbody>
 <tr class="altColor">
-<td class="colFirst"><a href="../../../../../org/sensorhub/impl/service/sos/IDataProviderFactory.html" title="interface in org.sensorhub.impl.service.sos">IDataProviderFactory</a></td>
+<td class="colFirst"><a href="../../../../../org/sensorhub/impl/service/sos/ISOSDataConsumer.html" title="interface in org.sensorhub.impl.service.sos">ISOSDataConsumer</a></td>
+<td class="colLast">
+<div class="block">
+ Interface to be implemented for consuming data received by the SOS-T interface.</div>
+</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><a href="../../../../../org/sensorhub/impl/service/sos/ISOSDataProvider.html" title="interface in org.sensorhub.impl.service.sos">ISOSDataProvider</a></td>
+<td class="colLast">
+<div class="block">
+ Interface to be implemented for providing data to the SOS engine.</div>
+</td>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><a href="../../../../../org/sensorhub/impl/service/sos/ISOSDataProviderFactory.html" title="interface in org.sensorhub.impl.service.sos">ISOSDataProviderFactory</a></td>
 <td class="colLast">
 <div class="block">
  Common interface for all data provider factories.</div>
@@ -93,19 +107,15 @@
 </tr>
 <tbody>
 <tr class="altColor">
-<td class="colFirst"><a href="../../../../../org/sensorhub/impl/service/sos/DataComponentFilter.html" title="class in org.sensorhub.impl.service.sos">DataComponentFilter</a></td>
-<td class="colLast">
-<div class="block">
- Generates filtered data component description and data depending on what
- observables are selected in the SOS request.</div>
-</td>
-</tr>
-<tr class="rowColor">
 <td class="colFirst"><a href="../../../../../org/sensorhub/impl/service/sos/FilteredFoiIterator.html" title="class in org.sensorhub.impl.service.sos">FilteredFoiIterator</a></td>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../../../../org/sensorhub/impl/service/sos/FoiUtils.html" title="class in org.sensorhub.impl.service.sos">FoiUtils</a></td>
+<td class="colLast">&nbsp;</td>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><a href="../../../../../org/sensorhub/impl/service/sos/ISOSDataConsumer.Template.html" title="class in org.sensorhub.impl.service.sos">ISOSDataConsumer.Template</a></td>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr class="rowColor">
@@ -166,6 +176,13 @@
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr class="rowColor">
+<td class="colFirst"><a href="../../../../../org/sensorhub/impl/service/sos/SOSDataFilter.html" title="class in org.sensorhub.impl.service.sos">SOSDataFilter</a></td>
+<td class="colLast">
+<div class="block">
+ Filter to be used with SOS data providers</div>
+</td>
+</tr>
+<tr class="altColor">
 <td class="colFirst"><a href="../../../../../org/sensorhub/impl/service/sos/SOSModuleDescriptor.html" title="class in org.sensorhub.impl.service.sos">SOSModuleDescriptor</a></td>
 <td class="colLast">
 <div class="block">
@@ -173,32 +190,32 @@
  the ModuleRegistry.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../../../../org/sensorhub/impl/service/sos/SOSProviderConfig.html" title="class in org.sensorhub.impl.service.sos">SOSProviderConfig</a></td>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../../../../org/sensorhub/impl/service/sos/SOSService.html" title="class in org.sensorhub.impl.service.sos">SOSService</a></td>
 <td class="colLast">
 <div class="block">
  Implementation of SensorHub generic SOS service.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../../../../org/sensorhub/impl/service/sos/SOSServiceConfig.html" title="class in org.sensorhub.impl.service.sos">SOSServiceConfig</a></td>
 <td class="colLast">
 <div class="block">
  Configuration class for the SOS service module</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../../../../org/sensorhub/impl/service/sos/SOSWebSocket.html" title="class in org.sensorhub.impl.service.sos">SOSWebSocket</a></td>
 <td class="colLast">
 <div class="block">
  Output only websocket for sending SOS live responses</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../../../../org/sensorhub/impl/service/sos/StorageDataProvider.html" title="class in org.sensorhub.impl.service.sos">StorageDataProvider</a></td>
 <td class="colLast">
 <div class="block">
@@ -206,42 +223,42 @@
  SensorHub's persistence API (ITimeSeriesStorage and derived classes)</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../../../../org/sensorhub/impl/service/sos/StorageDataProviderConfig.html" title="class in org.sensorhub.impl.service.sos">StorageDataProviderConfig</a></td>
 <td class="colLast">
 <div class="block">
  Configuration class for SOS data providers using the persistence API.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../../../../org/sensorhub/impl/service/sos/StorageDataProviderFactory.html" title="class in org.sensorhub.impl.service.sos">StorageDataProviderFactory</a></td>
 <td class="colLast">
 <div class="block">
  Factory for storage data providers.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../../../../org/sensorhub/impl/service/sos/StreamDataProvider.html" title="class in org.sensorhub.impl.service.sos">StreamDataProvider</a></td>
 <td class="colLast">
 <div class="block">
  Implementation of SOS data provider connecting to a streaming data source</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../../../../org/sensorhub/impl/service/sos/StreamDataProviderConfig.html" title="class in org.sensorhub.impl.service.sos">StreamDataProviderConfig</a></td>
 <td class="colLast">
 <div class="block">
  Configuration class for SOS data providers using the streaming data API.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../../../../org/sensorhub/impl/service/sos/StreamDataProviderFactory.html" title="class in org.sensorhub.impl.service.sos">StreamDataProviderFactory</a>&lt;ProducerType extends <a href="http://docs.opensensorhub.org/sensorhub-core/apidocs/org/sensorhub/api/data/IDataProducerModule.html?is-external=true" title="class or interface in org.sensorhub.api.data">IDataProducerModule</a>&lt;?&gt;&gt;</td>
 <td class="colLast">
 <div class="block">
  Abstract factory for streaming data providers.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../../../../org/sensorhub/impl/service/sos/StreamProcessDataProvider.html" title="class in org.sensorhub.impl.service.sos">StreamProcessDataProvider</a></td>
 <td class="colLast">
 <div class="block">
@@ -250,14 +267,14 @@
  Most of the logic is inherited from <a href="../../../../../org/sensorhub/impl/service/sos/StreamDataProvider.html" title="class in org.sensorhub.impl.service.sos"><code>StreamDataProvider</code></a>.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../../../../org/sensorhub/impl/service/sos/StreamProcessProviderConfig.html" title="class in org.sensorhub.impl.service.sos">StreamProcessProviderConfig</a></td>
 <td class="colLast">
 <div class="block">
  Configuration class for SOS data providers using the stream processing API.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../../../../org/sensorhub/impl/service/sos/StreamProcessProviderFactory.html" title="class in org.sensorhub.impl.service.sos">StreamProcessProviderFactory</a></td>
 <td class="colLast">
 <div class="block">
@@ -265,7 +282,7 @@
  Most of the logic is inherited from <a href="../../../../../org/sensorhub/impl/service/sos/StreamDataProviderFactory.html" title="class in org.sensorhub.impl.service.sos"><code>StreamDataProviderFactory</code></a>.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../../../../org/sensorhub/impl/service/sos/StreamProcessWithStorageProviderFactory.html" title="class in org.sensorhub.impl.service.sos">StreamProcessWithStorageProviderFactory</a></td>
 <td class="colLast">
 <div class="block">
@@ -273,7 +290,7 @@
  Most of the logic is inherited from <a href="../../../../../org/sensorhub/impl/service/sos/StreamWithStorageProviderFactory.html" title="class in org.sensorhub.impl.service.sos"><code>StreamWithStorageProviderFactory</code></a>.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../../../../org/sensorhub/impl/service/sos/StreamWithStorageProviderFactory.html" title="class in org.sensorhub.impl.service.sos">StreamWithStorageProviderFactory</a>&lt;ProducerType extends <a href="http://docs.opensensorhub.org/sensorhub-core/apidocs/org/sensorhub/api/data/IDataProducerModule.html?is-external=true" title="class or interface in org.sensorhub.api.data">IDataProducerModule</a>&lt;?&gt;&gt;</td>
 <td class="colLast">
 <div class="block">
@@ -281,7 +298,7 @@
  Most of the logic is inherited from <a href="../../../../../org/sensorhub/impl/service/sos/StorageDataProviderFactory.html" title="class in org.sensorhub.impl.service.sos"><code>StorageDataProviderFactory</code></a>.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../../../../org/sensorhub/impl/service/sos/WebSocketOutputStream.html" title="class in org.sensorhub.impl.service.sos">WebSocketOutputStream</a></td>
 <td class="colLast">
 <div class="block">

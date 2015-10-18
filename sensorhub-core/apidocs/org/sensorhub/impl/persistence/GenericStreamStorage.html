@@ -238,7 +238,8 @@ implements <a href="../../../../org/sensorhub/api/persistence/IRecordStorageModu
 </tr>
 <tr class="rowColor">
 <td class="colFirst"><code>int</code></td>
-<td class="colLast"><code><strong><a href="../../../../org/sensorhub/impl/persistence/GenericStreamStorage.html#getNumMatchingRecords(org.sensorhub.api.persistence.IDataFilter)">getNumMatchingRecords</a></strong>(<a href="../../../../org/sensorhub/api/persistence/IDataFilter.html" title="interface in org.sensorhub.api.persistence">IDataFilter</a>&nbsp;filter)</code>
+<td class="colLast"><code><strong><a href="../../../../org/sensorhub/impl/persistence/GenericStreamStorage.html#getNumMatchingRecords(org.sensorhub.api.persistence.IDataFilter,%20long)">getNumMatchingRecords</a></strong>(<a href="../../../../org/sensorhub/api/persistence/IDataFilter.html" title="interface in org.sensorhub.api.persistence">IDataFilter</a>&nbsp;filter,
+                     long&nbsp;maxCount)</code>
 <div class="block">Computes the (potentially approximate) number of records matching the
  given filter.<br/>
  Since the returned value can be approximate and the number of matching
@@ -813,14 +814,15 @@ implements <a href="../../../../org/sensorhub/api/persistence/IRecordStorageModu
 <dt><span class="strong">Returns:</span></dt><dd>A read-only iterator among records matching the filter</dd></dl>
 </li>
 </ul>
-<a name="getNumMatchingRecords(org.sensorhub.api.persistence.IDataFilter)">
+<a name="getNumMatchingRecords(org.sensorhub.api.persistence.IDataFilter, long)">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>getNumMatchingRecords</h4>
-<pre>public&nbsp;int&nbsp;getNumMatchingRecords(<a href="../../../../org/sensorhub/api/persistence/IDataFilter.html" title="interface in org.sensorhub.api.persistence">IDataFilter</a>&nbsp;filter)</pre>
-<div class="block"><strong>Description copied from interface:&nbsp;<code><a href="../../../../org/sensorhub/api/persistence/IBasicStorage.html#getNumMatchingRecords(org.sensorhub.api.persistence.IDataFilter)">IBasicStorage</a></code></strong></div>
+<pre>public&nbsp;int&nbsp;getNumMatchingRecords(<a href="../../../../org/sensorhub/api/persistence/IDataFilter.html" title="interface in org.sensorhub.api.persistence">IDataFilter</a>&nbsp;filter,
+                        long&nbsp;maxCount)</pre>
+<div class="block"><strong>Description copied from interface:&nbsp;<code><a href="../../../../org/sensorhub/api/persistence/IBasicStorage.html#getNumMatchingRecords(org.sensorhub.api.persistence.IDataFilter,%20long)">IBasicStorage</a></code></strong></div>
 <div class="block">Computes the (potentially approximate) number of records matching the
  given filter.<br/>
  Since the returned value can be approximate and the number of matching
@@ -830,8 +832,8 @@ implements <a href="../../../../org/sensorhub/api/persistence/IRecordStorageModu
  function.</div>
 <dl>
 <dt><strong>Specified by:</strong></dt>
-<dd><code><a href="../../../../org/sensorhub/api/persistence/IBasicStorage.html#getNumMatchingRecords(org.sensorhub.api.persistence.IDataFilter)">getNumMatchingRecords</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../org/sensorhub/api/persistence/IBasicStorage.html" title="interface in org.sensorhub.api.persistence">IBasicStorage</a></code></dd>
-<dt><span class="strong">Parameters:</span></dt><dd><code>filter</code> - filtering parameters</dd>
+<dd><code><a href="../../../../org/sensorhub/api/persistence/IBasicStorage.html#getNumMatchingRecords(org.sensorhub.api.persistence.IDataFilter,%20long)">getNumMatchingRecords</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../org/sensorhub/api/persistence/IBasicStorage.html" title="interface in org.sensorhub.api.persistence">IBasicStorage</a></code></dd>
+<dt><span class="strong">Parameters:</span></dt><dd><code>filter</code> - filtering parameters</dd><dd><code>maxCount</code> - counting will stop once this threshold is reached</dd>
 <dt><span class="strong">Returns:</span></dt><dd>number of matching records</dd></dl>
 </li>
 </ul>

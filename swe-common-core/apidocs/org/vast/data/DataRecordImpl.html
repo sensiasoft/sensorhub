@@ -183,44 +183,48 @@ implements <a href="../../../net/opengis/swe/v20/DataRecord.html" title="interfa
 </tr>
 <tr class="altColor">
 <td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><strong><a href="../../../org/vast/data/DataRecordImpl.html#accept(net.opengis.swe.v20.DataComponentVisitor)">accept</a></strong>(<a href="../../../net/opengis/swe/v20/DataComponentVisitor.html" title="interface in net.opengis.swe.v20">DataComponentVisitor</a>&nbsp;visitor)</code>&nbsp;</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/DataRecordImpl.html#addComponent(java.lang.String,%20net.opengis.swe.v20.DataComponent)">addComponent</a></strong>(<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;name,
             <a href="../../../net/opengis/swe/v20/DataComponent.html" title="interface in net.opengis.swe.v20">DataComponent</a>&nbsp;component)</code>
 <div class="block">Add a sub-component and registers a name for it</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/DataRecordImpl.html#addField(java.lang.String,%20net.opengis.swe.v20.DataComponent)">addField</a></strong>(<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;name,
         <a href="../../../net/opengis/swe/v20/DataComponent.html" title="interface in net.opengis.swe.v20">DataComponent</a>&nbsp;field)</code>
 <div class="block">Adds a new field property</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code><a href="../../../org/vast/data/DataRecordImpl.html" title="class in org.vast.data">DataRecordImpl</a></code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/DataRecordImpl.html#copy()">copy</a></strong>()</code>
 <div class="block">Return a structural copy of this component
  The copy is done recursively, but only the structure is copied (not the data)</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code><a href="../../../net/opengis/swe/v20/DataComponent.html" title="interface in net.opengis.swe.v20">DataComponent</a></code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/DataRecordImpl.html#getField(java.lang.String)">getField</a></strong>(<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;name)</code>
 <div class="block">Gets the field property with the given name</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code><a href="../../../net/opengis/OgcPropertyList.html" title="class in net.opengis">OgcPropertyList</a>&lt;<a href="../../../net/opengis/swe/v20/DataComponent.html" title="interface in net.opengis.swe.v20">DataComponent</a>&gt;</code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/DataRecordImpl.html#getFieldList()">getFieldList</a></strong>()</code>
 <div class="block">Gets the list of field properties</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>int</code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/DataRecordImpl.html#getNumFields()">getNumFields</a></strong>()</code>
 <div class="block">Returns number of field properties</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code><a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a></code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/DataRecordImpl.html#toString(java.lang.String)">toString</a></strong>(<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;indent)</code>
 <div class="block">Returns String representation of this DataContainer</div>
@@ -424,7 +428,7 @@ implements <a href="../../../net/opengis/swe/v20/DataRecord.html" title="interfa
 <a name="addField(java.lang.String, net.opengis.swe.v20.DataComponent)">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>addField</h4>
 <pre>public&nbsp;void&nbsp;addField(<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;name,
@@ -433,6 +437,19 @@ implements <a href="../../../net/opengis/swe/v20/DataRecord.html" title="interfa
 <dl>
 <dt><strong>Specified by:</strong></dt>
 <dd><code><a href="../../../net/opengis/swe/v20/DataRecord.html#addField(java.lang.String,%20net.opengis.swe.v20.DataComponent)">addField</a></code>&nbsp;in interface&nbsp;<code><a href="../../../net/opengis/swe/v20/DataRecord.html" title="interface in net.opengis.swe.v20">DataRecord</a></code></dd>
+</dl>
+</li>
+</ul>
+<a name="accept(net.opengis.swe.v20.DataComponentVisitor)">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>accept</h4>
+<pre>public&nbsp;void&nbsp;accept(<a href="../../../net/opengis/swe/v20/DataComponentVisitor.html" title="interface in net.opengis.swe.v20">DataComponentVisitor</a>&nbsp;visitor)</pre>
+<dl>
+<dt><strong>Specified by:</strong></dt>
+<dd><code><a href="../../../net/opengis/swe/v20/DataComponent.html#accept(net.opengis.swe.v20.DataComponentVisitor)">accept</a></code>&nbsp;in interface&nbsp;<code><a href="../../../net/opengis/swe/v20/DataComponent.html" title="interface in net.opengis.swe.v20">DataComponent</a></code></dd>
 </dl>
 </li>
 </ul>

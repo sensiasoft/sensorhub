@@ -96,7 +96,7 @@
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/sensorhub/impl/sensor/swe/SWEVirtualSensor.html#cleanup()">cleanup()</a></span> - Method in class org.sensorhub.impl.sensor.swe.<a href="./org/sensorhub/impl/sensor/swe/SWEVirtualSensor.html" title="class in org.sensorhub.impl.sensor.swe">SWEVirtualSensor</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/IDataProviderFactory.html#cleanup()">cleanup()</a></span> - Method in interface org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/IDataProviderFactory.html" title="interface in org.sensorhub.impl.service.sos">IDataProviderFactory</a></dt>
+<dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/ISOSDataProviderFactory.html#cleanup()">cleanup()</a></span> - Method in interface org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/ISOSDataProviderFactory.html" title="interface in org.sensorhub.impl.service.sos">ISOSDataProviderFactory</a></dt>
 <dd>
 <div class="block">Called when the provider is removed</div>
 </dd>
@@ -114,6 +114,11 @@
 </dd>
 <dt><span class="strong"><a href="./org/sensorhub/impl/service/sps/SPSService.html#cleanup()">cleanup()</a></span> - Method in class org.sensorhub.impl.service.sps.<a href="./org/sensorhub/impl/service/sps/SPSService.html" title="class in org.sensorhub.impl.service.sps">SPSService</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/ISOSDataProvider.html#close()">close()</a></span> - Method in interface org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/ISOSDataProvider.html" title="interface in org.sensorhub.impl.service.sos">ISOSDataProvider</a></dt>
+<dd>
+<div class="block">Properly releases all resources accessed by provider
+ (for instance, when connection is ended by client)</div>
+</dd>
 <dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/StorageDataProvider.html#close()">close()</a></span> - Method in class org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/StorageDataProvider.html" title="class in org.sensorhub.impl.service.sos">StorageDataProvider</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/StreamDataProvider.html#close()">close()</a></span> - Method in class org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/StreamDataProvider.html" title="class in org.sensorhub.impl.service.sos">StreamDataProvider</a></dt>
@@ -123,6 +128,8 @@
 <dt><span class="strong"><a href="./org/sensorhub/impl/service/sps/InMemoryTaskDB.html#close()">close()</a></span> - Method in class org.sensorhub.impl.service.sps.<a href="./org/sensorhub/impl/service/sps/InMemoryTaskDB.html" title="class in org.sensorhub.impl.service.sps">InMemoryTaskDB</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/sensorhub/impl/service/sps/ITaskDB.html#close()">close()</a></span> - Method in interface org.sensorhub.impl.service.sps.<a href="./org/sensorhub/impl/service/sps/ITaskDB.html" title="interface in org.sensorhub.impl.service.sps">ITaskDB</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/ISOSDataConsumer.Template.html#component">component</a></span> - Variable in class org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/ISOSDataConsumer.Template.html" title="class in org.sensorhub.impl.service.sos">ISOSDataConsumer.Template</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/sensorhub/impl/service/sps/SPSServiceConfig.html#connectors">connectors</a></span> - Variable in class org.sensorhub.impl.service.sps.<a href="./org/sensorhub/impl/service/sps/SPSServiceConfig.html" title="class in org.sensorhub.impl.service.sps">SPSServiceConfig</a></dt>
 <dd>
@@ -141,14 +148,6 @@
 <h2 class="title">D</h2>
 <dl>
 <dt><span class="strong"><a href="./org/sensorhub/impl/service/sps/SPSNotificationSystem.html#DATA_PUBLICATION_TOPIC">DATA_PUBLICATION_TOPIC</a></span> - Static variable in class org.sensorhub.impl.service.sps.<a href="./org/sensorhub/impl/service/sps/SPSNotificationSystem.html" title="class in org.sensorhub.impl.service.sps">SPSNotificationSystem</a></dt>
-<dd>&nbsp;</dd>
-<dt><a href="./org/sensorhub/impl/service/sos/DataComponentFilter.html" title="class in org.sensorhub.impl.service.sos"><span class="strong">DataComponentFilter</span></a> - Class in <a href="./org/sensorhub/impl/service/sos/package-summary.html">org.sensorhub.impl.service.sos</a></dt>
-<dd>
-<div class="block">
- Generates filtered data component description and data depending on what
- observables are selected in the SOS request.</div>
-</dd>
-<dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/DataComponentFilter.html#DataComponentFilter(org.vast.ows.sos.SOSDataFilter)">DataComponentFilter(SOSDataFilter)</a></span> - Constructor for class org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/DataComponentFilter.html" title="class in org.sensorhub.impl.service.sos">DataComponentFilter</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/SOSServiceConfig.html#dataConsumers">dataConsumers</a></span> - Variable in class org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/SOSServiceConfig.html" title="class in org.sensorhub.impl.service.sos">SOSServiceConfig</a></dt>
 <dd>&nbsp;</dd>
@@ -193,6 +192,8 @@
 </dd>
 <dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/SOSServiceConfig.html#enableTransactional">enableTransactional</a></span> - Variable in class org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/SOSServiceConfig.html" title="class in org.sensorhub.impl.service.sos">SOSServiceConfig</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/ISOSDataConsumer.Template.html#encoding">encoding</a></span> - Variable in class org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/ISOSDataConsumer.Template.html" title="class in org.sensorhub.impl.service.sos">ISOSDataConsumer.Template</a></dt>
+<dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/sensorhub/impl/client/sost/SOSTClient.StreamInfo.html#errorCount">errorCount</a></span> - Variable in class org.sensorhub.impl.client.sost.<a href="./org/sensorhub/impl/client/sost/SOSTClient.StreamInfo.html" title="class in org.sensorhub.impl.client.sost">SOSTClient.StreamInfo</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/sensorhub/impl/sensor/swe/SWEVirtualSensorControl.html#execCommand(net.opengis.swe.v20.DataBlock)">execCommand(DataBlock)</a></span> - Method in class org.sensorhub.impl.sensor.swe.<a href="./org/sensorhub/impl/sensor/swe/SWEVirtualSensorControl.html" title="class in org.sensorhub.impl.sensor.swe">SWEVirtualSensorControl</a></dt>
@@ -221,7 +222,7 @@
 </a>
 <h2 class="title">G</h2>
 <dl>
-<dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/IDataProviderFactory.html#generateCapabilities()">generateCapabilities()</a></span> - Method in interface org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/IDataProviderFactory.html" title="interface in org.sensorhub.impl.service.sos">IDataProviderFactory</a></dt>
+<dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/ISOSDataProviderFactory.html#generateCapabilities()">generateCapabilities()</a></span> - Method in interface org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/ISOSDataProviderFactory.html" title="interface in org.sensorhub.impl.service.sos">ISOSDataProviderFactory</a></dt>
 <dd>
 <div class="block">Builds the offering capabilities using the provider configuration
  This will connect to source providers to retrieve the necessary metadata</div>
@@ -247,7 +248,7 @@
 <dd>
 <div class="block">Generates a new unique ID for a new subscription</div>
 </dd>
-<dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/IDataProviderFactory.html#generateSensorMLDescription(double)">generateSensorMLDescription(double)</a></span> - Method in interface org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/IDataProviderFactory.html" title="interface in org.sensorhub.impl.service.sos">IDataProviderFactory</a></dt>
+<dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/ISOSDataProviderFactory.html#generateSensorMLDescription(double)">generateSensorMLDescription(double)</a></span> - Method in interface org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/ISOSDataProviderFactory.html" title="interface in org.sensorhub.impl.service.sos">ISOSDataProviderFactory</a></dt>
 <dd>
 <div class="block">Retrieves the SensorML description associated to this data source</div>
 </dd>
@@ -299,6 +300,11 @@
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/sensorhub/impl/client/sost/SOSTClient.html#getDataStreams()">getDataStreams()</a></span> - Method in class org.sensorhub.impl.client.sost.<a href="./org/sensorhub/impl/client/sost/SOSTClient.html" title="class in org.sensorhub.impl.client.sost">SOSTClient</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/ISOSDataProvider.html#getDefaultResultEncoding()">getDefaultResultEncoding()</a></span> - Method in interface org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/ISOSDataProvider.html" title="interface in org.sensorhub.impl.service.sos">ISOSDataProvider</a></dt>
+<dd>
+<div class="block">Requests provider to specify the preferred encoding for the
+ underlying data, given the current config and filter</div>
+</dd>
 <dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/StorageDataProvider.html#getDefaultResultEncoding()">getDefaultResultEncoding()</a></span> - Method in class org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/StorageDataProvider.html" title="class in org.sensorhub.impl.service.sos">StorageDataProvider</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/StreamDataProvider.html#getDefaultResultEncoding()">getDefaultResultEncoding()</a></span> - Method in class org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/StreamDataProvider.html" title="class in org.sensorhub.impl.service.sos">StreamDataProvider</a></dt>
@@ -313,11 +319,9 @@
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/FoiUtils.html#getFilteredFoiIterator(org.sensorhub.api.data.IDataProducerModule,%20org.sensorhub.api.persistence.IFoiFilter)">getFilteredFoiIterator(IDataProducerModule&lt;?&gt;, IFoiFilter)</a></span> - Static method in class org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/FoiUtils.html" title="class in org.sensorhub.impl.service.sos">FoiUtils</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/DataComponentFilter.html#getFilteredRecord(net.opengis.swe.v20.DataComponent,%20net.opengis.swe.v20.DataBlock)">getFilteredRecord(DataComponent, DataBlock)</a></span> - Method in class org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/DataComponentFilter.html" title="class in org.sensorhub.impl.service.sos">DataComponentFilter</a></dt>
+<dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/SOSDataFilter.html#getFoiIds()">getFoiIds()</a></span> - Method in class org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/SOSDataFilter.html" title="class in org.sensorhub.impl.service.sos">SOSDataFilter</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/DataComponentFilter.html#getFilteredRecordDescription(net.opengis.swe.v20.DataComponent)">getFilteredRecordDescription(DataComponent)</a></span> - Method in class org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/DataComponentFilter.html" title="class in org.sensorhub.impl.service.sos">DataComponentFilter</a></dt>
-<dd>&nbsp;</dd>
-<dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/IDataProviderFactory.html#getFoiIterator(org.sensorhub.api.persistence.IFoiFilter)">getFoiIterator(IFoiFilter)</a></span> - Method in interface org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/IDataProviderFactory.html" title="interface in org.sensorhub.impl.service.sos">IDataProviderFactory</a></dt>
+<dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/ISOSDataProviderFactory.html#getFoiIterator(org.sensorhub.api.persistence.IFoiFilter)">getFoiIterator(IFoiFilter)</a></span> - Method in interface org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/ISOSDataProviderFactory.html" title="interface in org.sensorhub.impl.service.sos">ISOSDataProviderFactory</a></dt>
 <dd>
 <div class="block">Retrieves iterator among features of interest matching the filter</div>
 </dd>
@@ -338,6 +342,8 @@
 <dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/SOSService.html#getLocalID()">getLocalID()</a></span> - Method in class org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/SOSService.html" title="class in org.sensorhub.impl.service.sos">SOSService</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/sensorhub/impl/service/sps/SPSService.html#getLocalID()">getLocalID()</a></span> - Method in class org.sensorhub.impl.service.sps.<a href="./org/sensorhub/impl/service/sps/SPSService.html" title="class in org.sensorhub.impl.service.sps">SPSService</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/SOSDataFilter.html#getMaxObsCount()">getMaxObsCount()</a></span> - Method in class org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/SOSDataFilter.html" title="class in org.sensorhub.impl.service.sos">SOSDataFilter</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/sensorhub/impl/service/wsn/NotificationSystem.html#getMaxSubscriptionLength()">getMaxSubscriptionLength()</a></span> - Method in class org.sensorhub.impl.service.wsn.<a href="./org/sensorhub/impl/service/wsn/NotificationSystem.html" title="class in org.sensorhub.impl.service.wsn">NotificationSystem</a></dt>
 <dd>&nbsp;</dd>
@@ -389,25 +395,41 @@
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/sensorhub/impl/service/sps/SPSService.html#getName()">getName()</a></span> - Method in class org.sensorhub.impl.service.sps.<a href="./org/sensorhub/impl/service/sps/SPSService.html" title="class in org.sensorhub.impl.service.sps">SPSService</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/SensorDataProviderFactory.html#getNewDataProvider(org.vast.ows.sos.SOSDataFilter)">getNewDataProvider(SOSDataFilter)</a></span> - Method in class org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/SensorDataProviderFactory.html" title="class in org.sensorhub.impl.service.sos">SensorDataProviderFactory</a></dt>
+<dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/ISOSDataProviderFactory.html#getNewDataProvider(org.sensorhub.impl.service.sos.SOSDataFilter)">getNewDataProvider(SOSDataFilter)</a></span> - Method in interface org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/ISOSDataProviderFactory.html" title="interface in org.sensorhub.impl.service.sos">ISOSDataProviderFactory</a></dt>
+<dd>
+<div class="block">Instantiates a new data provider</div>
+</dd>
+<dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/SensorDataProviderFactory.html#getNewDataProvider(org.sensorhub.impl.service.sos.SOSDataFilter)">getNewDataProvider(SOSDataFilter)</a></span> - Method in class org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/SensorDataProviderFactory.html" title="class in org.sensorhub.impl.service.sos">SensorDataProviderFactory</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/SensorWithStorageProviderFactory.html#getNewDataProvider(org.vast.ows.sos.SOSDataFilter)">getNewDataProvider(SOSDataFilter)</a></span> - Method in class org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/SensorWithStorageProviderFactory.html" title="class in org.sensorhub.impl.service.sos">SensorWithStorageProviderFactory</a></dt>
+<dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/SensorWithStorageProviderFactory.html#getNewDataProvider(org.sensorhub.impl.service.sos.SOSDataFilter)">getNewDataProvider(SOSDataFilter)</a></span> - Method in class org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/SensorWithStorageProviderFactory.html" title="class in org.sensorhub.impl.service.sos">SensorWithStorageProviderFactory</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/StorageDataProviderFactory.html#getNewDataProvider(org.vast.ows.sos.SOSDataFilter)">getNewDataProvider(SOSDataFilter)</a></span> - Method in class org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/StorageDataProviderFactory.html" title="class in org.sensorhub.impl.service.sos">StorageDataProviderFactory</a></dt>
+<dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/StorageDataProviderFactory.html#getNewDataProvider(org.sensorhub.impl.service.sos.SOSDataFilter)">getNewDataProvider(SOSDataFilter)</a></span> - Method in class org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/StorageDataProviderFactory.html" title="class in org.sensorhub.impl.service.sos">StorageDataProviderFactory</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/StreamProcessProviderFactory.html#getNewDataProvider(org.vast.ows.sos.SOSDataFilter)">getNewDataProvider(SOSDataFilter)</a></span> - Method in class org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/StreamProcessProviderFactory.html" title="class in org.sensorhub.impl.service.sos">StreamProcessProviderFactory</a></dt>
+<dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/StreamProcessProviderFactory.html#getNewDataProvider(org.sensorhub.impl.service.sos.SOSDataFilter)">getNewDataProvider(SOSDataFilter)</a></span> - Method in class org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/StreamProcessProviderFactory.html" title="class in org.sensorhub.impl.service.sos">StreamProcessProviderFactory</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/StreamProcessWithStorageProviderFactory.html#getNewDataProvider(org.vast.ows.sos.SOSDataFilter)">getNewDataProvider(SOSDataFilter)</a></span> - Method in class org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/StreamProcessWithStorageProviderFactory.html" title="class in org.sensorhub.impl.service.sos">StreamProcessWithStorageProviderFactory</a></dt>
+<dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/StreamProcessWithStorageProviderFactory.html#getNewDataProvider(org.sensorhub.impl.service.sos.SOSDataFilter)">getNewDataProvider(SOSDataFilter)</a></span> - Method in class org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/StreamProcessWithStorageProviderFactory.html" title="class in org.sensorhub.impl.service.sos">StreamProcessWithStorageProviderFactory</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/ISOSDataProvider.html#getNextObservation()">getNextObservation()</a></span> - Method in interface org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/ISOSDataProvider.html" title="interface in org.sensorhub.impl.service.sos">ISOSDataProvider</a></dt>
+<dd>
+<div class="block">Requests provider to generate the next observation from the
+ underlying data, given the current config and filter</div>
+</dd>
 <dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/StorageDataProvider.html#getNextObservation()">getNextObservation()</a></span> - Method in class org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/StorageDataProvider.html" title="class in org.sensorhub.impl.service.sos">StorageDataProvider</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/StreamDataProvider.html#getNextObservation()">getNextObservation()</a></span> - Method in class org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/StreamDataProvider.html" title="class in org.sensorhub.impl.service.sos">StreamDataProvider</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/ISOSDataProvider.html#getNextResultRecord()">getNextResultRecord()</a></span> - Method in interface org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/ISOSDataProvider.html" title="interface in org.sensorhub.impl.service.sos">ISOSDataProvider</a></dt>
+<dd>
+<div class="block">Requests provider to generate the next CDM record from the
+ underlying data, given the current config and filter</div>
+</dd>
 <dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/StorageDataProvider.html#getNextResultRecord()">getNextResultRecord()</a></span> - Method in class org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/StorageDataProvider.html" title="class in org.sensorhub.impl.service.sos">StorageDataProvider</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/StreamDataProvider.html#getNextResultRecord()">getNextResultRecord()</a></span> - Method in class org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/StreamDataProvider.html" title="class in org.sensorhub.impl.service.sos">StreamDataProvider</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/sensorhub/impl/service/wsn/SubscriptionInfo.html#getNumberOfTries()">getNumberOfTries()</a></span> - Method in class org.sensorhub.impl.service.wsn.<a href="./org/sensorhub/impl/service/wsn/SubscriptionInfo.html" title="class in org.sensorhub.impl.service.wsn">SubscriptionInfo</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/SOSDataFilter.html#getObservables()">getObservables()</a></span> - Method in class org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/SOSDataFilter.html" title="class in org.sensorhub.impl.service.sos">SOSDataFilter</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/sensorhub/impl/sensor/sost/SOSVirtualSensor.html#getOutputNameFromTemplateID(java.lang.String)">getOutputNameFromTemplateID(String)</a></span> - Method in class org.sensorhub.impl.sensor.sost.<a href="./org/sensorhub/impl/sensor/sost/SOSVirtualSensor.html" title="class in org.sensorhub.impl.sensor.sost">SOSVirtualSensor</a></dt>
 <dd>&nbsp;</dd>
@@ -433,13 +455,22 @@
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/sensorhub/impl/sensor/swe/SWEVirtualSensorOutput.html#getRecordDescription()">getRecordDescription()</a></span> - Method in class org.sensorhub.impl.sensor.swe.<a href="./org/sensorhub/impl/sensor/swe/SWEVirtualSensorOutput.html" title="class in org.sensorhub.impl.sensor.swe">SWEVirtualSensorOutput</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/SOSDataFilter.html#getReplaySpeedFactor()">getReplaySpeedFactor()</a></span> - Method in class org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/SOSDataFilter.html" title="class in org.sensorhub.impl.service.sos">SOSDataFilter</a></dt>
+<dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/sensorhub/impl/service/sps/ITask.html#getRequest()">getRequest()</a></span> - Method in interface org.sensorhub.impl.service.sps.<a href="./org/sensorhub/impl/service/sps/ITask.html" title="interface in org.sensorhub.impl.service.sps">ITask</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/sensorhub/impl/service/sps/Task.html#getRequest()">getRequest()</a></span> - Method in class org.sensorhub.impl.service.sps.<a href="./org/sensorhub/impl/service/sps/Task.html" title="class in org.sensorhub.impl.service.sps">Task</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/ISOSDataProvider.html#getResultStructure()">getResultStructure()</a></span> - Method in interface org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/ISOSDataProvider.html" title="interface in org.sensorhub.impl.service.sos">ISOSDataProvider</a></dt>
+<dd>
+<div class="block">Requests provider to provide the result structure corresponding
+ to the current config and filter</div>
+</dd>
 <dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/StorageDataProvider.html#getResultStructure()">getResultStructure()</a></span> - Method in class org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/StorageDataProvider.html" title="class in org.sensorhub.impl.service.sos">StorageDataProvider</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/StreamDataProvider.html#getResultStructure()">getResultStructure()</a></span> - Method in class org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/StreamDataProvider.html" title="class in org.sensorhub.impl.service.sos">StreamDataProvider</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/SOSDataFilter.html#getRoi()">getRoi()</a></span> - Method in class org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/SOSDataFilter.html" title="class in org.sensorhub.impl.service.sos">SOSDataFilter</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/sensorhub/impl/client/sos/SOSClient.html#getSensorDescription(java.lang.String)">getSensorDescription(String)</a></span> - Method in class org.sensorhub.impl.client.sos.<a href="./org/sensorhub/impl/client/sos/SOSClient.html" title="class in org.sensorhub.impl.client.sos">SOSClient</a></dt>
 <dd>&nbsp;</dd>
@@ -459,11 +490,17 @@
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/sensorhub/impl/service/sps/ITaskDB.html#getTaskStatusSince(java.lang.String,%20org.vast.util.DateTime)">getTaskStatusSince(String, DateTime)</a></span> - Method in interface org.sensorhub.impl.service.sps.<a href="./org/sensorhub/impl/service/sps/ITaskDB.html" title="interface in org.sensorhub.impl.service.sps">ITaskDB</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/ISOSDataConsumer.html#getTemplate(java.lang.String)">getTemplate(String)</a></span> - Method in interface org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/ISOSDataConsumer.html" title="interface in org.sensorhub.impl.service.sos">ISOSDataConsumer</a></dt>
+<dd>
+<div class="block">Retrieve previously registered template information</div>
+</dd>
 <dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/SensorDataConsumer.html#getTemplate(java.lang.String)">getTemplate(String)</a></span> - Method in class org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/SensorDataConsumer.html" title="class in org.sensorhub.impl.service.sos">SensorDataConsumer</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/sensorhub/impl/service/wsn/SubscriptionInfo.html#getTerminationTime()">getTerminationTime()</a></span> - Method in class org.sensorhub.impl.service.wsn.<a href="./org/sensorhub/impl/service/wsn/SubscriptionInfo.html" title="class in org.sensorhub.impl.service.wsn">SubscriptionInfo</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/sensorhub/impl/service/wsn/NotificationSystem.html#getTimeBetweenRetries()">getTimeBetweenRetries()</a></span> - Method in class org.sensorhub.impl.service.wsn.<a href="./org/sensorhub/impl/service/wsn/NotificationSystem.html" title="class in org.sensorhub.impl.service.wsn">NotificationSystem</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/SOSDataFilter.html#getTimeRange()">getTimeRange()</a></span> - Method in class org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/SOSDataFilter.html" title="class in org.sensorhub.impl.service.sos">SOSDataFilter</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/sensorhub/impl/service/wsn/SubscriptionInfo.html#getUid()">getUid()</a></span> - Method in class org.sensorhub.impl.service.wsn.<a href="./org/sensorhub/impl/service/wsn/SubscriptionInfo.html" title="class in org.sensorhub.impl.service.wsn">SubscriptionInfo</a></dt>
 <dd>&nbsp;</dd>
@@ -520,11 +557,6 @@
 </a>
 <h2 class="title">I</h2>
 <dl>
-<dt><a href="./org/sensorhub/impl/service/sos/IDataProviderFactory.html" title="interface in org.sensorhub.impl.service.sos"><span class="strong">IDataProviderFactory</span></a> - Interface in <a href="./org/sensorhub/impl/service/sos/package-summary.html">org.sensorhub.impl.service.sos</a></dt>
-<dd>
-<div class="block">
- Common interface for all data provider factories.</div>
-</dd>
 <dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/SOSService.html#init(org.sensorhub.impl.service.sos.SOSServiceConfig)">init(SOSServiceConfig)</a></span> - Method in class org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/SOSService.html" title="class in org.sensorhub.impl.service.sos">SOSService</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/sensorhub/impl/service/sps/SPSService.html#init(org.sensorhub.impl.service.sps.SPSServiceConfig)">init(SPSServiceConfig)</a></span> - Method in class org.sensorhub.impl.service.sps.<a href="./org/sensorhub/impl/service/sps/SPSService.html" title="class in org.sensorhub.impl.service.sps">SPSService</a></dt>
@@ -547,7 +579,7 @@
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/sensorhub/impl/sensor/swe/SWEVirtualSensor.html#isConnected()">isConnected()</a></span> - Method in class org.sensorhub.impl.sensor.swe.<a href="./org/sensorhub/impl/sensor/swe/SWEVirtualSensor.html" title="class in org.sensorhub.impl.sensor.swe">SWEVirtualSensor</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/IDataProviderFactory.html#isEnabled()">isEnabled()</a></span> - Method in interface org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/IDataProviderFactory.html" title="interface in org.sensorhub.impl.service.sos">IDataProviderFactory</a></dt>
+<dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/ISOSDataProviderFactory.html#isEnabled()">isEnabled()</a></span> - Method in interface org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/ISOSDataProviderFactory.html" title="interface in org.sensorhub.impl.service.sos">ISOSDataProviderFactory</a></dt>
 <dd>
 <div class="block">Allows to check if provider is enabled</div>
 </dd>
@@ -567,6 +599,25 @@
 </dd>
 <dt><span class="strong"><a href="./org/sensorhub/impl/service/sps/SPSService.html#isEnabled()">isEnabled()</a></span> - Method in class org.sensorhub.impl.service.sps.<a href="./org/sensorhub/impl/service/sps/SPSService.html" title="class in org.sensorhub.impl.service.sps">SPSService</a></dt>
 <dd>&nbsp;</dd>
+<dt><a href="./org/sensorhub/impl/service/sos/ISOSDataConsumer.html" title="interface in org.sensorhub.impl.service.sos"><span class="strong">ISOSDataConsumer</span></a> - Interface in <a href="./org/sensorhub/impl/service/sos/package-summary.html">org.sensorhub.impl.service.sos</a></dt>
+<dd>
+<div class="block">
+ Interface to be implemented for consuming data received by the SOS-T interface.</div>
+</dd>
+<dt><a href="./org/sensorhub/impl/service/sos/ISOSDataConsumer.Template.html" title="class in org.sensorhub.impl.service.sos"><span class="strong">ISOSDataConsumer.Template</span></a> - Class in <a href="./org/sensorhub/impl/service/sos/package-summary.html">org.sensorhub.impl.service.sos</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/ISOSDataConsumer.Template.html#ISOSDataConsumer.Template()">ISOSDataConsumer.Template()</a></span> - Constructor for class org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/ISOSDataConsumer.Template.html" title="class in org.sensorhub.impl.service.sos">ISOSDataConsumer.Template</a></dt>
+<dd>&nbsp;</dd>
+<dt><a href="./org/sensorhub/impl/service/sos/ISOSDataProvider.html" title="interface in org.sensorhub.impl.service.sos"><span class="strong">ISOSDataProvider</span></a> - Interface in <a href="./org/sensorhub/impl/service/sos/package-summary.html">org.sensorhub.impl.service.sos</a></dt>
+<dd>
+<div class="block">
+ Interface to be implemented for providing data to the SOS engine.</div>
+</dd>
+<dt><a href="./org/sensorhub/impl/service/sos/ISOSDataProviderFactory.html" title="interface in org.sensorhub.impl.service.sos"><span class="strong">ISOSDataProviderFactory</span></a> - Interface in <a href="./org/sensorhub/impl/service/sos/package-summary.html">org.sensorhub.impl.service.sos</a></dt>
+<dd>
+<div class="block">
+ Common interface for all data provider factories.</div>
+</dd>
 <dt><a href="./org/sensorhub/impl/service/sps/ISPSConnector.html" title="interface in org.sensorhub.impl.service.sps"><span class="strong">ISPSConnector</span></a> - Interface in <a href="./org/sensorhub/impl/service/sps/package-summary.html">org.sensorhub.impl.service.sps</a></dt>
 <dd>
 <div class="block">
@@ -615,6 +666,10 @@
 <dd>
 <div class="block">Maximum number of FoI IDs listed in capabilities</div>
 </dd>
+<dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/SOSServiceConfig.html#maxObsCount">maxObsCount</a></span> - Variable in class org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/SOSServiceConfig.html" title="class in org.sensorhub.impl.service.sos">SOSServiceConfig</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/SOSServiceConfig.html#maxRecordCount">maxRecordCount</a></span> - Variable in class org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/SOSServiceConfig.html" title="class in org.sensorhub.impl.service.sos">SOSServiceConfig</a></dt>
+<dd>&nbsp;</dd>
 </dl>
 <a name="_N_">
 <!--   -->
@@ -637,18 +692,31 @@
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/sensorhub/impl/sensor/sost/SOSVirtualSensor.html#newObservation(org.vast.ogc.om.IObservation...)">newObservation(IObservation...)</a></span> - Method in class org.sensorhub.impl.sensor.sost.<a href="./org/sensorhub/impl/sensor/sost/SOSVirtualSensor.html" title="class in org.sensorhub.impl.sensor.sost">SOSVirtualSensor</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/ISOSDataConsumer.html#newObservation(org.vast.ogc.om.IObservation...)">newObservation(IObservation...)</a></span> - Method in interface org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/ISOSDataConsumer.html" title="interface in org.sensorhub.impl.service.sos">ISOSDataConsumer</a></dt>
+<dd>
+<div class="block">Requests consumer to process a list of new observations</div>
+</dd>
 <dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/SensorDataConsumer.html#newObservation(org.vast.ogc.om.IObservation...)">newObservation(IObservation...)</a></span> - Method in class org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/SensorDataConsumer.html" title="class in org.sensorhub.impl.service.sos">SensorDataConsumer</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/sensorhub/impl/client/sos/SOSClient.SOSRecordListener.html#newRecord(net.opengis.swe.v20.DataBlock)">newRecord(DataBlock)</a></span> - Method in interface org.sensorhub.impl.client.sos.<a href="./org/sensorhub/impl/client/sos/SOSClient.SOSRecordListener.html" title="interface in org.sensorhub.impl.client.sos">SOSClient.SOSRecordListener</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/sensorhub/impl/sensor/sost/SOSVirtualSensor.html#newResultRecord(java.lang.String,%20net.opengis.swe.v20.DataBlock...)">newResultRecord(String, DataBlock...)</a></span> - Method in class org.sensorhub.impl.sensor.sost.<a href="./org/sensorhub/impl/sensor/sost/SOSVirtualSensor.html" title="class in org.sensorhub.impl.sensor.sost">SOSVirtualSensor</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/ISOSDataConsumer.html#newResultRecord(java.lang.String,%20net.opengis.swe.v20.DataBlock...)">newResultRecord(String, DataBlock...)</a></span> - Method in interface org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/ISOSDataConsumer.html" title="interface in org.sensorhub.impl.service.sos">ISOSDataConsumer</a></dt>
+<dd>
+<div class="block">Requests consumer to process a list of new result records</div>
+</dd>
 <dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/SensorDataConsumer.html#newResultRecord(java.lang.String,%20net.opengis.swe.v20.DataBlock...)">newResultRecord(String, DataBlock...)</a></span> - Method in class org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/SensorDataConsumer.html" title="class in org.sensorhub.impl.service.sos">SensorDataConsumer</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/sensorhub/impl/sensor/sost/SOSVirtualSensor.html#newResultTemplate(net.opengis.swe.v20.DataComponent,%20net.opengis.swe.v20.DataEncoding)">newResultTemplate(DataComponent, DataEncoding)</a></span> - Method in class org.sensorhub.impl.sensor.sost.<a href="./org/sensorhub/impl/sensor/sost/SOSVirtualSensor.html" title="class in org.sensorhub.impl.sensor.sost">SOSVirtualSensor</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/sensorhub/impl/sensor/sost/SOSVirtualSensor.html#newResultTemplate(net.opengis.swe.v20.DataComponent,%20net.opengis.swe.v20.DataEncoding,%20org.vast.ogc.om.IObservation)">newResultTemplate(DataComponent, DataEncoding, IObservation)</a></span> - Method in class org.sensorhub.impl.sensor.sost.<a href="./org/sensorhub/impl/sensor/sost/SOSVirtualSensor.html" title="class in org.sensorhub.impl.sensor.sost">SOSVirtualSensor</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/ISOSDataConsumer.html#newResultTemplate(net.opengis.swe.v20.DataComponent,%20net.opengis.swe.v20.DataEncoding,%20org.vast.ogc.om.IObservation)">newResultTemplate(DataComponent, DataEncoding, IObservation)</a></span> - Method in interface org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/ISOSDataConsumer.html" title="interface in org.sensorhub.impl.service.sos">ISOSDataConsumer</a></dt>
+<dd>
+<div class="block">Requests consumer to prepare for receiving new result records with given
+ data structure and encoding</div>
+</dd>
 <dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/SensorDataConsumer.html#newResultTemplate(net.opengis.swe.v20.DataComponent,%20net.opengis.swe.v20.DataEncoding,%20org.vast.ogc.om.IObservation)">newResultTemplate(DataComponent, DataEncoding, IObservation)</a></span> - Method in class org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/SensorDataConsumer.html" title="class in org.sensorhub.impl.service.sos">SensorDataConsumer</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/SensorWithStorageConsumer.html#newResultTemplate(net.opengis.swe.v20.DataComponent,%20net.opengis.swe.v20.DataEncoding,%20org.vast.ogc.om.IObservation)">newResultTemplate(DataComponent, DataEncoding, IObservation)</a></span> - Method in class org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/SensorWithStorageConsumer.html" title="class in org.sensorhub.impl.service.sos">SensorWithStorageConsumer</a></dt>
@@ -835,7 +903,7 @@
  SensorHub's sensor API (ISensorDataInterface).<br/>
  Most of the logic is inherited from <a href="./org/sensorhub/impl/service/sos/StreamDataProvider.html" title="class in org.sensorhub.impl.service.sos"><code>StreamDataProvider</code></a>.</div>
 </dd>
-<dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/SensorDataProvider.html#SensorDataProvider(org.sensorhub.api.sensor.ISensorModule,%20org.sensorhub.impl.service.sos.SensorDataProviderConfig,%20org.vast.ows.sos.SOSDataFilter)">SensorDataProvider(ISensorModule&lt;?&gt;, SensorDataProviderConfig, SOSDataFilter)</a></span> - Constructor for class org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/SensorDataProvider.html" title="class in org.sensorhub.impl.service.sos">SensorDataProvider</a></dt>
+<dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/SensorDataProvider.html#SensorDataProvider(org.sensorhub.api.sensor.ISensorModule,%20org.sensorhub.impl.service.sos.SensorDataProviderConfig,%20org.sensorhub.impl.service.sos.SOSDataFilter)">SensorDataProvider(ISensorModule&lt;?&gt;, SensorDataProviderConfig, SOSDataFilter)</a></span> - Constructor for class org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/SensorDataProvider.html" title="class in org.sensorhub.impl.service.sos">SensorDataProvider</a></dt>
 <dd>&nbsp;</dd>
 <dt><a href="./org/sensorhub/impl/service/sos/SensorDataProviderConfig.html" title="class in org.sensorhub.impl.service.sos"><span class="strong">SensorDataProviderConfig</span></a> - Class in <a href="./org/sensorhub/impl/service/sos/package-summary.html">org.sensorhub.impl.service.sos</a></dt>
 <dd>
@@ -900,6 +968,8 @@
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/sensorhub/impl/service/sps/Task.html#setLatestResponseTime(org.vast.util.DateTime)">setLatestResponseTime(DateTime)</a></span> - Method in class org.sensorhub.impl.service.sps.<a href="./org/sensorhub/impl/service/sps/Task.html" title="class in org.sensorhub.impl.service.sps">Task</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/SOSDataFilter.html#setMaxObsCount(long)">setMaxObsCount(long)</a></span> - Method in class org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/SOSDataFilter.html" title="class in org.sensorhub.impl.service.sos">SOSDataFilter</a></dt>
+<dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/sensorhub/impl/service/wsn/NotificationSystem.html#setMaxSubscriptionLength(long)">setMaxSubscriptionLength(long)</a></span> - Method in class org.sensorhub.impl.service.wsn.<a href="./org/sensorhub/impl/service/wsn/NotificationSystem.html" title="class in org.sensorhub.impl.service.wsn">NotificationSystem</a></dt>
 <dd>
 <div class="block">Sets the initial duration of all subscriptions after which they are removed from the DB.</div>
@@ -908,9 +978,13 @@
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/sensorhub/impl/service/wsn/SubscriptionInfo.html#setProducer(org.apache.muse.ws.addressing.EndpointReference)">setProducer(EndpointReference)</a></span> - Method in class org.sensorhub.impl.service.wsn.<a href="./org/sensorhub/impl/service/wsn/SubscriptionInfo.html" title="class in org.sensorhub.impl.service.wsn">SubscriptionInfo</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/SOSDataFilter.html#setReplaySpeedFactor(double)">setReplaySpeedFactor(double)</a></span> - Method in class org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/SOSDataFilter.html" title="class in org.sensorhub.impl.service.sos">SOSDataFilter</a></dt>
+<dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/sensorhub/impl/service/sps/ITask.html#setRequest(org.vast.ows.sps.TaskingRequest)">setRequest(TaskingRequest)</a></span> - Method in interface org.sensorhub.impl.service.sps.<a href="./org/sensorhub/impl/service/sps/ITask.html" title="interface in org.sensorhub.impl.service.sps">ITask</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/sensorhub/impl/service/sps/Task.html#setRequest(org.vast.ows.sps.TaskingRequest)">setRequest(TaskingRequest)</a></span> - Method in class org.sensorhub.impl.service.sps.<a href="./org/sensorhub/impl/service/sps/Task.html" title="class in org.sensorhub.impl.service.sps">Task</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/SOSDataFilter.html#setRoi(com.vividsolutions.jts.geom.Polygon)">setRoi(Polygon)</a></span> - Method in class org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/SOSDataFilter.html" title="class in org.sensorhub.impl.service.sos">SOSDataFilter</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/sensorhub/impl/sensor/sost/SOSVirtualSensor.html#setSensorDescription(net.opengis.sensorml.v20.AbstractProcess)">setSensorDescription(AbstractProcess)</a></span> - Method in class org.sensorhub.impl.sensor.sost.<a href="./org/sensorhub/impl/sensor/sost/SOSVirtualSensor.html" title="class in org.sensorhub.impl.sensor.sost">SOSVirtualSensor</a></dt>
 <dd>&nbsp;</dd>
@@ -953,6 +1027,19 @@
 <dt><a href="./org/sensorhub/impl/service/sos/SOSConsumerConfig.html" title="class in org.sensorhub.impl.service.sos"><span class="strong">SOSConsumerConfig</span></a> - Class in <a href="./org/sensorhub/impl/service/sos/package-summary.html">org.sensorhub.impl.service.sos</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/SOSConsumerConfig.html#SOSConsumerConfig()">SOSConsumerConfig()</a></span> - Constructor for class org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/SOSConsumerConfig.html" title="class in org.sensorhub.impl.service.sos">SOSConsumerConfig</a></dt>
+<dd>&nbsp;</dd>
+<dt><a href="./org/sensorhub/impl/service/sos/SOSDataFilter.html" title="class in org.sensorhub.impl.service.sos"><span class="strong">SOSDataFilter</span></a> - Class in <a href="./org/sensorhub/impl/service/sos/package-summary.html">org.sensorhub.impl.service.sos</a></dt>
+<dd>
+<div class="block">
+ Filter to be used with SOS data providers</div>
+</dd>
+<dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/SOSDataFilter.html#SOSDataFilter(org.vast.util.TimeExtent)">SOSDataFilter(TimeExtent)</a></span> - Constructor for class org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/SOSDataFilter.html" title="class in org.sensorhub.impl.service.sos">SOSDataFilter</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/SOSDataFilter.html#SOSDataFilter(java.lang.String)">SOSDataFilter(String)</a></span> - Constructor for class org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/SOSDataFilter.html" title="class in org.sensorhub.impl.service.sos">SOSDataFilter</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/SOSDataFilter.html#SOSDataFilter(java.lang.String,%20org.vast.util.TimeExtent)">SOSDataFilter(String, TimeExtent)</a></span> - Constructor for class org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/SOSDataFilter.html" title="class in org.sensorhub.impl.service.sos">SOSDataFilter</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/SOSDataFilter.html#SOSDataFilter(java.util.List,%20java.util.List,%20org.vast.util.TimeExtent)">SOSDataFilter(List&lt;String&gt;, List&lt;String&gt;, TimeExtent)</a></span> - Constructor for class org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/SOSDataFilter.html" title="class in org.sensorhub.impl.service.sos">SOSDataFilter</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/sensorhub/impl/client/sost/SOSTClientConfig.html#sosEndpointUrl">sosEndpointUrl</a></span> - Variable in class org.sensorhub.impl.client.sost.<a href="./org/sensorhub/impl/client/sost/SOSTClientConfig.html" title="class in org.sensorhub.impl.client.sost">SOSTClientConfig</a></dt>
 <dd>&nbsp;</dd>
@@ -1114,7 +1201,7 @@
  Implementation of SOS data provider connecting to a storage via 
  SensorHub's persistence API (ITimeSeriesStorage and derived classes)</div>
 </dd>
-<dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/StorageDataProvider.html#StorageDataProvider(org.sensorhub.api.persistence.IBasicStorage,%20org.sensorhub.impl.service.sos.StorageDataProviderConfig,%20org.vast.ows.sos.SOSDataFilter)">StorageDataProvider(IBasicStorage, StorageDataProviderConfig, SOSDataFilter)</a></span> - Constructor for class org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/StorageDataProvider.html" title="class in org.sensorhub.impl.service.sos">StorageDataProvider</a></dt>
+<dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/StorageDataProvider.html#StorageDataProvider(org.sensorhub.api.persistence.IBasicStorage,%20org.sensorhub.impl.service.sos.StorageDataProviderConfig,%20org.sensorhub.impl.service.sos.SOSDataFilter)">StorageDataProvider(IBasicStorage, StorageDataProviderConfig, SOSDataFilter)</a></span> - Constructor for class org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/StorageDataProvider.html" title="class in org.sensorhub.impl.service.sos">StorageDataProvider</a></dt>
 <dd>&nbsp;</dd>
 <dt><a href="./org/sensorhub/impl/service/sos/StorageDataProviderConfig.html" title="class in org.sensorhub.impl.service.sos"><span class="strong">StorageDataProviderConfig</span></a> - Class in <a href="./org/sensorhub/impl/service/sos/package-summary.html">org.sensorhub.impl.service.sos</a></dt>
 <dd>
@@ -1147,7 +1234,7 @@
 <div class="block">
  Implementation of SOS data provider connecting to a streaming data source</div>
 </dd>
-<dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/StreamDataProvider.html#StreamDataProvider(org.sensorhub.api.data.IDataProducerModule,%20org.sensorhub.impl.service.sos.StreamDataProviderConfig,%20org.vast.ows.sos.SOSDataFilter)">StreamDataProvider(IDataProducerModule&lt;?&gt;, StreamDataProviderConfig, SOSDataFilter)</a></span> - Constructor for class org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/StreamDataProvider.html" title="class in org.sensorhub.impl.service.sos">StreamDataProvider</a></dt>
+<dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/StreamDataProvider.html#StreamDataProvider(org.sensorhub.api.data.IDataProducerModule,%20org.sensorhub.impl.service.sos.StreamDataProviderConfig,%20org.sensorhub.impl.service.sos.SOSDataFilter)">StreamDataProvider(IDataProducerModule&lt;?&gt;, StreamDataProviderConfig, SOSDataFilter)</a></span> - Constructor for class org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/StreamDataProvider.html" title="class in org.sensorhub.impl.service.sos">StreamDataProvider</a></dt>
 <dd>&nbsp;</dd>
 <dt><a href="./org/sensorhub/impl/service/sos/StreamDataProviderConfig.html" title="class in org.sensorhub.impl.service.sos"><span class="strong">StreamDataProviderConfig</span></a> - Class in <a href="./org/sensorhub/impl/service/sos/package-summary.html">org.sensorhub.impl.service.sos</a></dt>
 <dd>
@@ -1168,7 +1255,7 @@
  SensorHub's stream processing API.<br/>
  Most of the logic is inherited from <a href="./org/sensorhub/impl/service/sos/StreamDataProvider.html" title="class in org.sensorhub.impl.service.sos"><code>StreamDataProvider</code></a>.</div>
 </dd>
-<dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/StreamProcessDataProvider.html#StreamProcessDataProvider(org.sensorhub.api.processing.IStreamProcessModule,%20org.sensorhub.impl.service.sos.StreamProcessProviderConfig,%20org.vast.ows.sos.SOSDataFilter)">StreamProcessDataProvider(IStreamProcessModule&lt;?&gt;, StreamProcessProviderConfig, SOSDataFilter)</a></span> - Constructor for class org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/StreamProcessDataProvider.html" title="class in org.sensorhub.impl.service.sos">StreamProcessDataProvider</a></dt>
+<dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/StreamProcessDataProvider.html#StreamProcessDataProvider(org.sensorhub.api.processing.IStreamProcessModule,%20org.sensorhub.impl.service.sos.StreamProcessProviderConfig,%20org.sensorhub.impl.service.sos.SOSDataFilter)">StreamProcessDataProvider(IStreamProcessModule&lt;?&gt;, StreamProcessProviderConfig, SOSDataFilter)</a></span> - Constructor for class org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/StreamProcessDataProvider.html" title="class in org.sensorhub.impl.service.sos">StreamProcessDataProvider</a></dt>
 <dd>&nbsp;</dd>
 <dt><a href="./org/sensorhub/impl/service/sos/StreamProcessProviderConfig.html" title="class in org.sensorhub.impl.service.sos"><span class="strong">StreamProcessProviderConfig</span></a> - Class in <a href="./org/sensorhub/impl/service/sos/package-summary.html">org.sensorhub.impl.service.sos</a></dt>
 <dd>
@@ -1295,7 +1382,7 @@
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/sensorhub/impl/service/wsn/NotificationSystem.html#unsubscribe(java.lang.String,%20org.w3c.dom.Element)">unsubscribe(String, Element)</a></span> - Method in class org.sensorhub.impl.service.wsn.<a href="./org/sensorhub/impl/service/wsn/NotificationSystem.html" title="class in org.sensorhub.impl.service.wsn">NotificationSystem</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/IDataProviderFactory.html#updateCapabilities()">updateCapabilities()</a></span> - Method in interface org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/IDataProviderFactory.html" title="interface in org.sensorhub.impl.service.sos">IDataProviderFactory</a></dt>
+<dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/ISOSDataProviderFactory.html#updateCapabilities()">updateCapabilities()</a></span> - Method in interface org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/ISOSDataProviderFactory.html" title="interface in org.sensorhub.impl.service.sos">ISOSDataProviderFactory</a></dt>
 <dd>
 <div class="block">Update capabilities previously generated by this provider if needed.</div>
 </dd>
@@ -1319,6 +1406,10 @@
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/FoiUtils.html#updateFois(org.vast.ows.sos.SOSOfferingCapabilities,%20org.sensorhub.api.data.IDataProducerModule,%20int)">updateFois(SOSOfferingCapabilities, IDataProducerModule&lt;?&gt;, int)</a></span> - Static method in class org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/FoiUtils.html" title="class in org.sensorhub.impl.service.sos">FoiUtils</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/ISOSDataConsumer.html#updateSensor(net.opengis.sensorml.v20.AbstractProcess)">updateSensor(AbstractProcess)</a></span> - Method in interface org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/ISOSDataConsumer.html" title="interface in org.sensorhub.impl.service.sos">ISOSDataConsumer</a></dt>
+<dd>
+<div class="block">Requests consumer to update sensor description</div>
+</dd>
 <dt><span class="strong"><a href="./org/sensorhub/impl/service/sos/SensorDataConsumer.html#updateSensor(net.opengis.sensorml.v20.AbstractProcess)">updateSensor(AbstractProcess)</a></span> - Method in class org.sensorhub.impl.service.sos.<a href="./org/sensorhub/impl/service/sos/SensorDataConsumer.html" title="class in org.sensorhub.impl.service.sos">SensorDataConsumer</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="strong"><a href="./org/sensorhub/impl/sensor/sost/SOSVirtualSensor.html#updateSensorDescription(net.opengis.sensorml.v20.AbstractProcess,%20boolean)">updateSensorDescription(AbstractProcess, boolean)</a></span> - Method in class org.sensorhub.impl.sensor.sost.<a href="./org/sensorhub/impl/sensor/sost/SOSVirtualSensor.html" title="class in org.sensorhub.impl.sensor.sost">SOSVirtualSensor</a></dt>

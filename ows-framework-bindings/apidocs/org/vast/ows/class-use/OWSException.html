@@ -256,7 +256,7 @@
 </tr>
 <tr class="rowColor">
 <td class="colFirst"><code><a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a></code></td>
-<td class="colLast"><span class="strong">GetCapabilitiesWriter.</span><code><strong><a href="../../../../org/vast/ows/GetCapabilitiesWriter.html#buildURLQuery(org.vast.ows.GetCapabilitiesRequest)">buildURLQuery</a></strong>(<a href="../../../../org/vast/ows/GetCapabilitiesRequest.html" title="class in org.vast.ows">GetCapabilitiesRequest</a>&nbsp;query)</code>&nbsp;</td>
+<td class="colLast"><span class="strong">GetCapabilitiesWriter.</span><code><strong><a href="../../../../org/vast/ows/GetCapabilitiesWriter.html#buildURLQuery(org.vast.ows.GetCapabilitiesRequest)">buildURLQuery</a></strong>(<a href="../../../../org/vast/ows/GetCapabilitiesRequest.html" title="class in org.vast.ows">GetCapabilitiesRequest</a>&nbsp;request)</code>&nbsp;</td>
 </tr>
 <tr class="altColor">
 <td class="colFirst"><code><a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a></code></td>
@@ -686,23 +686,32 @@
 </tr>
 <tr class="altColor">
 <td class="colFirst"><code>void</code></td>
+<td class="colLast"><span class="strong">OWSUtils.</span><code><strong><a href="../../../../org/vast/ows/OWSUtils.html#writeXMLResponse(java.io.OutputStream,%20org.vast.ows.OWSResponse,%20java.lang.String,%20java.lang.String)">writeXMLResponse</a></strong>(<a href="http://docs.oracle.com/javase/7/docs/api/java/io/OutputStream.html?is-external=true" title="class or interface in java.io">OutputStream</a>&nbsp;os,
+                <a href="../../../../org/vast/ows/OWSResponse.html" title="class in org.vast.ows">OWSResponse</a>&nbsp;response,
+                <a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;version,
+                <a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;soapVersion)</code>
+<div class="block">Helper method to write any OWS XML response directly to an output stream</div>
+</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><code>void</code></td>
 <td class="colLast"><span class="strong">AbstractResponseWriter.</span><code><strong><a href="../../../../org/vast/ows/AbstractResponseWriter.html#writeXMLResponse(java.io.OutputStream,%20ResponseType)">writeXMLResponse</a></strong>(<a href="http://docs.oracle.com/javase/7/docs/api/java/io/OutputStream.html?is-external=true" title="class or interface in java.io">OutputStream</a>&nbsp;os,
                 <a href="../../../../org/vast/ows/AbstractResponseWriter.html" title="type parameter in AbstractResponseWriter">ResponseType</a>&nbsp;response)</code>&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><span class="strong">OWSResponseWriter.</span><code><strong><a href="../../../../org/vast/ows/OWSResponseWriter.html#writeXMLResponse(java.io.OutputStream,%20ResponseType)">writeXMLResponse</a></strong>(<a href="http://docs.oracle.com/javase/7/docs/api/java/io/OutputStream.html?is-external=true" title="class or interface in java.io">OutputStream</a>&nbsp;os,
                 <a href="../../../../org/vast/ows/OWSResponseWriter.html" title="type parameter in OWSResponseWriter">ResponseType</a>&nbsp;response)</code>
 <div class="block">Writes the XML response directly to the output stream</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><span class="strong">AbstractResponseWriter.</span><code><strong><a href="../../../../org/vast/ows/AbstractResponseWriter.html#writeXMLResponse(java.io.OutputStream,%20ResponseType,%20java.lang.String)">writeXMLResponse</a></strong>(<a href="http://docs.oracle.com/javase/7/docs/api/java/io/OutputStream.html?is-external=true" title="class or interface in java.io">OutputStream</a>&nbsp;os,
                 <a href="../../../../org/vast/ows/AbstractResponseWriter.html" title="type parameter in AbstractResponseWriter">ResponseType</a>&nbsp;response,
                 <a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;version)</code>&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><span class="strong">OWSResponseWriter.</span><code><strong><a href="../../../../org/vast/ows/OWSResponseWriter.html#writeXMLResponse(java.io.OutputStream,%20ResponseType,%20java.lang.String)">writeXMLResponse</a></strong>(<a href="http://docs.oracle.com/javase/7/docs/api/java/io/OutputStream.html?is-external=true" title="class or interface in java.io">OutputStream</a>&nbsp;os,
                 <a href="../../../../org/vast/ows/OWSResponseWriter.html" title="type parameter in OWSResponseWriter">ResponseType</a>&nbsp;response,

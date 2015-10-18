@@ -35,7 +35,7 @@
 </div>
 <div class="subNav">
 <ul class="navList">
-<li><a href="../../../org/vast/data/DataBlockVisitor.html" title="interface in org.vast.data"><span class="strong">Prev Class</span></a></li>
+<li><a href="../../../org/vast/data/DataBlockUShort.html" title="class in org.vast.data"><span class="strong">Prev Class</span></a></li>
 <li><a href="../../../org/vast/data/DataComponentPropertyList.html" title="class in org.vast.data"><span class="strong">Next Class</span></a></li>
 </ul>
 <ul class="navList">
@@ -179,155 +179,159 @@ implements <a href="../../../net/opengis/swe/v20/DataChoice.html" title="interfa
 </tr>
 <tr class="altColor">
 <td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><strong><a href="../../../org/vast/data/DataChoiceImpl.html#accept(net.opengis.swe.v20.DataComponentVisitor)">accept</a></strong>(<a href="../../../net/opengis/swe/v20/DataComponentVisitor.html" title="interface in net.opengis.swe.v20">DataComponentVisitor</a>&nbsp;visitor)</code>&nbsp;</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/DataChoiceImpl.html#addComponent(java.lang.String,%20net.opengis.swe.v20.DataComponent)">addComponent</a></strong>(<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;name,
             <a href="../../../net/opengis/swe/v20/DataComponent.html" title="interface in net.opengis.swe.v20">DataComponent</a>&nbsp;component)</code>
 <div class="block">Add a sub-component and registers a name for it</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/DataChoiceImpl.html#addItem(java.lang.String,%20net.opengis.swe.v20.DataComponent)">addItem</a></strong>(<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;name,
        <a href="../../../net/opengis/swe/v20/DataComponent.html" title="interface in net.opengis.swe.v20">DataComponent</a>&nbsp;item)</code>
 <div class="block">Adds a new item property</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/DataChoiceImpl.html#clearData()">clearData</a></strong>()</code>
 <div class="block">Clear the datablock used by this component.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code><a href="../../../org/vast/data/DataChoiceImpl.html" title="class in org.vast.data">DataChoiceImpl</a></code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/DataChoiceImpl.html#copy()">copy</a></strong>()</code>
 <div class="block">Return a structural copy of this component
  The copy is done recursively, but only the structure is copied (not the data)</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code><a href="../../../org/vast/data/AbstractDataBlock.html" title="class in org.vast.data">AbstractDataBlock</a></code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/DataChoiceImpl.html#createDataBlock()">createDataBlock</a></strong>()</code>
 <div class="block">Create a new datablock for holding data of this component</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code><a href="../../../net/opengis/swe/v20/Category.html" title="interface in net.opengis.swe.v20">Category</a></code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/DataChoiceImpl.html#getChoiceValue()">getChoiceValue</a></strong>()</code>
 <div class="block">Gets the choiceValue property</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code><a href="../../../org/vast/data/AbstractDataComponentImpl.html" title="class in org.vast.data">AbstractDataComponentImpl</a></code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/DataChoiceImpl.html#getComponent(int)">getComponent</a></strong>(int&nbsp;index)</code>
 <div class="block">Get the sub-component located at the specified index</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code><a href="../../../org/vast/data/AbstractDataComponentImpl.html" title="class in org.vast.data">AbstractDataComponentImpl</a></code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/DataChoiceImpl.html#getComponent(java.lang.String)">getComponent</a></strong>(<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;name)</code>
 <div class="block">Get the sub-component registered with the specified name</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>int</code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/DataChoiceImpl.html#getComponentCount()">getComponentCount</a></strong>()</code>
 <div class="block">Returns number of sub-components in this component</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>int</code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/DataChoiceImpl.html#getComponentIndex(java.lang.String)">getComponentIndex</a></strong>(<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;name)</code>
 <div class="block">Get the index of the sub-component registered with this name</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code><a href="../../../net/opengis/swe/v20/DataComponent.html" title="interface in net.opengis.swe.v20">DataComponent</a></code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/DataChoiceImpl.html#getItem(java.lang.String)">getItem</a></strong>(<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;name)</code>
 <div class="block">Gets the item property with the given name</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code><a href="../../../net/opengis/OgcPropertyList.html" title="class in net.opengis">OgcPropertyList</a>&lt;<a href="../../../net/opengis/swe/v20/DataComponent.html" title="interface in net.opengis.swe.v20">DataComponent</a>&gt;</code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/DataChoiceImpl.html#getItemList()">getItemList</a></strong>()</code>
 <div class="block">Gets the list of item properties</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>int</code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/DataChoiceImpl.html#getNumItems()">getNumItems</a></strong>()</code>
 <div class="block">Returns number of item properties</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>int</code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/DataChoiceImpl.html#getSelected()">getSelected</a></strong>()</code>&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code><a href="../../../org/vast/data/AbstractDataComponentImpl.html" title="class in org.vast.data">AbstractDataComponentImpl</a></code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/DataChoiceImpl.html#getSelectedItem()">getSelectedItem</a></strong>()</code>
 <div class="block">Gets the selected item in this choice</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/DataChoiceImpl.html#hasConstraints()">hasConstraints</a></strong>()</code>
 <div class="block">Recursively checks if constraints are specified in this component or 
  any of its sub-components</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/DataChoiceImpl.html#isSetChoiceValue()">isSetChoiceValue</a></strong>()</code>
 <div class="block">Checks if choiceValue is set</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code><a href="../../../org/vast/data/AbstractDataComponentImpl.html" title="class in org.vast.data">AbstractDataComponentImpl</a></code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/DataChoiceImpl.html#removeComponent(int)">removeComponent</a></strong>(int&nbsp;index)</code>
 <div class="block">Remove the sub-component at the specified index</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code><a href="../../../org/vast/data/AbstractDataComponentImpl.html" title="class in org.vast.data">AbstractDataComponentImpl</a></code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/DataChoiceImpl.html#removeComponent(java.lang.String)">removeComponent</a></strong>(<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;name)</code>
 <div class="block">Remove sub-component with the specified name</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/DataChoiceImpl.html#setChoiceValue(net.opengis.swe.v20.Category)">setChoiceValue</a></strong>(<a href="../../../net/opengis/swe/v20/Category.html" title="interface in net.opengis.swe.v20">Category</a>&nbsp;choiceValue)</code>
 <div class="block">Sets the choiceValue property</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/DataChoiceImpl.html#setData(net.opengis.swe.v20.DataBlock)">setData</a></strong>(<a href="../../../net/opengis/swe/v20/DataBlock.html" title="interface in net.opengis.swe.v20">DataBlock</a>&nbsp;dataBlock)</code>
 <div class="block">Assign a new datablock to this component.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/DataChoiceImpl.html#setSelectedItem(int)">setSelectedItem</a></strong>(int&nbsp;index)</code>
 <div class="block">Sets the choice selection to the item with the given index</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/DataChoiceImpl.html#setSelectedItem(java.lang.String)">setSelectedItem</a></strong>(<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;name)</code>
 <div class="block">Sets the choice selection to the item with the given name</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code><a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a></code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/DataChoiceImpl.html#toString(java.lang.String)">toString</a></strong>(<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;indent)</code>
 <div class="block">Returns String representation of this DataContainer</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/DataChoiceImpl.html#unselect()">unselect</a></strong>()</code>&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/DataChoiceImpl.html#validateData(java.util.List)">validateData</a></strong>(<a href="http://docs.oracle.com/javase/7/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</a>&lt;<a href="../../../net/opengis/swe/v20/ValidationException.html" title="class in net.opengis.swe.v20">ValidationException</a>&gt;&nbsp;errorList)</code>
 <div class="block">Validates dataBlock against constraints if any.</div>
@@ -819,7 +823,7 @@ implements <a href="../../../net/opengis/swe/v20/DataChoice.html" title="interfa
 <a name="addItem(java.lang.String, net.opengis.swe.v20.DataComponent)">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>addItem</h4>
 <pre>public&nbsp;void&nbsp;addItem(<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;name,
@@ -828,6 +832,19 @@ implements <a href="../../../net/opengis/swe/v20/DataChoice.html" title="interfa
 <dl>
 <dt><strong>Specified by:</strong></dt>
 <dd><code><a href="../../../net/opengis/swe/v20/DataChoice.html#addItem(java.lang.String,%20net.opengis.swe.v20.DataComponent)">addItem</a></code>&nbsp;in interface&nbsp;<code><a href="../../../net/opengis/swe/v20/DataChoice.html" title="interface in net.opengis.swe.v20">DataChoice</a></code></dd>
+</dl>
+</li>
+</ul>
+<a name="accept(net.opengis.swe.v20.DataComponentVisitor)">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>accept</h4>
+<pre>public&nbsp;void&nbsp;accept(<a href="../../../net/opengis/swe/v20/DataComponentVisitor.html" title="interface in net.opengis.swe.v20">DataComponentVisitor</a>&nbsp;visitor)</pre>
+<dl>
+<dt><strong>Specified by:</strong></dt>
+<dd><code><a href="../../../net/opengis/swe/v20/DataComponent.html#accept(net.opengis.swe.v20.DataComponentVisitor)">accept</a></code>&nbsp;in interface&nbsp;<code><a href="../../../net/opengis/swe/v20/DataComponent.html" title="interface in net.opengis.swe.v20">DataComponent</a></code></dd>
 </dl>
 </li>
 </ul>
@@ -857,7 +874,7 @@ implements <a href="../../../net/opengis/swe/v20/DataChoice.html" title="interfa
 </div>
 <div class="subNav">
 <ul class="navList">
-<li><a href="../../../org/vast/data/DataBlockVisitor.html" title="interface in org.vast.data"><span class="strong">Prev Class</span></a></li>
+<li><a href="../../../org/vast/data/DataBlockUShort.html" title="class in org.vast.data"><span class="strong">Prev Class</span></a></li>
 <li><a href="../../../org/vast/data/DataComponentPropertyList.html" title="class in org.vast.data"><span class="strong">Next Class</span></a></li>
 </ul>
 <ul class="navList">

@@ -189,86 +189,90 @@ implements <a href="../../../net/opengis/swe/v20/Quantity.html" title="interface
 <th class="colLast" scope="col">Method and Description</th>
 </tr>
 <tr class="altColor">
+<td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><strong><a href="../../../org/vast/data/QuantityImpl.html#accept(net.opengis.swe.v20.DataComponentVisitor)">accept</a></strong>(<a href="../../../net/opengis/swe/v20/DataComponentVisitor.html" title="interface in net.opengis.swe.v20">DataComponentVisitor</a>&nbsp;visitor)</code>&nbsp;</td>
+</tr>
+<tr class="rowColor">
 <td class="colFirst"><code><a href="../../../org/vast/data/QuantityImpl.html" title="class in org.vast.data">QuantityImpl</a></code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/QuantityImpl.html#copy()">copy</a></strong>()</code>
 <div class="block">Return a structural copy of this component
  The copy is done recursively, but only the structure is copied (not the data)</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code><a href="../../../net/opengis/swe/v20/AllowedValues.html" title="interface in net.opengis.swe.v20">AllowedValues</a></code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/QuantityImpl.html#getConstraint()">getConstraint</a></strong>()</code>
 <div class="block">Gets the constraint property</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code><a href="../../../net/opengis/OgcProperty.html" title="interface in net.opengis">OgcProperty</a>&lt;<a href="../../../net/opengis/swe/v20/AllowedValues.html" title="interface in net.opengis.swe.v20">AllowedValues</a>&gt;</code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/QuantityImpl.html#getConstraintProperty()">getConstraintProperty</a></strong>()</code>
 <div class="block">Gets extra info (name, xlink, etc.) carried by the constraint property</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code><a href="../../../net/opengis/swe/v20/UnitReference.html" title="interface in net.opengis.swe.v20">UnitReference</a></code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/QuantityImpl.html#getUom()">getUom</a></strong>()</code>
 <div class="block">Gets the uom property</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>double</code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/QuantityImpl.html#getValue()">getValue</a></strong>()</code>
 <div class="block">Gets the value property</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/QuantityImpl.html#hasConstraints()">hasConstraints</a></strong>()</code>
 <div class="block">Recursively checks if constraints are specified in this component or 
  any of its sub-components</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/QuantityImpl.html#isSetConstraint()">isSetConstraint</a></strong>()</code>
 <div class="block">Checks if constraint is set</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/QuantityImpl.html#isSetValue()">isSetValue</a></strong>()</code>
 <div class="block">Checks if value is set</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/QuantityImpl.html#setConstraint(net.opengis.swe.v20.AllowedValues)">setConstraint</a></strong>(<a href="../../../net/opengis/swe/v20/AllowedValues.html" title="interface in net.opengis.swe.v20">AllowedValues</a>&nbsp;constraint)</code>
 <div class="block">Sets the constraint property</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/QuantityImpl.html#setUom(net.opengis.swe.v20.UnitReference)">setUom</a></strong>(<a href="../../../net/opengis/swe/v20/UnitReference.html" title="interface in net.opengis.swe.v20">UnitReference</a>&nbsp;uom)</code>
 <div class="block">Sets the uom property</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/QuantityImpl.html#setValue(double)">setValue</a></strong>(double&nbsp;value)</code>
 <div class="block">Sets the value property</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code><a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a></code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/QuantityImpl.html#toString(java.lang.String)">toString</a></strong>(<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;indent)</code>
 <div class="block">Returns String representation of this DataContainer</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/QuantityImpl.html#unSetValue()">unSetValue</a></strong>()</code>
 <div class="block">Unsets the value property</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/QuantityImpl.html#validateData(java.util.List)">validateData</a></strong>(<a href="http://docs.oracle.com/javase/7/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</a>&lt;<a href="../../../net/opengis/swe/v20/ValidationException.html" title="class in net.opengis.swe.v20">ValidationException</a>&gt;&nbsp;errorList)</code>
 <div class="block">Validates dataBlock against constraints if any.</div>
@@ -586,7 +590,7 @@ implements <a href="../../../net/opengis/swe/v20/Quantity.html" title="interface
 <a name="toString(java.lang.String)">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>toString</h4>
 <pre>public&nbsp;<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;toString(<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;indent)</pre>
@@ -597,6 +601,19 @@ implements <a href="../../../net/opengis/swe/v20/Quantity.html" title="interface
 <dd><code><a href="../../../org/vast/data/AbstractDataComponentImpl.html#toString(java.lang.String)">toString</a></code>&nbsp;in class&nbsp;<code><a href="../../../org/vast/data/AbstractDataComponentImpl.html" title="class in org.vast.data">AbstractDataComponentImpl</a></code></dd>
 <dt><span class="strong">Parameters:</span></dt><dd><code>indent</code> - int</dd>
 <dt><span class="strong">Returns:</span></dt><dd>String</dd></dl>
+</li>
+</ul>
+<a name="accept(net.opengis.swe.v20.DataComponentVisitor)">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>accept</h4>
+<pre>public&nbsp;void&nbsp;accept(<a href="../../../net/opengis/swe/v20/DataComponentVisitor.html" title="interface in net.opengis.swe.v20">DataComponentVisitor</a>&nbsp;visitor)</pre>
+<dl>
+<dt><strong>Specified by:</strong></dt>
+<dd><code><a href="../../../net/opengis/swe/v20/DataComponent.html#accept(net.opengis.swe.v20.DataComponentVisitor)">accept</a></code>&nbsp;in interface&nbsp;<code><a href="../../../net/opengis/swe/v20/DataComponent.html" title="interface in net.opengis.swe.v20">DataComponent</a></code></dd>
+</dl>
 </li>
 </ul>
 </li>

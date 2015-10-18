@@ -67,35 +67,6 @@
 <div class="contentContainer">
 <ul class="blockList">
 <li class="blockList">
-<table class="packageSummary" border="0" cellpadding="3" cellspacing="0" summary="Interface Summary table, listing interfaces, and an explanation">
-<caption><span>Interface Summary</span><span class="tabEnd">&nbsp;</span></caption>
-<tr>
-<th class="colFirst" scope="col">Interface</th>
-<th class="colLast" scope="col">Description</th>
-</tr>
-<tbody>
-<tr class="altColor">
-<td class="colFirst"><a href="../../../../org/vast/ows/sos/ISOSDataConsumer.html" title="interface in org.vast.ows.sos">ISOSDataConsumer</a></td>
-<td class="colLast">
-<div class="block">
- Interface to be implemented for consuming data received by the SOS-T interface.</div>
-</td>
-</tr>
-<tr class="rowColor">
-<td class="colFirst"><a href="../../../../org/vast/ows/sos/ISOSDataProvider.html" title="interface in org.vast.ows.sos">ISOSDataProvider</a></td>
-<td class="colLast">
-<div class="block">
- Interface to be implemented for providing data to the SOS engine.</div>
-</td>
-</tr>
-<tr class="altColor">
-<td class="colFirst"><a href="../../../../org/vast/ows/sos/ISOSDataProviderFactory.html" title="interface in org.vast.ows.sos">ISOSDataProviderFactory</a></td>
-<td class="colLast">&nbsp;</td>
-</tr>
-</tbody>
-</table>
-</li>
-<li class="blockList">
 <table class="packageSummary" border="0" cellpadding="3" cellspacing="0" summary="Class Summary table, listing classes, and an explanation">
 <caption><span>Class Summary</span><span class="tabEnd">&nbsp;</span></caption>
 <tr>
@@ -104,10 +75,11 @@
 </tr>
 <tbody>
 <tr class="altColor">
-<td class="colFirst"><a href="../../../../org/vast/ows/sos/DefaultSOSProviderConfig.html" title="class in org.vast.ows.sos">DefaultSOSProviderConfig</a></td>
+<td class="colFirst"><a href="../../../../org/vast/ows/sos/DataStructFilter.html" title="class in org.vast.ows.sos">DataStructFilter</a></td>
 <td class="colLast">
 <div class="block">
- Class holding information necessary to instantiate a new SOS data provider</div>
+ Data component visitor used to filter unwanted observables from the
+ SWE Common result structure.</div>
 </td>
 </tr>
 <tr class="rowColor">
@@ -405,10 +377,6 @@
 </td>
 </tr>
 <tr class="rowColor">
-<td class="colFirst"><a href="../../../../org/vast/ows/sos/ISOSDataConsumer.Template.html" title="class in org.vast.ows.sos">ISOSDataConsumer.Template</a></td>
-<td class="colLast">&nbsp;</td>
-</tr>
-<tr class="altColor">
 <td class="colFirst"><a href="../../../../org/vast/ows/sos/SOSCapabilitiesReaderV20.html" title="class in org.vast.ows.sos">SOSCapabilitiesReaderV20</a></td>
 <td class="colLast">
 <div class="block">
@@ -417,20 +385,13 @@
  SOSOfferingCapabilities objects for version 2.0</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../../../org/vast/ows/sos/SOSCapabilitiesWriterV20.html" title="class in org.vast.ows.sos">SOSCapabilitiesWriterV20</a></td>
 <td class="colLast">
 <div class="block"><b>Title:</b><br/>
  Writes an SOS server capabilities document from
  OWSServiceCapabilities and SOSOfferingCapabilities
  objects for version 2.0</div>
-</td>
-</tr>
-<tr class="altColor">
-<td class="colFirst"><a href="../../../../org/vast/ows/sos/SOSDataFilter.html" title="class in org.vast.ows.sos">SOSDataFilter</a></td>
-<td class="colLast">
-<div class="block">
- Filter to be used with SOS data provider</div>
 </td>
 </tr>
 <tr class="rowColor">

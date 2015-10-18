@@ -95,7 +95,7 @@
 <li class="blockList">
 <dl>
 <dt>All Implemented Interfaces:</dt>
-<dd><a href="../../../../../org/sensorhub/impl/service/sos/IDataProviderFactory.html" title="interface in org.sensorhub.impl.service.sos">IDataProviderFactory</a>, <a href="http://docs.opensensorhub.org/ows-framework-bindings/apidocs/org/vast/ows/sos/ISOSDataProviderFactory.html?is-external=true" title="class or interface in org.vast.ows.sos">ISOSDataProviderFactory</a></dd>
+<dd><a href="../../../../../org/sensorhub/impl/service/sos/ISOSDataProviderFactory.html" title="interface in org.sensorhub.impl.service.sos">ISOSDataProviderFactory</a></dd>
 </dl>
 <dl>
 <dt>Direct Known Subclasses:</dt>
@@ -105,7 +105,7 @@
 <br>
 <pre>public class <span class="strong">StorageDataProviderFactory</span>
 extends <a href="http://docs.oracle.com/javase/7/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</a>
-implements <a href="../../../../../org/sensorhub/impl/service/sos/IDataProviderFactory.html" title="interface in org.sensorhub.impl.service.sos">IDataProviderFactory</a></pre>
+implements <a href="../../../../../org/sensorhub/impl/service/sos/ISOSDataProviderFactory.html" title="interface in org.sensorhub.impl.service.sos">ISOSDataProviderFactory</a></pre>
 <div class="block"><p>
  Factory for storage data providers.
  </p>
@@ -166,8 +166,10 @@ implements <a href="../../../../../org/sensorhub/impl/service/sos/IDataProviderF
 </td>
 </tr>
 <tr class="altColor">
-<td class="colFirst"><code><a href="http://docs.opensensorhub.org/ows-framework-bindings/apidocs/org/vast/ows/sos/ISOSDataProvider.html?is-external=true" title="class or interface in org.vast.ows.sos">ISOSDataProvider</a></code></td>
-<td class="colLast"><code><strong><a href="../../../../../org/sensorhub/impl/service/sos/StorageDataProviderFactory.html#getNewDataProvider(org.vast.ows.sos.SOSDataFilter)">getNewDataProvider</a></strong>(<a href="http://docs.opensensorhub.org/ows-framework-bindings/apidocs/org/vast/ows/sos/SOSDataFilter.html?is-external=true" title="class or interface in org.vast.ows.sos">SOSDataFilter</a>&nbsp;filter)</code>&nbsp;</td>
+<td class="colFirst"><code><a href="../../../../../org/sensorhub/impl/service/sos/ISOSDataProvider.html" title="interface in org.sensorhub.impl.service.sos">ISOSDataProvider</a></code></td>
+<td class="colLast"><code><strong><a href="../../../../../org/sensorhub/impl/service/sos/StorageDataProviderFactory.html#getNewDataProvider(org.sensorhub.impl.service.sos.SOSDataFilter)">getNewDataProvider</a></strong>(<a href="../../../../../org/sensorhub/impl/service/sos/SOSDataFilter.html" title="class in org.sensorhub.impl.service.sos">SOSDataFilter</a>&nbsp;filter)</code>
+<div class="block">Instantiates a new data provider</div>
+</td>
 </tr>
 <tr class="rowColor">
 <td class="colFirst"><code>boolean</code></td>
@@ -211,12 +213,12 @@ implements <a href="../../../../../org/sensorhub/impl/service/sos/IDataProviderF
 <h4>generateCapabilities</h4>
 <pre>public&nbsp;<a href="http://docs.opensensorhub.org/ows-framework-bindings/apidocs/org/vast/ows/sos/SOSOfferingCapabilities.html?is-external=true" title="class or interface in org.vast.ows.sos">SOSOfferingCapabilities</a>&nbsp;generateCapabilities()
                                              throws <a href="http://docs.opensensorhub.org/sensorhub-core/apidocs/org/sensorhub/api/service/ServiceException.html?is-external=true" title="class or interface in org.sensorhub.api.service">ServiceException</a></pre>
-<div class="block"><strong>Description copied from interface:&nbsp;<code><a href="../../../../../org/sensorhub/impl/service/sos/IDataProviderFactory.html#generateCapabilities()">IDataProviderFactory</a></code></strong></div>
+<div class="block"><strong>Description copied from interface:&nbsp;<code><a href="../../../../../org/sensorhub/impl/service/sos/ISOSDataProviderFactory.html#generateCapabilities()">ISOSDataProviderFactory</a></code></strong></div>
 <div class="block">Builds the offering capabilities using the provider configuration
  This will connect to source providers to retrieve the necessary metadata</div>
 <dl>
 <dt><strong>Specified by:</strong></dt>
-<dd><code><a href="../../../../../org/sensorhub/impl/service/sos/IDataProviderFactory.html#generateCapabilities()">generateCapabilities</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../org/sensorhub/impl/service/sos/IDataProviderFactory.html" title="interface in org.sensorhub.impl.service.sos">IDataProviderFactory</a></code></dd>
+<dd><code><a href="../../../../../org/sensorhub/impl/service/sos/ISOSDataProviderFactory.html#generateCapabilities()">generateCapabilities</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../org/sensorhub/impl/service/sos/ISOSDataProviderFactory.html" title="interface in org.sensorhub.impl.service.sos">ISOSDataProviderFactory</a></code></dd>
 <dt><span class="strong">Returns:</span></dt><dd>SOS capabilities object containing the maximum of metadata</dd>
 <dt><span class="strong">Throws:</span></dt>
 <dd><code><a href="http://docs.opensensorhub.org/sensorhub-core/apidocs/org/sensorhub/api/service/ServiceException.html?is-external=true" title="class or interface in org.sensorhub.api.service">ServiceException</a></code></dd></dl>
@@ -230,12 +232,12 @@ implements <a href="../../../../../org/sensorhub/impl/service/sos/IDataProviderF
 <h4>updateCapabilities</h4>
 <pre>public&nbsp;void&nbsp;updateCapabilities()
                         throws <a href="http://docs.opensensorhub.org/sensorhub-core/apidocs/org/sensorhub/api/service/ServiceException.html?is-external=true" title="class or interface in org.sensorhub.api.service">ServiceException</a></pre>
-<div class="block"><strong>Description copied from interface:&nbsp;<code><a href="../../../../../org/sensorhub/impl/service/sos/IDataProviderFactory.html#updateCapabilities()">IDataProviderFactory</a></code></strong></div>
+<div class="block"><strong>Description copied from interface:&nbsp;<code><a href="../../../../../org/sensorhub/impl/service/sos/ISOSDataProviderFactory.html#updateCapabilities()">ISOSDataProviderFactory</a></code></strong></div>
 <div class="block">Update capabilities previously generated by this provider if needed.
- The object updated must be the one returned by <a href="../../../../../org/sensorhub/impl/service/sos/IDataProviderFactory.html#generateCapabilities()"><code>IDataProviderFactory.generateCapabilities()</code></a></div>
+ The object updated must be the one returned by <a href="../../../../../org/sensorhub/impl/service/sos/ISOSDataProviderFactory.html#generateCapabilities()"><code>ISOSDataProviderFactory.generateCapabilities()</code></a></div>
 <dl>
 <dt><strong>Specified by:</strong></dt>
-<dd><code><a href="../../../../../org/sensorhub/impl/service/sos/IDataProviderFactory.html#updateCapabilities()">updateCapabilities</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../org/sensorhub/impl/service/sos/IDataProviderFactory.html" title="interface in org.sensorhub.impl.service.sos">IDataProviderFactory</a></code></dd>
+<dd><code><a href="../../../../../org/sensorhub/impl/service/sos/ISOSDataProviderFactory.html#updateCapabilities()">updateCapabilities</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../org/sensorhub/impl/service/sos/ISOSDataProviderFactory.html" title="interface in org.sensorhub.impl.service.sos">ISOSDataProviderFactory</a></code></dd>
 <dt><span class="strong">Throws:</span></dt>
 <dd><code><a href="http://docs.opensensorhub.org/sensorhub-core/apidocs/org/sensorhub/api/service/ServiceException.html?is-external=true" title="class or interface in org.sensorhub.api.service">ServiceException</a></code></dd></dl>
 </li>
@@ -247,28 +249,31 @@ implements <a href="../../../../../org/sensorhub/impl/service/sos/IDataProviderF
 <li class="blockList">
 <h4>generateSensorMLDescription</h4>
 <pre>public&nbsp;net.opengis.sensorml.v20.AbstractProcess&nbsp;generateSensorMLDescription(double&nbsp;time)</pre>
-<div class="block"><strong>Description copied from interface:&nbsp;<code><a href="../../../../../org/sensorhub/impl/service/sos/IDataProviderFactory.html#generateSensorMLDescription(double)">IDataProviderFactory</a></code></strong></div>
+<div class="block"><strong>Description copied from interface:&nbsp;<code><a href="../../../../../org/sensorhub/impl/service/sos/ISOSDataProviderFactory.html#generateSensorMLDescription(double)">ISOSDataProviderFactory</a></code></strong></div>
 <div class="block">Retrieves the SensorML description associated to this data source</div>
 <dl>
 <dt><strong>Specified by:</strong></dt>
-<dd><code><a href="../../../../../org/sensorhub/impl/service/sos/IDataProviderFactory.html#generateSensorMLDescription(double)">generateSensorMLDescription</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../org/sensorhub/impl/service/sos/IDataProviderFactory.html" title="interface in org.sensorhub.impl.service.sos">IDataProviderFactory</a></code></dd>
+<dd><code><a href="../../../../../org/sensorhub/impl/service/sos/ISOSDataProviderFactory.html#generateSensorMLDescription(double)">generateSensorMLDescription</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../org/sensorhub/impl/service/sos/ISOSDataProviderFactory.html" title="interface in org.sensorhub.impl.service.sos">ISOSDataProviderFactory</a></code></dd>
 <dt><span class="strong">Parameters:</span></dt><dd><code>time</code> - Time at which the description should be valid</dd>
 <dt><span class="strong">Returns:</span></dt><dd>the SensorML process object describing the sensor</dd></dl>
 </li>
 </ul>
-<a name="getNewDataProvider(org.vast.ows.sos.SOSDataFilter)">
+<a name="getNewDataProvider(org.sensorhub.impl.service.sos.SOSDataFilter)">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>getNewDataProvider</h4>
-<pre>public&nbsp;<a href="http://docs.opensensorhub.org/ows-framework-bindings/apidocs/org/vast/ows/sos/ISOSDataProvider.html?is-external=true" title="class or interface in org.vast.ows.sos">ISOSDataProvider</a>&nbsp;getNewDataProvider(<a href="http://docs.opensensorhub.org/ows-framework-bindings/apidocs/org/vast/ows/sos/SOSDataFilter.html?is-external=true" title="class or interface in org.vast.ows.sos">SOSDataFilter</a>&nbsp;filter)
-                                    throws <a href="http://docs.opensensorhub.org/sensorhub-core/apidocs/org/sensorhub/api/service/ServiceException.html?is-external=true" title="class or interface in org.sensorhub.api.service">ServiceException</a></pre>
+<pre>public&nbsp;<a href="../../../../../org/sensorhub/impl/service/sos/ISOSDataProvider.html" title="interface in org.sensorhub.impl.service.sos">ISOSDataProvider</a>&nbsp;getNewDataProvider(<a href="../../../../../org/sensorhub/impl/service/sos/SOSDataFilter.html" title="class in org.sensorhub.impl.service.sos">SOSDataFilter</a>&nbsp;filter)
+                                    throws <a href="http://docs.oracle.com/javase/7/docs/api/java/lang/Exception.html?is-external=true" title="class or interface in java.lang">Exception</a></pre>
+<div class="block"><strong>Description copied from interface:&nbsp;<code><a href="../../../../../org/sensorhub/impl/service/sos/ISOSDataProviderFactory.html#getNewDataProvider(org.sensorhub.impl.service.sos.SOSDataFilter)">ISOSDataProviderFactory</a></code></strong></div>
+<div class="block">Instantiates a new data provider</div>
 <dl>
 <dt><strong>Specified by:</strong></dt>
-<dd><code><a href="http://docs.opensensorhub.org/ows-framework-bindings/apidocs/org/vast/ows/sos/ISOSDataProviderFactory.html?is-external=true#getNewDataProvider(org.vast.ows.sos.SOSDataFilter)" title="class or interface in org.vast.ows.sos">getNewDataProvider</a></code>&nbsp;in interface&nbsp;<code><a href="http://docs.opensensorhub.org/ows-framework-bindings/apidocs/org/vast/ows/sos/ISOSDataProviderFactory.html?is-external=true" title="class or interface in org.vast.ows.sos">ISOSDataProviderFactory</a></code></dd>
+<dd><code><a href="../../../../../org/sensorhub/impl/service/sos/ISOSDataProviderFactory.html#getNewDataProvider(org.sensorhub.impl.service.sos.SOSDataFilter)">getNewDataProvider</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../org/sensorhub/impl/service/sos/ISOSDataProviderFactory.html" title="interface in org.sensorhub.impl.service.sos">ISOSDataProviderFactory</a></code></dd>
+<dt><span class="strong">Returns:</span></dt><dd>sos data provider</dd>
 <dt><span class="strong">Throws:</span></dt>
-<dd><code><a href="http://docs.opensensorhub.org/sensorhub-core/apidocs/org/sensorhub/api/service/ServiceException.html?is-external=true" title="class or interface in org.sensorhub.api.service">ServiceException</a></code></dd></dl>
+<dd><code><a href="http://docs.oracle.com/javase/7/docs/api/java/lang/Exception.html?is-external=true" title="class or interface in java.lang">Exception</a></code></dd></dl>
 </li>
 </ul>
 <a name="getFoiIterator(org.sensorhub.api.persistence.IFoiFilter)">
@@ -279,11 +284,11 @@ implements <a href="../../../../../org/sensorhub/impl/service/sos/IDataProviderF
 <h4>getFoiIterator</h4>
 <pre>public&nbsp;<a href="http://docs.oracle.com/javase/7/docs/api/java/util/Iterator.html?is-external=true" title="class or interface in java.util">Iterator</a>&lt;net.opengis.gml.v32.AbstractFeature&gt;&nbsp;getFoiIterator(<a href="http://docs.opensensorhub.org/sensorhub-core/apidocs/org/sensorhub/api/persistence/IFoiFilter.html?is-external=true" title="class or interface in org.sensorhub.api.persistence">IFoiFilter</a>&nbsp;filter)
                                                              throws <a href="http://docs.oracle.com/javase/7/docs/api/java/lang/Exception.html?is-external=true" title="class or interface in java.lang">Exception</a></pre>
-<div class="block"><strong>Description copied from interface:&nbsp;<code><a href="../../../../../org/sensorhub/impl/service/sos/IDataProviderFactory.html#getFoiIterator(org.sensorhub.api.persistence.IFoiFilter)">IDataProviderFactory</a></code></strong></div>
+<div class="block"><strong>Description copied from interface:&nbsp;<code><a href="../../../../../org/sensorhub/impl/service/sos/ISOSDataProviderFactory.html#getFoiIterator(org.sensorhub.api.persistence.IFoiFilter)">ISOSDataProviderFactory</a></code></strong></div>
 <div class="block">Retrieves iterator among features of interest matching the filter</div>
 <dl>
 <dt><strong>Specified by:</strong></dt>
-<dd><code><a href="../../../../../org/sensorhub/impl/service/sos/IDataProviderFactory.html#getFoiIterator(org.sensorhub.api.persistence.IFoiFilter)">getFoiIterator</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../org/sensorhub/impl/service/sos/IDataProviderFactory.html" title="interface in org.sensorhub.impl.service.sos">IDataProviderFactory</a></code></dd>
+<dd><code><a href="../../../../../org/sensorhub/impl/service/sos/ISOSDataProviderFactory.html#getFoiIterator(org.sensorhub.api.persistence.IFoiFilter)">getFoiIterator</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../org/sensorhub/impl/service/sos/ISOSDataProviderFactory.html" title="interface in org.sensorhub.impl.service.sos">ISOSDataProviderFactory</a></code></dd>
 <dt><span class="strong">Parameters:</span></dt><dd><code>filter</code> - feature filtering criterias</dd>
 <dt><span class="strong">Returns:</span></dt><dd>read-only iterator (remove method does nothing)</dd>
 <dt><span class="strong">Throws:</span></dt>
@@ -297,11 +302,11 @@ implements <a href="../../../../../org/sensorhub/impl/service/sos/IDataProviderF
 <li class="blockList">
 <h4>isEnabled</h4>
 <pre>public&nbsp;boolean&nbsp;isEnabled()</pre>
-<div class="block"><strong>Description copied from interface:&nbsp;<code><a href="../../../../../org/sensorhub/impl/service/sos/IDataProviderFactory.html#isEnabled()">IDataProviderFactory</a></code></strong></div>
+<div class="block"><strong>Description copied from interface:&nbsp;<code><a href="../../../../../org/sensorhub/impl/service/sos/ISOSDataProviderFactory.html#isEnabled()">ISOSDataProviderFactory</a></code></strong></div>
 <div class="block">Allows to check if provider is enabled</div>
 <dl>
 <dt><strong>Specified by:</strong></dt>
-<dd><code><a href="../../../../../org/sensorhub/impl/service/sos/IDataProviderFactory.html#isEnabled()">isEnabled</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../org/sensorhub/impl/service/sos/IDataProviderFactory.html" title="interface in org.sensorhub.impl.service.sos">IDataProviderFactory</a></code></dd>
+<dd><code><a href="../../../../../org/sensorhub/impl/service/sos/ISOSDataProviderFactory.html#isEnabled()">isEnabled</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../org/sensorhub/impl/service/sos/ISOSDataProviderFactory.html" title="interface in org.sensorhub.impl.service.sos">ISOSDataProviderFactory</a></code></dd>
 <dt><span class="strong">Returns:</span></dt><dd>true if enabled, false otherwise</dd></dl>
 </li>
 </ul>
@@ -312,11 +317,11 @@ implements <a href="../../../../../org/sensorhub/impl/service/sos/IDataProviderF
 <li class="blockList">
 <h4>cleanup</h4>
 <pre>public&nbsp;void&nbsp;cleanup()</pre>
-<div class="block"><strong>Description copied from interface:&nbsp;<code><a href="../../../../../org/sensorhub/impl/service/sos/IDataProviderFactory.html#cleanup()">IDataProviderFactory</a></code></strong></div>
+<div class="block"><strong>Description copied from interface:&nbsp;<code><a href="../../../../../org/sensorhub/impl/service/sos/ISOSDataProviderFactory.html#cleanup()">ISOSDataProviderFactory</a></code></strong></div>
 <div class="block">Called when the provider is removed</div>
 <dl>
 <dt><strong>Specified by:</strong></dt>
-<dd><code><a href="../../../../../org/sensorhub/impl/service/sos/IDataProviderFactory.html#cleanup()">cleanup</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../org/sensorhub/impl/service/sos/IDataProviderFactory.html" title="interface in org.sensorhub.impl.service.sos">IDataProviderFactory</a></code></dd>
+<dd><code><a href="../../../../../org/sensorhub/impl/service/sos/ISOSDataProviderFactory.html#cleanup()">cleanup</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../org/sensorhub/impl/service/sos/ISOSDataProviderFactory.html" title="interface in org.sensorhub.impl.service.sos">ISOSDataProviderFactory</a></code></dd>
 </dl>
 </li>
 </ul>

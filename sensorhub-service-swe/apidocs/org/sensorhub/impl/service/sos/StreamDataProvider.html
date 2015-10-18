@@ -95,7 +95,7 @@
 <li class="blockList">
 <dl>
 <dt>All Implemented Interfaces:</dt>
-<dd><a href="http://docs.opensensorhub.org/sensorhub-core/apidocs/org/sensorhub/api/common/IEventListener.html?is-external=true" title="class or interface in org.sensorhub.api.common">IEventListener</a>, <a href="http://docs.opensensorhub.org/ows-framework-bindings/apidocs/org/vast/ows/sos/ISOSDataProvider.html?is-external=true" title="class or interface in org.vast.ows.sos">ISOSDataProvider</a></dd>
+<dd><a href="http://docs.opensensorhub.org/sensorhub-core/apidocs/org/sensorhub/api/common/IEventListener.html?is-external=true" title="class or interface in org.sensorhub.api.common">IEventListener</a>, <a href="../../../../../org/sensorhub/impl/service/sos/ISOSDataProvider.html" title="interface in org.sensorhub.impl.service.sos">ISOSDataProvider</a></dd>
 </dl>
 <dl>
 <dt>Direct Known Subclasses:</dt>
@@ -105,7 +105,7 @@
 <br>
 <pre>public abstract class <span class="strong">StreamDataProvider</span>
 extends <a href="http://docs.oracle.com/javase/7/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</a>
-implements <a href="http://docs.opensensorhub.org/ows-framework-bindings/apidocs/org/vast/ows/sos/ISOSDataProvider.html?is-external=true" title="class or interface in org.vast.ows.sos">ISOSDataProvider</a>, <a href="http://docs.opensensorhub.org/sensorhub-core/apidocs/org/sensorhub/api/common/IEventListener.html?is-external=true" title="class or interface in org.sensorhub.api.common">IEventListener</a></pre>
+implements <a href="../../../../../org/sensorhub/impl/service/sos/ISOSDataProvider.html" title="interface in org.sensorhub.impl.service.sos">ISOSDataProvider</a>, <a href="http://docs.opensensorhub.org/sensorhub-core/apidocs/org/sensorhub/api/common/IEventListener.html?is-external=true" title="class or interface in org.sensorhub.api.common">IEventListener</a></pre>
 <div class="block"><p>
  Implementation of SOS data provider connecting to a streaming data source
  </p></div>
@@ -131,9 +131,9 @@ implements <a href="http://docs.opensensorhub.org/ows-framework-bindings/apidocs
 <th class="colOne" scope="col">Constructor and Description</th>
 </tr>
 <tr class="altColor">
-<td class="colOne"><code><strong><a href="../../../../../org/sensorhub/impl/service/sos/StreamDataProvider.html#StreamDataProvider(org.sensorhub.api.data.IDataProducerModule,%20org.sensorhub.impl.service.sos.StreamDataProviderConfig,%20org.vast.ows.sos.SOSDataFilter)">StreamDataProvider</a></strong>(<a href="http://docs.opensensorhub.org/sensorhub-core/apidocs/org/sensorhub/api/data/IDataProducerModule.html?is-external=true" title="class or interface in org.sensorhub.api.data">IDataProducerModule</a>&lt;?&gt;&nbsp;dataSource,
+<td class="colOne"><code><strong><a href="../../../../../org/sensorhub/impl/service/sos/StreamDataProvider.html#StreamDataProvider(org.sensorhub.api.data.IDataProducerModule,%20org.sensorhub.impl.service.sos.StreamDataProviderConfig,%20org.sensorhub.impl.service.sos.SOSDataFilter)">StreamDataProvider</a></strong>(<a href="http://docs.opensensorhub.org/sensorhub-core/apidocs/org/sensorhub/api/data/IDataProducerModule.html?is-external=true" title="class or interface in org.sensorhub.api.data">IDataProducerModule</a>&lt;?&gt;&nbsp;dataSource,
                   <a href="../../../../../org/sensorhub/impl/service/sos/StreamDataProviderConfig.html" title="class in org.sensorhub.impl.service.sos">StreamDataProviderConfig</a>&nbsp;config,
-                  <a href="http://docs.opensensorhub.org/ows-framework-bindings/apidocs/org/vast/ows/sos/SOSDataFilter.html?is-external=true" title="class or interface in org.vast.ows.sos">SOSDataFilter</a>&nbsp;filter)</code>&nbsp;</td>
+                  <a href="../../../../../org/sensorhub/impl/service/sos/SOSDataFilter.html" title="class in org.sensorhub.impl.service.sos">SOSDataFilter</a>&nbsp;filter)</code>&nbsp;</td>
 </tr>
 </table>
 </li>
@@ -152,23 +152,38 @@ implements <a href="http://docs.opensensorhub.org/ows-framework-bindings/apidocs
 </tr>
 <tr class="altColor">
 <td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><strong><a href="../../../../../org/sensorhub/impl/service/sos/StreamDataProvider.html#close()">close</a></strong>()</code>&nbsp;</td>
+<td class="colLast"><code><strong><a href="../../../../../org/sensorhub/impl/service/sos/StreamDataProvider.html#close()">close</a></strong>()</code>
+<div class="block">Properly releases all resources accessed by provider
+ (for instance, when connection is ended by client)</div>
+</td>
 </tr>
 <tr class="rowColor">
 <td class="colFirst"><code>net.opengis.swe.v20.DataEncoding</code></td>
-<td class="colLast"><code><strong><a href="../../../../../org/sensorhub/impl/service/sos/StreamDataProvider.html#getDefaultResultEncoding()">getDefaultResultEncoding</a></strong>()</code>&nbsp;</td>
+<td class="colLast"><code><strong><a href="../../../../../org/sensorhub/impl/service/sos/StreamDataProvider.html#getDefaultResultEncoding()">getDefaultResultEncoding</a></strong>()</code>
+<div class="block">Requests provider to specify the preferred encoding for the
+ underlying data, given the current config and filter</div>
+</td>
 </tr>
 <tr class="altColor">
 <td class="colFirst"><code>org.vast.ogc.om.IObservation</code></td>
-<td class="colLast"><code><strong><a href="../../../../../org/sensorhub/impl/service/sos/StreamDataProvider.html#getNextObservation()">getNextObservation</a></strong>()</code>&nbsp;</td>
+<td class="colLast"><code><strong><a href="../../../../../org/sensorhub/impl/service/sos/StreamDataProvider.html#getNextObservation()">getNextObservation</a></strong>()</code>
+<div class="block">Requests provider to generate the next observation from the
+ underlying data, given the current config and filter</div>
+</td>
 </tr>
 <tr class="rowColor">
 <td class="colFirst"><code>net.opengis.swe.v20.DataBlock</code></td>
-<td class="colLast"><code><strong><a href="../../../../../org/sensorhub/impl/service/sos/StreamDataProvider.html#getNextResultRecord()">getNextResultRecord</a></strong>()</code>&nbsp;</td>
+<td class="colLast"><code><strong><a href="../../../../../org/sensorhub/impl/service/sos/StreamDataProvider.html#getNextResultRecord()">getNextResultRecord</a></strong>()</code>
+<div class="block">Requests provider to generate the next CDM record from the
+ underlying data, given the current config and filter</div>
+</td>
 </tr>
 <tr class="altColor">
 <td class="colFirst"><code>net.opengis.swe.v20.DataComponent</code></td>
-<td class="colLast"><code><strong><a href="../../../../../org/sensorhub/impl/service/sos/StreamDataProvider.html#getResultStructure()">getResultStructure</a></strong>()</code>&nbsp;</td>
+<td class="colLast"><code><strong><a href="../../../../../org/sensorhub/impl/service/sos/StreamDataProvider.html#getResultStructure()">getResultStructure</a></strong>()</code>
+<div class="block">Requests provider to provide the result structure corresponding
+ to the current config and filter</div>
+</td>
 </tr>
 <tr class="rowColor">
 <td class="colFirst"><code>void</code></td>
@@ -196,7 +211,7 @@ implements <a href="http://docs.opensensorhub.org/ows-framework-bindings/apidocs
 <!--   -->
 </a>
 <h3>Constructor Detail</h3>
-<a name="StreamDataProvider(org.sensorhub.api.data.IDataProducerModule, org.sensorhub.impl.service.sos.StreamDataProviderConfig, org.vast.ows.sos.SOSDataFilter)">
+<a name="StreamDataProvider(org.sensorhub.api.data.IDataProducerModule, org.sensorhub.impl.service.sos.StreamDataProviderConfig, org.sensorhub.impl.service.sos.SOSDataFilter)">
 <!--   -->
 </a>
 <ul class="blockListLast">
@@ -204,7 +219,7 @@ implements <a href="http://docs.opensensorhub.org/ows-framework-bindings/apidocs
 <h4>StreamDataProvider</h4>
 <pre>public&nbsp;StreamDataProvider(<a href="http://docs.opensensorhub.org/sensorhub-core/apidocs/org/sensorhub/api/data/IDataProducerModule.html?is-external=true" title="class or interface in org.sensorhub.api.data">IDataProducerModule</a>&lt;?&gt;&nbsp;dataSource,
                   <a href="../../../../../org/sensorhub/impl/service/sos/StreamDataProviderConfig.html" title="class in org.sensorhub.impl.service.sos">StreamDataProviderConfig</a>&nbsp;config,
-                  <a href="http://docs.opensensorhub.org/ows-framework-bindings/apidocs/org/vast/ows/sos/SOSDataFilter.html?is-external=true" title="class or interface in org.vast.ows.sos">SOSDataFilter</a>&nbsp;filter)
+                  <a href="../../../../../org/sensorhub/impl/service/sos/SOSDataFilter.html" title="class in org.sensorhub.impl.service.sos">SOSDataFilter</a>&nbsp;filter)
                    throws <a href="http://docs.opensensorhub.org/sensorhub-core/apidocs/org/sensorhub/api/service/ServiceException.html?is-external=true" title="class or interface in org.sensorhub.api.service">ServiceException</a></pre>
 <dl><dt><span class="strong">Throws:</span></dt>
 <dd><code><a href="http://docs.opensensorhub.org/sensorhub-core/apidocs/org/sensorhub/api/service/ServiceException.html?is-external=true" title="class or interface in org.sensorhub.api.service">ServiceException</a></code></dd></dl>
@@ -226,9 +241,13 @@ implements <a href="http://docs.opensensorhub.org/ows-framework-bindings/apidocs
 <h4>getNextObservation</h4>
 <pre>public&nbsp;org.vast.ogc.om.IObservation&nbsp;getNextObservation()
                                                 throws <a href="http://docs.opensensorhub.org/sensorhub-core/apidocs/org/sensorhub/api/common/SensorHubException.html?is-external=true" title="class or interface in org.sensorhub.api.common">SensorHubException</a></pre>
+<div class="block"><strong>Description copied from interface:&nbsp;<code><a href="../../../../../org/sensorhub/impl/service/sos/ISOSDataProvider.html#getNextObservation()">ISOSDataProvider</a></code></strong></div>
+<div class="block">Requests provider to generate the next observation from the
+ underlying data, given the current config and filter</div>
 <dl>
 <dt><strong>Specified by:</strong></dt>
-<dd><code><a href="http://docs.opensensorhub.org/ows-framework-bindings/apidocs/org/vast/ows/sos/ISOSDataProvider.html?is-external=true#getNextObservation()" title="class or interface in org.vast.ows.sos">getNextObservation</a></code>&nbsp;in interface&nbsp;<code><a href="http://docs.opensensorhub.org/ows-framework-bindings/apidocs/org/vast/ows/sos/ISOSDataProvider.html?is-external=true" title="class or interface in org.vast.ows.sos">ISOSDataProvider</a></code></dd>
+<dd><code><a href="../../../../../org/sensorhub/impl/service/sos/ISOSDataProvider.html#getNextObservation()">getNextObservation</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../org/sensorhub/impl/service/sos/ISOSDataProvider.html" title="interface in org.sensorhub.impl.service.sos">ISOSDataProvider</a></code></dd>
+<dt><span class="strong">Returns:</span></dt><dd>observation instance</dd>
 <dt><span class="strong">Throws:</span></dt>
 <dd><code><a href="http://docs.opensensorhub.org/sensorhub-core/apidocs/org/sensorhub/api/common/SensorHubException.html?is-external=true" title="class or interface in org.sensorhub.api.common">SensorHubException</a></code></dd></dl>
 </li>
@@ -240,10 +259,13 @@ implements <a href="http://docs.opensensorhub.org/ows-framework-bindings/apidocs
 <li class="blockList">
 <h4>getNextResultRecord</h4>
 <pre>public&nbsp;net.opengis.swe.v20.DataBlock&nbsp;getNextResultRecord()</pre>
+<div class="block"><strong>Description copied from interface:&nbsp;<code><a href="../../../../../org/sensorhub/impl/service/sos/ISOSDataProvider.html#getNextResultRecord()">ISOSDataProvider</a></code></strong></div>
+<div class="block">Requests provider to generate the next CDM record from the
+ underlying data, given the current config and filter</div>
 <dl>
 <dt><strong>Specified by:</strong></dt>
-<dd><code><a href="http://docs.opensensorhub.org/ows-framework-bindings/apidocs/org/vast/ows/sos/ISOSDataProvider.html?is-external=true#getNextResultRecord()" title="class or interface in org.vast.ows.sos">getNextResultRecord</a></code>&nbsp;in interface&nbsp;<code><a href="http://docs.opensensorhub.org/ows-framework-bindings/apidocs/org/vast/ows/sos/ISOSDataProvider.html?is-external=true" title="class or interface in org.vast.ows.sos">ISOSDataProvider</a></code></dd>
-</dl>
+<dd><code><a href="../../../../../org/sensorhub/impl/service/sos/ISOSDataProvider.html#getNextResultRecord()">getNextResultRecord</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../org/sensorhub/impl/service/sos/ISOSDataProvider.html" title="interface in org.sensorhub.impl.service.sos">ISOSDataProvider</a></code></dd>
+<dt><span class="strong">Returns:</span></dt><dd>data block</dd></dl>
 </li>
 </ul>
 <a name="getResultStructure()">
@@ -253,10 +275,13 @@ implements <a href="http://docs.opensensorhub.org/ows-framework-bindings/apidocs
 <li class="blockList">
 <h4>getResultStructure</h4>
 <pre>public&nbsp;net.opengis.swe.v20.DataComponent&nbsp;getResultStructure()</pre>
+<div class="block"><strong>Description copied from interface:&nbsp;<code><a href="../../../../../org/sensorhub/impl/service/sos/ISOSDataProvider.html#getResultStructure()">ISOSDataProvider</a></code></strong></div>
+<div class="block">Requests provider to provide the result structure corresponding
+ to the current config and filter</div>
 <dl>
 <dt><strong>Specified by:</strong></dt>
-<dd><code><a href="http://docs.opensensorhub.org/ows-framework-bindings/apidocs/org/vast/ows/sos/ISOSDataProvider.html?is-external=true#getResultStructure()" title="class or interface in org.vast.ows.sos">getResultStructure</a></code>&nbsp;in interface&nbsp;<code><a href="http://docs.opensensorhub.org/ows-framework-bindings/apidocs/org/vast/ows/sos/ISOSDataProvider.html?is-external=true" title="class or interface in org.vast.ows.sos">ISOSDataProvider</a></code></dd>
-</dl>
+<dd><code><a href="../../../../../org/sensorhub/impl/service/sos/ISOSDataProvider.html#getResultStructure()">getResultStructure</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../org/sensorhub/impl/service/sos/ISOSDataProvider.html" title="interface in org.sensorhub.impl.service.sos">ISOSDataProvider</a></code></dd>
+<dt><span class="strong">Returns:</span></dt><dd>data component</dd></dl>
 </li>
 </ul>
 <a name="getDefaultResultEncoding()">
@@ -266,10 +291,13 @@ implements <a href="http://docs.opensensorhub.org/ows-framework-bindings/apidocs
 <li class="blockList">
 <h4>getDefaultResultEncoding</h4>
 <pre>public&nbsp;net.opengis.swe.v20.DataEncoding&nbsp;getDefaultResultEncoding()</pre>
+<div class="block"><strong>Description copied from interface:&nbsp;<code><a href="../../../../../org/sensorhub/impl/service/sos/ISOSDataProvider.html#getDefaultResultEncoding()">ISOSDataProvider</a></code></strong></div>
+<div class="block">Requests provider to specify the preferred encoding for the
+ underlying data, given the current config and filter</div>
 <dl>
 <dt><strong>Specified by:</strong></dt>
-<dd><code><a href="http://docs.opensensorhub.org/ows-framework-bindings/apidocs/org/vast/ows/sos/ISOSDataProvider.html?is-external=true#getDefaultResultEncoding()" title="class or interface in org.vast.ows.sos">getDefaultResultEncoding</a></code>&nbsp;in interface&nbsp;<code><a href="http://docs.opensensorhub.org/ows-framework-bindings/apidocs/org/vast/ows/sos/ISOSDataProvider.html?is-external=true" title="class or interface in org.vast.ows.sos">ISOSDataProvider</a></code></dd>
-</dl>
+<dd><code><a href="../../../../../org/sensorhub/impl/service/sos/ISOSDataProvider.html#getDefaultResultEncoding()">getDefaultResultEncoding</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../org/sensorhub/impl/service/sos/ISOSDataProvider.html" title="interface in org.sensorhub.impl.service.sos">ISOSDataProvider</a></code></dd>
+<dt><span class="strong">Returns:</span></dt><dd>encoding instance</dd></dl>
 </li>
 </ul>
 <a name="handleEvent(org.sensorhub.api.common.Event)">
@@ -292,9 +320,12 @@ implements <a href="http://docs.opensensorhub.org/ows-framework-bindings/apidocs
 <li class="blockList">
 <h4>close</h4>
 <pre>public&nbsp;void&nbsp;close()</pre>
+<div class="block"><strong>Description copied from interface:&nbsp;<code><a href="../../../../../org/sensorhub/impl/service/sos/ISOSDataProvider.html#close()">ISOSDataProvider</a></code></strong></div>
+<div class="block">Properly releases all resources accessed by provider
+ (for instance, when connection is ended by client)</div>
 <dl>
 <dt><strong>Specified by:</strong></dt>
-<dd><code><a href="http://docs.opensensorhub.org/ows-framework-bindings/apidocs/org/vast/ows/sos/ISOSDataProvider.html?is-external=true#close()" title="class or interface in org.vast.ows.sos">close</a></code>&nbsp;in interface&nbsp;<code><a href="http://docs.opensensorhub.org/ows-framework-bindings/apidocs/org/vast/ows/sos/ISOSDataProvider.html?is-external=true" title="class or interface in org.vast.ows.sos">ISOSDataProvider</a></code></dd>
+<dd><code><a href="../../../../../org/sensorhub/impl/service/sos/ISOSDataProvider.html#close()">close</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../org/sensorhub/impl/service/sos/ISOSDataProvider.html" title="interface in org.sensorhub.impl.service.sos">ISOSDataProvider</a></code></dd>
 </dl>
 </li>
 </ul>

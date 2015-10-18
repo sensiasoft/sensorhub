@@ -194,6 +194,11 @@
 <li type="circle">org.vast.unit.<a href="org/vast/unit/GenericUnitConverter.html" title="class in org.vast.unit"><span class="strong">GenericUnitConverter</span></a></li>
 </ul>
 </li>
+<li type="circle">org.vast.data.<a href="org/vast/data/BaseTreeVisitor.html" title="class in org.vast.data"><span class="strong">BaseTreeVisitor</span></a> (implements net.opengis.swe.v20.<a href="net/opengis/swe/v20/DataComponentVisitor.html" title="interface in net.opengis.swe.v20">DataComponentVisitor</a>)
+<ul>
+<li type="circle">org.vast.data.<a href="org/vast/data/ScalarVisitor.html" title="class in org.vast.data"><span class="strong">ScalarVisitor</span></a></li>
+</ul>
+</li>
 <li type="circle">org.vast.ogc.xlink.<a href="org/vast/ogc/xlink/CachedReference.html" title="class in org.vast.ogc.xlink"><span class="strong">CachedReference</span></a>&lt;TargetType&gt; (implements org.vast.ogc.xlink.<a href="org/vast/ogc/xlink/IXlinkReference.html" title="interface in org.vast.ogc.xlink">IXlinkReference</a>&lt;TargetType&gt;)
 <ul>
 <li type="circle">org.vast.ogc.def.<a href="org/vast/ogc/def/DefinitionRef.html" title="class in org.vast.ogc.def"><span class="strong">DefinitionRef</span></a> (implements org.vast.ogc.def.<a href="org/vast/ogc/def/IDefinition.html" title="interface in org.vast.ogc.def">IDefinition</a>)</li>
@@ -233,6 +238,7 @@
 <ul>
 <li type="circle">org.vast.swe.<a href="org/vast/swe/AsciiDataWriter.html" title="class in org.vast.swe"><span class="strong">AsciiDataWriter</span></a></li>
 <li type="circle">org.vast.swe.<a href="org/vast/swe/BinaryDataWriter.html" title="class in org.vast.swe"><span class="strong">BinaryDataWriter</span></a></li>
+<li type="circle">org.vast.swe.<a href="org/vast/swe/FilteredWriter.html" title="class in org.vast.swe"><span class="strong">FilteredWriter</span></a></li>
 <li type="circle">org.vast.swe.<a href="org/vast/swe/JSONDataWriter.html" title="class in org.vast.swe"><span class="strong">JSONDataWriter</span></a></li>
 <li type="circle">org.vast.swe.<a href="org/vast/swe/XmlDataWriter.html" title="class in org.vast.swe"><span class="strong">XmlDataWriter</span></a></li>
 <li type="circle">org.vast.swe.<a href="org/vast/swe/XmlDataWriterDOM.html" title="class in org.vast.swe"><span class="strong">XmlDataWriterDOM</span></a></li>
@@ -294,7 +300,6 @@
 <li type="circle">org.vast.util.<a href="org/vast/util/Interval.html" title="class in org.vast.util"><span class="strong">Interval</span></a></li>
 <li type="circle">org.vast.util.<a href="org/vast/util/MessageSystem.html" title="class in org.vast.util"><span class="strong">MessageSystem</span></a></li>
 <li type="circle">net.opengis.<a href="net/opengis/NamespaceRegister.html" title="class in net.opengis"><span class="strong">NamespaceRegister</span></a> (implements javax.xml.namespace.<a href="http://docs.oracle.com/javase/7/docs/api/javax/xml/namespace/NamespaceContext.html?is-external=true" title="class or interface in javax.xml.namespace">NamespaceContext</a>)</li>
-<li type="circle">org.vast.swe.<a href="org/vast/swe/NewTextDataParser.html" title="class in org.vast.swe"><span class="strong">NewTextDataParser</span></a> (implements org.vast.cdm.common.<a href="org/vast/cdm/common/DataStreamParser.html" title="interface in org.vast.cdm.common">DataStreamParser</a>)</li>
 <li type="circle">org.vast.data.<a href="org/vast/data/NilValueImpl.html" title="class in org.vast.data"><span class="strong">NilValueImpl</span></a> (implements net.opengis.swe.v20.<a href="net/opengis/swe/v20/NilValue.html" title="interface in net.opengis.swe.v20">NilValue</a>)</li>
 <li type="circle">org.vast.ogc.<a href="org/vast/ogc/OGCExceptionReader.html" title="class in org.vast.ogc"><span class="strong">OGCExceptionReader</span></a></li>
 <li type="circle">net.opengis.<a href="net/opengis/OgcPropertyImpl.html" title="class in net.opengis"><span class="strong">OgcPropertyImpl</span></a>&lt;ValueType&gt; (implements net.opengis.<a href="net/opengis/OgcProperty.html" title="interface in net.opengis">OgcProperty</a>&lt;ValueType&gt;)
@@ -324,7 +329,6 @@
 </li>
 </ul>
 </li>
-<li type="circle">org.vast.xml.<a href="org/vast/xml/QName.html" title="class in org.vast.xml"><span class="strong">QName</span></a></li>
 <li type="circle">org.vast.swe.<a href="org/vast/swe/ScalarIndexer.html" title="class in org.vast.swe"><span class="strong">ScalarIndexer</span></a></li>
 <li type="circle">org.vast.swe.<a href="org/vast/swe/SWEConstants.html" title="class in org.vast.swe"><span class="strong">SWEConstants</span></a></li>
 <li type="circle">org.vast.swe.<a href="org/vast/swe/SWEDataTypeUtils.html" title="class in org.vast.swe"><span class="strong">SWEDataTypeUtils</span></a></li>
@@ -761,7 +765,7 @@
 </li>
 <li type="circle">org.vast.cdm.common.<a href="org/vast/cdm/common/CompressedStreamParser.html" title="interface in org.vast.cdm.common"><span class="strong">CompressedStreamParser</span></a></li>
 <li type="circle">org.vast.cdm.common.<a href="org/vast/cdm/common/CompressedStreamWriter.html" title="interface in org.vast.cdm.common"><span class="strong">CompressedStreamWriter</span></a></li>
-<li type="circle">org.vast.data.<a href="org/vast/data/DataBlockVisitor.html" title="interface in org.vast.data"><span class="strong">DataBlockVisitor</span></a></li>
+<li type="circle">net.opengis.swe.v20.<a href="net/opengis/swe/v20/DataComponentVisitor.html" title="interface in net.opengis.swe.v20"><span class="strong">DataComponentVisitor</span></a></li>
 <li type="circle">org.vast.cdm.common.<a href="org/vast/cdm/common/DataHandler.html" title="interface in org.vast.cdm.common"><span class="strong">DataHandler</span></a></li>
 <li type="circle">java.io.<a href="http://docs.oracle.com/javase/7/docs/api/java/io/DataInput.html?is-external=true" title="class or interface in java.io"><span class="strong">DataInput</span></a>
 <ul>

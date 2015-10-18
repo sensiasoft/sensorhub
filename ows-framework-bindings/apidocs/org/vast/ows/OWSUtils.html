@@ -165,11 +165,11 @@ extends <a href="../../../org/vast/ows/OWSCommonUtils.html" title="class in org.
 </tr>
 <tr class="altColor">
 <td class="colFirst"><code>static <a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a></code></td>
-<td class="colLast"><code><strong><a href="../../../org/vast/ows/OWSUtils.html#soap11Uri">soap11Uri</a></strong></code>&nbsp;</td>
+<td class="colLast"><code><strong><a href="../../../org/vast/ows/OWSUtils.html#SOAP11_URI">SOAP11_URI</a></strong></code>&nbsp;</td>
 </tr>
 <tr class="rowColor">
 <td class="colFirst"><code>static <a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a></code></td>
-<td class="colLast"><code><strong><a href="../../../org/vast/ows/OWSUtils.html#soap12Uri">soap12Uri</a></strong></code>&nbsp;</td>
+<td class="colLast"><code><strong><a href="../../../org/vast/ows/OWSUtils.html#SOAP12_URI">SOAP12_URI</a></strong></code>&nbsp;</td>
 </tr>
 <tr class="altColor">
 <td class="colFirst"><code>static <a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a></code></td>
@@ -448,11 +448,6 @@ extends <a href="../../../org/vast/ows/OWSCommonUtils.html" title="class in org.
 </td>
 </tr>
 <tr class="altColor">
-<td class="colFirst"><code><a href="http://docs.oracle.com/javase/7/docs/api/org/w3c/dom/Element.html?is-external=true" title="class or interface in org.w3c.dom">Element</a></code></td>
-<td class="colLast"><code><strong><a href="../../../org/vast/ows/OWSUtils.html#skipSoapEnvelope(org.vast.xml.DOMHelper,%20org.w3c.dom.Element)">skipSoapEnvelope</a></strong>(org.vast.xml.DOMHelper&nbsp;dom,
-                <a href="http://docs.oracle.com/javase/7/docs/api/org/w3c/dom/Element.html?is-external=true" title="class or interface in org.w3c.dom">Element</a>&nbsp;requestElt)</code>&nbsp;</td>
-</tr>
-<tr class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/ows/OWSUtils.html#writeXMLException(java.io.OutputStream,%20java.lang.String,%20java.lang.String,%20org.vast.ows.OWSException)">writeXMLException</a></strong>(<a href="http://docs.oracle.com/javase/7/docs/api/java/io/OutputStream.html?is-external=true" title="class or interface in java.io">OutputStream</a>&nbsp;os,
                  <a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;serviceType,
@@ -461,14 +456,14 @@ extends <a href="../../../org/vast/ows/OWSCommonUtils.html" title="class in org.
 <div class="block">Helper method to write OWS exception reports</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/ows/OWSUtils.html#writeXMLQuery(java.io.OutputStream,%20org.vast.ows.OWSRequest)">writeXMLQuery</a></strong>(<a href="http://docs.oracle.com/javase/7/docs/api/java/io/OutputStream.html?is-external=true" title="class or interface in java.io">OutputStream</a>&nbsp;os,
              <a href="../../../org/vast/ows/OWSRequest.html" title="class in org.vast.ows">OWSRequest</a>&nbsp;request)</code>
 <div class="block">Helper method to write any OWS XML request directly to an output stream</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/ows/OWSUtils.html#writeXMLResponse(java.io.OutputStream,%20org.vast.ows.OWSResponse)">writeXMLResponse</a></strong>(<a href="http://docs.oracle.com/javase/7/docs/api/java/io/OutputStream.html?is-external=true" title="class or interface in java.io">OutputStream</a>&nbsp;os,
                 <a href="../../../org/vast/ows/OWSResponse.html" title="class in org.vast.ows">OWSResponse</a>&nbsp;response)</code>
@@ -476,11 +471,20 @@ extends <a href="../../../org/vast/ows/OWSCommonUtils.html" title="class in org.
  The version specified in the response object determines the version of writer to use</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/ows/OWSUtils.html#writeXMLResponse(java.io.OutputStream,%20org.vast.ows.OWSResponse,%20java.lang.String)">writeXMLResponse</a></strong>(<a href="http://docs.oracle.com/javase/7/docs/api/java/io/OutputStream.html?is-external=true" title="class or interface in java.io">OutputStream</a>&nbsp;os,
                 <a href="../../../org/vast/ows/OWSResponse.html" title="class in org.vast.ows">OWSResponse</a>&nbsp;response,
                 <a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;version)</code>
+<div class="block">Helper method to write any OWS XML response directly to an output stream</div>
+</td>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><strong><a href="../../../org/vast/ows/OWSUtils.html#writeXMLResponse(java.io.OutputStream,%20org.vast.ows.OWSResponse,%20java.lang.String,%20java.lang.String)">writeXMLResponse</a></strong>(<a href="http://docs.oracle.com/javase/7/docs/api/java/io/OutputStream.html?is-external=true" title="class or interface in java.io">OutputStream</a>&nbsp;os,
+                <a href="../../../org/vast/ows/OWSResponse.html" title="class in org.vast.ows">OWSResponse</a>&nbsp;response,
+                <a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;version,
+                <a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;soapVersion)</code>
 <div class="block">Helper method to write any OWS XML response directly to an output stream</div>
 </td>
 </tr>
@@ -673,26 +677,6 @@ extends <a href="../../../org/vast/ows/OWSCommonUtils.html" title="class in org.
 <dl><dt><span class="strong">See Also:</span></dt><dd><a href="../../../constant-values.html#org.vast.ows.OWSUtils.SLD">Constant Field Values</a></dd></dl>
 </li>
 </ul>
-<a name="soap11Uri">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>soap11Uri</h4>
-<pre>public static final&nbsp;<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a> soap11Uri</pre>
-<dl><dt><span class="strong">See Also:</span></dt><dd><a href="../../../constant-values.html#org.vast.ows.OWSUtils.soap11Uri">Constant Field Values</a></dd></dl>
-</li>
-</ul>
-<a name="soap12Uri">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>soap12Uri</h4>
-<pre>public static final&nbsp;<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a> soap12Uri</pre>
-<dl><dt><span class="strong">See Also:</span></dt><dd><a href="../../../constant-values.html#org.vast.ows.OWSUtils.soap12Uri">Constant Field Values</a></dd></dl>
-</li>
-</ul>
 <a name="unsupportedSpec">
 <!--   -->
 </a>
@@ -716,11 +700,31 @@ extends <a href="../../../org/vast/ows/OWSCommonUtils.html" title="class in org.
 <a name="ioError">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>ioError</h4>
 <pre>public static final&nbsp;<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a> ioError</pre>
 <dl><dt><span class="strong">See Also:</span></dt><dd><a href="../../../constant-values.html#org.vast.ows.OWSUtils.ioError">Constant Field Values</a></dd></dl>
+</li>
+</ul>
+<a name="SOAP11_URI">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>SOAP11_URI</h4>
+<pre>public static final&nbsp;<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a> SOAP11_URI</pre>
+<dl><dt><span class="strong">See Also:</span></dt><dd><a href="../../../constant-values.html#org.vast.ows.OWSUtils.SOAP11_URI">Constant Field Values</a></dd></dl>
+</li>
+</ul>
+<a name="SOAP12_URI">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>SOAP12_URI</h4>
+<pre>public static final&nbsp;<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a> SOAP12_URI</pre>
+<dl><dt><span class="strong">See Also:</span></dt><dd><a href="../../../constant-values.html#org.vast.ows.OWSUtils.SOAP12_URI">Constant Field Values</a></dd></dl>
 </li>
 </ul>
 </li>
@@ -765,16 +769,6 @@ extends <a href="../../../org/vast/ows/OWSCommonUtils.html" title="class in org.
 <h4>getNamespaceURI</h4>
 <pre>public static&nbsp;<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;getNamespaceURI(<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;spec,
                      <a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;version)</pre>
-</li>
-</ul>
-<a name="skipSoapEnvelope(org.vast.xml.DOMHelper, org.w3c.dom.Element)">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>skipSoapEnvelope</h4>
-<pre>public&nbsp;<a href="http://docs.oracle.com/javase/7/docs/api/org/w3c/dom/Element.html?is-external=true" title="class or interface in org.w3c.dom">Element</a>&nbsp;skipSoapEnvelope(org.vast.xml.DOMHelper&nbsp;dom,
-                       <a href="http://docs.oracle.com/javase/7/docs/api/org/w3c/dom/Element.html?is-external=true" title="class or interface in org.w3c.dom">Element</a>&nbsp;requestElt)</pre>
 </li>
 </ul>
 <a name="readXMLQuery(org.vast.xml.DOMHelper, org.w3c.dom.Element, java.lang.String, java.lang.String)">
@@ -1107,6 +1101,24 @@ extends <a href="../../../org/vast/ows/OWSCommonUtils.html" title="class in org.
 <div class="block">Helper method to write any OWS XML response directly to an output stream.<br/>
  The version specified in the response object determines the version of writer to use</div>
 <dl><dt><span class="strong">Parameters:</span></dt><dd><code>os</code> - output stream to write to</dd><dd><code>response</code> - OWS response object</dd>
+<dt><span class="strong">Throws:</span></dt>
+<dd><code><a href="../../../org/vast/ows/OWSException.html" title="class in org.vast.ows">OWSException</a></code></dd></dl>
+</li>
+</ul>
+<a name="writeXMLResponse(java.io.OutputStream, org.vast.ows.OWSResponse, java.lang.String, java.lang.String)">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>writeXMLResponse</h4>
+<pre>public&nbsp;void&nbsp;writeXMLResponse(<a href="http://docs.oracle.com/javase/7/docs/api/java/io/OutputStream.html?is-external=true" title="class or interface in java.io">OutputStream</a>&nbsp;os,
+                    <a href="../../../org/vast/ows/OWSResponse.html" title="class in org.vast.ows">OWSResponse</a>&nbsp;response,
+                    <a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;version,
+                    <a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;soapVersion)
+                      throws <a href="../../../org/vast/ows/OWSException.html" title="class in org.vast.ows">OWSException</a></pre>
+<div class="block">Helper method to write any OWS XML response directly to an output stream</div>
+<dl><dt><span class="strong">Parameters:</span></dt><dd><code>os</code> - output stream to write to</dd><dd><code>response</code> - OWS response object</dd><dd><code>version</code> - version of writer to use</dd><dd><code>soapVersion</code> - version of SOAP used to wrap the response (<a href="../../../org/vast/ows/OWSUtils.html#SOAP11_URI"><code>SOAP11_URI</code></a> or <a href="../../../org/vast/ows/OWSUtils.html#SOAP12_URI"><code>SOAP12_URI</code></a>).
+                    If null, response is sent as-is without envelope</dd>
 <dt><span class="strong">Throws:</span></dt>
 <dd><code><a href="../../../org/vast/ows/OWSException.html" title="class in org.vast.ows">OWSException</a></code></dd></dl>
 </li>

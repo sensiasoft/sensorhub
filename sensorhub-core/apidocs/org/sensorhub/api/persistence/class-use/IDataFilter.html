@@ -152,7 +152,8 @@
 </tr>
 <tr class="rowColor">
 <td class="colFirst"><code>int</code></td>
-<td class="colLast"><span class="strong">IBasicStorage.</span><code><strong><a href="../../../../../org/sensorhub/api/persistence/IBasicStorage.html#getNumMatchingRecords(org.sensorhub.api.persistence.IDataFilter)">getNumMatchingRecords</a></strong>(<a href="../../../../../org/sensorhub/api/persistence/IDataFilter.html" title="interface in org.sensorhub.api.persistence">IDataFilter</a>&nbsp;filter)</code>
+<td class="colLast"><span class="strong">IBasicStorage.</span><code><strong><a href="../../../../../org/sensorhub/api/persistence/IBasicStorage.html#getNumMatchingRecords(org.sensorhub.api.persistence.IDataFilter,%20long)">getNumMatchingRecords</a></strong>(<a href="../../../../../org/sensorhub/api/persistence/IDataFilter.html" title="interface in org.sensorhub.api.persistence">IDataFilter</a>&nbsp;filter,
+                     long&nbsp;maxCount)</code>
 <div class="block">Computes the (potentially approximate) number of records matching the
  given filter.<br/>
  Since the returned value can be approximate and the number of matching
@@ -223,15 +224,17 @@
 </tr>
 <tr class="rowColor">
 <td class="colFirst"><code>int</code></td>
-<td class="colLast"><span class="strong">InMemoryBasicStorage.</span><code><strong><a href="../../../../../org/sensorhub/impl/persistence/InMemoryBasicStorage.html#getNumMatchingRecords(org.sensorhub.api.persistence.IDataFilter)">getNumMatchingRecords</a></strong>(<a href="../../../../../org/sensorhub/api/persistence/IDataFilter.html" title="interface in org.sensorhub.api.persistence">IDataFilter</a>&nbsp;filter)</code>&nbsp;</td>
+<td class="colLast"><span class="strong">InMemoryBasicStorage.TimeSeriesImpl.</span><code><strong><a href="../../../../../org/sensorhub/impl/persistence/InMemoryBasicStorage.TimeSeriesImpl.html#getNumMatchingRecords(org.sensorhub.api.persistence.IDataFilter)">getNumMatchingRecords</a></strong>(<a href="../../../../../org/sensorhub/api/persistence/IDataFilter.html" title="interface in org.sensorhub.api.persistence">IDataFilter</a>&nbsp;filter)</code>&nbsp;</td>
 </tr>
 <tr class="altColor">
 <td class="colFirst"><code>int</code></td>
-<td class="colLast"><span class="strong">InMemoryBasicStorage.TimeSeriesImpl.</span><code><strong><a href="../../../../../org/sensorhub/impl/persistence/InMemoryBasicStorage.TimeSeriesImpl.html#getNumMatchingRecords(org.sensorhub.api.persistence.IDataFilter)">getNumMatchingRecords</a></strong>(<a href="../../../../../org/sensorhub/api/persistence/IDataFilter.html" title="interface in org.sensorhub.api.persistence">IDataFilter</a>&nbsp;filter)</code>&nbsp;</td>
+<td class="colLast"><span class="strong">InMemoryBasicStorage.</span><code><strong><a href="../../../../../org/sensorhub/impl/persistence/InMemoryBasicStorage.html#getNumMatchingRecords(org.sensorhub.api.persistence.IDataFilter,%20long)">getNumMatchingRecords</a></strong>(<a href="../../../../../org/sensorhub/api/persistence/IDataFilter.html" title="interface in org.sensorhub.api.persistence">IDataFilter</a>&nbsp;filter,
+                     long&nbsp;maxCount)</code>&nbsp;</td>
 </tr>
 <tr class="rowColor">
 <td class="colFirst"><code>int</code></td>
-<td class="colLast"><span class="strong">GenericStreamStorage.</span><code><strong><a href="../../../../../org/sensorhub/impl/persistence/GenericStreamStorage.html#getNumMatchingRecords(org.sensorhub.api.persistence.IDataFilter)">getNumMatchingRecords</a></strong>(<a href="../../../../../org/sensorhub/api/persistence/IDataFilter.html" title="interface in org.sensorhub.api.persistence">IDataFilter</a>&nbsp;filter)</code>&nbsp;</td>
+<td class="colLast"><span class="strong">GenericStreamStorage.</span><code><strong><a href="../../../../../org/sensorhub/impl/persistence/GenericStreamStorage.html#getNumMatchingRecords(org.sensorhub.api.persistence.IDataFilter,%20long)">getNumMatchingRecords</a></strong>(<a href="../../../../../org/sensorhub/api/persistence/IDataFilter.html" title="interface in org.sensorhub.api.persistence">IDataFilter</a>&nbsp;filter,
+                     long&nbsp;maxCount)</code>&nbsp;</td>
 </tr>
 <tr class="altColor">
 <td class="colFirst"><code><a href="http://docs.oracle.com/javase/7/docs/api/java/util/Iterator.html?is-external=true" title="class or interface in java.util">Iterator</a>&lt;? extends <a href="../../../../../org/sensorhub/api/persistence/IDataRecord.html" title="interface in org.sensorhub.api.persistence">IDataRecord</a>&gt;</code></td>

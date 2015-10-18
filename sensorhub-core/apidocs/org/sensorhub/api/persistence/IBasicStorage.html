@@ -165,7 +165,8 @@
 </tr>
 <tr class="altColor">
 <td class="colFirst"><code>int</code></td>
-<td class="colLast"><code><strong><a href="../../../../org/sensorhub/api/persistence/IBasicStorage.html#getNumMatchingRecords(org.sensorhub.api.persistence.IDataFilter)">getNumMatchingRecords</a></strong>(<a href="../../../../org/sensorhub/api/persistence/IDataFilter.html" title="interface in org.sensorhub.api.persistence">IDataFilter</a>&nbsp;filter)</code>
+<td class="colLast"><code><strong><a href="../../../../org/sensorhub/api/persistence/IBasicStorage.html#getNumMatchingRecords(org.sensorhub.api.persistence.IDataFilter,%20long)">getNumMatchingRecords</a></strong>(<a href="../../../../org/sensorhub/api/persistence/IDataFilter.html" title="interface in org.sensorhub.api.persistence">IDataFilter</a>&nbsp;filter,
+                     long&nbsp;maxCount)</code>
 <div class="block">Computes the (potentially approximate) number of records matching the
  given filter.<br/>
  Since the returned value can be approximate and the number of matching
@@ -455,13 +456,14 @@
 <dt><span class="strong">Returns:</span></dt><dd>A read-only iterator among records matching the filter</dd></dl>
 </li>
 </ul>
-<a name="getNumMatchingRecords(org.sensorhub.api.persistence.IDataFilter)">
+<a name="getNumMatchingRecords(org.sensorhub.api.persistence.IDataFilter, long)">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>getNumMatchingRecords</h4>
-<pre>int&nbsp;getNumMatchingRecords(<a href="../../../../org/sensorhub/api/persistence/IDataFilter.html" title="interface in org.sensorhub.api.persistence">IDataFilter</a>&nbsp;filter)</pre>
+<pre>int&nbsp;getNumMatchingRecords(<a href="../../../../org/sensorhub/api/persistence/IDataFilter.html" title="interface in org.sensorhub.api.persistence">IDataFilter</a>&nbsp;filter,
+                        long&nbsp;maxCount)</pre>
 <div class="block">Computes the (potentially approximate) number of records matching the
  given filter.<br/>
  Since the returned value can be approximate and the number of matching
@@ -469,7 +471,7 @@
  <a href="../../../../org/sensorhub/api/persistence/IBasicStorage.html#getRecordIterator(org.sensorhub.api.persistence.IDataFilter)"><code>getRecordIterator(IDataFilter)</code></a>, the exact number of records can
  only be obtained by counting the records returned by the iterator next()
  function.</div>
-<dl><dt><span class="strong">Parameters:</span></dt><dd><code>filter</code> - filtering parameters</dd>
+<dl><dt><span class="strong">Parameters:</span></dt><dd><code>filter</code> - filtering parameters</dd><dd><code>maxCount</code> - counting will stop once this threshold is reached</dd>
 <dt><span class="strong">Returns:</span></dt><dd>number of matching records</dd></dl>
 </li>
 </ul>

@@ -36,6 +36,7 @@
 <li><a href="org/vast/swe/AsciiDataWriter.html" title="class in org.vast.swe">AsciiDataWriter</a></li>
 <li><a href="org/vast/swe/Base64Decoder.html" title="class in org.vast.swe">Base64Decoder</a></li>
 <li><a href="org/vast/swe/Base64Encoder.html" title="class in org.vast.swe">Base64Encoder</a></li>
+<li><a href="org/vast/data/BaseTreeVisitor.html" title="class in org.vast.data">BaseTreeVisitor</a></li>
 <li><a href="net/opengis/swe/v20/BinaryBlock.html" title="interface in net.opengis.swe.v20"><i>BinaryBlock</i></a></li>
 <li><a href="org/vast/data/BinaryBlockImpl.html" title="class in org.vast.data">BinaryBlockImpl</a></li>
 <li><a href="net/opengis/swe/v20/BinaryComponent.html" title="interface in net.opengis.swe.v20"><i>BinaryComponent</i></a></li>
@@ -83,11 +84,11 @@
 <li><a href="org/vast/data/DataBlockUByte.html" title="class in org.vast.data">DataBlockUByte</a></li>
 <li><a href="org/vast/data/DataBlockUInt.html" title="class in org.vast.data">DataBlockUInt</a></li>
 <li><a href="org/vast/data/DataBlockUShort.html" title="class in org.vast.data">DataBlockUShort</a></li>
-<li><a href="org/vast/data/DataBlockVisitor.html" title="interface in org.vast.data"><i>DataBlockVisitor</i></a></li>
 <li><a href="net/opengis/swe/v20/DataChoice.html" title="interface in net.opengis.swe.v20"><i>DataChoice</i></a></li>
 <li><a href="org/vast/data/DataChoiceImpl.html" title="class in org.vast.data">DataChoiceImpl</a></li>
 <li><a href="net/opengis/swe/v20/DataComponent.html" title="interface in net.opengis.swe.v20"><i>DataComponent</i></a></li>
 <li><a href="org/vast/data/DataComponentPropertyList.html" title="class in org.vast.data">DataComponentPropertyList</a></li>
+<li><a href="net/opengis/swe/v20/DataComponentVisitor.html" title="interface in net.opengis.swe.v20"><i>DataComponentVisitor</i></a></li>
 <li><a href="net/opengis/swe/v20/DataConstraint.html" title="interface in net.opengis.swe.v20"><i>DataConstraint</i></a></li>
 <li><a href="net/opengis/swe/v20/DataEncoding.html" title="interface in net.opengis.swe.v20"><i>DataEncoding</i></a></li>
 <li><a href="org/vast/data/DataException.html" title="class in org.vast.data">DataException</a></li>
@@ -141,6 +142,7 @@
 <li><a href="org/vast/util/ExceptionHandler.html" title="interface in org.vast.util"><i>ExceptionHandler</i></a></li>
 <li><a href="org/vast/util/ExceptionSystem.html" title="class in org.vast.util">ExceptionSystem</a></li>
 <li><a href="net/opengis/swe/v20/Factory.html" title="interface in net.opengis.swe.v20"><i>Factory</i></a></li>
+<li><a href="org/vast/swe/FilteredWriter.html" title="class in org.vast.swe">FilteredWriter</a></li>
 <li><a href="org/vast/unit/GenericUnitConverter.html" title="class in org.vast.unit">GenericUnitConverter</a></li>
 <li><a href="org/vast/ogc/gml/GMLUnitReader.html" title="class in org.vast.ogc.gml">GMLUnitReader</a></li>
 <li><a href="net/opengis/swe/v20/HasCodeSpace.html" title="interface in net.opengis.swe.v20"><i>HasCodeSpace</i></a></li>
@@ -176,7 +178,6 @@
 <li><a href="org/vast/util/MessageHandler.html" title="interface in org.vast.util"><i>MessageHandler</i></a></li>
 <li><a href="org/vast/util/MessageSystem.html" title="class in org.vast.util">MessageSystem</a></li>
 <li><a href="net/opengis/NamespaceRegister.html" title="class in net.opengis">NamespaceRegister</a></li>
-<li><a href="org/vast/swe/NewTextDataParser.html" title="class in org.vast.swe">NewTextDataParser</a></li>
 <li><a href="net/opengis/swe/v20/NilValue.html" title="interface in net.opengis.swe.v20"><i>NilValue</i></a></li>
 <li><a href="org/vast/data/NilValueImpl.html" title="class in org.vast.data">NilValueImpl</a></li>
 <li><a href="net/opengis/swe/v20/NilValues.html" title="interface in net.opengis.swe.v20"><i>NilValues</i></a></li>
@@ -188,7 +189,6 @@
 <li><a href="net/opengis/OgcPropertyList.html" title="class in net.opengis">OgcPropertyList</a></li>
 <li><a href="org/vast/ogc/OGCRegistry.html" title="class in org.vast.ogc">OGCRegistry</a></li>
 <li><a href="org/vast/cdm/common/OutputStreamProvider.html" title="interface in org.vast.cdm.common"><i>OutputStreamProvider</i></a></li>
-<li><a href="org/vast/xml/QName.html" title="class in org.vast.xml">QName</a></li>
 <li><a href="net/opengis/swe/v20/Quantity.html" title="interface in net.opengis.swe.v20"><i>Quantity</i></a></li>
 <li><a href="org/vast/data/QuantityImpl.html" title="class in org.vast.data">QuantityImpl</a></li>
 <li><a href="net/opengis/swe/v20/QuantityRange.html" title="interface in net.opengis.swe.v20"><i>QuantityRange</i></a></li>
@@ -200,6 +200,7 @@
 <li><a href="net/opengis/swe/v20/ScalarComponent.html" title="interface in net.opengis.swe.v20"><i>ScalarComponent</i></a></li>
 <li><a href="org/vast/swe/ScalarIndexer.html" title="class in org.vast.swe">ScalarIndexer</a></li>
 <li><a href="org/vast/data/ScalarIterator.html" title="class in org.vast.data">ScalarIterator</a></li>
+<li><a href="org/vast/data/ScalarVisitor.html" title="class in org.vast.data">ScalarVisitor</a></li>
 <li><a href="org/vast/ogc/ServiceType.html" title="enum in org.vast.ogc">ServiceType</a></li>
 <li><a href="net/opengis/swe/v20/SimpleComponent.html" title="interface in net.opengis.swe.v20"><i>SimpleComponent</i></a></li>
 <li><a href="org/vast/cdm/common/StreamDemux.html" title="interface in org.vast.cdm.common"><i>StreamDemux</i></a></li>

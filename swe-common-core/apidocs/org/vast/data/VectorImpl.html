@@ -181,106 +181,110 @@ implements <a href="../../../net/opengis/swe/v20/Vector.html" title="interface i
 </tr>
 <tr class="altColor">
 <td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><strong><a href="../../../org/vast/data/VectorImpl.html#accept(net.opengis.swe.v20.DataComponentVisitor)">accept</a></strong>(<a href="../../../net/opengis/swe/v20/DataComponentVisitor.html" title="interface in net.opengis.swe.v20">DataComponentVisitor</a>&nbsp;visitor)</code>&nbsp;</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/VectorImpl.html#addComponent(java.lang.String,%20net.opengis.swe.v20.DataComponent)">addComponent</a></strong>(<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;name,
             <a href="../../../net/opengis/swe/v20/DataComponent.html" title="interface in net.opengis.swe.v20">DataComponent</a>&nbsp;component)</code>
 <div class="block">Add a sub-component and registers a name for it</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/VectorImpl.html#addCoordinateAsCount(java.lang.String,%20net.opengis.swe.v20.Count)">addCoordinateAsCount</a></strong>(<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;name,
                     <a href="../../../net/opengis/swe/v20/Count.html" title="interface in net.opengis.swe.v20">Count</a>&nbsp;coordinate)</code>
 <div class="block">Adds a new coordinateAsCount property</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/VectorImpl.html#addCoordinateAsQuantity(java.lang.String,%20net.opengis.swe.v20.Quantity)">addCoordinateAsQuantity</a></strong>(<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;name,
                        <a href="../../../net/opengis/swe/v20/Quantity.html" title="interface in net.opengis.swe.v20">Quantity</a>&nbsp;coordinate)</code>
 <div class="block">Adds a new coordinateAsQuantity property</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/VectorImpl.html#addCoordinateAsTime(java.lang.String,%20net.opengis.swe.v20.Time)">addCoordinateAsTime</a></strong>(<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;name,
                    <a href="../../../net/opengis/swe/v20/Time.html" title="interface in net.opengis.swe.v20">Time</a>&nbsp;coordinate)</code>
 <div class="block">Adds a new coordinateAsTime property</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code><a href="../../../org/vast/data/VectorImpl.html" title="class in org.vast.data">VectorImpl</a></code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/VectorImpl.html#copy()">copy</a></strong>()</code>
 <div class="block">Return a structural copy of this component
  The copy is done recursively, but only the structure is copied (not the data)</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code><a href="../../../net/opengis/swe/v20/ScalarComponent.html" title="interface in net.opengis.swe.v20">ScalarComponent</a></code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/VectorImpl.html#getCoordinate(java.lang.String)">getCoordinate</a></strong>(<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;name)</code>
 <div class="block">Gets the coordinate property with the given name</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code><a href="../../../net/opengis/OgcPropertyList.html" title="class in net.opengis">OgcPropertyList</a>&lt;<a href="../../../net/opengis/swe/v20/ScalarComponent.html" title="interface in net.opengis.swe.v20">ScalarComponent</a>&gt;</code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/VectorImpl.html#getCoordinateList()">getCoordinateList</a></strong>()</code>
 <div class="block">Gets the list of coordinate properties</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code><a href="../../../net/opengis/swe/v20/DataType.html" title="enum in net.opengis.swe.v20">DataType</a></code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/VectorImpl.html#getDataType()">getDataType</a></strong>()</code>
 <div class="block">Gets the component data type</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code><a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a></code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/VectorImpl.html#getLocalFrame()">getLocalFrame</a></strong>()</code>
 <div class="block">Gets the localFrame property</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>int</code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/VectorImpl.html#getNumCoordinates()">getNumCoordinates</a></strong>()</code>
 <div class="block">Returns number of coordinate properties</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code><a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a></code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/VectorImpl.html#getReferenceFrame()">getReferenceFrame</a></strong>()</code>
 <div class="block">Gets the referenceFrame property</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/VectorImpl.html#isSetLocalFrame()">isSetLocalFrame</a></strong>()</code>
 <div class="block">Checks if localFrame is set</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/VectorImpl.html#isSetReferenceFrame()">isSetReferenceFrame</a></strong>()</code>
 <div class="block">Checks if referenceFrame is set</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/VectorImpl.html#setDataType(net.opengis.swe.v20.DataType)">setDataType</a></strong>(<a href="../../../net/opengis/swe/v20/DataType.html" title="enum in net.opengis.swe.v20">DataType</a>&nbsp;type)</code>
 <div class="block">Sets the component data type</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/VectorImpl.html#setLocalFrame(java.lang.String)">setLocalFrame</a></strong>(<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;localFrame)</code>
 <div class="block">Sets the localFrame property</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/VectorImpl.html#setReferenceFrame(java.lang.String)">setReferenceFrame</a></strong>(<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;referenceFrame)</code>
 <div class="block">Sets the referenceFrame property</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code><a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a></code></td>
 <td class="colLast"><code><strong><a href="../../../org/vast/data/VectorImpl.html#toString(java.lang.String)">toString</a></strong>(<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;indent)</code>
 <div class="block">Returns String representation of this DataContainer</div>
@@ -628,7 +632,7 @@ implements <a href="../../../net/opengis/swe/v20/Vector.html" title="interface i
 <a name="setDataType(net.opengis.swe.v20.DataType)">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>setDataType</h4>
 <pre>public&nbsp;void&nbsp;setDataType(<a href="../../../net/opengis/swe/v20/DataType.html" title="enum in net.opengis.swe.v20">DataType</a>&nbsp;type)</pre>
@@ -637,6 +641,19 @@ implements <a href="../../../net/opengis/swe/v20/Vector.html" title="interface i
 <dl>
 <dt><strong>Specified by:</strong></dt>
 <dd><code><a href="../../../net/opengis/swe/v20/Vector.html#setDataType(net.opengis.swe.v20.DataType)">setDataType</a></code>&nbsp;in interface&nbsp;<code><a href="../../../net/opengis/swe/v20/Vector.html" title="interface in net.opengis.swe.v20">Vector</a></code></dd>
+</dl>
+</li>
+</ul>
+<a name="accept(net.opengis.swe.v20.DataComponentVisitor)">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>accept</h4>
+<pre>public&nbsp;void&nbsp;accept(<a href="../../../net/opengis/swe/v20/DataComponentVisitor.html" title="interface in net.opengis.swe.v20">DataComponentVisitor</a>&nbsp;visitor)</pre>
+<dl>
+<dt><strong>Specified by:</strong></dt>
+<dd><code><a href="../../../net/opengis/swe/v20/DataComponent.html#accept(net.opengis.swe.v20.DataComponentVisitor)">accept</a></code>&nbsp;in interface&nbsp;<code><a href="../../../net/opengis/swe/v20/DataComponent.html" title="interface in net.opengis.swe.v20">DataComponent</a></code></dd>
 </dl>
 </li>
 </ul>
