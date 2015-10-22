@@ -28,7 +28,7 @@
     "commSettings":
     {
         "objClass": "org.sensorhub.impl.sensor.avl.MultipleFilesProviderConfig",
-        "dataFolder": "/home/alex/Documents/Projects/Workspace_OGC/sensorhub/sensorhub-driver-avl-911"
+        "dataFolder": "../../osh-sensors/sensorhub-driver-avl-911"
     }
   }, 
   {

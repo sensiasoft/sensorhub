@@ -35,14 +35,9 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.namespace.QName;
-import javax.xml.stream.XMLEventFactory;
-import javax.xml.stream.XMLEventReader;
-import javax.xml.stream.XMLEventWriter;
-import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLOutputFactory;
+import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
-import javax.xml.stream.events.XMLEvent;
-import javax.xml.transform.dom.DOMSource;
 import net.opengis.fes.v20.Conformance;
 import net.opengis.fes.v20.FilterCapabilities;
 import net.opengis.fes.v20.SpatialCapabilities;
@@ -708,11 +703,14 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
             
             // init xml document writing
             OutputStream os = new BufferedOutputStream(request.getResponseStream());
-            XMLEventFactory xmlFactory = XMLEventFactory.newInstance();
-            XMLEventWriter xmlWriter = XMLOutputFactory.newInstance().createXMLEventWriter(os, "UTF-8");
-            xmlWriter.add(xmlFactory.createStartDocument());
-            xmlWriter.add(xmlFactory.createStartElement(SOS_PREFIX, sosNsUri, "GetObservationResponse"));
-            xmlWriter.add(xmlFactory.createNamespace(SOS_PREFIX, sosNsUri));
+            XMLStreamWriter xmlWriter = XMLOutputFactory.newInstance().createXMLStreamWriter(os, "UTF-8");
+            xmlWriter = new IndentingXMLStreamWriter(xmlWriter);
+            
+            // wrap with SOAP envelope if needed
+            xmlWriter.writeStartDocument();
+            startSoapEnvelope(request, xmlWriter);
+            xmlWriter.writeStartElement(SOS_PREFIX, "GetObservationResponse", sosNsUri);
+            xmlWriter.writeNamespace(SOS_PREFIX, sosNsUri);
             
             // send obs from each selected offering
             // TODO sort by time by multiplexing obs from different offerings?
@@ -785,28 +783,21 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
                         if (firstObs)
                         {
                             for (Entry<String, String> nsDef: dom.getXmlDocument().getNSTable().entrySet())
-                                xmlWriter.add(xmlFactory.createNamespace(nsDef.getKey(), nsDef.getValue()));        
+                                xmlWriter.writeNamespace(nsDef.getKey(), nsDef.getValue());        
                             firstObs = false;
                         }
                         
                         // serialize observation DOM tree into stream writer
-                        xmlWriter.add(xmlFactory.createStartElement(SOS_PREFIX, sosNsUri, "observationData"));                        
-                        XMLInputFactory factory = XMLImplFinder.getStaxInputFactory();
-                        XMLEventReader domReader = factory.createXMLEventReader(new DOMSource(obsElt));
-                        while (domReader.hasNext())
-                        {
-                            XMLEvent event = domReader.nextEvent();
-                            if (!event.isStartDocument() && !event.isEndDocument())
-                                xmlWriter.add(event);
-                        }                        
-                        xmlWriter.add(xmlFactory.createEndElement(SOS_PREFIX, sosNsUri, "observationData"));
+                        xmlWriter.writeStartElement(SOS_PREFIX, "observationData", sosNsUri);
+                        dom.writeToStreamWriter(obsElt, xmlWriter);
+                        xmlWriter.writeEndElement();
                         xmlWriter.flush();
-                        os.write('\n');
                     }
                 }
             }
             
-            xmlWriter.add(xmlFactory.createEndDocument());
+            // this will automatically close all open elements
+            xmlWriter.writeEndDocument();
             xmlWriter.close();
         }
         finally
@@ -1038,13 +1029,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
         xmlWriter.writeStartDocument();
         
         // wrap with SOAP envelope if requested
-        String soapUri = request.getSoapVersion(); 
-        if (soapUri != null)
-        {
-            xmlWriter.writeStartElement(SOAP_PREFIX, "Envelope", soapUri);
-            xmlWriter.writeNamespace(SOAP_PREFIX, soapUri);
-            xmlWriter.writeStartElement(SOAP_PREFIX, "Body", soapUri);
-        }
+        startSoapEnvelope(request, xmlWriter);
         
         // write response root element
         String sosNsUri = OGCRegistry.getNamespaceURI(SOSUtils.SOS, DEFAULT_VERSION);
@@ -1093,12 +1078,8 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
         }
         
         // close SOAP elements
-        if (soapUri != null)
-        {
-            xmlWriter.writeEndElement();
-            xmlWriter.writeEndElement();
-        }
-        
+        endSoapEnvelope(request, xmlWriter);
+                
         xmlWriter.writeEndDocument();
         xmlWriter.close();
     }
@@ -1228,6 +1209,29 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
         {
             
         }        
+    }
+    
+    
+    protected void startSoapEnvelope(OWSRequest request, XMLStreamWriter writer) throws XMLStreamException
+    {
+        String soapUri = request.getSoapVersion(); 
+        if (soapUri != null)
+        {
+            writer.writeStartElement(SOAP_PREFIX, "Envelope", soapUri);
+            writer.writeNamespace(SOAP_PREFIX, soapUri);
+            writer.writeStartElement(SOAP_PREFIX, "Body", soapUri);
+        }
+    }
+    
+    
+    protected void endSoapEnvelope(OWSRequest request, XMLStreamWriter writer) throws XMLStreamException
+    {
+        String soapUri = request.getSoapVersion(); 
+        if (soapUri != null)
+        {
+            writer.writeEndElement();
+            writer.writeEndElement();
+        }
     }
     
     
