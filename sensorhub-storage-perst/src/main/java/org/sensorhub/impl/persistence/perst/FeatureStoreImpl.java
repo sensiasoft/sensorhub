@@ -28,6 +28,8 @@ import org.sensorhub.api.persistence.IFeatureFilter;
 import org.sensorhub.api.persistence.IFeatureStorage;
 import org.vast.util.Bbox;
 import com.vividsolutions.jts.geom.Envelope;
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.Polygon;
 
 
 /**
@@ -74,7 +76,8 @@ class FeatureStoreImpl extends Persistent implements IFeatureStorage
     
     public Iterator<String> getFeatureIDs(IFeatureFilter filter)
     {
-        // TODO optimize implementation to avoid loading whole feature objects
+        // could we optimize implementation to avoid loading whole feature objects?
+        // -> not worth it since with spatial filter we need to read geometries anyway
         
         final Iterator<AbstractFeature> it = getFeatures(filter);
         
@@ -139,14 +142,49 @@ class FeatureStoreImpl extends Persistent implements IFeatureStorage
         // case of ROI
         if (filter.getRoi() != null)
         {
+            final Polygon roi = filter.getRoi();
+            
             // iterate through spatial index using bounding rectangle
-            // TODO filter on exact polygon geometry using JTS
-            Envelope env = filter.getRoi().getEnvelopeInternal();
+            Envelope env = roi.getEnvelopeInternal();
             double[] coords = new double[] {env.getMinX(), env.getMinY(), Double.NEGATIVE_INFINITY, env.getMaxX(), env.getMaxY(), Double.POSITIVE_INFINITY};
-            return geoIndex.iterator(new RectangleRn(coords));
+            final Iterator<AbstractFeature> it = geoIndex.iterator(new RectangleRn(coords));
+            
+            // wrap with iterator to filter on exact polygon geometry using JTS
+            Iterator<AbstractFeature> it2 =  new Iterator<AbstractFeature>()
+            {
+                AbstractFeature nextFeature;
+                
+                public boolean hasNext()
+                {
+                    return (nextFeature != null);
+                }
+
+                public AbstractFeature next()
+                {
+                    AbstractFeature currentFeature = nextFeature;
+                    nextFeature = null;
+                    
+                    while (nextFeature == null && it.hasNext())
+                    {
+                        AbstractFeature f = it.next();
+                        Geometry geom = (Geometry)f.getLocation();
+                        if (geom != null && roi.intersects(geom))
+                            nextFeature = f;
+                    }
+                    
+                    return currentFeature;
+                }
+
+                public void remove()
+                {                    
+                } 
+            };
+            
+            it2.next();
+            return it2;
         }
         
-        // TODO handle ROI + IDs?        
+        // TODO handle ROI + IDs but it's not very useful in practice 
         
         return idIndex.iterator();
     }

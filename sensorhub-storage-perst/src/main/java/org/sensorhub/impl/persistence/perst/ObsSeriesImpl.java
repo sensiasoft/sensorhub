@@ -14,6 +14,7 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.impl.persistence.perst;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map.Entry;
@@ -26,10 +27,13 @@ import org.garret.perst.IterableIterator;
 import org.garret.perst.Key;
 import org.garret.perst.Storage;
 import org.sensorhub.api.persistence.DataKey;
+import org.sensorhub.api.persistence.FeatureFilter;
 import org.sensorhub.api.persistence.IDataFilter;
+import org.sensorhub.api.persistence.IFeatureFilter;
 import org.sensorhub.api.persistence.IObsFilter;
 import org.sensorhub.api.persistence.ObsKey;
 import org.sensorhub.impl.persistence.perst.FoiTimesStoreImpl.FoiTimePeriod;
+import com.vividsolutions.jts.geom.Polygon;
 
 
 /**
@@ -64,12 +68,44 @@ public class ObsSeriesImpl extends TimeSeriesImpl
     }
     
     
-    Set<FoiTimePeriod> getFoiTimePeriods(IDataFilter filter)
+    Set<FoiTimePeriod> getFoiTimePeriods(final IDataFilter filter)
     {
-        // FOI ID list
+        // extract FOI filters if any
         Collection<String> foiIDs = null;
+        Polygon roi = null;
         if (filter instanceof IObsFilter)
+        {
             foiIDs = ((IObsFilter)filter).getFoiIDs();
+            roi = ((IObsFilter) filter).getRoi();
+        }
+        
+        // if using spatial filter, first get matching FOI IDs
+        // and then follow normal process
+        if (roi != null)
+        {
+            IFeatureFilter foiFilter = new FeatureFilter()
+            {
+                public Collection<String> getFeatureIDs()
+                {
+                    return ((IObsFilter)filter).getFoiIDs();
+                }
+
+                public Polygon getRoi()
+                {
+                    return ((IObsFilter) filter).getRoi();
+                }
+            };
+            
+            Iterator<String> foiIt = getFeatureStore().getFeatureIDs(foiFilter);
+            Collection<String> allFoiIDs = new ArrayList<String>(100);
+            if (foiIDs != null)
+                allFoiIDs.addAll(foiIDs);
+            while (foiIt.hasNext())
+                allFoiIDs.add(foiIt.next());
+            foiIDs = allFoiIDs;
+        }
+        
+        // get time periods for list of FOIs
         Set<FoiTimePeriod> foiTimes = foiTimesStore.getSortedFoiTimes(foiIDs);
         
         // trim periods to filter time range if specified
@@ -93,8 +129,6 @@ public class ObsSeriesImpl extends TimeSeriesImpl
                     it.remove();
             }
         }
-        
-        // TODO FOI spatial filter
         
         return foiTimes;
     }
@@ -133,7 +167,7 @@ public class ObsSeriesImpl extends TimeSeriesImpl
     
     protected IteratorWithFoi getEntryIterator(IDataFilter filter)
     {
-        // FoI ID list
+     // get time periods formatching FOIs
         final Set<FoiTimePeriod> foiTimePeriods = getFoiTimePeriods(filter);
             
         // scan through each time range sequentially
@@ -173,6 +207,12 @@ public class ObsSeriesImpl extends TimeSeriesImpl
                 return currentFoiID;
             }
         };
+    }
+    
+    
+    protected FeatureStoreImpl getFeatureStore()
+    {
+        return ((ObsStorageRoot)getStorage().getRoot()).featureStore;
     }
 
 

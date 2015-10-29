@@ -20,7 +20,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import javax.xml.namespace.QName;
 import net.opengis.gml.v32.AbstractFeature;
@@ -39,6 +41,8 @@ import org.sensorhub.api.persistence.ObsKey;
 import org.sensorhub.test.TestUtils;
 import org.vast.ogc.gml.GenericFeatureImpl;
 import org.vast.util.Bbox;
+import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Polygon;
 
@@ -59,15 +63,18 @@ public abstract class AbstractTestObsStorage<StorageType extends IObsStorageModu
     static String FOI_UID_PREFIX = "urn:domain:features:foi";
     static int NUM_FOIS = 100;
     GMLFactory gmlFac = new GMLFactory(true);
+    Map<String, AbstractFeature> allFeatures;
     
     static String[] FOI_SET1_IDS = new String[]
     {
-        FOI_UID_PREFIX + "001",
-        FOI_UID_PREFIX + "002",
-        FOI_UID_PREFIX + "003"
+        FOI_UID_PREFIX + "1",
+        FOI_UID_PREFIX + "2",
+        FOI_UID_PREFIX + "3",
+        FOI_UID_PREFIX + "4",
+        FOI_UID_PREFIX + "15"
     };
     
-    static int[] FOI_SET1_STARTS = new int[] {0, 20, 60};
+    static int[] FOI_SET1_STARTS = new int[] {0, 20, 25, 40, 60};
     
     
     String[] FOI_IDS = FOI_SET1_IDS;
@@ -77,6 +84,7 @@ public abstract class AbstractTestObsStorage<StorageType extends IObsStorageModu
     protected void addFoisToStorage() throws Exception
     {
         storage.setAutoCommit(false);
+        allFeatures = new LinkedHashMap<String, AbstractFeature>(NUM_FOIS);
         
         for (int foiNum = 1; foiNum <= NUM_FOIS; foiNum++)
         {
@@ -89,6 +97,7 @@ public abstract class AbstractTestObsStorage<StorageType extends IObsStorageModu
             Point p = gmlFac.newPoint();
             p.setPos(new double[] {foiNum, foiNum, 0.0});
             foi.setLocation(p);
+            allFeatures.put(foi.getUniqueIdentifier(), foi);
             storage.storeFoi(producerID, foi);
         }
         
@@ -278,6 +287,36 @@ public abstract class AbstractTestObsStorage<StorageType extends IObsStorageModu
     }
     
     
+    protected IObsFilter buildFilterByRoi(DataComponent recordDef, List<DataBlock> dataList, final Polygon roi)
+    {
+        // get list of FOIs within roi
+        ArrayList<Integer> foiIndexList = new ArrayList<Integer>();
+        int fIndex = 0;
+        for (String foiID: FOI_IDS)
+        {
+            AbstractFeature f = allFeatures.get(foiID);
+            if (roi.intersects((Geometry)f.getLocation()))
+                foiIndexList.add(fIndex);
+            fIndex++;
+        }
+        
+        // then just filter dataList using list of indexes
+        int i = 0;
+        int[] foiIndexes = new int[foiIndexList.size()];
+        for (int index: foiIndexList)
+            foiIndexes[i++] = index;
+        buildFilterByFoiID(recordDef, dataList, foiIndexes);
+        
+        // generate filter
+        IObsFilter filter = new ObsFilter(recordDef.getName()) {
+            public Polygon getRoi() { return roi; }
+            public Collection<String> getProducerIDs() {return producerFilterList; };
+        };
+        
+        return filter;
+    }
+    
+    
     protected IObsFilter buildFilterByFoiIDAndTime(DataComponent recordDef, List<DataBlock> dataList, int[] foiIndexes, final double[] timeRange)
     {
         final Set<String> foiSet = new HashSet<String>();
@@ -346,7 +385,8 @@ public abstract class AbstractTestObsStorage<StorageType extends IObsStorageModu
         {
             IDataRecord dbRec = it2.next();
             TestUtils.assertEquals(dataList.get(i), dbRec.getData());
-            assertTrue(filter.getFoiIDs().contains(((ObsKey)dbRec.getKey()).foiID));
+            if (filter.getFoiIDs() != null)
+                assertTrue(filter.getFoiIDs().contains(((ObsKey)dbRec.getKey()).foiID));
             i++;
         }
         
@@ -459,6 +499,60 @@ public abstract class AbstractTestObsStorage<StorageType extends IObsStorageModu
         testList.clear();
         testList.addAll(dataList);
         filter = buildFilterByFoiIDAndTime(recordDef, testList, new int[] {2, 1}, timeRange);
+        checkFilteredResults(filter, testList);
+    }
+    
+    
+    @Test
+    public void testGetRecordsByRoi() throws Exception
+    {
+        addFoisToStorage();
+        
+        DataComponent recordDef = createDs2();
+        List<DataBlock> dataList = addObservationsWithFoiToStorage(recordDef);
+        List<DataBlock> testList = new ArrayList<DataBlock>(dataList.size());
+        IObsFilter filter;
+        Polygon roi;
+        
+        // FOI 1
+        testList.clear();
+        testList.addAll(dataList);
+        roi = new GeometryFactory().createPolygon(new Coordinate[] {
+            new Coordinate(0.5, 0.5),
+            new Coordinate(0.5, 1.5),
+            new Coordinate(1.5, 1.5),
+            new Coordinate(1.5, 0.5),
+            new Coordinate(0.5, 0.5)
+        });
+        filter = buildFilterByRoi(recordDef, testList, roi);
+        checkFilteredResults(filter, testList);
+        
+        // FOIs 1 + 3
+        testList.clear();
+        testList.addAll(dataList);
+        roi = new GeometryFactory().createPolygon(new Coordinate[] {
+            new Coordinate(0.5, 0.5),
+            new Coordinate(0.5, 3.5),
+            new Coordinate(3.5, 3.5),
+            new Coordinate(3.5, 2.5),
+            new Coordinate(1.5, 2.5),
+            new Coordinate(1.5, 0.5),
+            new Coordinate(0.5, 0.5)
+        });
+        filter = buildFilterByRoi(recordDef, testList, roi);
+        checkFilteredResults(filter, testList);
+        
+        // FOIs 1-4
+        testList.clear();
+        testList.addAll(dataList);
+        roi = new GeometryFactory().createPolygon(new Coordinate[] {
+            new Coordinate(0.0, 0.0),
+            new Coordinate(0.0, 4.0),
+            new Coordinate(4.0, 4.0),
+            new Coordinate(4.0, 0.0),
+            new Coordinate(0.0, 0.0)
+        });
+        filter = buildFilterByRoi(recordDef, testList, roi);
         checkFilteredResults(filter, testList);
     }
     
