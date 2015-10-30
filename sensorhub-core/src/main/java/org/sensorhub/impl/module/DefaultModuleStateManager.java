@@ -194,6 +194,14 @@ public class DefaultModuleStateManager implements IModuleStateManager
             throw new RuntimeException("Cannot save module state information", e);
         }        
     }
+    
+    
+    @Override
+    public String getFolder()
+    {
+        ensureFolder();
+        return folder.getAbsolutePath();
+    }
 
 
     @Override

@@ -44,5 +44,7 @@ public interface IModuleStateManager
     
     public void flush();
     
+    public String getFolder();
+    
     public void cleanup();
 }
