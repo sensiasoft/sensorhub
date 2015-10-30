@@ -18,7 +18,6 @@ import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataEncoding;
 import org.sensorhub.api.common.IEventProducer;
-import org.sensorhub.api.module.IModule;
 
 
 /**
@@ -37,7 +36,7 @@ public interface IStreamingDataInterface extends IEventProducer
      * Allows by-reference access to parent module
      * @return parent module instance
      */
-    public IModule<?> getParentModule();
+    public IDataProducerModule<?> getParentModule();
     
     
     /**

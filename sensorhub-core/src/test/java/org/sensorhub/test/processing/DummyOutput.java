@@ -21,7 +21,6 @@ import org.sensorhub.api.common.IEventHandler;
 import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.data.DataEvent;
 import org.sensorhub.api.data.IStreamingDataInterface;
-import org.sensorhub.api.module.IModule;
 import org.sensorhub.api.processing.IStreamProcessModule;
 import org.sensorhub.impl.common.BasicEventHandler;
 import org.vast.swe.SWEHelper;
@@ -58,7 +57,7 @@ class DummyOutput implements IStreamingDataInterface
     
 
     @Override
-    public IModule<?> getParentModule()
+    public IStreamProcessModule<?> getParentModule()
     {
         return parentProcess;
     }
