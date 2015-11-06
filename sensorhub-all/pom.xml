@@ -4,7 +4,7 @@
    <artifactId>sensorhub-all</artifactId>
    <packaging>pom</packaging>
    <name>SensorHub</name>
-   <version>1.0</version>
+   <version>1.1-SNAPSHOT</version>
    <url>http://docs.opensensorhub.org</url>
    <description>SensorHub software allows one to easily build sensor networks that use standard formats to exchange measurements data, commands and events/alarms. These standard formats are mostly OGC standards from the Sensor Web Enablement (SWE) initiative and are key to design sensor networks that can largely evolve with time (addition of new types of sensors, reconfigurations, etc.). </description>
    <properties>
@@ -73,6 +73,7 @@
                   <!-- use exportcontents instead of Export-Package otherwise it also includes all classes from dependencies -->
                   <Embed-Directory>lib</Embed-Directory>
                   <_exportcontents>org.sensorhub.*</_exportcontents>
+                  <remoteOBR>repository.xml</remoteOBR>
                </instructions>
             </configuration>
          </plugin>
