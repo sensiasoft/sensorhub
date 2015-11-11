@@ -25,22 +25,22 @@
       <dependency>
          <groupId>org.vast.opengis</groupId>
          <artifactId>swe-common-core</artifactId>
-         <version>1.0</version>
+         <version>${project.parent.version}</version>
       </dependency>
       <dependency>
          <groupId>org.vast.opengis</groupId>
          <artifactId>swe-common-om</artifactId>
-         <version>1.0</version>
+         <version>${project.parent.version}</version>
       </dependency>
       <dependency>
          <groupId>org.vast.opengis</groupId>
          <artifactId>sensorml-core</artifactId>
-         <version>1.0</version>
+         <version>${project.parent.version}</version>
       </dependency>
       <dependency>
          <groupId>org.vast.opengis</groupId>
          <artifactId>sensorml-core</artifactId>
-         <version>1.0</version>
+         <version>${project.parent.version}</version>
          <type>test-jar</type>
          <scope>test</scope>
       </dependency>
