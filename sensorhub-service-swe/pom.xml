@@ -47,7 +47,7 @@
       <dependency>
          <groupId>org.vast.opengis</groupId>
          <artifactId>ows-framework-bindings</artifactId>
-         <version>1.0</version>
+         <version>${project.version}</version>
       </dependency>
       <dependency>
          <artifactId>amused-core</artifactId>
