@@ -4,12 +4,11 @@
    <parent>
       <groupId>org.sensorhub</groupId>
       <artifactId>sensorhub-all</artifactId>
-      <version>1.0</version>
+      <version>1.1-SNAPSHOT</version>
       <relativePath>../../sensorhub-all/pom.xml</relativePath>
    </parent>
    <artifactId>sensorhub-webui-widgetset</artifactId>
    <packaging>jar</packaging>
-   <version>1.0</version>
    <name>SensorHub Vaadin WidgetSet</name>
 
    <properties>
