@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
+    
+    <url>
+     <loc>None/</loc>
+     <lastmod>2015-11-20</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+    
+
+    
+        
+    <url>
+     <loc>None/download/</loc>
+     <lastmod>2015-11-20</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+        
+    <url>
+     <loc>None/install/</loc>
+     <lastmod>2015-11-20</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+        
+    
+
+    
+        
+    <url>
+     <loc>None/user-guide/</loc>
+     <lastmod>2015-11-20</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+        
+    <url>
+     <loc>None/swe-services/</loc>
+     <lastmod>2015-11-20</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+        
+    
+
+    
+        
+    <url>
+     <loc>None/dev-guide/</loc>
+     <lastmod>2015-11-20</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+        
+    <url>
+     <loc>None/architecture/</loc>
+     <lastmod>2015-11-20</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+        
+    <url>
+     <loc>None/apidocs/</loc>
+     <lastmod>2015-11-20</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+        
+    
+
+    
+        
+    <url>
+     <loc>None/tutos/adding-new-modules/</loc>
+     <lastmod>2015-11-20</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+        
+    <url>
+     <loc>None/tutos/your-first-sensor/</loc>
+     <lastmod>2015-11-20</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+        
+    
+
+    
+        
+    <url>
+     <loc>None/core-apis/</loc>
+     <lastmod>2015-11-20</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+        
+    <url>
+     <loc>None/core-apis/sensorml-api/</loc>
+     <lastmod>2015-11-20</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+        
+    <url>
+     <loc>None/core-apis/sensor-api/</loc>
+     <lastmod>2015-11-20</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+        
+    <url>
+     <loc>None/core-apis/sensornet-api/</loc>
+     <lastmod>2015-11-20</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+        
+    
+
+    
+    <url>
+     <loc>None/license/</loc>
+     <lastmod>2015-11-20</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+    
+
+</urlset>

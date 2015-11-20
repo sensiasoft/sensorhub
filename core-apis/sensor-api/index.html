@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  
+  <title>Sensor API - OpenSensorHub</title>
+  
+
+  <link rel="shortcut icon" href="../../img/favicon.ico">
+
+  
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  <link rel="stylesheet" href="../../css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../css/theme_extra.css" type="text/css" />
+  <link rel="stylesheet" href="../../css/highlight.css">
+
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Sensor API";
+    var mkdocs_page_input_path = "core-apis/sensor-api.md";
+    var mkdocs_page_url = "/core-apis/sensor-api/";
+  </script>
+  
+  <script src="../../js/jquery-2.1.1.min.js"></script>
+  <script src="../../js/modernizr-2.8.3.min.js"></script>
+  <script type="text/javascript" src="../../js/highlight.pack.js"></script>
+  <script src="../../js/theme.js"></script> 
+
+  
+  <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+      ga('create', 'UA-36723568-3', 'opensensorhub.org');
+      ga('send', 'pageview');
+  </script>
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+      <div class="wy-side-nav-search">
+        <img src="/img/logo-light.png"/>
+        <a href="../.." class="icon"> OpenSensorHub</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        <ul class="current">
+          
+            <li>
+    <li class="toctree-l1 ">
+        <a class="" href="../..">Introduction</a>
+        
+    </li>
+<li>
+          
+            <li>
+    <ul class="subnav">
+    <li><span>Getting Started</span></li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../../download/">Download</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../../install/">Installation</a>
+        
+    </li>
+
+        
+    </ul>
+<li>
+          
+            <li>
+    <ul class="subnav">
+    <li><span>User Documentation</span></li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../../user-guide/">Introduction</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../../swe-services/">SWE Services</a>
+        
+    </li>
+
+        
+    </ul>
+<li>
+          
+            <li>
+    <ul class="subnav">
+    <li><span>Developer Documentation</span></li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../../dev-guide/">Introduction</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../../architecture/">Architecture</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../../apidocs/">Javadoc</a>
+        
+    </li>
+
+        
+    </ul>
+<li>
+          
+            <li>
+    <ul class="subnav">
+    <li><span>Tutorials</span></li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../../tutos/adding-new-modules/">Adding New Modules</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../../tutos/your-first-sensor/">Your First Sensor</a>
+        
+    </li>
+
+        
+    </ul>
+<li>
+          
+            <li>
+    <ul class="subnav">
+    <li><span>Core APIs</span></li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../">Introduction</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../sensorml-api/">SensorML API</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 current">
+        <a class="current" href="./">Sensor API</a>
+        
+            <ul>
+            
+                <!--<li class="toctree-l3"><a href="#sensor-api">Sensor API</a></li>-->
+                
+                    <li><a class="toctree-l4" href="#isensormodule">ISensorModule</a></li>
+                
+                    <li><a class="toctree-l4" href="#isensordatainterface">ISensorDataInterface</a></li>
+                
+                    <li><a class="toctree-l4" href="#isensorcontrolinterface">ISensorControlInterface</a></li>
+                
+                    <li><a class="toctree-l4" href="#sensorconfig">SensorConfig</a></li>
+                
+                    <li><a class="toctree-l4" href="#abstractsensormodule">AbstractSensorModule</a></li>
+                
+                    <li><a class="toctree-l4" href="#imoduledescriptor">IModuleDescriptor</a></li>
+                
+            
+            </ul>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../sensornet-api/">Sensor Net API</a>
+        
+    </li>
+
+        
+    </ul>
+<li>
+          
+            <li>
+    <li class="toctree-l1 ">
+        <a class="" href="../../license/">License</a>
+        
+    </li>
+<li>
+          
+        </ul>
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../..">OpenSensorHub</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../..">Docs</a> &raquo;</li>
+    
+      
+        
+          <li>Core APIs &raquo;</li>
+        
+      
+    
+    <li>Sensor API</li>
+    <li class="wy-breadcrumbs-aside">
+      <!--
+        
+          <a href="https://github.com/opensensorhub/" class="icon icon-github"> Edit on GitHub</a>
+        
+      -->
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h2 id="sensor-api">Sensor API</h2>
+<p>This page presents the base API that one needs to implement to add support for new sensors or actuators.</p>
+<p>This API can only be used to implement drivers for single sensors (this limitation is due to the fact that the base API only allows the driver to define a single Feature of Interest (FOI) and a single sensor description). This means that a driver implementing only the base API would have to be instantiated N times to connect to a network of N sensors. Fortunately, SensorHub also defines an extension to the base sensor API allowing one to write drivers that can wrap sensor networks of any size within a single module. Please see the <a href="../sensornet-api/">Sensor Network API</a> page for more details.</p>
+<p>When implementing the base sensor API, each new sensor (or actuator) driver is composed of at least 4 classes:</p>
+<ul>
+<li>An implementation of the <a href="#isensormodule"><code>ISensorModule</code></a> interface</li>
+<li>Zero or more implementations of <a href="#isensordatainterface"><code>ISensorDataInterface</code></a> (<em>at least one for a sensor</em>)</li>
+<li>Zero or more implementations of <a href="#isensorcontrolinterface"><code>ISensorControlInterface</code></a> (<em>at least one for an actuator</em>)</li>
+<li>An extension of the <a href="#sensorconfig"><code>SensorConfig</code></a> class</li>
+<li>An implementation of the <a href="#imoduledescriptor"><code>IModuleDescriptor</code></a> interface</li>
+</ul>
+<p>Details about these different classes are given in the next sections.</p>
+<p><em>Note: Several sensor drivers can be packaged in a single Maven module, although we encourage this only if the drivers are very closely related and/or have tight inter-dependencies.</em></p>
+<h3 id="isensormodule">ISensorModule</h3>
+<p>The <a href="https://github.com/opensensorhub/osh-core/blob/master/sensorhub-core/src/main/java/org/sensorhub/api/sensor/ISensorModule.java"><code>ISensorModule</code></a> interface is the top-level one to be implemented by sensor drivers. It provides methods for:</p>
+<ul>
+<li>Getting the SensorML description of an installed sensor or actuator</li>
+<li>Getting the feature of interest (FOI) currently observed by the sensor</li>
+<li>Checking for the presence of the device</li>
+<li>Subscribing for high level sensor events (activation, connection, etc.)</li>
+<li>Giving access to the sensor measurement outputs and control inputs</li>
+</ul>
+<p>The main functions of the sensor module are shown on the figure below:</p>
+<p><img alt="fig1" src="../images/sensor_module.png" /></p>
+<p>Each data interface is an output that gives access to a stream of sensor measurements and is an implementation of <a href="#isensordatainterface"><code>ISensorDataInterface</code></a>. Data interfaces are asynchornous in the sense that each of them can produce data at a different rate.</p>
+<p>Each control interface is an input that can receive commands and is an implementation of <a href="#isensorcontrolinterface"><code>ISensorControlInterface</code></a>. Each control input can receive different types of command messages.</p>
+<p>A sensor module implementation must also provide the description of the sensor as a SensorML process (any class derived from <code>AbstractProcess</code> is acceptable). Usually, this sensor description is a mix between information auto-generated by the driver and information provided as a SensorML file by the user. Versioning and updating the sensor description can be optionnally supported by the driver.</p>
+<p>In order to help you implement the API, we provide the <a href="#abstractsensormodule"><code>AbstractSensorModule</code></a> class that is a simple partial implementation of <code>ISensorModule</code> and can be used as the base for most sensor modules. It provides default implementations of most methods in the API.</p>
+<h3 id="isensordatainterface">ISensorDataInterface</h3>
+<p>Data produced by each output must be made available by an implementation of <a href="https://github.com/opensensorhub/osh-core/blob/master/sensorhub-core/src/main/java/org/sensorhub/api/sensor/ISensorDataInterface.java"><code>ISensorDataInterface</code></a> that provides methods for:</p>
+<ul>
+<li>Describing the data structure of each measurement record</li>
+<li>Reading data produced by a sensor (poll mode)</li>
+<li>Subscribing for data produced by a sensor (push mode)</li>
+<li>Discovery methods allowing to advertise if push and storage are supported</li>
+</ul>
+<p>The measurement record description must be provided as a tree of SWE Common data components (DataRecord, DataArray, Quantity, Time, Count, etc.). This structure will automatically be used to populate the output section of the SensorML description.</p>
+<p>A recommended encoding must also be defined which is usually text for simple measurements and some binary flavor for imagery, video and other multi-dimensionnal datasets. </p>
+<p>These components and encodings are provided by the <em>lib-swe-common</em> module.</p>
+<p>All data streamed through the same data interface must be synchronous and time-tagged together.</p>
+<p>The <a href="https://github.com/opensensorhub/osh-core/blob/master/sensorhub-core/src/main/java/org/sensorhub/impl/sensor/AbstractSensorOutput.java"><code>AbstractSensorOutput</code></a> class is provided to reduce redundant code and help you get started. It is a basic partial implementation of <code>ISensorDataInterface</code> that can be used as the base for most sensor modules.</p>
+<h3 id="isensorcontrolinterface">ISensorControlInterface</h3>
+<p>Commands can be sent to the sensor via implementations of <a href="https://github.com/opensensorhub/osh-core/blob/master/sensorhub-core/src/main/java/org/sensorhub/api/sensor/ISensorControlInterface.java"><code>ISensorControlInterface</code></a> that provides methods for:</p>
+<ul>
+<li>Sending commands to the sensor/actuator (synchronous or asynchronous)</li>
+<li>Scheduling commands to be sent asynchronously and/or at specific times</li>
+<li>Subscribing to events related to a command that is executed asynchronously</li>
+</ul>
+<p>The <a href="https://github.com/opensensorhub/osh-core/blob/master/sensorhub-core/src/main/java/org/sensorhub/impl/sensor/AbstractSensorControl.java"><code>AbstractSensorControl</code></a> class is provided to reduce redundant code and help you get started. It is a basic partial implementation of <code>ISensorControlInterface</code> that can be used as the base for most sensor modules.</p>
+<h3 id="sensorconfig">SensorConfig</h3>
+<p>A configuration class derived from SensorConfig must be provided with the new driver. This class is used as a <em>struct</em> that contain public fields carrying the configuration of the sensor module.</p>
+<p>All public fields in this class are used to automatically generate the administration user interface of this particular driver. Nesting configuration classes is supported.</p>
+<p>You can use the <a href="https://github.com/opensensorhub/osh-core/blob/master/sensorhub-core/src/main/java/org/sensorhub/api/config/DisplayInfo.java"><code>DisplayInfo</code></a> annotation to give hints to the UI renderer, by providing:</p>
+<ul>
+<li>A more readable label (if non is provided, the label is automatically derived from the field name)</li>
+<li>A description that will show up in a popup</li>
+</ul>
+<h3 id="abstractsensormodule">AbstractSensorModule</h3>
+<p>The <a href="https://github.com/opensensorhub/osh-core/blob/master/sensorhub-core/src/main/java/org/sensorhub/impl/sensor/AbstractSensorModule.java"><code>AbstractSensorModule</code></a> class can serve as a base to develop most sensor drivers. It provides default implementation for the following aspects:</p>
+<ul>
+<li>Keeping maps of outputs and command inputs. Derived classes should thus call the <code>addOutput()</code> and <code>addControlInput()</code> methods</li>
+<li>Generation of SensorML description (more details are given below)</li>
+</ul>
+<p>However, there is no default support for:</p>
+<ul>
+<li>Updating the sensor description from outside the driver (except by changing the base SensorML file)</li>
+<li>Maintaining a history of sensor descriptions (this is because, by default, this feature is better handled by the persistence layer in SensorHub).</li>
+</ul>
+<p>Consequently, the <code>AbstractSensorModule</code> class returns <em>false</em> in the two methods reporting support of these functionalities.</p>
+<h4 id="default-workflow-for-generating-the-sensorml-description">Default workflow for generating the SensorML description</h4>
+<p>The default workflow shown on the figure below illustrates the way the current sensor decription is generated when you derive a concrete driver implementation from <code>AbstractSensorModule</code>:</p>
+<p><img alt="fig2" src="../images/sensorml_gen.png" /></p>
+<ol>
+<li>
+<p>Output, control inputs and configuration parameter descriptions are actually defined by concrete driver implementation but appending to SensorML is done in <code>AbstractSensorModule</code></p>
+</li>
+<li>
+<p>Autogenerated content is usually info obtained directly from sensor hardware
+(e.g. serial number, etc.) and/or internal driver state (e.g. depending on commands received)</p>
+</li>
+</ol>
+<h3 id="imoduledescriptor">IModuleDescriptor</h3>
+<p>Like any SensorHub module, a sensor driver must implement a class derived from this interface to become discoverable.</p>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../sensornet-api/" class="btn btn-neutral float-right" title="Sensor Net API"/>Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+        <a href="../sensorml-api/" class="btn btn-neutral" title="SensorML API"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+      <p>© Copyright 2015 Sensia Software LLC</p>
+    
+  </div>
+
+</footer>
+	  
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+<div class="rst-versions" role="note" style="cursor: pointer">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+          <a href="https://github.com/opensensorhub/" class="icon icon-github" style="float: left; color: #fcfcfc"> GitHub</a>
+      
+      
+        <span><a href="../sensorml-api/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+        <span style="margin-left: 15px"><a href="../sensornet-api/" style="color: #fcfcfc">Next &raquo;</a></span>
+      
+    </span>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  
+  <title>Sensor Net API - OpenSensorHub</title>
+  
+
+  <link rel="shortcut icon" href="../../img/favicon.ico">
+
+  
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  <link rel="stylesheet" href="../../css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../css/theme_extra.css" type="text/css" />
+  <link rel="stylesheet" href="../../css/highlight.css">
+
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Sensor Net API";
+    var mkdocs_page_input_path = "core-apis/sensornet-api.md";
+    var mkdocs_page_url = "/core-apis/sensornet-api/";
+  </script>
+  
+  <script src="../../js/jquery-2.1.1.min.js"></script>
+  <script src="../../js/modernizr-2.8.3.min.js"></script>
+  <script type="text/javascript" src="../../js/highlight.pack.js"></script>
+  <script src="../../js/theme.js"></script> 
+
+  
+  <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+      ga('create', 'UA-36723568-3', 'opensensorhub.org');
+      ga('send', 'pageview');
+  </script>
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+      <div class="wy-side-nav-search">
+        <img src="/img/logo-light.png"/>
+        <a href="../.." class="icon"> OpenSensorHub</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        <ul class="current">
+          
+            <li>
+    <li class="toctree-l1 ">
+        <a class="" href="../..">Introduction</a>
+        
+    </li>
+<li>
+          
+            <li>
+    <ul class="subnav">
+    <li><span>Getting Started</span></li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../../download/">Download</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../../install/">Installation</a>
+        
+    </li>
+
+        
+    </ul>
+<li>
+          
+            <li>
+    <ul class="subnav">
+    <li><span>User Documentation</span></li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../../user-guide/">Introduction</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../../swe-services/">SWE Services</a>
+        
+    </li>
+
+        
+    </ul>
+<li>
+          
+            <li>
+    <ul class="subnav">
+    <li><span>Developer Documentation</span></li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../../dev-guide/">Introduction</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../../architecture/">Architecture</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../../apidocs/">Javadoc</a>
+        
+    </li>
+
+        
+    </ul>
+<li>
+          
+            <li>
+    <ul class="subnav">
+    <li><span>Tutorials</span></li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../../tutos/adding-new-modules/">Adding New Modules</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../../tutos/your-first-sensor/">Your First Sensor</a>
+        
+    </li>
+
+        
+    </ul>
+<li>
+          
+            <li>
+    <ul class="subnav">
+    <li><span>Core APIs</span></li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../">Introduction</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../sensorml-api/">SensorML API</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../sensor-api/">Sensor API</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 current">
+        <a class="current" href="./">Sensor Net API</a>
+        
+            <ul>
+            
+                <!--<li class="toctree-l3"><a href="#sensor-network-api">Sensor Network API</a></li>-->
+                
+                    <li><a class="toctree-l4" href="#entities">Entities</a></li>
+                
+                    <li><a class="toctree-l4" href="#sensor-descriptions">Sensor Descriptions</a></li>
+                
+                    <li><a class="toctree-l4" href="#features-of-interest">Features of Interest</a></li>
+                
+                    <li><a class="toctree-l4" href="#network-output">Network Output</a></li>
+                
+            
+            </ul>
+        
+    </li>
+
+        
+    </ul>
+<li>
+          
+            <li>
+    <li class="toctree-l1 ">
+        <a class="" href="../../license/">License</a>
+        
+    </li>
+<li>
+          
+        </ul>
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../..">OpenSensorHub</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../..">Docs</a> &raquo;</li>
+    
+      
+        
+          <li>Core APIs &raquo;</li>
+        
+      
+    
+    <li>Sensor Net API</li>
+    <li class="wy-breadcrumbs-aside">
+      <!--
+        
+          <a href="https://github.com/opensensorhub/" class="icon icon-github"> Edit on GitHub</a>
+        
+      -->
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h2 id="sensor-network-api">Sensor Network API</h2>
+<p>This page presents an extension of the base <a href="../sensor-api/">Sensor API</a> that allows one to implement drivers for sensor networks of any size as a single SensorHub module. This API is used in addition to the base sensor API when one needs to wrap such a sensor network instead of just a single sensor.</p>
+<p>In addition to the base sensor API methods, a sensor network module would have to implement the <a href="https://github.com/opensensorhub/osh-core/blob/master/sensorhub-core/src/main/java/org/sensorhub/api/data/IMultiSourceDataProducer.java">'IMultiSourceDataProducer'</a> interface which allows providing <a href="#sensor-descriptions">Sensor Descriptions</a> and <a href="#features-of-interest">Features of Interest</a> (FOI) for multiple <a href="#entities">Entities</a>:</p>
+<h3 id="entities">Entities</h3>
+<p>The 'IMultiSourceDataProducer' interface is based on the concept of <em>Entity</em>: An entity represents one member of the network. We use the term entity because this interface can also be used for other things than sensor networks, such as process grids.</p>
+<p>For sensor networks, each entity usually corresponds to one sensor (or one measurement system such as a weather station) in the network. Although sensors in a network often measure the same quantities, it is not always the case, so SensorHub allows for completely heterogeneous sensors to be part of the same network.</p>
+<h3 id="sensor-descriptions">Sensor Descriptions</h3>
+<p>The sensor network driver is responsible for providing sensor descriptions for each entity via the <code>getCurrentDescription(String entityId)</code> method. This description can contain information specific to that entity such as its location (when fixed) and calibration tables for example.</p>
+<p>Since the driver also inherits the original methods from the base <a href="../sensor-api/">Sensor API</a>, the <code>getCurrentDescription()</code> method shall be used to provide a description of the network as a whole. This description usually contains the list of sensors that are part of the network as SensorML components (for large networks, this will be preferably done by reference). It is also important to include discovery related information in this description since it is the only one directly referenced by the capabilities document of SWE services.</p>
+<p>Changes in the network or in a given entity configuration are notified using a <a href="https://github.com/opensensorhub/osh-core/sensorhub/blob/master/sensorhub-core/src/main/java/org/sensorhub/api/sensor/SensorEvent.java">SensorEvent</a>. In the case of an entity change, use the constructor with the sensorID.</p>
+<p><em>Note: As for single sensors, the driver is only required to provide the most current sensor descriptions. Maintenance of the history of descriptions is done by storage modules in SensorHub.</em></p>
+<h3 id="features-of-interest">Features of Interest</h3>
+<p>In a sensor network, there can be as many features of interest (FOI) as there are entities in the network at any given point in time (e.g. for a network of weather station, there is one static sampling point per station). The FOI associated with each entity is provided via the <code>getCurrentFeatureOfInterest(String entityID)</code> method.</p>
+<p>Since the driver also inherits the original methods from the base <a href="../sensor-api/">Sensor API</a>, the <code>getCurrentFeatureOfInterest()</code> method shall be used to provide a FOI for the network as a whole (e.g. The FOI for a river monitoring sensor network is the river itself, while the FOI for each station/entity would be a sampling point at the station location). This corresponds to the sampled feature in the O&amp;M model.</p>
+<p>When one of the features of interest changes (as usually happens in networks of mobile sensors), this can be notified using an <a href="https://github.com/opensensorhub/osh-core/sensorhub/blob/master/sensorhub-core/src/main/java/org/sensorhub/api/data/FoiEvent.java">FoiEvent</a>. If the FOI observed by one of the sensor changes (e.g. the sensor was moved to a new location), use the constructor with the entityID.</p>
+<p><em>Note: As for single sensors, the driver is only required to provide the feature of interest currently being observed. Maintenance of the history of FOIs is done by storage modules in SensorHub.</em></p>
+<h3 id="network-output">Network Output</h3>
+<p>For sensor networks, the observation output(s) should include a field indicating the ID of the entity that generated the data record. For instance, the record description for weather measurements coming from a network of weather station could be such as:</p>
+<pre><code class="xml">&lt;swe:DataRecord definition=&quot;http://sensorml.com/ont/swe/property/WeatherData&quot;&gt;
+    &lt;swe:field name=&quot;time&quot;&gt;
+        &lt;swe:Time
+            definition=&quot;http://www.opengis.net/def/property/OGC/0/SamplingTime&quot; referenceFrame=&quot;http://www.opengis.net/def/trs/BIPM/0/UTC&quot;&gt;
+            &lt;swe:label&gt;Sampling Time&lt;/swe:label&gt;
+            &lt;swe:uom xlink:href=&quot;http://www.opengis.net/def/uom/ISO-8601/0/Gregorian&quot;/&gt;
+        &lt;/swe:Time&gt;
+    &lt;/swe:field&gt;
+    &lt;swe:field name=&quot;stationID&quot;&gt;
+        &lt;swe:Text definition=&quot;http://sensorml.com/ont/swe/property/StationID&quot;&gt;
+            &lt;swe:label&gt;Station ID&lt;/swe:label&gt;
+        &lt;/swe:Text&gt;
+    &lt;/swe:field&gt;
+    &lt;swe:field name=&quot;temp&quot;&gt;
+        &lt;swe:Quantity definition=&quot;http://sensorml.com/ont/swe/property/Temperature&quot;&gt;
+            &lt;swe:label&gt;Air Temperature&lt;/swe:label&gt;
+            &lt;swe:uom code=&quot;degF&quot;/&gt;
+        &lt;/swe:Quantity&gt;
+    &lt;/swe:field&gt;
+    &lt;swe:field name=&quot;humidity&quot;&gt;
+        &lt;swe:Quantity definition=&quot;http://sensorml.com/ont/swe/property/HumidityValue&quot;&gt;
+            &lt;swe:label&gt;Relative Humidity&lt;/swe:label&gt;
+            &lt;swe:uom code=&quot;%&quot;/&gt;
+        &lt;/swe:Quantity&gt;
+    &lt;/swe:field&gt;
+    &lt;swe:field name=&quot;press&quot;&gt;
+        &lt;swe:Quantity definition=&quot;http://sensorml.com/ont/swe/property/AirPressureValue&quot;&gt;
+            &lt;swe:label&gt;Atmospheric Pressure&lt;/swe:label&gt;
+            &lt;swe:uom code=&quot;[in_i]Hg&quot;/&gt;
+        &lt;/swe:Quantity&gt;
+    &lt;/swe:field&gt;
+&lt;/swe:DataRecord&gt;
+</code></pre>
+
+<p>Notice the field `stationID' whose value would be the ID of the entity/station that generated the record.</p>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../../license/" class="btn btn-neutral float-right" title="License"/>Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+        <a href="../sensor-api/" class="btn btn-neutral" title="Sensor API"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+      <p>© Copyright 2015 Sensia Software LLC</p>
+    
+  </div>
+
+</footer>
+	  
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+<div class="rst-versions" role="note" style="cursor: pointer">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+          <a href="https://github.com/opensensorhub/" class="icon icon-github" style="float: left; color: #fcfcfc"> GitHub</a>
+      
+      
+        <span><a href="../sensor-api/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+        <span style="margin-left: 15px"><a href="../../license/" style="color: #fcfcfc">Next &raquo;</a></span>
+      
+    </span>
+</div>
+
+</body>
+</html>
