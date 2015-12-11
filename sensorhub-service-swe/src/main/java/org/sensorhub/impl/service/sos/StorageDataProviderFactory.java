@@ -204,7 +204,7 @@ public class StorageDataProviderFactory implements ISOSDataProviderFactory
     {
         FoiFilter filter = new FoiFilter();
         int numFois = ((IObsStorage) storage).getNumFois(filter);
-        if (numFois < config.maxFois)
+        if (numFois <= config.maxFois)
         {
             Iterator<String> it = ((IObsStorage)storage).getFoiIDs(filter);
             while (it.hasNext())

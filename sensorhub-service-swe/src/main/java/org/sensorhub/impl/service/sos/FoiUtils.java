@@ -45,7 +45,7 @@ public class FoiUtils
             Bbox boundingRect = new Bbox();
             for (AbstractFeature foi: fois)
             {
-                if (numFois < maxFois)
+                if (numFois <= maxFois)
                     caps.getRelatedFeatures().add(foi.getUniqueIdentifier());
                 
                 AbstractGeometry geom = foi.getLocation();
@@ -56,7 +56,8 @@ public class FoiUtils
                 }
             }
             
-            caps.getObservedAreas().add(boundingRect);
+            if (!boundingRect.isNull())
+                caps.getObservedAreas().add(boundingRect);
         }
         else
         {

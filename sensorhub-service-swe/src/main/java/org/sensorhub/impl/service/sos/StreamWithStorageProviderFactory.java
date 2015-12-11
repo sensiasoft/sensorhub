@@ -63,7 +63,7 @@ public class StreamWithStorageProviderFactory<ProducerType extends IDataProducer
         SOSOfferingCapabilities capabilities = super.generateCapabilities();
         
         // if storage does support FOIs, list the current ones
-        if (capabilities.getRelatedFeatures().isEmpty())
+        if (!(storage instanceof IObsStorage))
             FoiUtils.updateFois(caps, producer, config.maxFois);
         
         // enable real-time requests only if streaming data source is enabled
