@@ -202,6 +202,10 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
             if (!sensorDescription.isSetIdentifier())
                 sensorDescription.setUniqueIdentifier(getLocalID());
             
+            // description
+            if (!sensorDescription.isSetDescription() && config.name != null)
+                sensorDescription.setName(config.name);
+            
             // time validity
             if (sensorDescription.getNumValidTimes() == 0)
             {
