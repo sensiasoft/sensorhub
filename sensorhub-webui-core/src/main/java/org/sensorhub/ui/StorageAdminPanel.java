@@ -64,7 +64,6 @@ import com.vaadin.ui.Table;
 public class StorageAdminPanel extends DefaultModulePanel<IRecordStorageModule<?>> implements IModuleAdminPanel<IRecordStorageModule<?>>
 {
     private static final long serialVersionUID = 9206002459600214988L;
-    Panel oldPanel;
     
     
     @Override
@@ -145,11 +144,11 @@ public class StorageAdminPanel extends DefaultModulePanel<IRecordStorageModule<?
                 // data table
                 panelLayout.addComponent(buildTable(storage, dsInfo));
                 
+                Component oldPanel = form.getComponent(0, i); // we start at index 2 because there is a spacer and the title on top
                 if (oldPanel != null)
                     form.replaceComponent(oldPanel, panel);
                 else
                     form.addComponent(panel);
-                oldPanel = panel;
             }
         }
     }
