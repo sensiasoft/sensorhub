@@ -167,9 +167,23 @@ public class ObsSeriesImpl extends TimeSeriesImpl
     
     protected IteratorWithFoi getEntryIterator(IDataFilter filter)
     {
-     // get time periods formatching FOIs
+        // get time periods for matching FOIs
         final Set<FoiTimePeriod> foiTimePeriods = getFoiTimePeriods(filter);
             
+        // if no FOIs have been added just process whole time range
+        if (foiTimePeriods.isEmpty())
+        {
+            double[] timeRange = filter.getTimeStampRange();
+            double start = Double.NEGATIVE_INFINITY;
+            double stop = Double.POSITIVE_INFINITY;
+            if (timeRange != null)
+            {
+                start = filter.getTimeStampRange()[0];
+                stop = filter.getTimeStampRange()[1];
+            }
+            foiTimePeriods.add(new FoiTimePeriod(null, start, stop));
+        }
+        
         // scan through each time range sequentially
         // but wrap the process with a single iterator
         return new IteratorWithFoi()

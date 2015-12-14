@@ -47,7 +47,7 @@ class FoiTimesStoreImpl extends Persistent
     }
     
     
-    class FoiTimePeriod
+    static class FoiTimePeriod
     {
         String uid;
         double start;
