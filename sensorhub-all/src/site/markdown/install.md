@@ -13,8 +13,8 @@ On Linux, we have successfully tested SensorHub with both OpenJDK and Oracle JDK
 
 ### Setup
 
-  * First download the latest OSH binary release from [Here](https://github.com/opensensorhub/osh-distros/releases)
-  * Unzip the file to a directory of your choice
+  * First download the latest OSH binary release (both 'core' and 'sensors' zip files) from [Here](https://github.com/opensensorhub/osh-core/releases)
+  * Unzip both files to a directory of your choice
   * Execute the `launch.sh` script (on Linux)
   * You should now be able to connect to <http://localhost:8181/sensorhub/test> and get the message `SensorHub web server is up`
   
