@@ -95,10 +95,5 @@
         <artifactId>sensorhub-driver-avl-911</artifactId>
         <version>0.1-SNAPSHOT</version>
      </dependency>
-     <dependency>
-        <groupId>org.jcodec</groupId>
-        <artifactId>jcodec</artifactId>
-        <version>0.1.5</version>
-     </dependency>
   </dependencies>
 </project>
