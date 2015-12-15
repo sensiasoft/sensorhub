@@ -82,7 +82,7 @@ class SMLOutputInterface implements IStreamingDataInterface
         {
             parentProcess.smlProcess.connectOutput(outputDef.getName(), "/", outputQueue);
         }
-        catch (org.vast.process.SMLProcessException e)
+        catch (org.vast.process.SMLException e)
         {
             throw new ProcessException("Error while connecting output " + outputDef.getName(), e);
         }

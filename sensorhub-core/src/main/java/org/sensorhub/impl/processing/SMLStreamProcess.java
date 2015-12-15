@@ -26,7 +26,7 @@ import org.sensorhub.api.processing.DataSourceConfig;
 import org.sensorhub.api.processing.ProcessException;
 import org.sensorhub.utils.MsgUtils;
 import org.vast.process.DataQueue;
-import org.vast.process.SMLProcessException;
+import org.vast.process.SMLException;
 import org.vast.sensorML.AbstractProcessImpl;
 import org.vast.sensorML.AggregateProcessImpl;
 import org.vast.sensorML.SMLHelper;
@@ -79,11 +79,11 @@ public class SMLStreamProcess extends AbstractStreamProcess<SMLStreamProcessConf
             // make process executable
             try
             {
-                utils.makeProcessExecutable(smlProcess);
+                SMLHelper.makeProcessExecutable(smlProcess);
                 smlProcess.createNewInputBlocks();
                 smlProcess.createNewOutputBlocks();
             }
-            catch (SMLProcessException e)
+            catch (SMLException e)
             {
                 throw new ProcessException("Error while preparing SensorML process for execution in " +
                         MsgUtils.moduleString(this), e);
@@ -150,7 +150,7 @@ public class SMLStreamProcess extends AbstractStreamProcess<SMLStreamProcessConf
             // call super to register to input events
             super.start();
         }
-        catch (org.vast.process.SMLProcessException e)
+        catch (org.vast.process.SMLException e)
         {
             throw new ProcessException("Error when starting SensorML process thread", e);
         }
