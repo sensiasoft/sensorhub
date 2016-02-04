@@ -77,32 +77,6 @@
                </instructions>
             </configuration>
          </plugin>
-         <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-site-plugin</artifactId>
-            <version>3.4</version>
-            <dependencies>
-               <dependency>
-                  <groupId>org.apache.maven.doxia</groupId>
-                  <artifactId>doxia-module-markdown</artifactId>
-                  <version>1.6</version>
-               </dependency>
-               <!-- Needed by Reflow Skin -->
-               <dependency>
-                  <groupId>lt.velykis.maven.skins</groupId>
-                  <artifactId>reflow-velocity-tools</artifactId>
-                  <version>1.1.1</version>
-               </dependency>
-               <dependency>
-                  <groupId>org.apache.velocity</groupId>
-                  <artifactId>velocity</artifactId>
-                  <version>1.7</version>
-               </dependency>
-            </dependencies>
-            <configuration>
-               <stagingDirectory>${session.executionRootDirectory}/../sensorhub-site</stagingDirectory>
-            </configuration>
-         </plugin>
       </plugins>
       <extensions>
          <extension>
@@ -121,10 +95,6 @@
          <id>sensiasoft</id>
          <url>scpexe://sensiasoft.net/home/ubuntu/maven-repo</url>
       </snapshotRepository>
-      <site>
-         <id>osh</id>
-         <url>http://docs.opensensorhub.org</url>
-      </site>
    </distributionManagement>
    <reporting>
       <plugins>
