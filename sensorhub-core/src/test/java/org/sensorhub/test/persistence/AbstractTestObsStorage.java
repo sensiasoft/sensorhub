@@ -223,7 +223,7 @@ public abstract class AbstractTestObsStorage<StorageType extends IObsStorageModu
         for (int i=0; i<numRecords; i++)
         {
             DataBlock data = recordDef.createDataBlock();
-            data.setDoubleValue(0, i*0.1);
+            data.setDoubleValue(0, i*timeStep);
             data.setIntValue(1, 3*i);
             data.setStringValue(2, "test" + i);
             dataList.add(data);
@@ -295,8 +295,11 @@ public abstract class AbstractTestObsStorage<StorageType extends IObsStorageModu
         for (String foiID: FOI_IDS)
         {
             AbstractFeature f = allFeatures.get(foiID);
-            if (roi.intersects((Geometry)f.getLocation()))
-                foiIndexList.add(fIndex);
+            if (f != null)
+            {
+                if (roi.intersects((Geometry)f.getLocation()))
+                    foiIndexList.add(fIndex);                
+            }
             fIndex++;
         }
         
@@ -372,7 +375,9 @@ public abstract class AbstractTestObsStorage<StorageType extends IObsStorageModu
         Iterator<DataBlock> it1 = storage.getDataBlockIterator(filter);
         while (it1.hasNext())
         {
-            TestUtils.assertEquals(dataList.get(i), it1.next());
+            DataBlock blk = it1.next();
+            if (dataList.size() > i)
+                TestUtils.assertEquals(dataList.get(i), blk);
             i++;
         }
         
@@ -383,10 +388,13 @@ public abstract class AbstractTestObsStorage<StorageType extends IObsStorageModu
         Iterator<? extends IDataRecord> it2 = storage.getRecordIterator(filter);
         while (it2.hasNext())
         {
-            IDataRecord dbRec = it2.next();
-            TestUtils.assertEquals(dataList.get(i), dbRec.getData());
-            if (filter.getFoiIDs() != null)
-                assertTrue(filter.getFoiIDs().contains(((ObsKey)dbRec.getKey()).foiID));
+            IDataRecord dbRec = it2.next();            
+            if (dataList.size() > i)
+            {
+                TestUtils.assertEquals(dataList.get(i), dbRec.getData());
+                if (filter.getFoiIDs() != null)
+                    assertTrue(filter.getFoiIDs().contains(((ObsKey)dbRec.getKey()).foiID));
+            }            
             i++;
         }
         
@@ -513,6 +521,19 @@ public abstract class AbstractTestObsStorage<StorageType extends IObsStorageModu
         List<DataBlock> testList = new ArrayList<DataBlock>(dataList.size());
         IObsFilter filter;
         Polygon roi;
+        
+        // NO FOI
+        testList.clear();
+        testList.addAll(dataList);
+        roi = new GeometryFactory().createPolygon(new Coordinate[] {
+            new Coordinate(0.0, 0.0),
+            new Coordinate(0.0, 0.1),
+            new Coordinate(0.1, 0.1),
+            new Coordinate(0.1, 0.0),
+            new Coordinate(0.0, 0.0)
+        });
+        filter = buildFilterByRoi(recordDef, testList, roi);
+        checkFilteredResults(filter, testList);
         
         // FOI 1
         testList.clear();

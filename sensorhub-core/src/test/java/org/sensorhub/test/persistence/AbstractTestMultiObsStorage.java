@@ -47,16 +47,6 @@ public abstract class AbstractTestMultiObsStorage<StorageType extends IObsStorag
             ((IMultiSourceStorage<?>)storage).addDataStore(producerID);
         }
     }
-    
-    
-    protected void addFoisToStorage() throws Exception
-    {
-        for (int i = 1; i <= NUM_PRODUCERS; i++)
-        {
-            producerID = SENSOR_UID_PREFIX + i;
-            super.addFoisToStorage();
-        }
-    }
 
 
     @Override
@@ -120,6 +110,14 @@ public abstract class AbstractTestMultiObsStorage<StorageType extends IObsStorag
     {
         addProducersToStorage();
         super.testGetRecordsForMultipleFoiIDsAndTime();
+    }
+    
+    
+    @Override
+    public void testGetRecordsByRoi() throws Exception
+    {
+        addProducersToStorage();
+        super.testGetRecordsByRoi();
     }
 
 

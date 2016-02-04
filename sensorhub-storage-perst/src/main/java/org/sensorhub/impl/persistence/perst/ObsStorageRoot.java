@@ -44,15 +44,14 @@ class ObsStorageRoot extends BasicStorageRoot implements IObsStorage
     
     
     public ObsStorageRoot(Storage db)
-    {
-        super(db);
-        this.featureStore = new FeatureStoreImpl(db);
+    {        
+        this(db, new FeatureStoreImpl(db));
     }
     
     
     public ObsStorageRoot(Storage db, FeatureStoreImpl featureStore)
     {
-        this(db);
+        super(db);
         this.featureStore = featureStore;
     }
     
@@ -95,7 +94,7 @@ class ObsStorageRoot extends BasicStorageRoot implements IObsStorage
     @Override
     public void addRecordStore(String name, DataComponent recordStructure, DataEncoding recommendedEncoding)
     {
-        ObsSeriesImpl newTimeSeries = new ObsSeriesImpl(getStorage(), recordStructure, recommendedEncoding);
+        ObsSeriesImpl newTimeSeries = new ObsSeriesImpl(this, recordStructure, recommendedEncoding);
         dataStores.put(name, newTimeSeries);
         modify();
     }

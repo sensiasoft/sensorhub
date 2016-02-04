@@ -198,6 +198,9 @@ class BasicStorageRoot extends Persistent implements IBasicStorage
         TimeSeriesImpl dataStore = dataStores.get(recordType);
         if (dataStore == null)
             throw new IllegalArgumentException("Record type not found in this storage: " + recordType);
+        
+        // make sure parent is set
+        dataStore.parentStore = this;
         return dataStore;            
     }
 

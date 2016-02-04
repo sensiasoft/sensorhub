@@ -93,7 +93,7 @@ class FoiTimesStoreImpl extends Persistent
         
         // TODO handle case of overlaping FOI periods?
         
-        if (uids != null && uids.size() > 0)
+        if (uids != null)
         {
             for (String uid: uids)
             {

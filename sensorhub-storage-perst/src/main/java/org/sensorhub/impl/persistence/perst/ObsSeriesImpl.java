@@ -16,6 +16,7 @@ package org.sensorhub.impl.persistence.perst;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -25,7 +26,6 @@ import net.opengis.swe.v20.DataEncoding;
 import org.garret.perst.Index;
 import org.garret.perst.IterableIterator;
 import org.garret.perst.Key;
-import org.garret.perst.Storage;
 import org.sensorhub.api.persistence.DataKey;
 import org.sensorhub.api.persistence.FeatureFilter;
 import org.sensorhub.api.persistence.IDataFilter;
@@ -50,9 +50,54 @@ public class ObsSeriesImpl extends TimeSeriesImpl
     FoiTimesStoreImpl foiTimesStore;
     
     
-    static abstract class IteratorWithFoi extends IterableIterator<Entry<Object,DataBlock>>
+    class IteratorWithFoi extends IterableIterator<Entry<Object,DataBlock>>
     {
-        public abstract String getCurrentFoiID();
+        Iterator<FoiTimePeriod> periodIt; 
+        Iterator<Entry<Object, DataBlock>> recordIt;
+        Entry<Object,DataBlock> nextRecord;
+        String currentFoiID;
+        
+        IteratorWithFoi(Set<FoiTimePeriod>foiTimePeriods)
+        {
+            periodIt = foiTimePeriods.iterator();
+            next();
+        }
+
+        public final boolean hasNext()
+        {
+            return nextRecord != null;
+        }
+
+        public final Entry<Object,DataBlock> next()
+        {
+            Entry<Object,DataBlock> rec = nextRecord;
+            
+            if ((recordIt == null || !recordIt.hasNext()) && periodIt.hasNext())
+            {
+                // process next time range
+                FoiTimePeriod nextPeriod = periodIt.next();
+                currentFoiID = nextPeriod.uid;
+                recordIt = recordIndex.entryIterator(new Key(nextPeriod.start), new Key(nextPeriod.stop), Index.ASCENT_ORDER);
+            }
+            
+            // continue processing time range
+            if (recordIt != null && recordIt.hasNext())
+                nextRecord = recordIt.next();
+            else
+                nextRecord = null;
+            
+            return rec;
+        }
+    
+        public final void remove()
+        {
+            recordIt.remove();
+        }
+
+        public String getCurrentFoiID()
+        {
+            return currentFoiID;
+        }
     }
     
     
@@ -61,10 +106,11 @@ public class ObsSeriesImpl extends TimeSeriesImpl
     private ObsSeriesImpl() {}
     
     
-    ObsSeriesImpl(Storage db, DataComponent recordDescription, DataEncoding recommendedEncoding)
+    ObsSeriesImpl(ObsStorageRoot parentStore, DataComponent recordDescription, DataEncoding recommendedEncoding)
     {
-        super(db, recordDescription, recommendedEncoding);
-        this.foiTimesStore = new FoiTimesStoreImpl(db);
+        super(parentStore.getStorage(), recordDescription, recommendedEncoding);
+        this.parentStore = parentStore;
+        this.foiTimesStore = new FoiTimesStoreImpl(parentStore.getStorage());
     }
     
     
@@ -76,6 +122,8 @@ public class ObsSeriesImpl extends TimeSeriesImpl
         if (filter instanceof IObsFilter)
         {
             foiIDs = ((IObsFilter)filter).getFoiIDs();
+            if (foiIDs != null && foiIDs.isEmpty())
+                foiIDs = null;
             roi = ((IObsFilter) filter).getRoi();
         }
         
@@ -96,14 +144,23 @@ public class ObsSeriesImpl extends TimeSeriesImpl
                 }
             };
             
-            Iterator<String> foiIt = getFeatureStore().getFeatureIDs(foiFilter);
+            FeatureStoreImpl fStore = ((ObsStorageRoot)parentStore).featureStore;
+            Iterator<String> foiIt = fStore.getFeatureIDs(foiFilter);
             Collection<String> allFoiIDs = new ArrayList<String>(100);
+            
+            // apply OR between FOI id list and ROI
+            // this is not standard compliant but more useful than AND
             if (foiIDs != null)
                 allFoiIDs.addAll(foiIDs);
             while (foiIt.hasNext())
                 allFoiIDs.add(foiIt.next());
+            
             foiIDs = allFoiIDs;
         }
+        
+        // if no FOIs selected don't compute periods
+        if (foiIDs == null)
+            return null;
         
         // get time periods for list of FOIs
         Set<FoiTimePeriod> foiTimes = foiTimesStore.getSortedFoiTimes(foiIDs);
@@ -168,10 +225,10 @@ public class ObsSeriesImpl extends TimeSeriesImpl
     protected IteratorWithFoi getEntryIterator(IDataFilter filter)
     {
         // get time periods for matching FOIs
-        final Set<FoiTimePeriod> foiTimePeriods = getFoiTimePeriods(filter);
+        Set<FoiTimePeriod> foiTimePeriods = getFoiTimePeriods(filter);
             
         // if no FOIs have been added just process whole time range
-        if (foiTimePeriods.isEmpty())
+        if (foiTimePeriods == null)
         {
             double[] timeRange = filter.getTimeStampRange();
             double start = Double.NEGATIVE_INFINITY;
@@ -181,52 +238,14 @@ public class ObsSeriesImpl extends TimeSeriesImpl
                 start = filter.getTimeStampRange()[0];
                 stop = filter.getTimeStampRange()[1];
             }
+            
+            foiTimePeriods = new HashSet<FoiTimePeriod>();
             foiTimePeriods.add(new FoiTimePeriod(null, start, stop));
         }
         
         // scan through each time range sequentially
         // but wrap the process with a single iterator
-        return new IteratorWithFoi()
-        {
-            Iterator<FoiTimePeriod> periodIt = foiTimePeriods.iterator();
-            Iterator<Entry<Object, DataBlock>> recordIt;
-            protected String currentFoiID;
-                                
-            public final boolean hasNext()
-            {
-                return periodIt.hasNext() || (recordIt != null && recordIt.hasNext());
-            }
-
-            public final Entry<Object,DataBlock> next()
-            {
-                if (recordIt == null || !recordIt.hasNext())
-                {
-                    // process next time range
-                    FoiTimePeriod nextPeriod = periodIt.next();
-                    currentFoiID = nextPeriod.uid;
-                    recordIt = recordIndex.entryIterator(new Key(nextPeriod.start), new Key(nextPeriod.stop), Index.ASCENT_ORDER);
-                }
-                
-                // continue processing time range
-                return recordIt.next();
-            }
-        
-            public final void remove()
-            {
-                recordIt.remove();
-            }
-
-            public String getCurrentFoiID()
-            {
-                return currentFoiID;
-            }
-        };
-    }
-    
-    
-    protected FeatureStoreImpl getFeatureStore()
-    {
-        return ((ObsStorageRoot)getStorage().getRoot()).featureStore;
+        return new IteratorWithFoi(foiTimePeriods);
     }
 
 

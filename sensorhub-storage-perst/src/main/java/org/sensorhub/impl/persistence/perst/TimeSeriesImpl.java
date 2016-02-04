@@ -48,6 +48,7 @@ class TimeSeriesImpl extends Persistent implements IRecordStoreInfo
     DataComponent recordDescription;
     DataEncoding recommendedEncoding;
     Index<DataBlock> recordIndex;
+    protected transient BasicStorageRoot parentStore;
     
     
     /*
