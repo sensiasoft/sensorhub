@@ -89,7 +89,6 @@ import org.slf4j.LoggerFactory;
 import org.vast.cdm.common.DataSource;
 import org.vast.cdm.common.DataStreamParser;
 import org.vast.cdm.common.DataStreamWriter;
-import org.vast.data.DataBlockMixed;
 import org.vast.ogc.OGCRegistry;
 import org.vast.ogc.def.DefinitionRef;
 import org.vast.ogc.gml.GMLStaxBindings;
@@ -159,10 +158,6 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     private static final String INVALID_WS_REQ_MSG = "Invalid WebSocket request: ";
     private static final String INVALID_SML_MSG = "Invalid SensorML description: ";
         
-    private static final String MIME_TYPE_MULTIPART = "multipart/x-mixed-replace; boundary=--myboundary"; 
-    private static final byte[] MIME_BOUNDARY_JPEG = new String("--myboundary\r\nContent-Type: image/jpeg\r\nContent-Length: ").getBytes();
-    private static final byte[] END_MIME = new byte[] {0xD, 0xA, 0xD, 0xA};
-    
     private static final QName EXT_REPLAY = new QName("replayspeed"); // kvp params are always lower case
     
     String endpointUrl;
@@ -173,6 +168,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     Map<String, String> templateToOfferingMap;    
     Map<String, ISOSDataProviderFactory> dataProviders = new LinkedHashMap<String, ISOSDataProviderFactory>();
     Map<String, ISOSDataConsumer> dataConsumers;
+    Map<String, ISOSCustomSerializer> customFormats = new HashMap<String, ISOSCustomSerializer>();
         
     boolean needCapabilitiesTimeUpdate = false;
 
@@ -869,40 +865,37 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
             DataComponent resultStructure = dataProvider.getResultStructure();
             DataEncoding resultEncoding = dataProvider.getDefaultResultEncoding();
             
-            // write response with SWE common data stream
-            OutputStream os = new BufferedOutputStream(request.getResponseStream());
-            
-            // write small xml wrapper if requested
-            if (((GetResultRequest) request).isXmlWrapper())
-            {
-                String nsUri = OGCRegistry.getNamespaceURI(SOSUtils.SOS, request.getVersion());
-                os.write(new String("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n").getBytes());
-                os.write(new String("<GetResultResponse xmlns=\"" + nsUri + "\">\n<resultValues>\n").getBytes());
-            }
-            
-            // set response headers in case of HTTP response
-            else if (request.getHttpResponse() != null)
-            {
-                if (resultEncoding instanceof TextEncoding)
-                    request.getHttpResponse().setContentType(TEXT_MIME_TYPE);
-                else if (resultEncoding instanceof JSONEncoding)
-                    request.getHttpResponse().setContentType(OWSUtils.JSON_MIME_TYPE);
-                else if (resultEncoding instanceof XMLEncoding)
-                    request.getHttpResponse().setContentType(OWSUtils.XML_MIME_TYPE);
-                else if (resultEncoding instanceof BinaryEncoding)
-                    request.getHttpResponse().setContentType(BINARY_MIME_TYPE);
-                else
-                    throw new RuntimeException("Unsupported encoding: " + resultEncoding.getClass().getCanonicalName());
-            }
-            
             // use specific format handler if available
-            boolean dataWritten = false;
-            if (resultEncoding instanceof BinaryEncoding)
-                dataWritten = writeCustomFormatStream(request, dataProvider, os);
+            boolean dataWritten = writeCustomFormatStream(request, dataProvider);
             
-            // otherwise use default
+            // otherwise write standard SWE common data stream
             if (!dataWritten)
             {
+                OutputStream os = new BufferedOutputStream(request.getResponseStream());
+                
+                // write small xml wrapper if requested
+                if (((GetResultRequest) request).isXmlWrapper())
+                {
+                    String nsUri = OGCRegistry.getNamespaceURI(SOSUtils.SOS, request.getVersion());
+                    os.write(new String("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n").getBytes());
+                    os.write(new String("<GetResultResponse xmlns=\"" + nsUri + "\">\n<resultValues>\n").getBytes());
+                }
+                
+                // set response headers in case of HTTP response
+                else if (request.getHttpResponse() != null)
+                {
+                    if (resultEncoding instanceof TextEncoding)
+                        request.getHttpResponse().setContentType(TEXT_MIME_TYPE);
+                    else if (resultEncoding instanceof JSONEncoding)
+                        request.getHttpResponse().setContentType(OWSUtils.JSON_MIME_TYPE);
+                    else if (resultEncoding instanceof XMLEncoding)
+                        request.getHttpResponse().setContentType(OWSUtils.XML_MIME_TYPE);
+                    else if (resultEncoding instanceof BinaryEncoding)
+                        request.getHttpResponse().setContentType(BINARY_MIME_TYPE);
+                    else
+                        throw new RuntimeException("Unsupported encoding: " + resultEncoding.getClass().getCanonicalName());
+                }
+
                 // prepare writer for selected encoding
                 DataStreamWriter writer = SWEHelper.createDataWriter(resultEncoding);
                 
@@ -1235,98 +1228,68 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     }
     
     
-    protected boolean writeCustomFormatStream(GetResultRequest request, ISOSDataProvider dataProvider, OutputStream os) throws Exception
+    protected boolean writeCustomFormatStream(GetResultRequest request, ISOSDataProvider dataProvider) throws Exception
     {
-        DataComponent resultStructure = dataProvider.getResultStructure();
-        DataEncoding resultEncoding = dataProvider.getDefaultResultEncoding();
+        String format = request.getFormat();
         
-        if (resultEncoding instanceof BinaryEncoding)
+        // auto select format in some common cases
+        if (format == null)
         {
-            boolean useMP4 = false;
-            boolean useMJPEG = false;
-            List<BinaryMember> mbrList = ((BinaryEncoding)resultEncoding).getMemberList();
-            BinaryBlock videoFrameSpec = null;
-            
-            // try to find binary block encoding def in list
-            for (BinaryMember spec: mbrList)
+            DataEncoding resultEncoding = dataProvider.getDefaultResultEncoding();
+            if (resultEncoding instanceof BinaryEncoding)
             {
-                if (spec instanceof BinaryBlock)
+                List<BinaryMember> mbrList = ((BinaryEncoding)resultEncoding).getMemberList();
+                BinaryBlock videoFrameSpec = null;
+                
+                // try to find binary block encoding def in list
+                for (BinaryMember spec: mbrList)
                 {
-                    videoFrameSpec = (BinaryBlock)spec;
-                    break;
+                    if (spec instanceof BinaryBlock)
+                    {
+                        videoFrameSpec = (BinaryBlock)spec;
+                        break;
+                    }
                 }
-            }
-                    
-            if (videoFrameSpec != null)
-            {            
-                if (videoFrameSpec.getCompression().equals("H264"))
-                    useMP4 = true;            
-                else if (videoFrameSpec.getCompression().equals("JPEG"))
-                    useMJPEG = true;            
-            }
-            
-            if (useMP4)
-            {            
-                // set MIME type for MP4 format
-                if (request.getHttpResponse() != null)
-                    request.getHttpResponse().setContentType("video/mp4");
-                
-                //os = new FileOutputStream("/home/alex/testsos.mp4");
-                
-                // TODO generate header on the fly using SWE Common structure
-                String header = "00 00 00 20 66 74 79 70 69 73 6F 6D 00 00 02 00 69 73 6F 6D 69 73 6F 32 61 76 63 31 6D 70 34 31 00 00 02 E5 6D 6F 6F 76 00 00 00 6C 6D 76 68 64 00 00 00 00 D0 C3 54 92 D0 C3 54 92 00 00 03 E8 00 00 00 00 00 01 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 40 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 02 00 00 00 18 69 6F 64 73 00 00 00 00 10 80 80 80 07 00 4F FF FF FF FF FF 00 00 01 D1 74 72 61 6B 00 00 00 5C 74 6B 68 64 00 00 00 0F D0 C3 54 92 D0 C3 54 92 00 00 00 01 00 00 00 00 FF FF FF FF 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 40 00 00 00 07 80 00 00 04 38 00 00 00 00 01 6D 6D 64 69 61 00 00 00 20 6D 64 68 64 00 00 00 00 D0 C3 54 92 D0 C3 54 92 00 01 5F 90 FF FF FF FF 15 C7 00 00 00 00 00 2D 68 64 6C 72 00 00 00 00 00 00 00 00 76 69 64 65 00 00 00 00 00 00 00 00 00 00 00 00 56 69 64 65 6F 48 61 6E 64 6C 65 72 00 00 00 01 18 6D 69 6E 66 00 00 00 14 76 6D 68 64 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 24 64 69 6E 66 00 00 00 1C 64 72 65 66 00 00 00 00 00 00 00 01 00 00 00 0C 75 72 6C 20 00 00 00 01 00 00 00 D8 73 74 62 6C 00 00 00 8C 73 74 73 64 00 00 00 00 00 00 00 01 00 00 00 7C 61 76 63 31 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 07 80 04 38 00 48 00 00 00 48 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 18 FF FF 00 00 00 26 61 76 63 43 01 42 80 28 FF E1 00 0F 67 42 80 28 DA 01 E0 08 9F 96 01 B4 28 4D 40 01 00 04 68 CE 06 E2 00 00 00 10 73 74 74 73 00 00 00 00 00 00 00 00 00 00 00 10 73 74 73 63 00 00 00 00 00 00 00 00 00 00 00 14 73 74 73 7A 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 10 73 74 63 6F 00 00 00 00 00 00 00 00 00 00 00 28 6D 76 65 78 00 00 00 20 74 72 65 78 00 00 00 00 00 00 00 01 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 60 75 64 74 61 00 00 00 58 6D 65 74 61 00 00 00 00 00 00 00 21 68 64 6C 72 00 00 00 00 00 00 00 00 6D 64 69 72 61 70 70 6C 00 00 00 00 00 00 00 00 00 00 00 00 2B 69 6C 73 74 00 00 00 23 A9 74 6F 6F 00 00 00 1B 64 61 74 61 00 00 00 01 00 00 00 00 4C 61 76 66 35 34 2E 32 30 2E 34";
-                for (String val: header.split(" ")) {
-                    int b = Integer.parseInt(val, 16);
-                    os.write(b);
-                }
-                
-                // prepare record writer for selected encoding
-                DataStreamWriter writer = SWEHelper.createDataWriter(resultEncoding);
-                writer.setDataComponents(resultStructure);
-                writer.setOutput(os);
-                
-                // write each record in output stream
-                DataBlock nextRecord;
-                while ((nextRecord = dataProvider.getNextResultRecord()) != null)
-                {
-                    writer.write(nextRecord);
-                    writer.flush();
-                }       
                         
-                os.flush();
+                if (videoFrameSpec != null)
+                {            
+                    if (videoFrameSpec.getCompression().equals("H264"))
+                        format = "video/mp4";
+                    
+                    else if (videoFrameSpec.getCompression().equals("JPEG") && isRequestForMJpegMimeMultipart(request))
+                        format = "video/x-motion-jpeg";            
+                }
+            }
+        }
+        
+        // try to find matching implementation for selected format
+        if (format != null)
+        {
+            ISOSCustomSerializer serializer = customFormats.get(format);
+            
+            // if not in map try to get a matching format implementation
+            if (!customFormats.containsKey(format))
+            {                
+                for (SOSCustomFormatConfig allowedFormat: config.customFormats)
+                {
+                    if (allowedFormat.mimeType.equals(format))
+                    {
+                        ModuleRegistry moduleReg = SensorHub.getInstance().getModuleRegistry();
+                        serializer = (ISOSCustomSerializer)moduleReg.loadClass(allowedFormat.className);
+                    }
+                }
+                
+                // save to map
+                customFormats.put(format, serializer);
+            }            
+            
+            if (serializer != null)
+            {
+                serializer.write(dataProvider, request);
                 return true;
             }
-            
-            else if (useMJPEG)
-            {
-                if (isRequestForMJpegMimeMultipart(request) && request.getHttpResponse() != null)
-                {
-                    request.getHttpResponse().addHeader("Cache-Control", "no-cache");
-                    request.getHttpResponse().addHeader("Pragma", "no-cache");                    
-                    // set multi-part MIME so that browser can properly decode it in an img tag
-                    request.getHttpResponse().setContentType(MIME_TYPE_MULTIPART);
-                
-                    // write each record in output stream
-                    // skip time stamp to provide raw MJPEG
-                    // TODO set timestamp in JPEG metadata
-                    DataBlock nextRecord;
-                    while ((nextRecord = dataProvider.getNextResultRecord()) != null)
-                    {
-                        DataBlock frameBlk = ((DataBlockMixed)nextRecord).getUnderlyingObject()[1];
-                        byte[] frameData = (byte[])frameBlk.getUnderlyingObject();
-                        
-                        // write MIME boundary
-                        os.write(MIME_BOUNDARY_JPEG);
-                        os.write(Integer.toString(frameData.length).getBytes());
-                        os.write(END_MIME);
-                        
-                        os.write(frameData);
-                        os.flush();
-                    }
-                    
-                    return true;
-                }
-            }
+            else
+                throw new SOSException(SOSException.invalid_param_code, "format", format, "Unsupported format " + format);
         }
         
         return false;
@@ -1339,8 +1302,11 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
      */
     protected boolean isRequestForMJpegMimeMultipart(GetResultRequest request)
     {
+        // don't do multipart with websockets
         HttpServletRequest httpRequest = request.getHttpRequest();
         if (httpRequest == null)
+            return false;
+        if (request.getHttpResponse() == null)
             return false;
         
         String userAgent = httpRequest.getHeader("User-Agent");

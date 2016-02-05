@@ -113,8 +113,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
                 config.id = UUID.randomUUID().toString();
             
             // instantiate and init module class
-            Class<IModule> clazz = (Class<IModule>)Class.forName(config.moduleClass);
-            IModule module = clazz.newInstance();
+            IModule module = (IModule)loadClass(config.moduleClass);
             module.init(config);
             
             // load saved module state
@@ -137,10 +136,6 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
             
             return module;
         }
-        catch (ClassNotFoundException | IllegalAccessException | InstantiationException e)
-        {
-            throw new SensorHubException("Cannot instantiate module class", e);
-        }
         catch (SensorHubException e)
         {
             log.error("Error while initializing module " + config.name, e);
@@ -149,6 +144,20 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
         catch (Exception e)
         {
             throw new SensorHubException("Cannot load module " + config.name, e);
+        }
+    }
+    
+    
+    public Object loadClass(String className) throws SensorHubException
+    {
+        try
+        {
+            Class<?> clazz = (Class<?>)Class.forName(className);
+            return clazz.newInstance();
+        }
+        catch (ClassNotFoundException | IllegalAccessException | InstantiationException e)
+        {
+            throw new SensorHubException("Cannot instantiate module class", e);
         }
     }
     

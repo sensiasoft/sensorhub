@@ -54,4 +54,15 @@ public class SOSServiceConfig extends OGCServiceConfig
     
     @DisplayInfo(desc="Configuration of data consumers for SOS offerings created by SOS-T")
     public List<SOSConsumerConfig> dataConsumers = new ArrayList<SOSConsumerConfig>();
+    
+    
+    @DisplayInfo(desc="Mapping of custom formats mime-types to custom serializer classes")
+    public List<SOSCustomFormatConfig> customFormats = new ArrayList<SOSCustomFormatConfig>();
+    
+    
+    public SOSServiceConfig()
+    {
+        customFormats.add(new SOSCustomFormatConfig("video/mp4", "org.sensorhub.impl.service.sos.video.MP4Serializer"));
+        customFormats.add(new SOSCustomFormatConfig("video/x-motion-jpeg", "org.sensorhub.impl.service.sos.video.MJPEGSerializer"));
+    }
 }
