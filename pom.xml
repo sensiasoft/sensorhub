@@ -16,9 +16,11 @@
             <activeByDefault>true</activeByDefault>
          </activation>
          <modules>
-            <module>lib-swe-common/swe-common-all</module>
-            <module>lib-sensorml/sensorml-all</module>
-            <module>lib-ows/ows-framework-all</module>
+            <module>lib-swe-common/swe-common-core</module>
+            <module>lib-swe-common/swe-common-om</module>
+            <module>lib-swe-common/swe-common-video</module>
+            <module>lib-sensorml/sensorml-core</module>
+            <module>lib-ows/ows-framework-bindings</module>
             <module>sensorhub-all</module>
             <module>sensorhub-core</module>
             <module>sensorhub-storage-perst</module>
@@ -34,7 +36,21 @@
          </modules>
       </profile>
    </profiles>
-   <properties>
-      <stagingDir>${session.executionRootDirectory}/../sensorhub-site</stagingDir>
-   </properties>
+   <build>
+      <plugins>
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-javadoc-plugin</artifactId>
+            <executions>
+               <execution>
+                  <id>generate-javadoc</id>
+                  <phase>package</phase>
+                  <goals>
+                     <goal>aggregate</goal>
+                  </goals>
+               </execution>
+            </executions>
+         </plugin>
+      </plugins>
+   </build>
 </project>

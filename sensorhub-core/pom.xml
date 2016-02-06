@@ -88,6 +88,21 @@
                   <goals>
                      <goal>jar</goal>
                   </goals>
+                  <configuration>
+                     <show>public</show>
+                     <excludePackageNames>*:org.sensorhub.impl</excludePackageNames>
+                     <notimestamp>true</notimestamp>
+                     <links>
+                        <link>http://docs.oracle.com/javase/7/docs/api/</link>
+                     </links>
+                     <!--<offlineLinks>
+                        <offlineLink>
+                           <url>../swe-common/apidocs</url>
+                           <location>/home/alex/Projects/Workspace_OGC/osh-core/lib-swe-common/swe-common-core/target/site/apidocs</location>
+                        </offlineLink>
+                     </offlineLinks>-->
+                     <detectOfflineLinks />
+                  </configuration>
                </execution>
             </executions>
          </plugin>
