@@ -81,21 +81,22 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
     
     protected FieldGroup fieldGroup;
     protected List<IModuleConfigForm> allForms = new ArrayList<IModuleConfigForm>();
+    protected boolean tabJustRemoved;
     
     
     @Override
     public void build(String propId, ComplexProperty prop)
     {
         String title = prop.getLabel();
-        if (title == null || title.length() == 0)
+        if (title == null)
             title = DisplayUtils.getPrettyName(propId);
         
-        build(title, prop.getValue());
+        build(title, prop.getDescription(), prop.getValue());
     }
     
     
     @Override
-    public void build(String title, MyBeanItem<? extends Object> beanItem)
+    public void build(String title, String popupText, MyBeanItem<? extends Object> beanItem)
     {
         List<Field<?>> labels = new ArrayList<Field<?>>();
         List<Field<?>> textBoxes = new ArrayList<Field<?>>();
@@ -115,6 +116,7 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
         if (title != null)
         {
             Label sectionLabel = new Label(title);
+            sectionLabel.setDescription(popupText);
             sectionLabel.addStyleName(STYLE_H3);
             sectionLabel.addStyleName(STYLE_COLORED);
             form.addComponent(sectionLabel);
@@ -142,7 +144,8 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
                     }
                     
                     // else use tab sheet
-                    else if (!((ContainerProperty)prop).getValue().getItemIds().isEmpty())
+                    //else if (!((ContainerProperty)prop).getValue().getItemIds().isEmpty())
+                    else
                     {
                         Component subform = buildTabs((String)propId, (ContainerProperty)prop, fieldGroup);
                         otherWidgets.add(subform);
@@ -498,7 +501,7 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
         {
             MyBeanItem<Object> childBeanItem = (MyBeanItem<Object>)container.getItem(itemId);
             IModuleConfigForm subform = AdminUI.getInstance().generateForm(childBeanItem.getBean().getClass());
-            subform.build(null, childBeanItem);
+            subform.build(null, null, childBeanItem);
             ((MarginHandler)subform).setMargin(new MarginInfo(true, false, true, false));
             allForms.add(subform);
             Tab tab = tabs.addTab(subform, "Item #" + (i++));
@@ -508,8 +511,17 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
             ((AbstractComponent)subform).setData(itemId);
         }
         
-        // draw icon on last tab to add new items
+        // add fake tab with icon to add new items
         tabs.addTab(new VerticalLayout(), "", UIConstants.ADD_ICON);
+        
+        // also add empty tab so click on the '+' tab can be detected with tab changed events
+        tabs.addTab(new VerticalLayout(), "").setStyleName("empty-tab");
+        
+        // initial selection
+        if (tabs.getComponentCount() > 2)
+            tabs.setSelectedTab(0); // select first item
+        else
+            tabs.setSelectedTab(1); // select empty tab
         
         // catch close event to delete item
         tabs.setCloseHandler(new CloseHandler() {
@@ -533,9 +545,15 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
                             
                             // remove from UI
                             int deletedTabPos = tabs.getTabPosition(tab);
+                            tabJustRemoved = true;
                             tabs.removeTab(tab);
-                            tabs.setSelectedTab(deletedTabPos-1);
-                            
+                            if (deletedTabPos > 0)
+                                tabs.setSelectedTab(deletedTabPos-1);
+                            else if (tabs.getComponentCount() > 2)
+                                tabs.setSelectedTab(deletedTabPos);
+                            else
+                                tabs.setSelectedTab(1); // select empty tab
+                                                        
                             // remove from container
                             container.removeItem(itemId);
                         }
@@ -557,9 +575,13 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
                 final int selectedTabPos = tabs.getTabPosition(tab);
                                 
                 // case of + tab to add new item
-                if (tab.getCaption().equals(""))
+                if (tab.getIcon() != null && !tabJustRemoved)
                 {
-                    tabs.setSelectedTab(selectedTabPos-1);
+                    // select something in case add is canceled
+                    if (tabs.getComponentCount() > 2)
+                        tabs.setSelectedTab(selectedTabPos-1); // select last item
+                    else
+                        tabs.setSelectedTab(selectedTabPos+1); // select empty tab
                     
                     try
                     {
@@ -576,7 +598,7 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
                                                                         
                                     // generate form for new item
                                     IModuleConfigForm subform = AdminUI.getInstance().generateForm(childBeanItem.getBean().getClass());
-                                    subform.build(null, childBeanItem);
+                                    subform.build(null, null, childBeanItem);
                                     ((MarginHandler)subform).setMargin(new MarginInfo(true, false, true, false));
                                     allForms.add(subform);
                                     
@@ -598,7 +620,10 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
                     {
                         e.printStackTrace();
                     }
-                }                
+                } 
+                
+                // reset flag to allow adding
+                tabJustRemoved = false;
             }
         });
         

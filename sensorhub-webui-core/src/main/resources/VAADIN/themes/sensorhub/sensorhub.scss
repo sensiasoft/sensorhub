@@ -95,4 +95,8 @@ $v-layout-margin-top: 25px;
    img.v-icon {
       margin-bottom: 3px;
    }
+   
+   .v-tabsheet-tabitemcell-empty-tab .v-tabsheet-tabitem-selected .v-caption.v-caption { 
+      border-bottom-color: transparent;
+   }
 }

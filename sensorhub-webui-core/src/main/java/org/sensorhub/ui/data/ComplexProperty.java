@@ -15,7 +15,6 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 package org.sensorhub.ui.data;
 
 import java.lang.reflect.Field;
-import org.sensorhub.api.config.DisplayInfo;
 
 
 @SuppressWarnings("serial")
@@ -61,16 +60,6 @@ public class ComplexProperty extends BaseProperty<MyBeanItem<Object>>
     public Class<? extends MyBeanItem<Object>> getType()
     {
         return (Class<? extends MyBeanItem<Object>>)item.getClass();
-    }
-    
-    
-    public String getLabel()
-    {
-        DisplayInfo ann = f.getAnnotation(DisplayInfo.class);
-        if (ann != null)
-            return ann.label();
-        else
-            return null;
     }
     
     

@@ -106,7 +106,7 @@ public class DefaultModulePanel<ModuleType extends IModule<? extends ModuleConfi
     protected IModuleConfigForm getConfigForm(MyBeanItem<ModuleConfig> beanItem, ModuleType module)
     {
         IModuleConfigForm form = AdminUI.getInstance().generateForm(beanItem.getBean().getClass());//module.getClass());
-        form.build("Main Settings", beanItem);
+        form.build("Main Settings", null, beanItem);
         return form;
     }
 

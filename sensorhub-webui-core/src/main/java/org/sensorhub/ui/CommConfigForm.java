@@ -16,7 +16,6 @@ package org.sensorhub.ui;
 
 import org.sensorhub.api.comm.ICommProvider;
 import org.sensorhub.ui.api.UIConstants;
-import org.sensorhub.ui.data.MyBeanItem;
 import com.vaadin.data.Property;
 import com.vaadin.ui.Field;
 
@@ -30,13 +29,6 @@ public class CommConfigForm extends GenericConfigForm
     public Class<?> getPolymorphicBeanParentType()
     {
         return ICommProvider.class;
-    }
-    
-    
-    @Override
-    public void build(String title, MyBeanItem<? extends Object> beanItem)
-    {
-        super.build(title, beanItem);  
     }
     
     

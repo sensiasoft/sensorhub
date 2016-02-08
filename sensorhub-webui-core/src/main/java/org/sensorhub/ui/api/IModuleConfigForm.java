@@ -43,9 +43,10 @@ public interface IModuleConfigForm extends ComponentContainer
     /**
      * Builds the whole form for a given config object.
      * @param title title of the form
+     * @param popupText help popup text shown when hovering on the form title
      * @param beanItem object to render a form for
      */
-    public void build(String title, MyBeanItem<? extends Object> beanItem);
+    public void build(String title, String popupText, MyBeanItem<? extends Object> beanItem);
     
     
     /**

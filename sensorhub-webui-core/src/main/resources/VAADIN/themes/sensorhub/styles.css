@@ -12773,3 +12773,7 @@ div.v-layout.v-horizontal.v-widget {
 .sensorhub img.v-icon {
 	margin-bottom: 3px;
 }
+
+.sensorhub .v-tabsheet-tabitemcell-empty-tab .v-tabsheet-tabitem-selected .v-caption.v-caption {
+	border-bottom-color: transparent;
+}

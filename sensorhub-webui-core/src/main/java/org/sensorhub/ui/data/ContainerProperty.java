@@ -16,7 +16,6 @@ package org.sensorhub.ui.data;
 
 import java.lang.reflect.Field;
 import java.util.Collection;
-import org.sensorhub.api.config.DisplayInfo;
 
 
 @SuppressWarnings({ "serial", "rawtypes" })
@@ -66,16 +65,6 @@ public class ContainerProperty extends BaseProperty<MyBeanItemContainer>
     public Class<? extends MyBeanItemContainer> getType()
     {
         return container.getClass();
-    }
-    
-    
-    public String getLabel()
-    {
-        DisplayInfo ann = f.getAnnotation(DisplayInfo.class);
-        if (ann != null)
-            return ann.label();
-        else
-            return null;
     }
 
 
