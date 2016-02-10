@@ -16,7 +16,7 @@ package org.sensorhub.impl.persistence;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Collection;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.module.IModule;
 import org.sensorhub.api.module.IModuleProvider;
@@ -57,9 +57,9 @@ public class PersistenceManagerImpl implements IPersistenceManager
     
     
     @Override
-    public List<IStorageModule<?>> getLoadedModules()
+    public Collection<IStorageModule<?>> getLoadedModules()
     {
-        List<IStorageModule<?>> enabledStorages = new ArrayList<IStorageModule<?>>();
+        ArrayList<IStorageModule<?>> enabledStorages = new ArrayList<IStorageModule<?>>();
         
         // retrieve all modules implementing ISensorInterface
         for (IModule<?> module: moduleRegistry.getLoadedModules())
@@ -80,9 +80,9 @@ public class PersistenceManagerImpl implements IPersistenceManager
 
 
     @Override
-    public List<ModuleConfig> getAvailableModules()
+    public Collection<ModuleConfig> getAvailableModules()
     {
-        List<ModuleConfig> storageTypes = new ArrayList<ModuleConfig>();
+        ArrayList<ModuleConfig> storageTypes = new ArrayList<ModuleConfig>();
         
         // retrieve all modules implementing IStorageModule
         for (ModuleConfig config: moduleRegistry.getAvailableModules())
@@ -114,15 +114,15 @@ public class PersistenceManagerImpl implements IPersistenceManager
     
     
     @Override
-    public List<IRecordStorageModule<?>> findStorageForSensor(String sensorLocalID) throws SensorHubException
+    public Collection<IRecordStorageModule<?>> findStorageForSensor(String sensorLocalID) throws SensorHubException
     {
-        List<IRecordStorageModule<?>> sensorStorageList = new ArrayList<IRecordStorageModule<?>>();
+        ArrayList<IRecordStorageModule<?>> sensorStorageList = new ArrayList<IRecordStorageModule<?>>();
         
         ISensorModule<?> sensorModule = SensorHub.getInstance().getSensorManager().getModuleById(sensorLocalID);
         String sensorUID = sensorModule.getCurrentDescription().getUniqueIdentifier();
         
         // find all basic storage modules whose data source UID is the same as the sensor UID
-        List<IStorageModule<?>> storageModules = getLoadedModules();
+        Collection<IStorageModule<?>> storageModules = getLoadedModules();
         for (IStorageModule<?> module: storageModules)
         {
             if (module instanceof IRecordStorageModule<?>)
@@ -141,8 +141,7 @@ public class PersistenceManagerImpl implements IPersistenceManager
     @Override
     public StorageConfig getDefaultStorageConfig(Class<?> storageClass) throws SensorHubException
     {
-        List<IModuleProvider> storageModules = moduleRegistry.getInstalledModuleTypes();
-        for (IModuleProvider provider: storageModules)
+        for (IModuleProvider provider: moduleRegistry.getInstalledModuleTypes())
         {
             try
             {

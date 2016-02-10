@@ -16,6 +16,8 @@ package org.sensorhub.impl.module;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -353,11 +355,9 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
      * @see org.sensorhub.api.module.IModuleManager#getLoadedModules()
      */
     @Override
-    public synchronized List<IModule<?>> getLoadedModules()
+    public synchronized Collection<IModule<?>> getLoadedModules()
     {
-        List<IModule<?>> moduleList = new ArrayList<IModule<?>>();
-        moduleList.addAll(loadedModules.values());
-        return moduleList;
+        return Collections.unmodifiableCollection(loadedModules.values());
     }
     
     
@@ -393,9 +393,9 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
      * @see org.sensorhub.api.module.IModuleManager#getAvailableModules()
      */
     @Override
-    public synchronized List<ModuleConfig> getAvailableModules()
+    public synchronized Collection<ModuleConfig> getAvailableModules()
     {
-        return configRepos.getAllModulesConfigurations();
+        return Collections.unmodifiableCollection(configRepos.getAllModulesConfigurations());
     }
     
     
@@ -403,9 +403,9 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
      * Retrieves list of all installed module types
      * @return list of module providers (not the module themselves)
      */
-    public List<IModuleProvider> getInstalledModuleTypes()
+    public Collection<IModuleProvider> getInstalledModuleTypes()
     {
-        List<IModuleProvider> installedModules = new ArrayList<IModuleProvider>();
+        ArrayList<IModuleProvider> installedModules = new ArrayList<IModuleProvider>();
         
         ServiceLoader<IModuleProvider> sl = ServiceLoader.load(IModuleProvider.class);
         try
@@ -428,9 +428,9 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
      * @param moduleClass Parent class of modules to search for
      * @return list of module providers (not the module themselves)
      */
-    public List<IModuleProvider> getInstalledModuleTypes(Class<?> moduleClass)
+    public Collection<IModuleProvider> getInstalledModuleTypes(Class<?> moduleClass)
     {
-        List<IModuleProvider> installedModules = new ArrayList<IModuleProvider>();
+        ArrayList<IModuleProvider> installedModules = new ArrayList<IModuleProvider>();
 
         ServiceLoader<IModuleProvider> sl = ServiceLoader.load(IModuleProvider.class);
         for (IModuleProvider provider: sl)

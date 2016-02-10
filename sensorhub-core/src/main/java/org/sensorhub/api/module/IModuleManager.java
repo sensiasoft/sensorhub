@@ -14,7 +14,7 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.api.module;
 
-import java.util.List;
+import java.util.Collection;
 import org.sensorhub.api.common.SensorHubException;
 
 
@@ -35,7 +35,7 @@ public interface IModuleManager<ModuleType extends IModule<?>>
      * that are already loaded (i.e. enabled)
      * @return list of module instances
      */
-    public List<ModuleType> getLoadedModules();
+    public Collection<ModuleType> getLoadedModules();
     
     
     /**
@@ -50,7 +50,7 @@ public interface IModuleManager<ModuleType extends IModule<?>>
      * that are configured but not yet loaded (i.e. disabled)
      * @return list of module configuration classes
      */
-    public List<ModuleConfig> getAvailableModules();
+    public Collection<ModuleConfig> getAvailableModules();
     
     
     /**

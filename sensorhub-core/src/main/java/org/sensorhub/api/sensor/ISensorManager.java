@@ -14,7 +14,7 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.api.sensor;
 
-import java.util.List;
+import java.util.Collection;
 import org.sensorhub.api.module.IModuleManager;
 import org.sensorhub.api.module.IModuleProvider;
 
@@ -42,7 +42,7 @@ public interface ISensorManager extends IModuleManager<ISensorModule<?>>
      * Helper method to get the list of connected sensors only
      * @return the list of sensors actually connected to the system
      */
-    public List<ISensorModule<?>> getConnectedSensors();
+    public Collection<ISensorModule<?>> getConnectedSensors();
     
     
     /**
@@ -64,6 +64,6 @@ public interface ISensorManager extends IModuleManager<ISensorModule<?>>
 	/**
 	 * @return the list of all sensor drivers installed on the system
 	 */
-	public List<IModuleProvider> getInstalledSensorDrivers();	
+	public Collection<IModuleProvider> getInstalledSensorDrivers();	
 
 }

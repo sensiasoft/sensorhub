@@ -15,7 +15,7 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 package org.sensorhub.impl.processing;
 
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Collection;
 import java.util.concurrent.Future;
 import javax.print.DocFlavor.URL;
 import org.sensorhub.api.common.SensorHubException;
@@ -46,9 +46,9 @@ public class ProcessingManagerImpl implements IProcessingManager
     
     
     @Override
-    public List<IProcessModule<?>> getLoadedModules()
+    public Collection<IProcessModule<?>> getLoadedModules()
     {
-        List<IProcessModule<?>> enabledProcesses = new ArrayList<IProcessModule<?>>();
+        ArrayList<IProcessModule<?>> enabledProcesses = new ArrayList<IProcessModule<?>>();
         
         // retrieve all modules implementing IProcessModule
         for (IModule<?> module: moduleRegistry.getLoadedModules())
@@ -69,9 +69,9 @@ public class ProcessingManagerImpl implements IProcessingManager
 
 
     @Override
-    public List<ModuleConfig> getAvailableModules()
+    public Collection<ModuleConfig> getAvailableModules()
     {
-        List<ModuleConfig> configuredProcesses = new ArrayList<ModuleConfig>();
+        ArrayList<ModuleConfig> configuredProcesses = new ArrayList<ModuleConfig>();
         
         // retrieve all modules implementing ISensorInterface
         for (ModuleConfig config: moduleRegistry.getAvailableModules())
@@ -103,7 +103,7 @@ public class ProcessingManagerImpl implements IProcessingManager
 
 
     @Override
-    public List<String> getAllProcessCodePackages()
+    public Collection<String> getAllProcessCodePackages()
     {
         // TODO Auto-generated method stub
         return null;

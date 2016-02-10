@@ -14,7 +14,7 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.api.persistence;
 
-import java.util.List;
+import java.util.Collection;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.module.IModuleManager;
 
@@ -36,7 +36,7 @@ public interface IPersistenceManager extends IModuleManager<IStorageModule<?>>
      * @return list of storage instances or empty list if none are found
      * @throws SensorHubException
      */
-    public List<? extends IRecordStorageModule<?>> findStorageForSensor(String sensorID) throws SensorHubException;
+    public Collection<? extends IRecordStorageModule<?>> findStorageForSensor(String sensorID) throws SensorHubException;
     
     
     /**

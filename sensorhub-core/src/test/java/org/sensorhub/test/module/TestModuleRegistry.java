@@ -14,6 +14,7 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.test.module;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.util.Arrays;
@@ -22,6 +23,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.sensorhub.api.common.SensorHubException;
+import org.sensorhub.api.module.IModule;
 import org.sensorhub.api.module.IModuleProvider;
 import org.sensorhub.api.module.ModuleConfig;
 import org.sensorhub.api.persistence.StorageConfig;
@@ -144,8 +146,12 @@ public class TestModuleRegistry
     {
         ModuleConfig config = createConfModule1();
         registry.loadModule(config);
+        
         System.out.println(registry.getLoadedModules());
-        assertTrue(registry.getLoadedModules().get(0).getName().equals(config.name));
+        assertEquals(1, registry.getLoadedModules().size());
+        
+        for (IModule<?> m: registry.getLoadedModules())
+            assertTrue(m.getName().equals(config.name));
     }
     
     
@@ -163,8 +169,17 @@ public class TestModuleRegistry
         registry.loadModule(conf2);
         
         System.out.println(registry.getLoadedModules());
-        assertTrue(registry.getLoadedModules().get(0).getName().equals(conf1.name));
-        assertTrue(registry.getLoadedModules().get(1).getName().equals(conf2.name));
+        assertEquals(2, registry.getLoadedModules().size());        
+        
+        int i = 0;
+        for (IModule<?> m: registry.getLoadedModules())
+        {
+            if (i == 0)
+                assertTrue(m.getName().equals(conf1.name));
+            else
+                assertTrue(m.getName().equals(conf2.name));
+            i++;
+        }
     }
     
     

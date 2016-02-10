@@ -15,7 +15,7 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 package org.sensorhub.impl.sensor;
 
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Collection;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.module.IModule;
 import org.sensorhub.api.module.IModuleProvider;
@@ -45,9 +45,9 @@ public class SensorManagerImpl implements ISensorManager
     
     
     @Override
-    public List<ISensorModule<?>> getLoadedModules()
+    public Collection<ISensorModule<?>> getLoadedModules()
     {
-        List<ISensorModule<?>> enabledSensors = new ArrayList<ISensorModule<?>>();
+        ArrayList<ISensorModule<?>> enabledSensors = new ArrayList<ISensorModule<?>>();
         
         // retrieve all modules implementing ISensorInterface
         for (IModule<?> module: moduleRegistry.getLoadedModules())
@@ -68,9 +68,9 @@ public class SensorManagerImpl implements ISensorManager
 
 
     @Override
-    public List<ModuleConfig> getAvailableModules()
+    public Collection<ModuleConfig> getAvailableModules()
     {
-        List<ModuleConfig> configuredSensors = new ArrayList<ModuleConfig>();
+        ArrayList<ModuleConfig> configuredSensors = new ArrayList<ModuleConfig>();
         
         // retrieve all modules implementing ISensorInterface
         for (ModuleConfig config: moduleRegistry.getAvailableModules())
@@ -104,7 +104,7 @@ public class SensorManagerImpl implements ISensorManager
     @Override
     public ISensorModule<?> findSensor(String uid)
     {
-        List<ISensorModule<?>> enabledSensors = getLoadedModules();
+        Collection<ISensorModule<?>> enabledSensors = getLoadedModules();
         for (ISensorModule<?> sensor: enabledSensors)
         {
             if (uid.equals(sensor.getCurrentDescription().getIdentifier()))
@@ -116,9 +116,9 @@ public class SensorManagerImpl implements ISensorManager
 
 
     @Override
-    public List<ISensorModule<?>> getConnectedSensors()
+    public Collection<ISensorModule<?>> getConnectedSensors()
     {
-        List<ISensorModule<?>> connectedSensors = new ArrayList<ISensorModule<?>>();
+        ArrayList<ISensorModule<?>> connectedSensors = new ArrayList<ISensorModule<?>>();
         
         // scan module list
         for (IModule<?> module: moduleRegistry.getLoadedModules())
@@ -149,9 +149,9 @@ public class SensorManagerImpl implements ISensorManager
 
 
     @Override
-    public List<IModuleProvider> getInstalledSensorDrivers()
+    public Collection<IModuleProvider> getInstalledSensorDrivers()
     {
-        List<IModuleProvider> installedModules = new ArrayList<IModuleProvider>();
+        ArrayList<IModuleProvider> installedModules = new ArrayList<IModuleProvider>();
         
         // retrieve all modules implementing ISensorInterface
         for (IModuleProvider modType: moduleRegistry.getInstalledModuleTypes())

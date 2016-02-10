@@ -22,6 +22,7 @@ import java.io.InputStream;
 import java.io.StringWriter;
 import java.net.URL;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,6 +32,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.sensorhub.api.persistence.IRecordStorageModule;
 import org.sensorhub.api.persistence.StorageConfig;
+import org.sensorhub.api.sensor.ISensorModule;
 import org.sensorhub.api.sensor.SensorConfig;
 import org.sensorhub.impl.SensorHub;
 import org.sensorhub.impl.SensorHubConfig;
@@ -451,13 +453,20 @@ public class TestSOSService
     }
     
     
+    private FakeSensor getSensorModule(int index)
+    {
+        Collection<ISensorModule<?>> sensors = SensorHub.getInstance().getSensorManager().getLoadedModules();
+        return (FakeSensor)sensors.toArray(new ISensorModule[0])[index];
+    }
+    
+    
     @Test
     public void testGetObsOneOfferingEndNow() throws Exception
     {
         deployService(buildSensorProvider1WithStorage());
         
         // wait until data has been produced and archived
-        FakeSensor sensor = (FakeSensor)SensorHub.getInstance().getSensorManager().getLoadedModules().get(0);
+        FakeSensor sensor = getSensorModule(0);
         while (sensor.getAllOutputs().get(NAME_OUTPUT1).isEnabled())
             Thread.sleep(((long)SAMPLING_PERIOD*500));
         
@@ -472,7 +481,7 @@ public class TestSOSService
         deployService(buildSensorProvider1WithStorage());
         
         // wait until data has been produced and archived
-        FakeSensor sensor = (FakeSensor)SensorHub.getInstance().getSensorManager().getLoadedModules().get(0);
+        FakeSensor sensor = getSensorModule(0);;
         while (sensor.getAllOutputs().get(NAME_OUTPUT1).isEnabled())
             Thread.sleep(((long)SAMPLING_PERIOD*500));
                 
@@ -508,7 +517,7 @@ public class TestSOSService
         deployService(buildSensorProvider1(), buildSensorProvider2WithObsStorage());
         
         // wait until data has been produced and archived
-        FakeSensor sensor = (FakeSensor)SensorHub.getInstance().getSensorManager().getLoadedModules().get(1);
+        FakeSensor sensor = getSensorModule(1);
         while (sensor.getAllOutputs().get(NAME_OUTPUT2).isEnabled())
             Thread.sleep(((long)SAMPLING_PERIOD*500));
         DOMHelper dom;
@@ -618,7 +627,7 @@ public class TestSOSService
         deployService(buildSensorProvider1(), buildSensorProvider2WithObsStorage());
         
         // wait until data has been produced and archived
-        FakeSensor sensor = (FakeSensor)SensorHub.getInstance().getSensorManager().getLoadedModules().get(1);
+        FakeSensor sensor = getSensorModule(1);
         while (sensor.getAllOutputs().get(NAME_OUTPUT2).isEnabled())
             Thread.sleep(((long)SAMPLING_PERIOD*500));        
         
@@ -680,7 +689,7 @@ public class TestSOSService
         deployService(buildSensorProvider1(), buildSensorProvider2WithObsStorage());
         
         // wait until data has been produced and archived
-        FakeSensor sensor = (FakeSensor)SensorHub.getInstance().getSensorManager().getLoadedModules().get(1);
+        FakeSensor sensor = getSensorModule(1);
         while (sensor.getAllOutputs().get(NAME_OUTPUT2).isEnabled())
             Thread.sleep(((long)SAMPLING_PERIOD*500));
         
@@ -720,7 +729,7 @@ public class TestSOSService
         deployService(buildSensorProvider1(), buildSensorProvider2WithObsStorage());
         
         // wait until data has been produced and archived
-        FakeSensor sensor = (FakeSensor)SensorHub.getInstance().getSensorManager().getLoadedModules().get(1);
+        FakeSensor sensor = getSensorModule(1);
         while (sensor.getAllOutputs().get(NAME_OUTPUT2).isEnabled())
             Thread.sleep(((long)SAMPLING_PERIOD*500));
         
@@ -759,7 +768,7 @@ public class TestSOSService
         deployService(buildSensorProvider1(), buildSensorProvider2WithObsStorage());
         
         // wait until data has been produced and archived
-        FakeSensor sensor = (FakeSensor)SensorHub.getInstance().getSensorManager().getLoadedModules().get(1);
+        FakeSensor sensor = getSensorModule(1);
         while (sensor.getAllOutputs().get(NAME_OUTPUT2).isEnabled())
             Thread.sleep(((long)SAMPLING_PERIOD*500));
         

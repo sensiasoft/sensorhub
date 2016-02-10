@@ -14,7 +14,7 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.api.processing;
 
-import java.util.List;
+import java.util.Collection;
 import java.util.concurrent.Future;
 import javax.print.DocFlavor.URL;
 import org.sensorhub.api.module.IModuleManager;
@@ -33,7 +33,7 @@ public interface IProcessingManager extends IModuleManager<IProcessModule<?>>
 	/**
 	 * @return the list of all process code configured on the system
 	 */
-	public List<String> getAllProcessCodePackages();
+	public Collection<String> getAllProcessCodePackages();
 	
 	
 	/**
