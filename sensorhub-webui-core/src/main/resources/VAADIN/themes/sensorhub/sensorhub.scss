@@ -63,6 +63,12 @@ $v-layout-margin-top: 25px;
       font-size: 16px;
    }
    
+   .v-verticallayout > .v-slot:first-child .v-gridlayout-slot > .v-label-h3 {
+      margin-top: 0.5em;
+      padding-bottom: 0.5em;
+      border-bottom: 1px solid #dfdfdf;
+   }
+   
    .v-table .v-table-cell-content-green {
       background-image: url("icons/enabled.gif");
       background-repeat: no-repeat;

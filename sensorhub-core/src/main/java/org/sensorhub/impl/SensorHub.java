@@ -14,6 +14,7 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.impl;
 
+import org.sensorhub.api.comm.INetworkManager;
 import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.config.IGlobalConfig;
@@ -21,6 +22,7 @@ import org.sensorhub.api.module.IModuleConfigRepository;
 import org.sensorhub.api.persistence.IPersistenceManager;
 import org.sensorhub.api.processing.IProcessingManager;
 import org.sensorhub.api.sensor.ISensorManager;
+import org.sensorhub.impl.comm.NetworkManagerImpl;
 import org.sensorhub.impl.module.ModuleConfigJsonFile;
 import org.sensorhub.impl.module.ModuleRegistry;
 import org.sensorhub.impl.persistence.PersistenceManagerImpl;
@@ -152,6 +154,12 @@ public class SensorHub
     public ModuleRegistry getModuleRegistry()
     {
         return registry;
+    }
+    
+    
+    public INetworkManager getNetworkManager()
+    {
+        return new NetworkManagerImpl(registry);
     }
     
     

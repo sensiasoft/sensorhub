@@ -53,8 +53,10 @@ public class DefaultModulePanel<ModuleType extends IModule<? extends ModuleConfi
         setSpacing(true);
         
         // label with module name
-        String moduleName = getTitle(beanItem.getBean());
+        String moduleName = beanItem.getBean().name;
+        String className = beanItem.getBean().getClass().getSimpleName();
         Label title = new Label(moduleName);
+        title.setDescription(className);
         title.setStyleName(STYLE_H2);
         addComponent(title);
         
@@ -89,17 +91,6 @@ public class DefaultModulePanel<ModuleType extends IModule<? extends ModuleConfi
                 }
             }
         });
-    }
-    
-    
-    protected String getTitle(ModuleConfig config)
-    {
-        StringBuilder buf = new StringBuilder();
-        buf.append(config.name);
-        buf.append(" (");
-        buf.append(config.getClass().getSimpleName());
-        buf.append(')');
-        return buf.toString();
     }
     
     

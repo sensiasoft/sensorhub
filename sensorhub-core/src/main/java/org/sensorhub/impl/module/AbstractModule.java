@@ -82,11 +82,14 @@ public abstract class AbstractModule<ConfigType extends ModuleConfig> implements
     @Override
     public void updateConfig(ConfigType config) throws SensorHubException
     {
-        // by default we restart the module when config was changed
-        stop();
         this.config = config;
+        
+        // by default we restart the module when config was changed
         if (config.enabled)
+        {
+            stop();
             start();
+        }
     }
 
 

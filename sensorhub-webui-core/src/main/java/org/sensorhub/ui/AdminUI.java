@@ -22,6 +22,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 import org.sensorhub.api.comm.CommConfig;
+import org.sensorhub.api.comm.NetworkConfig;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.module.IModule;
 import org.sensorhub.api.module.ModuleConfig;
@@ -43,6 +44,7 @@ import org.sensorhub.ui.data.MyBeanItem;
 import org.sensorhub.ui.data.MyBeanItemContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.vaadin.annotations.Push;
 import com.vaadin.annotations.Theme;
 import com.vaadin.data.Item;
 import com.vaadin.data.util.converter.Converter;
@@ -58,6 +60,7 @@ import com.vaadin.server.Resource;
 import com.vaadin.server.ThemeResource;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.server.VaadinSession;
+import com.vaadin.shared.communication.PushMode;
 import com.vaadin.ui.Accordion;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
@@ -81,6 +84,7 @@ import com.vaadin.ui.Window.CloseListener;
 //@Theme("runo")
 //@Theme("valo")
 @Theme("sensorhub")
+@Push(PushMode.MANUAL)
 public class AdminUI extends com.vaadin.ui.UI
 {
     private static final long serialVersionUID = 4069325051233125115L;
@@ -163,6 +167,7 @@ public class AdminUI extends com.vaadin.ui.UI
             // load default panel builders
             customPanels.put(SensorConfig.class.getCanonicalName(), SensorAdminPanel.class);        
             customPanels.put(StorageConfig.class.getCanonicalName(), StorageAdminPanel.class);
+            customPanels.put(NetworkConfig.class.getCanonicalName(), NetworkAdminPanel.class);
             
             // load custom panel builders defined in config
             for (CustomUIConfig customPanel: uiConfig.customPanels)
@@ -333,16 +338,22 @@ public class AdminUI extends com.vaadin.ui.UI
         MyBeanItemContainer<ModuleConfig> container = new MyBeanItemContainer<ModuleConfig>(ModuleConfig.class);
         container.addBean(HttpServer.getInstance().getConfiguration());
         //container.addBean(uiConfig); 
-        displayModuleList(layout, container, null);
+        buildModuleList(layout, container, NetworkConfig.class);
     }
     
     
     protected void buildModuleList(VerticalLayout layout, final Class<?> configType)
     {
+        MyBeanItemContainer<ModuleConfig> container = new MyBeanItemContainer<ModuleConfig>(ModuleConfig.class);
+        buildModuleList(layout, container, configType);
+    }
+    
+    
+    protected void buildModuleList(VerticalLayout layout, MyBeanItemContainer<ModuleConfig> container, final Class<?> configType)
+    {
         ModuleRegistry reg = SensorHub.getInstance().getModuleRegistry();
         
-        // build bean items and add them to container
-        MyBeanItemContainer<ModuleConfig> container = new MyBeanItemContainer<ModuleConfig>(ModuleConfig.class);
+        // build bean items and add them to container        
         for (IModule<?> module: reg.getLoadedModules())
         {
             ModuleConfig config = module.getConfiguration().clone();

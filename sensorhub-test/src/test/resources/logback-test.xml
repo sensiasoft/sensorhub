@@ -8,6 +8,7 @@
   <logger name="org.eclipse.jetty" level="warn"/>
   <logger name="org.sensorhub" level="debug"/>
   <logger name="org.vast" level="debug"/>
+  <logger name="org.eclipse.kura" level="debug"/>
   <root level="WARN">          
     <appender-ref ref="STDOUT" />
   </root>    

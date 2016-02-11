@@ -14,22 +14,23 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.impl.comm;
 
+import org.sensorhub.api.comm.CommConfig;
+import org.sensorhub.api.config.DisplayInfo;
+
 
 /**
  * <p>
- * Driver configuration options for the TCP/IP network protocol
+ * Driver configuration options for IP network protocols
  * </p>
  *
  * @author Alex Robin <alex.robin@sensiasoftware.com>
- * @since Nov 5, 2010
+ * @since Feb 5, 2016
  */
-public class TCPConfig extends IPConfig
-{	
-    public int remotePort;
-		
+public abstract class IPConfig extends CommConfig
+{
+	
+    @DisplayInfo(desc="IP or DNS name of remote host")
+    public String remoteHost; // IP or host name
+    
 
-	public TCPConfig()
-	{
-	    this.moduleClass = TCPCommProvider.class.getCanonicalName();
-	}
 }

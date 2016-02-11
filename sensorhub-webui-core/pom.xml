@@ -9,6 +9,9 @@
    <artifactId>sensorhub-webui-core</artifactId>
    <name>SensorHub Web UI Core</name>
    <description>Web based admin user interface for SensorHub</description>
+   <properties>
+      <vaadin.version>7.4.0</vaadin.version>
+   </properties>
    <repositories>
       <repository>
          <id>vaadin-addons</id>
@@ -41,17 +44,22 @@
       <dependency>
          <groupId>com.vaadin</groupId>
          <artifactId>vaadin-server</artifactId>
-         <version>7.4.0</version>
+         <version>${vaadin.version}</version>
+      </dependency>
+      <dependency>
+         <groupId>com.vaadin</groupId>
+         <artifactId>vaadin-push</artifactId>
+         <version>${vaadin.version}</version>
       </dependency>
       <dependency>
          <groupId>com.vaadin</groupId>
          <artifactId>vaadin-client-compiled</artifactId>
-         <version>7.4.0</version>
+         <version>${vaadin.version}</version>
       </dependency>
       <dependency>
          <groupId>com.vaadin</groupId>
          <artifactId>vaadin-themes</artifactId>
-         <version>7.4.0</version>
+         <version>${vaadin.version}</version>
       </dependency>
       <dependency>
          <groupId>org.tltv.gantt</groupId>
@@ -64,7 +72,7 @@
          <plugin>
             <groupId>com.vaadin</groupId>
             <artifactId>vaadin-maven-plugin</artifactId>
-            <version>7.4.0</version>
+            <version>${vaadin.version}</version>
             <configuration>
                 <theme>sensorhub</theme>
             </configuration>

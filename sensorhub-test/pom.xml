@@ -45,6 +45,11 @@
      </dependency>
      <dependency>
         <groupId>org.sensorhub</groupId>
+        <artifactId>sensorhub-service-video</artifactId>
+        <version>0.1-SNAPSHOT</version>
+     </dependency>
+     <dependency>
+        <groupId>org.sensorhub</groupId>
         <artifactId>sensorhub-driver-v4l</artifactId>
         <version>0.1-SNAPSHOT</version>
         <type>bundle</type>
@@ -93,6 +98,16 @@
      <dependency>
         <groupId>org.sensorhub</groupId>
         <artifactId>sensorhub-driver-avl-911</artifactId>
+        <version>0.1-SNAPSHOT</version>
+     </dependency>
+     <dependency>
+        <groupId>org.sensorhub</groupId>
+        <artifactId>sensorhub-comm-ip-zeroconf</artifactId>
+        <version>0.1-SNAPSHOT</version>
+     </dependency>
+     <dependency>
+        <groupId>org.sensorhub</groupId>
+        <artifactId>sensorhub-comm-ble-kura</artifactId>
         <version>0.1-SNAPSHOT</version>
      </dependency>
   </dependencies>

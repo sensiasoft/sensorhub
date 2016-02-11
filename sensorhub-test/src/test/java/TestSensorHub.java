@@ -13,9 +13,9 @@ public class TestSensorHub
         ProcessLoader.loadMaps(processMapUrl.toString(), false);
         
         
-        SensorHub.main(new String[] {"src/test/resources/config_fakesensors_with_storage.json", "storage"});
+        //SensorHub.main(new String[] {"src/test/resources/config_fakesensors_with_storage.json", "storage"});
         //SensorHub.main(new String[] {"src/test/resources/config_fakesensors_with_process.json", "storage"});
-        //SensorHub.main(new String[] {"src/test/resources/config_empty_sost.json", "storage"});
+        SensorHub.main(new String[] {"src/test/resources/config_empty_sost.json", "storage"});
         //SensorHub.main(new String[] {"src/test/resources/config_empty_sost_with_storage.json", "storage"});
         //SensorHub.main(new String[] {"src/test/resources/config_sat_process.json", "storage"});
         //SensorHub.main(new String[] {"src/test/resources/config_metar_with_storage.json", "storage"});
