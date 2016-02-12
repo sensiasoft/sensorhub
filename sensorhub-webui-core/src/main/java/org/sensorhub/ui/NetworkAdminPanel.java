@@ -151,12 +151,23 @@ public class NetworkAdminPanel extends DefaultModulePanel<ICommNetwork<?>> imple
                                 AdminUI.getInstance().access(new Runnable() {
                                     @Override
                                     public void run() {
-                                        table.addItem(new Object[] {
-                                                info.getName(),
-                                                info.getType(),
-                                                info.getAddress(),
-                                                info.getSignalLevel()
-                                            }, table.getItemIds().size());
+                                        String itemId = info.getAddress();
+                                        // if address was already detected, refresh info
+                                        if (table.containsId(itemId))
+                                        {
+                                            table.getContainerProperty(itemId, "Name").setValue(info.getName());
+                                            table.getContainerProperty(itemId, "Type").setValue(info.getType());
+                                            table.getContainerProperty(itemId, "Signal Level").setValue(info.getSignalLevel());
+                                        }
+                                        else
+                                        {
+                                            table.addItem(new Object[] {
+                                                    info.getName(),
+                                                    info.getType(),
+                                                    info.getAddress(),
+                                                    info.getSignalLevel()
+                                                }, info.getAddress());
+                                        }
                                         AdminUI.getInstance().push();
                                     }
                                 });                                         
@@ -179,7 +190,7 @@ public class NetworkAdminPanel extends DefaultModulePanel<ICommNetwork<?>> imple
                             {
                                 stopScan(module);
                             }                        
-                        }, 5000);
+                        }, 30000);
                     }
                     else
                     {
@@ -188,7 +199,7 @@ public class NetworkAdminPanel extends DefaultModulePanel<ICommNetwork<?>> imple
                 }
                 catch (Exception e)
                 {
-                    String msg = "Error while updating module configuration";
+                    String msg = "Error scanning for devices";
                     Page page = AdminUI.getInstance().getPage();
                     new Notification("Error", msg + '\n' + e.getMessage(), Notification.Type.ERROR_MESSAGE).show(page);
                     //Notification.show("Error", msg + '\n' + e.getMessage(), Notification.Type.ERROR_MESSAGE);

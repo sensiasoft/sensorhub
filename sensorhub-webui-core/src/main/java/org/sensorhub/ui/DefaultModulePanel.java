@@ -63,6 +63,7 @@ public class DefaultModulePanel<ModuleType extends IModule<? extends ModuleConfi
         // apply changes button
         Button applyButton = new Button("Apply Changes");
         applyButton.setIcon(APPLY_ICON);
+        applyButton.addStyleName(STYLE_SMALL);
         applyButton.addStyleName("apply-button");
         addComponent(applyButton);
         

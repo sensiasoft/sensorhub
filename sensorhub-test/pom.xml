@@ -110,5 +110,10 @@
         <artifactId>sensorhub-comm-ble-kura</artifactId>
         <version>0.1-SNAPSHOT</version>
      </dependency>
+     <dependency>
+        <groupId>org.sensorhub</groupId>
+        <artifactId>sensorhub-comm-ble-dbus</artifactId>
+        <version>0.1-SNAPSHOT</version>
+     </dependency>
   </dependencies>
 </project>

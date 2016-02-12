@@ -76,6 +76,7 @@ public class SensorAdminPanel extends DefaultModulePanel<ISensorModule<?>> imple
         Button refreshButton = new Button("Refresh");
         refreshButton.setDescription("Load latest data from sensor");
         refreshButton.setIcon(REFRESH_ICON);
+        refreshButton.addStyleName(STYLE_SMALL);
         refreshButton.addStyleName(STYLE_QUIET);
         titleBar.addComponent(refreshButton);
         titleBar.setComponentAlignment(refreshButton, Alignment.MIDDLE_LEFT);
