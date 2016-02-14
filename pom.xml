@@ -16,10 +16,13 @@
             <activeByDefault>true</activeByDefault>
          </activation>
          <modules>
+            <module>lib-swe-common/swe-common-all</module>
             <module>lib-swe-common/swe-common-core</module>
             <module>lib-swe-common/swe-common-om</module>
             <module>lib-swe-common/swe-common-video</module>
+            <module>lib-sensorml/sensorml-all</module>
             <module>lib-sensorml/sensorml-core</module>
+            <module>lib-ows/ows-framework-all</module>
             <module>lib-ows/ows-framework-bindings</module>
             <module>sensorhub-all</module>
             <module>sensorhub-core</module>
