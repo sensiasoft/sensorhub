@@ -26,6 +26,7 @@ import net.opengis.swe.v20.DataEncoding;
 import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.Quantity;
 import net.opengis.swe.v20.Time;
+import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.sensor.SensorDataEvent;
 import org.sensorhub.api.sensor.SensorException;
 import org.sensorhub.impl.sensor.AbstractSensorOutput;
@@ -48,12 +49,17 @@ import org.vast.swe.SWEConstants;
 public class FakeSensorData extends AbstractSensorOutput<FakeSensor> implements IFakeSensorOutput
 {
     String name;
+    DataComponent outputStruct;
+    DataEncoding outputEncoding;
     int maxSampleCount;
     int sampleCount;
     int bufferSize;
     double samplingPeriod; // seconds
     Deque<DataBlock> dataQueue;
     Timer timer;
+    TimerTask sensorTask;
+    boolean started;
+    boolean hasListeners;
     
     
     public FakeSensorData(FakeSensor sensor, String name)
@@ -69,8 +75,39 @@ public class FakeSensorData extends AbstractSensorOutput<FakeSensor> implements 
         this.bufferSize = bufferSize;
         this.samplingPeriod = samplingPeriod;
         this.dataQueue = new LinkedBlockingDeque<DataBlock>(bufferSize);
-        this.maxSampleCount = maxSampleCount;        
+        this.maxSampleCount = maxSampleCount;
         init();
+    }
+    
+    
+    @Override
+    public void init()
+    {
+        outputStruct = new DataRecordImpl(3);
+        outputStruct.setName(this.name);
+        outputStruct.setDefinition("urn:blabla:weatherData");
+        
+        Time time = new TimeImpl();
+        time.setDefinition(SWEConstants.DEF_SAMPLING_TIME);
+        time.getUom().setHref(Time.ISO_TIME_UNIT);
+        outputStruct.addComponent("time", time);
+        
+        Quantity temp = new QuantityImpl();
+        temp.setDefinition("urn:blabla:temperature");
+        temp.getUom().setCode("Cel");
+        outputStruct.addComponent("temp", temp);
+        
+        Quantity wind = new QuantityImpl();
+        wind.setDefinition("urn:blabla:windSpeed");
+        wind.getUom().setCode("m/s");
+        outputStruct.addComponent("windSpeed", wind);
+        
+        Quantity press = new QuantityImpl();
+        press.setDefinition("urn:blabla:pressure");
+        press.getUom().setCode("hPa");
+        outputStruct.addComponent("press", press);
+        
+        outputEncoding = new TextEncodingImpl(",", "\n");
     }
 
 
@@ -81,57 +118,73 @@ public class FakeSensorData extends AbstractSensorOutput<FakeSensor> implements 
 
 
     @Override
-    public void init()
+    public void start()
     {
-        // start data production timer
-        TimerTask sensorTask = new TimerTask()
+        // we start sending if we are started and have listeners
+        if (hasListeners)
+            startSending();
+        started = true;
+    }
+    
+    
+    protected void startSending()
+    {
+        if (timer == null)
         {
-            @Override
-            public void run()
+            // start data production timer
+            sensorTask = new TimerTask()
             {
-                // safety to make sure we don't output more samples than requested
-                // cancel does not seem to be taken into account early enough with high rates
-                if (sampleCount >= maxSampleCount)
-                    return;
-                
-                synchronized (dataQueue)
+                @Override
+                public void run()
                 {
-                    // miss random samples 20% of the time
-                    if (Math.random() > 0.8)
+                    // safety to make sure we don't output more samples than requested
+                    // cancel does not seem to be taken into account early enough with high rates
+                    if (sampleCount >= maxSampleCount)
                         return;
                     
-                    double samplingTime = System.currentTimeMillis() / 1000.;
-                    DataBlock data = new DataBlockDouble(4);
-                    data.setDoubleValue(0, samplingTime);
-                    data.setDoubleValue(1, 1.0 + ((int)(Math.random()*100))/1000.);
-                    data.setDoubleValue(2, 2.0 + ((int)(Math.random()*100))/1000.);
-                    data.setDoubleValue(3, 3.0 + ((int)(Math.random()*100))/1000.);
-                               
-                    sampleCount++;
-                    System.out.println("Record #" + sampleCount + " generated");
-                    if (sampleCount >= maxSampleCount)
-                        cancel();
-                    
-                    if (dataQueue.size() == bufferSize)
-                        dataQueue.remove();
-                    dataQueue.offer(data);
-                    
-                    latestRecordTime = System.currentTimeMillis();
-                    eventHandler.publishEvent(new SensorDataEvent(latestRecordTime, FakeSensorData.this, data));
-                }                        
-            }                
-        };
-        
-        timer = new Timer(name, true);
-        timer.scheduleAtFixedRate(sensorTask, 1000, (long)(samplingPeriod * 1000)); // keep 1s delay otherwise sensor starts to early during some tests
+                    synchronized (dataQueue)
+                    {
+                        // miss random samples 20% of the time
+                        if (Math.random() > 0.8)
+                            return;
+                        
+                        double samplingTime = System.currentTimeMillis() / 1000.;
+                        DataBlock data = new DataBlockDouble(4);
+                        data.setDoubleValue(0, samplingTime);
+                        data.setDoubleValue(1, 1.0 + ((int)(Math.random()*100))/1000.);
+                        data.setDoubleValue(2, 2.0 + ((int)(Math.random()*100))/1000.);
+                        data.setDoubleValue(3, 3.0 + ((int)(Math.random()*100))/1000.);
+                                   
+                        sampleCount++;
+                        System.out.println("Record #" + sampleCount + " generated");
+                        if (sampleCount >= maxSampleCount)
+                            cancel();
+                        
+                        if (dataQueue.size() == bufferSize)
+                            dataQueue.remove();
+                        dataQueue.offer(data);
+                        
+                        latestRecordTime = System.currentTimeMillis();
+                        eventHandler.publishEvent(new SensorDataEvent(latestRecordTime, FakeSensorData.this, data));
+                    }                        
+                }                
+            };
+            
+            timer = new Timer(name, true);
+            timer.scheduleAtFixedRate(sensorTask, 0, (long)(samplingPeriod * 1000));
+        }
     }
     
     
     @Override
     public void stop()
     {
-        timer.cancel();
-        timer.purge();
+        if (timer != null)
+        {
+            timer.cancel();
+            timer.purge();
+            timer = null;
+        }
     }
     
     
@@ -162,38 +215,14 @@ public class FakeSensorData extends AbstractSensorOutput<FakeSensor> implements 
     @Override
     public DataComponent getRecordDescription()
     {
-        DataComponent record = new DataRecordImpl(3);
-        record.setName(this.name);
-        record.setDefinition("urn:blabla:weatherData");
-        
-        Time time = new TimeImpl();
-        time.setDefinition(SWEConstants.DEF_SAMPLING_TIME);
-        time.getUom().setHref(Time.ISO_TIME_UNIT);
-        record.addComponent("time", time);
-        
-        Quantity temp = new QuantityImpl();
-        temp.setDefinition("urn:blabla:temperature");
-        temp.getUom().setCode("Cel");
-        record.addComponent("temp", temp);
-        
-        Quantity wind = new QuantityImpl();
-        wind.setDefinition("urn:blabla:windSpeed");
-        wind.getUom().setCode("m/s");
-        record.addComponent("windSpeed", wind);
-        
-        Quantity press = new QuantityImpl();
-        press.setDefinition("urn:blabla:pressure");
-        press.getUom().setCode("hPa");
-        record.addComponent("press", press);
-        
-        return record;
+        return outputStruct;
     }
 
 
     @Override
     public DataEncoding getRecommendedEncoding()
     {
-        return new TextEncodingImpl(",", "\n");
+        return outputEncoding;
     }
 
 
@@ -280,6 +309,18 @@ public class FakeSensorData extends AbstractSensorOutput<FakeSensor> implements 
             dataQueue.clear();
             return numRecords;
         }
+    }
+
+
+    @Override
+    public void registerListener(IEventListener listener)
+    {
+        super.registerListener(listener);
+        
+        // we start sending if we are started and have listeners
+        if (started)
+            startSending();
+        hasListeners = true;
     }
 
 }

@@ -82,7 +82,6 @@ public class TestStreamProcess implements IEventListener
         IModule<?> sensor = SensorHub.getInstance().getModuleRegistry().loadModule(sensorCfg);
         FakeSensorData sensorOutput = new FakeSensorData((FakeSensor)sensor, NAME_OUTPUT1, 10, SAMPLING_PERIOD, SAMPLE_COUNT);
         ((FakeSensor)sensor).setDataInterfaces(sensorOutput);
-        sensorOutput.registerListener(this);
         
         return (FakeSensor)sensor;
     }
@@ -130,12 +129,11 @@ public class TestStreamProcess implements IEventListener
         new SMLUtils(SMLUtils.V2_0).writeProcess(System.out, process.getCurrentDescription(), true);
         for (IStreamingDataInterface output: process.getAllOutputs().values())
             output.registerListener(this);
-                
         SensorHub.getInstance().getModuleRegistry().getModuleById(FAKE_SENSOR1_ID).start();
-        
+                
         synchronized (this) 
         {
-            while (eventCount < SAMPLE_COUNT*2)
+            while (eventCount < SAMPLE_COUNT)
                 wait();
         }
         

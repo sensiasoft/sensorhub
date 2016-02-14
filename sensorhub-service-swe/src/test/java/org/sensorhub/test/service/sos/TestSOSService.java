@@ -151,6 +151,7 @@ public class TestSOSService
         FakeSensor sensor = (FakeSensor)SensorHub.getInstance().getModuleRegistry().loadModule(sensorCfg);
         sensor.setSensorUID(UID_SENSOR1);
         sensor.setDataInterfaces(new FakeSensorData(sensor, NAME_OUTPUT1, 10, SAMPLING_PERIOD, NUM_GEN_SAMPLES));
+        sensor.start();
         
         // create SOS data provider config
         SensorDataProviderConfig provCfg = new SensorDataProviderConfig();
@@ -176,6 +177,7 @@ public class TestSOSService
         sensor.setDataInterfaces(
                 new FakeSensorData(sensor, NAME_OUTPUT1),
                 new FakeSensorData2(sensor, NAME_OUTPUT2, SAMPLING_PERIOD, NUM_GEN_SAMPLES, obsFoiMap));
+        sensor.start();
         
         // create SOS data provider config
         SensorDataProviderConfig provCfg = new SensorDataProviderConfig();
