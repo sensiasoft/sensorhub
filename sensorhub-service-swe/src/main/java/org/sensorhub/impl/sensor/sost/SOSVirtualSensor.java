@@ -25,7 +25,6 @@ import net.opengis.gml.v32.TimePeriod;
 import net.opengis.sensorml.v20.AbstractProcess;
 import net.opengis.sensorml.v20.DataInterface;
 import net.opengis.sensorml.v20.IOPropertyList;
-import net.opengis.sensorml.v20.PhysicalSystem;
 import net.opengis.swe.v20.AbstractSWEIdentifiable;
 import net.opengis.swe.v20.BinaryBlock;
 import net.opengis.swe.v20.BinaryComponent;
@@ -364,7 +363,7 @@ public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfi
             InputStream is = loader.getAsInputStream(STATE_SML_DESC);
             if (is != null)
             {
-                sensorDescription = (PhysicalSystem)new SMLUtils(SMLUtils.V2_0).readProcess(is);
+                sensorDescription = new SMLUtils(SMLUtils.V2_0).readProcess(is);
                 int timeListSize = sensorDescription.getValidTimeList().size();
                 if (timeListSize > 0)
                 {
