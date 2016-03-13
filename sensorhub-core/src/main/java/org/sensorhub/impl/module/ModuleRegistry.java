@@ -415,7 +415,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
         }
         catch (Throwable e)
         {
-            log.error("Invalid reference to module descriptor");
+            log.error("Invalid reference to module descriptor", e);
         }
         
         return installedModules;
