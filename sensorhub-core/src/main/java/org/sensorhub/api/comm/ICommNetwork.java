@@ -15,6 +15,7 @@ Copyright (C) 2012-2016 Sensia Software LLC. All Rights Reserved.
 package org.sensorhub.api.comm;
 
 import java.util.Collection;
+import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.module.IModule;
 import org.sensorhub.api.module.ModuleConfig;
 
@@ -61,18 +62,35 @@ public interface ICommNetwork<ConfigType extends ModuleConfig> extends IModule<C
      */
     public IDeviceScanner getDeviceScanner();
     
+
+    //public void powerOn();
+    //public void powerOff();
+    
+    
+    /*
+     * Check if network is available (e.g. connected to an access point, etc.)
+     * @return true if network is available for communications
+     */
+    //public boolean isConnected();
+    
+    
+    /*
+     * Checks if address is reachable through this network
+     * @param address
+     * @return
+     */
+    //public boolean isReachable(String address);
+    
+    
+    /*
+     * Registers a listener that get notified when network availability changes
+     */
+    //public void registerConnectivityListener(IEventListener listener);
+    
     
     /**
      * @return the list of networks available with this module
+     * -> move to INetworkManager
      */
     public Collection<? extends INetworkInfo> getAvailableNetworks();
-    
-    
-    /**
-     * Creates a comm provider working on this network using the provided
-     * configuration
-     * @param config
-     * @return new comm provider instance for connecting to a device
-     */
-    public ICommProvider<?> newCommProvider(CommConfig config);
 }
