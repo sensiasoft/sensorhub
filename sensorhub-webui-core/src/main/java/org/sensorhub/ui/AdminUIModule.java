@@ -14,6 +14,8 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.ui;
 
+import java.io.OutputStream;
+import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.LogManager;
@@ -44,8 +46,16 @@ public class AdminUIModule extends AbstractModule<AdminUIConfig>
         initParams.put(SERVLET_PARAM_MODULE_ID, getLocalID());
         if (config.widgetSet != null)
             initParams.put(WIDGETSET, config.widgetSet);
-        initParams.put("productionMode", "true");  // set to false to compile theme on-the-fly       
+        initParams.put("productionMode", "true");  // set to false to compile theme on-the-fly
+        
+        // deploy servlet
+        // HACK: we have to disable std err to hide message due to Vaadin duplicate implementation of SL4J
+        PrintStream oldStdErr = System.err;
+        System.setErr(new PrintStream(new OutputStream() {
+            public void write(int b) { }
+        }));
         HttpServer.getInstance().deployServlet(vaadinServlet, initParams, "/admin/*", "/VAADIN/*");
+        System.setErr(oldStdErr);
         HttpServer.getInstance().addServletSecurity("/admin/*", "admin");
     }
     
