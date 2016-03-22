@@ -151,7 +151,7 @@ public class NetworkAdminPanel extends DefaultModulePanel<ICommNetwork<?>> imple
                                 AdminUI.getInstance().access(new Runnable() {
                                     @Override
                                     public void run() {
-                                        String itemId = info.getAddress();
+                                        String itemId = info.getAddress() + '/' + info.getType();
                                         // if address was already detected, refresh info
                                         if (table.containsId(itemId))
                                         {
@@ -166,7 +166,7 @@ public class NetworkAdminPanel extends DefaultModulePanel<ICommNetwork<?>> imple
                                                     info.getType(),
                                                     info.getAddress(),
                                                     info.getSignalLevel()
-                                                }, info.getAddress());
+                                                }, itemId);
                                         }
                                         AdminUI.getInstance().push();
                                     }
