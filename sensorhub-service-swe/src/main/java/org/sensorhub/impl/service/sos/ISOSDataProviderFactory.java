@@ -42,6 +42,12 @@ public interface ISOSDataProviderFactory
 {
 
     /**
+     * @return the configuration of this provider 
+     */
+    public SOSProviderConfig getConfig();
+    
+    
+    /**
      * Allows to check if provider is enabled
      * @return true if enabled, false otherwise
      */

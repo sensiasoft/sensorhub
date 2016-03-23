@@ -290,23 +290,10 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
                 try
                 {
                     // instantiate provider factories and map them to offering URIs
-                    ISOSDataProviderFactory provider = providerConf.getFactory();
-                    if (!provider.isEnabled())
-                        continue;
-                                    
+                    ISOSDataProviderFactory provider = providerConf.getFactory(this);
                     dataProviders.put(providerConf.uri, provider);
-         
-                    // add offering metadata to capabilities
-                    SOSOfferingCapabilities offCaps = provider.generateCapabilities();
-                    capabilities.getLayers().add(offCaps);
-                    offeringCaps.put(offCaps.getIdentifier(), offCaps);
-                    
-                    // build procedure-offering map
-                    String procedureID = offCaps.getMainProcedure();
-                    procedureToOfferingMap.put(procedureID, offCaps.getIdentifier());
-                    
-                    if (log.isDebugEnabled())
-                        log.debug("Offering " + "\"" + offCaps.toString() + "\" generated for procedure " + procedureID);
+                    if (provider.isEnabled())
+                        showProviderCaps(provider);
                 }
                 catch (Exception e)
                 {
@@ -335,6 +322,52 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
         
         capabilitiesCache = capabilities;
         return capabilities;
+    }
+    
+    
+    protected void showProviderCaps(ISOSDataProviderFactory provider)
+    {
+        SOSProviderConfig config = provider.getConfig();
+        
+        try
+        {
+            // stop here if provider is already advertise
+            if (offeringCaps.containsKey(config.uri))
+                return;
+            
+            // add offering metadata to capabilities
+            SOSOfferingCapabilities offCaps = provider.generateCapabilities();
+            capabilitiesCache.getLayers().add(offCaps);
+            offeringCaps.put(offCaps.getIdentifier(), offCaps);
+            
+            // build procedure-offering map
+            String procedureID = offCaps.getMainProcedure();
+            procedureToOfferingMap.put(procedureID, offCaps.getIdentifier());
+            
+            if (log.isDebugEnabled())
+                log.debug("Offering " + "\"" + offCaps.getIdentifier() + "\" added for procedure " + procedureID);
+        }
+        catch (Exception e)
+        {
+            log.error("Error while generating offering " + config.uri, e);
+        }
+    }
+    
+    
+    protected void hideProviderCaps(ISOSDataProviderFactory provider)
+    {
+        SOSProviderConfig config = provider.getConfig();
+        
+        // remove offering from capabilities
+        SOSOfferingCapabilities offCaps = offeringCaps.remove(config.uri);
+        capabilitiesCache.getLayers().remove(offCaps);
+        
+        // remove from procedure map
+        String procedureID = offCaps.getMainProcedure();
+        procedureToOfferingMap.remove(procedureID);
+        
+        if (log.isDebugEnabled())
+            log.debug("Offering " + "\"" + offCaps.getIdentifier() + "\" removed for procedure " + procedureID);
     }
     
     
@@ -579,7 +612,10 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
         // we don't always do it when changes occur because high frequency changes 
         // would trigger too many updates (e.g. new measurements changing time periods)
         for (ISOSDataProviderFactory provider: dataProviders.values())
-            ((ISOSDataProviderFactory)provider).updateCapabilities();
+        {
+            if (provider.isEnabled())
+                ((ISOSDataProviderFactory)provider).updateCapabilities();
+        }
         
         sendResponse(request, capabilitiesCache);
     }
@@ -1172,7 +1208,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
                 }
                 
                 // instantiate provider and consumer instances
-                ISOSDataProviderFactory provider = providerConfig.getFactory();
+                ISOSDataProviderFactory provider = providerConfig.getFactory(this);
                 ISOSDataConsumer consumer = consumerConfig.getConsumerInstance();
                 
                 // register provider and consumer

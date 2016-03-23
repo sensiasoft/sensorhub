@@ -36,9 +36,10 @@ public class SensorWithStorageProviderFactory extends StreamWithStorageProviderF
     SensorDataProviderConfig sensorProviderConfig;
     
     
-    public SensorWithStorageProviderFactory(SensorDataProviderConfig config) throws SensorHubException
+    public SensorWithStorageProviderFactory(SOSService service, SensorDataProviderConfig config) throws SensorHubException
     {
-        super(config, SensorHub.getInstance().getSensorManager().getModuleById(config.sensorID));
+        super(service, config,
+              SensorHub.getInstance().getSensorManager().getModuleById(config.sensorID));
         this.sensorProviderConfig = config;
         
         String liveSensorUID = producer.getCurrentDescription().getUniqueIdentifier();

@@ -55,7 +55,8 @@ public abstract class SOSProviderConfig
     
     /**
      * Retrieves the factory associated with this type of data provider
+     * @param service Parent SOS service
      * @return
      */
-    protected abstract ISOSDataProviderFactory getFactory() throws SensorHubException;
+    protected abstract ISOSDataProviderFactory getFactory(SOSService service) throws SensorHubException;
 }

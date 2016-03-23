@@ -39,12 +39,12 @@ public class StreamProcessProviderConfig extends StreamDataProviderConfig
     
     
     @Override
-    protected ISOSDataProviderFactory getFactory() throws SensorHubException
+    protected ISOSDataProviderFactory getFactory(SOSService service) throws SensorHubException
     {
         if (storageID != null)
-            return new StreamProcessWithStorageProviderFactory(this);
+            return new StreamProcessWithStorageProviderFactory(service, this);
         else
-            return new StreamProcessProviderFactory(this);
+            return new StreamProcessProviderFactory(service, this);
     }
 
 }

@@ -101,11 +101,18 @@ public class TestSOSService
     @Before
     public void setupFramework() throws Exception
     {
-        // init sensorhub
+        // setup config and db file
         configFile = new File("junit-test.json");
         //configFile = File.createTempFile("junit-config-", ".json");
         configFile.deleteOnExit();
-        new File(DB_PATH).deleteOnExit();
+        
+        configFile.deleteOnExit();
+        File dbFile = new File(DB_PATH);
+        if (dbFile.exists())
+            dbFile.delete();
+        dbFile.deleteOnExit();
+        
+        // start sensorhub
         SensorHub.createInstance(new SensorHubConfig(configFile.getAbsolutePath(), configFile.getParent()));
         
         // start HTTP server

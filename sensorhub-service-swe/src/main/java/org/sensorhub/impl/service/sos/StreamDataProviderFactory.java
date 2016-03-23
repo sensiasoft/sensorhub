@@ -29,8 +29,10 @@ import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.data.IDataProducerModule;
 import org.sensorhub.api.data.IStreamingDataInterface;
+import org.sensorhub.api.module.ModuleEvent;
 import org.sensorhub.api.persistence.IFoiFilter;
 import org.sensorhub.api.service.ServiceException;
+import org.sensorhub.impl.SensorHub;
 import org.sensorhub.utils.MsgUtils;
 import org.vast.data.DataIterator;
 import org.vast.ogc.om.IObservation;
@@ -51,17 +53,22 @@ import org.vast.util.TimeExtent;
  */
 public abstract class StreamDataProviderFactory<ProducerType extends IDataProducerModule<?>> implements ISOSDataProviderFactory, IEventListener
 {
+    final SOSService service;
     final StreamDataProviderConfig config;
     final String producerType;
     final ProducerType producer;    
     SOSOfferingCapabilities caps;
     
     
-    protected StreamDataProviderFactory(StreamDataProviderConfig config, ProducerType producer, String producerType) throws SensorHubException
+    protected StreamDataProviderFactory(SOSService service, StreamDataProviderConfig config, ProducerType producer, String producerType) throws SensorHubException
     {
+        this.service = service;
         this.config = config;
         this.producer = producer;
         this.producerType = producerType;
+        
+        // listen to producer lifecycle events
+        SensorHub.getInstance().getModuleRegistry().registerListener(this);
     }
     
     
@@ -136,6 +143,10 @@ public abstract class StreamDataProviderFactory<ProducerType extends IDataProduc
     @Override
     public synchronized void updateCapabilities() throws Exception
     {
+        checkEnabled();
+        if (caps == null)
+            return;
+            
         updateNameAndDescription();
         FoiUtils.updateFois(caps, producer, config.maxFois);
     }
@@ -236,11 +247,8 @@ public abstract class StreamDataProviderFactory<ProducerType extends IDataProduc
     protected void checkEnabled() throws ServiceException
     {
         if (!config.enabled)
-        {
-            String providerName = (config.name != null) ? config.name : "for " + config.uri;
-            throw new ServiceException(producerType + " " + providerName + " is disabled");
-        }
-        
+            throw new ServiceException("Offering " + config.uri + " is disabled");
+                
         if (!producer.isEnabled())
             throw new ServiceException(producerType + " " + MsgUtils.moduleString(producer) + " is disabled");
     }
@@ -249,19 +257,15 @@ public abstract class StreamDataProviderFactory<ProducerType extends IDataProduc
     @Override
     public void handleEvent(Event<?> e)
     {
-        /*// we need to enable/disable this provider when the state of the
-        // underlying sensor changes
-        if (e instanceof ModuleEvent && e.getSource() == sensor)
+        // if producer is enabled/disabled
+        if (e instanceof ModuleEvent && e.getSource() == producer)
         {
-            if (((ModuleEvent) e).type == ModuleEvent.Type.DELETED)
-                config.enabled = false;
-            
             if (((ModuleEvent) e).type == ModuleEvent.Type.ENABLED)
-                config.enabled = true;
+                service.showProviderCaps(this);
             
-            if (((ModuleEvent) e).type == ModuleEvent.Type.DISABLED)
-                config.enabled = false;
-        }*/       
+            else if (((ModuleEvent) e).type == ModuleEvent.Type.DISABLED || ((ModuleEvent) e).type == ModuleEvent.Type.DELETED)
+                service.hideProviderCaps(this);
+        }      
     }
 
 
@@ -276,5 +280,12 @@ public abstract class StreamDataProviderFactory<ProducerType extends IDataProduc
     public boolean isEnabled()
     {
         return (config.enabled && producer.isEnabled());
+    }
+    
+    
+    @Override
+    public StreamDataProviderConfig getConfig()
+    {
+        return this.config;
     }
 }

@@ -42,9 +42,9 @@ public class StreamWithStorageProviderFactory<ProducerType extends IDataProducer
     long liveDataTimeOut;
     
     
-    public StreamWithStorageProviderFactory(StreamDataProviderConfig config, ProducerType producer) throws SensorHubException
+    public StreamWithStorageProviderFactory(SOSService service, StreamDataProviderConfig config, ProducerType producer) throws SensorHubException
     {
-        super(new StorageDataProviderConfig(config));
+        super(service, new StorageDataProviderConfig(config));
         this.producer = producer;
         this.liveDataTimeOut = (long)(config.liveDataTimeout * 1000);
     }
@@ -86,6 +86,9 @@ public class StreamWithStorageProviderFactory<ProducerType extends IDataProducer
     @Override
     public void updateCapabilities() throws ServiceException
     {
+        if (caps == null)
+            return;
+        
         super.updateCapabilities();
         
         // enable real-time requests if streaming data source is enabled

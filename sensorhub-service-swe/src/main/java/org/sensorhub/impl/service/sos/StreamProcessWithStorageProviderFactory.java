@@ -36,9 +36,9 @@ public class StreamProcessWithStorageProviderFactory extends StreamWithStoragePr
     StreamProcessProviderConfig streamProviderConfig;
     
     
-    public StreamProcessWithStorageProviderFactory(StreamProcessProviderConfig config) throws SensorHubException
+    public StreamProcessWithStorageProviderFactory(SOSService service, StreamProcessProviderConfig config) throws SensorHubException
     {
-        super(config,
+        super(service, config,
               (IStreamProcessModule<?>)SensorHub.getInstance().getProcessingManager().getModuleById(config.processID));
         
         this.streamProviderConfig = config;

@@ -62,13 +62,15 @@ import org.vast.util.TimeExtent;
  */
 public class StorageDataProviderFactory implements ISOSDataProviderFactory
 {
+    final SOSService service;
     final StorageDataProviderConfig config;
     final IRecordStorageModule<?> storage;
     SOSOfferingCapabilities caps;
     
     
-    protected StorageDataProviderFactory(StorageDataProviderConfig config) throws SensorHubException
+    protected StorageDataProviderFactory(SOSService service, StorageDataProviderConfig config) throws SensorHubException
     {
+        this.service = service;
         this.config = config;
         IStorageModule<?> storageModule = null;
         
@@ -150,6 +152,10 @@ public class StorageDataProviderFactory implements ISOSDataProviderFactory
     @Override
     public void updateCapabilities() throws ServiceException
     {
+        checkEnabled();
+        if (caps == null)
+            return;
+        
         try
         {
             // update time extent
@@ -337,5 +343,11 @@ public class StorageDataProviderFactory implements ISOSDataProviderFactory
     {
 
     }
-
+    
+    
+    @Override
+    public StorageDataProviderConfig getConfig()
+    {
+        return this.config;
+    }
 }

@@ -34,9 +34,9 @@ public class StreamProcessProviderFactory extends StreamDataProviderFactory<IStr
 {
     
     
-    protected StreamProcessProviderFactory(StreamProcessProviderConfig config) throws SensorHubException
+    protected StreamProcessProviderFactory(SOSService service, StreamProcessProviderConfig config) throws SensorHubException
     {
-        super(config,
+        super(service, config,
               (IStreamProcessModule<?>)SensorHub.getInstance().getModuleRegistry().getModuleById(config.processID),
               "Process");
     }
