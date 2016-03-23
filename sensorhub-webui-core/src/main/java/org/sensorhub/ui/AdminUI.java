@@ -91,8 +91,9 @@ public class AdminUI extends com.vaadin.ui.UI
     
     private static final Action ADD_MODULE_ACTION = new Action("Add Module", new ThemeResource("icons/module_add.png"));
     private static final Action REMOVE_MODULE_ACTION = new Action("Remove Module", new ThemeResource("icons/module_delete.png"));
-    private static final Action ENABLE_MODULE_ACTION = new Action("Enable", new ThemeResource("icons/enable.png"));
-    private static final Action DISABLE_MODULE_ACTION = new Action("Disable", new ThemeResource("icons/disable.gif"));
+    private static final Action START_MODULE_ACTION = new Action("Start", new ThemeResource("icons/enable.png"));
+    private static final Action STOP_MODULE_ACTION = new Action("Stop", new ThemeResource("icons/disable.gif"));
+    private static final Action RESTART_MODULE_ACTION = new Action("Restart", new ThemeResource("icons/refresh.gif"));
     private static final Resource LOGO_ICON = new ClassResource("/sensorhub_logo_128.png");
     private static final Resource ACC_TAB_ICON = new ThemeResource("icons/enable.png");    
     private static final String STYLE_LOGO = "logo";
@@ -446,9 +447,12 @@ public class AdminUI extends com.vaadin.ui.UI
                 {                    
                     boolean enabled = ((MyBeanItem<ModuleConfig>)table.getItem(target)).getBean().enabled;
                     if (enabled)
-                        actions.add(DISABLE_MODULE_ACTION);
+                    {
+                        actions.add(STOP_MODULE_ACTION);
+                        actions.add(RESTART_MODULE_ACTION);
+                    }
                     else
-                        actions.add(ENABLE_MODULE_ACTION);
+                        actions.add(START_MODULE_ACTION);
                     actions.add(REMOVE_MODULE_ACTION);
                 }
                 else
@@ -476,7 +480,7 @@ public class AdminUI extends com.vaadin.ui.UI
                                 ModuleRegistry reg = SensorHub.getInstance().getModuleRegistry();
                                 reg.loadModule(config);
                             }
-                            catch (Exception e)
+                            catch (Throwable e)
                             {
                                 String msg = "The module could not be initialized";
                                 Notification.show("Error", msg + '\n' + e.getMessage(), Notification.Type.ERROR_MESSAGE);
@@ -524,9 +528,9 @@ public class AdminUI extends com.vaadin.ui.UI
                         addWindow(popup);
                                            
                     }
-                    else if (action == ENABLE_MODULE_ACTION)
+                    else if (action == START_MODULE_ACTION)
                     {
-                        final ConfirmDialog popup = new ConfirmDialog("Are you sure you want to enable module " + moduleName + "?");
+                        final ConfirmDialog popup = new ConfirmDialog("Are you sure you want to start module " + moduleName + "?");
                         popup.addCloseListener(new CloseListener() {
                             @Override
                             public void windowClose(CloseEvent e)
@@ -550,9 +554,9 @@ public class AdminUI extends com.vaadin.ui.UI
                         
                         addWindow(popup);
                     }
-                    else if (action == DISABLE_MODULE_ACTION)
+                    else if (action == STOP_MODULE_ACTION)
                     {
-                        final ConfirmDialog popup = new ConfirmDialog("Are you sure you want to disable module " + moduleName + "?");
+                        final ConfirmDialog popup = new ConfirmDialog("Are you sure you want to stop module " + moduleName + "?");
                         popup.addCloseListener(new CloseListener() {
                             @Override
                             public void windowClose(CloseEvent e)
@@ -567,6 +571,32 @@ public class AdminUI extends com.vaadin.ui.UI
                                     catch (SensorHubException ex)
                                     {
                                         String msg = "The module could not be disabled";
+                                        Notification.show("Error", msg + '\n' + ex.getMessage(), Notification.Type.ERROR_MESSAGE);
+                                    }
+                                }
+                            }                        
+                        });                    
+                        
+                        addWindow(popup);
+                    }
+                    else if (action == RESTART_MODULE_ACTION)
+                    {
+                        final ConfirmDialog popup = new ConfirmDialog("Are you sure you want to restart module " + moduleName + "?");
+                        popup.addCloseListener(new CloseListener() {
+                            @Override
+                            public void windowClose(CloseEvent e)
+                            {
+                                if (popup.isConfirmed())
+                                {                    
+                                    try 
+                                    {
+                                        SensorHub.getInstance().getModuleRegistry().disableModule(moduleId);
+                                        SensorHub.getInstance().getModuleRegistry().enableModule(moduleId);
+                                        item.getItemProperty(UIConstants.PROP_ENABLED).setValue(true);
+                                    }
+                                    catch (SensorHubException ex)
+                                    {
+                                        String msg = "The module could not be restarted";
                                         Notification.show("Error", msg + '\n' + ex.getMessage(), Notification.Type.ERROR_MESSAGE);
                                     }
                                 }
