@@ -22,7 +22,9 @@ import org.sensorhub.api.data.IDataProducerModule;
 
 /**
  * <p>
- * Interface to be implemented by all sensor drivers connected to the system
+ * Interface to be implemented by all sensor drivers connected to the system.<br/>
+ * Inputs/Output should always be created in the init() method even if they are
+ * further modified during or after startup.
  * </p>
  *
  * @author Alex Robin <alex.robin@sensiasoftware.com>

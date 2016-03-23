@@ -23,7 +23,10 @@ import net.opengis.sensorml.v20.AbstractProcess;
 import net.opengis.swe.v20.DataArray;
 import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataRecord;
+import org.sensorhub.api.common.Event;
+import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.common.SensorHubException;
+import org.sensorhub.api.module.ModuleEvent;
 import org.sensorhub.api.persistence.FoiFilter;
 import org.sensorhub.api.persistence.IFoiFilter;
 import org.sensorhub.api.persistence.IObsStorage;
@@ -60,7 +63,7 @@ import org.vast.util.TimeExtent;
  * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @since Sep 15, 2013
  */
-public class StorageDataProviderFactory implements ISOSDataProviderFactory
+public class StorageDataProviderFactory implements ISOSDataProviderFactory, IEventListener
 {
     final SOSService service;
     final StorageDataProviderConfig config;
@@ -79,6 +82,9 @@ public class StorageDataProviderFactory implements ISOSDataProviderFactory
         {
             storageModule = SensorHub.getInstance().getPersistenceManager().getModuleById(config.storageID);
             this.storage = (IRecordStorageModule<?>)storageModule;
+            
+            // listen to storage lifecycle events
+            storage.registerListener(this);
         }
         catch (ClassCastException e)
         {
@@ -321,13 +327,24 @@ public class StorageDataProviderFactory implements ISOSDataProviderFactory
     protected void checkEnabled() throws ServiceException
     {
         if (!config.enabled)
-        {
-            String providerName = (config.name != null) ? config.name : "for " + MsgUtils.moduleString(storage);
-            throw new ServiceException("Provider " + providerName + " is disabled");
-        }
+            throw new ServiceException("Offering " + config.uri + " is disabled");
         
         if (!storage.isEnabled())
             throw new ServiceException("Storage " + MsgUtils.moduleString(storage) + " is disabled");
+    }
+    
+    
+    @Override
+    public void handleEvent(Event<?> e)
+    {
+        // if producer is enabled/disabled
+        if (e instanceof ModuleEvent && e.getSource() == storage)
+        {
+            if (isEnabled())
+                service.showProviderCaps(this);
+            else
+                service.hideProviderCaps(this);
+        }      
     }
 
 

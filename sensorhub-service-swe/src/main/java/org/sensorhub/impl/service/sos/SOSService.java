@@ -162,7 +162,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     
     String endpointUrl;
     SOSServiceConfig config;
-    SOSServiceCapabilities capabilitiesCache;
+    SOSServiceCapabilities capabilities;
     Map<String, SOSOfferingCapabilities> offeringCaps;
     Map<String, String> procedureToOfferingMap;
     Map<String, String> templateToOfferingMap;    
@@ -199,18 +199,17 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     
     /**
      * Generates the SOSServiceCapabilities object with info from data source
-     * @return
      */
-    protected SOSServiceCapabilities generateCapabilities() throws SensorHubException
+    protected void generateCapabilities() throws SensorHubException
     {
         dataProviders.clear();
         procedureToOfferingMap.clear();
         templateToOfferingMap.clear();
         offeringCaps.clear();
+        capabilities = new SOSServiceCapabilities();
         
         // get main capabilities info from config
         CapabilitiesInfo serviceInfo = config.ogcCapabilitiesInfo;
-        SOSServiceCapabilities capabilities = new SOSServiceCapabilities();
         capabilities.getSupportedVersions().add(DEFAULT_VERSION);
         capabilities.getIdentification().setTitle(serviceInfo.title);
         capabilities.getIdentification().setDescription(serviceInfo.description);
@@ -319,9 +318,6 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
                 }
             }
         }
-        
-        capabilitiesCache = capabilities;
-        return capabilities;
     }
     
     
@@ -329,15 +325,15 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     {
         SOSProviderConfig config = provider.getConfig();
         
+        // stop here if provider is already advertised
+        if (offeringCaps.containsKey(config.uri))
+            return;
+        
         try
         {
-            // stop here if provider is already advertise
-            if (offeringCaps.containsKey(config.uri))
-                return;
-            
             // add offering metadata to capabilities
             SOSOfferingCapabilities offCaps = provider.generateCapabilities();
-            capabilitiesCache.getLayers().add(offCaps);
+            capabilities.getLayers().add(offCaps);
             offeringCaps.put(offCaps.getIdentifier(), offCaps);
             
             // build procedure-offering map
@@ -358,9 +354,13 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     {
         SOSProviderConfig config = provider.getConfig();
         
+        // stop here if provider is not advertised
+        if (!offeringCaps.containsKey(config.uri))
+            return;
+        
         // remove offering from capabilities
         SOSOfferingCapabilities offCaps = offeringCaps.remove(config.uri);
-        capabilitiesCache.getLayers().remove(offCaps);
+        capabilities.getLayers().remove(offCaps);
         
         // remove from procedure map
         String procedureID = offCaps.getMainProcedure();
@@ -403,10 +403,13 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
         
         // pre-generate capabilities
         endpointUrl = null;
-        this.capabilitiesCache = generateCapabilities();
+        generateCapabilities();
                 
         // subscribe to server lifecycle events
-        SensorHub.getInstance().registerListener(this);
+        HttpServer httpServer = HttpServer.getInstance();
+        if (httpServer == null)
+            throw new RuntimeException("HTTP server module must be loaded");
+        httpServer.registerListener(this);
         
         // deploy servlet
         deploy();
@@ -419,9 +422,6 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
         // undeploy servlet
         undeploy();
         
-        // unregister ourself
-        SensorHub.getInstance().unregisterListener(this);
-        
         // clean all providers
         for (ISOSDataProviderFactory provider: dataProviders.values())
             ((ISOSDataProviderFactory)provider).cleanup();
@@ -430,11 +430,8 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     
     protected void deploy()
     {
-        HttpServer httpServer = HttpServer.getInstance();
-        if (httpServer == null)
-            throw new RuntimeException("HTTP server must be started");
-        
-        if (!httpServer.isEnabled())
+        HttpServer httpServer = HttpServer.getInstance();        
+        if (httpServer == null || !httpServer.isEnabled())
             return;
         
         // deploy ourself to HTTP server
@@ -468,7 +465,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
         if (e instanceof ModuleEvent && e.getSource() == HttpServer.getInstance())
         {
             // start when HTTP server is enabled
-            if (((ModuleEvent) e).type == ModuleEvent.Type.ENABLED)
+            if (((ModuleEvent) e).type == ModuleEvent.Type.STARTED)
             {
                 try
                 {
@@ -482,7 +479,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
             }
             
             // stop when HTTP server is disabled
-            else if (((ModuleEvent) e).type == ModuleEvent.Type.DISABLED)
+            else if (((ModuleEvent) e).type == ModuleEvent.Type.STOPPED)
                 stop();
         }
     }
@@ -601,10 +598,10 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
         if (endpointUrl == null)
         {
             endpointUrl = request.getHttpRequest().getRequestURL().toString();
-            for (Entry<String, String> op: capabilitiesCache.getGetServers().entrySet())
-                capabilitiesCache.getGetServers().put(op.getKey(), endpointUrl);
-            for (Entry<String, String> op: capabilitiesCache.getPostServers().entrySet())
-                capabilitiesCache.getPostServers().put(op.getKey(), endpointUrl);
+            for (Entry<String, String> op: capabilities.getGetServers().entrySet())
+                capabilities.getGetServers().put(op.getKey(), endpointUrl);
+            for (Entry<String, String> op: capabilities.getPostServers().entrySet())
+                capabilities.getPostServers().put(op.getKey(), endpointUrl);
         }
         
         // ask providers to refresh their capabilities if needed.
@@ -617,7 +614,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
                 ((ISOSDataProviderFactory)provider).updateCapabilities();
         }
         
-        sendResponse(request, capabilitiesCache);
+        sendResponse(request, capabilities);
     }
         
     
@@ -994,7 +991,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
             for (String obsProp: observables)
             {
                 boolean found = false;
-                for (SOSOfferingCapabilities offering: capabilitiesCache.getLayers())
+                for (SOSOfferingCapabilities offering: capabilities.getLayers())
                 {
                     if (offering.getObservableProperties().contains(obsProp))
                     {
@@ -1157,7 +1154,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
                 }
                 
                 // make sure module is enabled
-                SensorHub.getInstance().getModuleRegistry().enableModule(sensorUID);
+                SensorHub.getInstance().getModuleRegistry().startModule(sensorUID);
                 
                 // generate new provider and consumer config
                 SensorDataProviderConfig providerConfig = new SensorDataProviderConfig();
@@ -1217,7 +1214,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
                 
                 // create new offering
                 SOSOfferingCapabilities offCaps = provider.generateCapabilities();
-                capabilitiesCache.getLayers().add(offCaps);
+                capabilities.getLayers().add(offCaps);
                 offeringCaps.put(offCaps.getIdentifier(), offCaps);
                 procedureToOfferingMap.put(sensorUID, offering);
             }
@@ -1466,13 +1463,13 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
                 ISOSDataProviderFactory provider = getDataProviderFactoryByOfferingID(offering);
                 SOSOfferingCapabilities newCaps = provider.generateCapabilities();
                 int oldIndex = 0;
-                for (OWSLayerCapabilities offCaps: capabilitiesCache.getLayers())
+                for (OWSLayerCapabilities offCaps: capabilities.getLayers())
                 {
                     if (offCaps.getIdentifier().equals(offering))
                         break; 
                     oldIndex++;
                 }
-                capabilitiesCache.getLayers().set(oldIndex, newCaps);
+                capabilities.getLayers().set(oldIndex, newCaps);
                 offeringCaps.put(newCaps.getIdentifier(), newCaps);
             }
             

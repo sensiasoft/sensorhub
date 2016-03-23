@@ -51,7 +51,7 @@ import org.vast.util.TimeExtent;
  * @param <ProducerType> Type of producer handled by this provider
  * @since Feb 28, 2015
  */
-public abstract class StreamDataProviderFactory<ProducerType extends IDataProducerModule<?>> implements ISOSDataProviderFactory, IEventListener
+public class StreamDataProviderFactory<ProducerType extends IDataProducerModule<?>> implements ISOSDataProviderFactory, IEventListener
 {
     final SOSService service;
     final StreamDataProviderConfig config;
@@ -260,10 +260,9 @@ public abstract class StreamDataProviderFactory<ProducerType extends IDataProduc
         // if producer is enabled/disabled
         if (e instanceof ModuleEvent && e.getSource() == producer)
         {
-            if (((ModuleEvent) e).type == ModuleEvent.Type.ENABLED)
+            if (isEnabled())
                 service.showProviderCaps(this);
-            
-            else if (((ModuleEvent) e).type == ModuleEvent.Type.DISABLED || ((ModuleEvent) e).type == ModuleEvent.Type.DELETED)
+            else
                 service.hideProviderCaps(this);
         }      
     }
@@ -287,5 +286,12 @@ public abstract class StreamDataProviderFactory<ProducerType extends IDataProduc
     public StreamDataProviderConfig getConfig()
     {
         return this.config;
+    }
+
+
+    @Override
+    public ISOSDataProvider getNewDataProvider(SOSDataFilter filter) throws Exception
+    {
+        return null;
     }
 }

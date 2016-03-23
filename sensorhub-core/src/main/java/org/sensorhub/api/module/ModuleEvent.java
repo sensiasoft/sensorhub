@@ -48,12 +48,12 @@ public class ModuleEvent extends Event<Type>
         /**
          * after module is enabled/started
          */
-        ENABLED,
+        STARTED,
         
         /**
-         * after module is disabled/stopped
+         * before module is disabled/stopped
          */
-        DISABLED,
+        STOPPED,
         
         /**
          * after the module configuration has been changed and accepted through updateConfig()

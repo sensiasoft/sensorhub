@@ -61,7 +61,9 @@ public interface IModule<ConfigType extends ModuleConfig> extends IEventProducer
     
     
     /**
-     * Initializes the module with the specified configuration
+     * Initializes the module with the specified configuration.<br/>
+     * Implementations of this method must guarantee that the module is
+     * correctly initialized or send an exception before returning.
      * @param config
      * @throws SensorHubException 
      */
@@ -81,10 +83,11 @@ public interface IModule<ConfigType extends ModuleConfig> extends IEventProducer
     
     /**
      * Starts the module with the current configuration.<br/>
-     * init() should always be called before start().
+     * init() should always be called before start().<br/>
+     * If module fails to start, the enabled flag should be set to false in the configuration
      * @throws SensorHubException
      */
-    public void start() throws SensorHubException;
+    public void start(/*callback to notify that module is actually started*/) throws SensorHubException;
     
     
     /**

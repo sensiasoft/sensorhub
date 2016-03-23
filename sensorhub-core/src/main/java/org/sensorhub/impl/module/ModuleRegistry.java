@@ -35,6 +35,7 @@ import org.sensorhub.api.module.IModuleStateManager;
 import org.sensorhub.api.module.ModuleConfig;
 import org.sensorhub.api.module.ModuleEvent;
 import org.sensorhub.impl.common.BasicEventHandler;
+import org.sensorhub.impl.common.EventBus;
 import org.sensorhub.utils.MsgUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -132,7 +133,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
             if (config.enabled)
             {
                 module.start();
-                eventHandler.publishEvent(new ModuleEvent(module, ModuleEvent.Type.ENABLED));
+                eventHandler.publishEvent(new ModuleEvent(module, ModuleEvent.Type.STARTED));
                 log.debug("Module " + MsgUtils.moduleString(module) +  " started");
             }
             
@@ -181,7 +182,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
      */
     public synchronized void unloadModule(String moduleID) throws SensorHubException
     {
-        disableModule(moduleID);        
+        stopModule(moduleID);        
         IModule<?> module = loadedModules.remove(moduleID);
         eventHandler.publishEvent(new ModuleEvent(module, ModuleEvent.Type.UNLOADED));        
         log.debug("Module " + MsgUtils.moduleString(module) +  " unloaded");
@@ -223,7 +224,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
      * @throws SensorHubException 
      */
     @SuppressWarnings("rawtypes")
-    public synchronized IModule<?> enableModule(String moduleID) throws SensorHubException
+    public synchronized IModule<?> startModule(String moduleID) throws SensorHubException
     {
         try
         {
@@ -243,7 +244,8 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
             {
                 module.start();      
                 module.getConfiguration().enabled = true;
-                eventHandler.publishEvent(new ModuleEvent(module, ModuleEvent.Type.ENABLED));
+                ModuleEvent event = new ModuleEvent(module, ModuleEvent.Type.STARTED);
+                EventBus.getInstance().registerProducer(moduleID).publishEvent(event);
                 log.debug("Module " + MsgUtils.moduleString(module) +  " started");
             }
             
@@ -262,7 +264,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
      * @param moduleID Local ID of module to disable
      * @throws SensorHubException 
      */
-    public synchronized void disableModule(String moduleID) throws SensorHubException
+    public synchronized void stopModule(String moduleID) throws SensorHubException
     {
         try
         {
@@ -280,9 +282,10 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
                 catch (Exception e)
                 {
                     throw new SensorHubException("Error while stopping module " + MsgUtils.moduleString(module), e);
-                }
-                
-                eventHandler.publishEvent(new ModuleEvent(module, ModuleEvent.Type.DISABLED));
+                }                
+
+                ModuleEvent event = new ModuleEvent(module, ModuleEvent.Type.STOPPED);
+                EventBus.getInstance().registerProducer(moduleID).publishEvent(event);
                 log.debug("Module " + MsgUtils.moduleString(module) + " stopped");
             }
         }
@@ -461,7 +464,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
                     configRepos.update(module.getConfiguration());
                 
                 // cleanly stop module
-                this.disableModule(module.getLocalID());
+                this.stopModule(module.getLocalID());
                 
                 // save state if requested
                 if (saveState)

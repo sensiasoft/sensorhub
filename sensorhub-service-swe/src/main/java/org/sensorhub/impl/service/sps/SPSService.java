@@ -34,7 +34,6 @@ import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.module.IModuleStateManager;
 import org.sensorhub.api.module.ModuleEvent;
 import org.sensorhub.api.service.IServiceModule;
-import org.sensorhub.impl.SensorHub;
 import org.sensorhub.impl.common.EventBus;
 import org.sensorhub.impl.service.HttpServer;
 import org.sensorhub.impl.service.ogc.OGCServiceConfig.CapabilitiesInfo;
@@ -73,7 +72,7 @@ public class SPSService extends OWSServlet implements IServiceModule<SPSServiceC
     
     String endpointUrl;
     SPSServiceConfig config;
-    SPSServiceCapabilities capabilitiesCache;
+    SPSServiceCapabilities capabilities;
     Map<String, SPSOfferingCapabilities> procedureToOfferingMap;
     Map<String, ISPSConnector> connectors;
     IEventHandler eventHandler;
@@ -106,16 +105,15 @@ public class SPSService extends OWSServlet implements IServiceModule<SPSServiceC
     
     /**
      * Generates the SPSServiceCapabilities object with info obtained from connector
-     * @return
      */
-    protected SPSServiceCapabilities generateCapabilities()
+    protected void generateCapabilities()
     {
         connectors.clear();
         procedureToOfferingMap.clear();
+        capabilities = new SPSServiceCapabilities();
         
         // get main capabilities info from config
         CapabilitiesInfo serviceInfo = config.ogcCapabilitiesInfo;
-        SPSServiceCapabilities capabilities = new SPSServiceCapabilities();
         capabilities.getIdentification().setTitle(serviceInfo.title);
         capabilities.getIdentification().setDescription(serviceInfo.description);
         capabilities.setFees(serviceInfo.fees);
@@ -166,24 +164,24 @@ public class SPSService extends OWSServlet implements IServiceModule<SPSServiceC
                 }
             }
         }
-        
-        capabilitiesCache = capabilities;
-        return capabilities;
     }
     
     
     @Override
-    public void start()
+    public void start() throws SensorHubException
     {
         this.connectors = new LinkedHashMap<String, ISPSConnector>();
         this.procedureToOfferingMap = new HashMap<String, SPSOfferingCapabilities>();
         this.taskDB = new InMemoryTaskDB();
         
         // pre-generate capabilities
-        this.capabilitiesCache = generateCapabilities();
+        generateCapabilities();
                 
         // subscribe to server lifecycle events
-        SensorHub.getInstance().registerListener(this);
+        HttpServer httpServer = HttpServer.getInstance();
+        if (httpServer == null)
+            throw new RuntimeException("HTTP server must be started");
+        httpServer.registerListener(this);
         
         // deploy servlet
         deploy();
@@ -196,9 +194,6 @@ public class SPSService extends OWSServlet implements IServiceModule<SPSServiceC
         // undeploy servlet
         undeploy();
         
-        // unregister ourself
-        SensorHub.getInstance().unregisterListener(this);
-        
         // clean all connectors
         for (ISPSConnector connector: connectors.values())
             connector.cleanup();
@@ -207,11 +202,8 @@ public class SPSService extends OWSServlet implements IServiceModule<SPSServiceC
     
     protected void deploy()
     {
-        HttpServer httpServer = HttpServer.getInstance();
-        if (httpServer == null)
-            throw new RuntimeException("HTTP server must be started");
-        
-        if (!httpServer.isEnabled())
+        HttpServer httpServer = HttpServer.getInstance();        
+        if (httpServer == null || !httpServer.isEnabled())
             return;
         
         // deploy ourself to HTTP server
@@ -243,11 +235,21 @@ public class SPSService extends OWSServlet implements IServiceModule<SPSServiceC
         if (e instanceof ModuleEvent && e.getSource() == HttpServer.getInstance())
         {
             // start when HTTP server is enabled
-            if (((ModuleEvent) e).type == ModuleEvent.Type.ENABLED)
-                start();
+            if (((ModuleEvent) e).type == ModuleEvent.Type.STARTED)
+            {
+                try
+                {
+                    if (config.enabled)
+                        start();
+                }
+                catch (SensorHubException e1)
+                {
+                    log.error("SPS Service could not be restarted", e);
+                }
+            }
             
             // stop when HTTP server is disabled
-            else if (((ModuleEvent) e).type == ModuleEvent.Type.DISABLED)
+            else if (((ModuleEvent) e).type == ModuleEvent.Type.STOPPED)
                 stop();
         }
     }
@@ -413,13 +415,13 @@ public class SPSService extends OWSServlet implements IServiceModule<SPSServiceC
         if (endpointUrl == null)
         {
             endpointUrl = request.getHttpRequest().getRequestURL().toString();
-            for (Entry<String, String> op: capabilitiesCache.getGetServers().entrySet())
-                capabilitiesCache.getGetServers().put(op.getKey(), endpointUrl);
-            for (Entry<String, String> op: capabilitiesCache.getPostServers().entrySet())
-                capabilitiesCache.getPostServers().put(op.getKey(), endpointUrl);
+            for (Entry<String, String> op: capabilities.getGetServers().entrySet())
+                capabilities.getGetServers().put(op.getKey(), endpointUrl);
+            for (Entry<String, String> op: capabilities.getPostServers().entrySet())
+                capabilities.getPostServers().put(op.getKey(), endpointUrl);
         }
         
-        sendResponse(request, capabilitiesCache);
+        sendResponse(request, capabilities);
     }
     
     

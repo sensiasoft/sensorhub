@@ -18,16 +18,16 @@ import java.util.HashMap;
 import java.util.Map;
 import org.sensorhub.api.common.IEventHandler;
 import org.sensorhub.api.common.IEventListener;
+import org.sensorhub.impl.SensorHub;
 
 
 /**
  * <p>
- * Eveny Bus: Main event management class in SensorHub.<br/>
+ * Event Bus: Main event management class in SensorHub.<br/>
  * All event producers and listeners registrations must be done through
  * this class (instead of directly with the source module) in order to
  * benefit from more advanced event dispatching implementations such as
  * distributed event messaging.<br/>
- * Actual dispatching of events is done
  * </p>
  *
  * @author Alex Robin <alex.robin@sensiasoftware.com>
@@ -37,20 +37,16 @@ public class EventBus
 {
     public static final String MAIN_TOPIC = "_MAIN"; 
     
-    private static EventBus singletonInstance;
     private Map<String, IEventHandler> eventHandlers;
     
     
     public static EventBus getInstance()
     {
-        if (singletonInstance == null)
-            singletonInstance = new EventBus();
-        
-        return singletonInstance;
+        return SensorHub.getInstance().getEventBus();
     }
     
     
-    private EventBus()
+    public EventBus()
     {
         eventHandlers = new HashMap<String, IEventHandler>();
     }

@@ -539,7 +539,7 @@ public class AdminUI extends com.vaadin.ui.UI
                                 {                    
                                     try 
                                     {
-                                        SensorHub.getInstance().getModuleRegistry().enableModule(moduleId);
+                                        SensorHub.getInstance().getModuleRegistry().startModule(moduleId);
                                         item.getItemProperty(UIConstants.PROP_ENABLED).setValue(true);
                                         openModuleInfo((MyBeanItem<ModuleConfig>)item);
                                     }
@@ -565,7 +565,7 @@ public class AdminUI extends com.vaadin.ui.UI
                                 {                    
                                     try 
                                     {
-                                        SensorHub.getInstance().getModuleRegistry().disableModule(moduleId);
+                                        SensorHub.getInstance().getModuleRegistry().stopModule(moduleId);
                                         item.getItemProperty(UIConstants.PROP_ENABLED).setValue(false);
                                     }
                                     catch (SensorHubException ex)
@@ -590,8 +590,8 @@ public class AdminUI extends com.vaadin.ui.UI
                                 {                    
                                     try 
                                     {
-                                        SensorHub.getInstance().getModuleRegistry().disableModule(moduleId);
-                                        SensorHub.getInstance().getModuleRegistry().enableModule(moduleId);
+                                        SensorHub.getInstance().getModuleRegistry().stopModule(moduleId);
+                                        SensorHub.getInstance().getModuleRegistry().startModule(moduleId);
                                         item.getItemProperty(UIConstants.PROP_ENABLED).setValue(true);
                                     }
                                     catch (SensorHubException ex)

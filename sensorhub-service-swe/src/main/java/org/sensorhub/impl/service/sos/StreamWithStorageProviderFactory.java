@@ -16,12 +16,15 @@ package org.sensorhub.impl.service.sos;
 
 import java.util.Iterator;
 import net.opengis.gml.v32.AbstractFeature;
+import org.sensorhub.api.common.Event;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.data.IDataProducerModule;
 import org.sensorhub.api.data.IStreamingDataInterface;
+import org.sensorhub.api.module.ModuleEvent;
 import org.sensorhub.api.persistence.IFoiFilter;
 import org.sensorhub.api.persistence.IObsStorage;
 import org.sensorhub.api.service.ServiceException;
+import org.sensorhub.utils.MsgUtils;
 import org.vast.ows.sos.SOSOfferingCapabilities;
 import org.vast.util.TimeExtent;
 
@@ -39,6 +42,7 @@ import org.vast.util.TimeExtent;
 public class StreamWithStorageProviderFactory<ProducerType extends IDataProducerModule<?>> extends StorageDataProviderFactory
 {
     final ProducerType producer;
+    final StreamDataProviderFactory<ProducerType> altProvider;
     long liveDataTimeOut;
     
     
@@ -47,24 +51,32 @@ public class StreamWithStorageProviderFactory<ProducerType extends IDataProducer
         super(service, new StorageDataProviderConfig(config));
         this.producer = producer;
         this.liveDataTimeOut = (long)(config.liveDataTimeout * 1000);
-    }
-
-
-    @Override
-    public boolean isEnabled()
-    {
-        return config.enabled && (producer.isEnabled() || storage.isEnabled());
+        
+        // listen to producer lifecycle events
+        producer.registerListener(this);
+        
+        // build alt provider to generate capabilities in case storage is disabled
+        this.altProvider = new StreamDataProviderFactory<ProducerType>(service, config, producer, "Stream");
     }
 
 
     @Override
     public SOSOfferingCapabilities generateCapabilities() throws ServiceException
     {
-        SOSOfferingCapabilities capabilities = super.generateCapabilities();
+        SOSOfferingCapabilities capabilities;
         
-        // if storage does support FOIs, list the current ones
-        if (!(storage instanceof IObsStorage))
-            FoiUtils.updateFois(caps, producer, config.maxFois);
+        if (storage.isEnabled())
+        {
+            capabilities = super.generateCapabilities();         
+        
+            // if storage does support FOIs, list the current ones
+            if (!(storage instanceof IObsStorage))
+                FoiUtils.updateFois(caps, producer, config.maxFois);
+        }
+        else
+        {
+            capabilities = altProvider.generateCapabilities();
+        }
         
         // enable real-time requests only if streaming data source is enabled
         if (producer.isEnabled())
@@ -89,7 +101,8 @@ public class StreamWithStorageProviderFactory<ProducerType extends IDataProducer
         if (caps == null)
             return;
         
-        super.updateCapabilities();
+        if (storage.isEnabled())
+            super.updateCapabilities();
         
         // enable real-time requests if streaming data source is enabled
         if (producer.isEnabled())
@@ -127,5 +140,37 @@ public class StreamWithStorageProviderFactory<ProducerType extends IDataProducer
         if (!foiIt.hasNext())
             foiIt = FoiUtils.getFilteredFoiIterator(producer, filter);
         return foiIt;
+    }
+    
+    
+    @Override
+    public void handleEvent(Event<?> e)
+    {
+        // if producer is enabled/disabled
+        if (e instanceof ModuleEvent && (e.getSource() == producer || e.getSource() == storage))
+        {
+            if (isEnabled())
+                service.showProviderCaps(this);
+            else
+                service.hideProviderCaps(this);
+        }      
+    }
+    
+    
+    @Override
+    protected void checkEnabled() throws ServiceException
+    {
+        if (!config.enabled)
+            throw new ServiceException("Offering " + config.uri + " is disabled");
+        
+        if (!storage.isEnabled() && !producer.isEnabled())
+            throw new ServiceException("Storage " + MsgUtils.moduleString(storage) + " is disabled");
+    }
+    
+    
+    @Override
+    public boolean isEnabled()
+    {
+        return config.enabled && (producer.isEnabled() || storage.isEnabled());
     }
 }

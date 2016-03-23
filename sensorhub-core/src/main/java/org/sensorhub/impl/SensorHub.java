@@ -23,6 +23,7 @@ import org.sensorhub.api.persistence.IPersistenceManager;
 import org.sensorhub.api.processing.IProcessingManager;
 import org.sensorhub.api.sensor.ISensorManager;
 import org.sensorhub.impl.comm.NetworkManagerImpl;
+import org.sensorhub.impl.common.EventBus;
 import org.sensorhub.impl.module.ModuleConfigJsonFile;
 import org.sensorhub.impl.module.ModuleRegistry;
 import org.sensorhub.impl.persistence.PersistenceManagerImpl;
@@ -47,6 +48,7 @@ public class SensorHub
     private static SensorHub instance;
     
     private IGlobalConfig config;
+    private EventBus eventBus;
     private ModuleRegistry registry;
     
     
@@ -84,6 +86,7 @@ public class SensorHub
     {
         this.config = config;        
         IModuleConfigRepository configDB = new ModuleConfigJsonFile(config.getModuleConfigPath());
+        this.eventBus = new EventBus();
         this.registry = new ModuleRegistry(configDB);
     }
     
@@ -154,6 +157,12 @@ public class SensorHub
     public ModuleRegistry getModuleRegistry()
     {
         return registry;
+    }
+    
+    
+    public EventBus getEventBus()
+    {
+        return eventBus;
     }
     
     
