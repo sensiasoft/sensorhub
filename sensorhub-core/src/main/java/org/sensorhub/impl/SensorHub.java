@@ -15,7 +15,6 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 package org.sensorhub.impl;
 
 import org.sensorhub.api.comm.INetworkManager;
-import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.config.IGlobalConfig;
 import org.sensorhub.api.module.IModuleConfigRepository;
@@ -24,6 +23,7 @@ import org.sensorhub.api.processing.IProcessingManager;
 import org.sensorhub.api.sensor.ISensorManager;
 import org.sensorhub.impl.comm.NetworkManagerImpl;
 import org.sensorhub.impl.common.EventBus;
+import org.sensorhub.impl.module.InMemoryConfigDb;
 import org.sensorhub.impl.module.ModuleConfigJsonFile;
 import org.sensorhub.impl.module.ModuleRegistry;
 import org.sensorhub.impl.persistence.PersistenceManagerImpl;
@@ -52,6 +52,11 @@ public class SensorHub
     private ModuleRegistry registry;
     
     
+    /**
+     * Creates the singleton instance with the given config and JSON module DB
+     * @param config
+     * @return the singleton instance
+     */
     public static SensorHub createInstance(IGlobalConfig config)
     {
         if (instance == null)
@@ -61,6 +66,12 @@ public class SensorHub
     }
     
     
+    /**
+     * Creates the singleton instance with the given config and registry
+     * @param config
+     * @param registry
+     * @return the singleton instance
+     */
     public static SensorHub createInstance(IGlobalConfig config, ModuleRegistry registry)
     {
         if (instance == null)
@@ -70,12 +81,26 @@ public class SensorHub
     }
     
     
+    /**
+     * Retrieves the singleton instance or a new instance with in-memory storage
+     * if none was created yet
+     * @return singleton instance
+     */
     public static SensorHub getInstance()
     {
+        if (instance == null)
+        {
+            IModuleConfigRepository configDB = new InMemoryConfigDb();
+            instance = new SensorHub(null, new ModuleRegistry(configDB));
+        }
+        
         return instance;
     }
     
     
+    /**
+     * Clears the singleton instance
+     */
     public static void clearInstance()
     {
         instance = null;
@@ -84,10 +109,11 @@ public class SensorHub
     
     private SensorHub(IGlobalConfig config)
     {
-        this.config = config;        
-        IModuleConfigRepository configDB = new ModuleConfigJsonFile(config.getModuleConfigPath());
-        this.eventBus = new EventBus();
-        this.registry = new ModuleRegistry(configDB);
+        this(config, 
+             new ModuleRegistry(
+                new ModuleConfigJsonFile(config.getModuleConfigPath())
+             )
+        );
     }
     
     
@@ -95,6 +121,7 @@ public class SensorHub
     {
         this.config = config;
         this.registry = registry;
+        this.eventBus = new EventBus();
     }
     
     
@@ -127,18 +154,6 @@ public class SensorHub
         {
             log.error("Error while stopping SensorHub", e);
         }
-    }
-    
-    
-    public void registerListener(IEventListener listener)
-    {
-        registry.registerListener(listener);        
-    }
-
-
-    public void unregisterListener(IEventListener listener)
-    {
-        registry.unregisterListener(listener);        
     }
     
     
@@ -196,7 +211,7 @@ public class SensorHub
         if (args.length < 2)
         {
             // print usage
-            System.out.println("SensorHub v1.0");
+            System.out.println("SensorHub v1.1");
             System.out.println("Command syntax: sensorhub [module_config_path] [base_storage_path]");
             System.exit(1);
         }
