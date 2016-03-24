@@ -32,7 +32,6 @@ import org.sensorhub.api.data.IStreamingDataInterface;
 import org.sensorhub.api.module.ModuleEvent;
 import org.sensorhub.api.persistence.IFoiFilter;
 import org.sensorhub.api.service.ServiceException;
-import org.sensorhub.impl.SensorHub;
 import org.sensorhub.utils.MsgUtils;
 import org.vast.data.DataIterator;
 import org.vast.ogc.om.IObservation;
@@ -44,7 +43,7 @@ import org.vast.util.TimeExtent;
 
 /**
  * <p>
- * Abstract factory for streaming data providers.
+ * Base factory for streaming data providers.
  * </p>
  *
  * @author Alex Robin <alex.robin@sensiasoftware.com>
@@ -68,7 +67,7 @@ public class StreamDataProviderFactory<ProducerType extends IDataProducerModule<
         this.producerType = producerType;
         
         // listen to producer lifecycle events
-        SensorHub.getInstance().getModuleRegistry().registerListener(this);
+        producer.registerListener(this);
     }
     
     
