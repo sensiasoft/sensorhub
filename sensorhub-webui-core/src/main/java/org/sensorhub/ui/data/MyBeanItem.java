@@ -102,8 +102,8 @@ public class MyBeanItem<BeanType> implements Item
                 throw new RuntimeException("Cannot access field " + fullName);
             }
             
-            // case of simple types
-            if (isSimpleType(f))
+            // case of simple types or enum instances
+            if (isSimpleType(f) || fieldVal instanceof Enum<?>)
             {
                 //System.out.println("field " + fullName);
                 addItemProperty(fullName, new FieldProperty(bean, f));

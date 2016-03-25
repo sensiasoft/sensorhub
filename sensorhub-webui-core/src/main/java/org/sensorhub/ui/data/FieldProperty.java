@@ -61,7 +61,10 @@ public class FieldProperty extends BaseProperty<Object>
     @Override
     public Class<?> getType()
     {
-        return convertPrimitiveType(f.getType());
+        if (getValue() instanceof Enum<?>)
+            return getValue().getClass();
+        else
+            return convertPrimitiveType(f.getType());
     }
 
 
