@@ -28,6 +28,7 @@ import org.sensorhub.impl.module.ModuleConfigJsonFile;
 import org.sensorhub.impl.module.ModuleRegistry;
 import org.sensorhub.impl.persistence.PersistenceManagerImpl;
 import org.sensorhub.impl.processing.ProcessingManagerImpl;
+import org.sensorhub.impl.security.ClientAuth;
 import org.sensorhub.impl.sensor.SensorManagerImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -127,6 +128,9 @@ public class SensorHub
     
     public void start()
     {
+        // prepare client authenticator (e.g. for HTTP connections, etc...)
+        ClientAuth.createInstance("keystore");
+                
         // load all modules in the order implied by dependency constraints
         registry.loadAllModules();
     }
