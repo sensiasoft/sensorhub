@@ -97,7 +97,7 @@ public class TestSOSTService
         SOSServiceConfig serviceCfg = new SOSServiceConfig();
         serviceCfg.moduleClass = SOSService.class.getCanonicalName();
         serviceCfg.endPoint = SERVICE_ENDPOINT;
-        serviceCfg.enabled = true;
+        serviceCfg.autoStart = true;
         serviceCfg.name = "SOS";
         serviceCfg.enableTransactional = true;
         CapabilitiesInfo srvcMetadata = serviceCfg.ogcCapabilitiesInfo;
@@ -122,7 +122,7 @@ public class TestSOSTService
     {
         // create test sensor
         SensorConfig sensorCfg = new SensorConfig();
-        sensorCfg.enabled = true;
+        sensorCfg.autoStart = true;
         sensorCfg.moduleClass = FakeSensor.class.getCanonicalName();
         sensorCfg.name = "Sensor1";
         IModule<?> sensor = SensorHub.getInstance().getModuleRegistry().loadModule(sensorCfg);
@@ -384,6 +384,7 @@ public class TestSOSTService
                 module.cleanup();
             }
             registry.shutdown(false, false);
+            SensorHub.clearInstance();
             
             if (configFile != null)
                 configFile.delete();

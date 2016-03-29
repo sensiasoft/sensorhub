@@ -235,7 +235,7 @@ public class DirectSensorConnector implements ISPSConnector
             throw new ServiceException("Connector " + providerName + " is disabled");
         }
         
-        if (!sensor.isEnabled())
+        if (!sensor.isStarted())
             throw new ServiceException("Sensor " + MsgUtils.moduleString(sensor) + " is disabled");
     }
     
@@ -250,6 +250,6 @@ public class DirectSensorConnector implements ISPSConnector
     @Override
     public boolean isEnabled()
     {
-        return (config.enabled && sensor.isEnabled());
+        return (config.enabled && sensor.isStarted());
     }
 }

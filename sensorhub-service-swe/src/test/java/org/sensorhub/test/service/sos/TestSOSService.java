@@ -128,7 +128,7 @@ public class TestSOSService
         SOSServiceConfig serviceCfg = new SOSServiceConfig();
         serviceCfg.moduleClass = SOSService.class.getCanonicalName();
         serviceCfg.endPoint = SERVICE_PATH;
-        serviceCfg.enabled = true;
+        serviceCfg.autoStart = true;
         serviceCfg.name = "SOS";
         CapabilitiesInfo srvcMetadata = serviceCfg.ogcCapabilitiesInfo;
         srvcMetadata.title = "My SOS Service";
@@ -152,7 +152,7 @@ public class TestSOSService
     {
         // create test sensor
         SensorConfig sensorCfg = new SensorConfig();
-        sensorCfg.enabled = true;
+        sensorCfg.autoStart = true;
         sensorCfg.moduleClass = FakeSensorWithFoi.class.getCanonicalName();
         sensorCfg.name = "Sensor1";
         FakeSensor sensor = (FakeSensor)SensorHub.getInstance().getModuleRegistry().loadModule(sensorCfg);
@@ -176,7 +176,7 @@ public class TestSOSService
     {
         // create test sensor
         SensorConfig sensorCfg = new SensorConfig();
-        sensorCfg.enabled = true;
+        sensorCfg.autoStart = true;
         sensorCfg.moduleClass = FakeSensorWithFoi.class.getCanonicalName();
         sensorCfg.name = "Sensor2";
         FakeSensorWithFoi sensor = (FakeSensorWithFoi)SensorHub.getInstance().getModuleRegistry().loadModule(sensorCfg);
@@ -205,7 +205,7 @@ public class TestSOSService
         // configure in-memory storage configure
         StreamStorageConfig streamStorageConfig = new StreamStorageConfig();
         streamStorageConfig.name = "Storage";
-        streamStorageConfig.enabled = true;
+        streamStorageConfig.autoStart = true;
         streamStorageConfig.storageConfig = new StorageConfig();
         streamStorageConfig.storageConfig.moduleClass = InMemoryBasicStorage.class.getCanonicalName();
         streamStorageConfig.dataSourceID = sosProviderConfig.sensorID;
@@ -225,7 +225,7 @@ public class TestSOSService
         // configure in-memory storage configure
         StreamStorageConfig streamStorageConfig = new StreamStorageConfig();
         streamStorageConfig.name = "Storage";
-        streamStorageConfig.enabled = true;
+        streamStorageConfig.autoStart = true;
         streamStorageConfig.storageConfig = new BasicStorageConfig();
         streamStorageConfig.storageConfig.moduleClass = ObsStorageImpl.class.getCanonicalName();
         streamStorageConfig.storageConfig.storagePath = DB_PATH;
@@ -815,6 +815,7 @@ public class TestSOSService
         {
             SensorHub.getInstance().getModuleRegistry().shutdown(false, false);
             HttpServer.getInstance().cleanup();
+            SensorHub.clearInstance();
             if (configFile != null)
                 configFile.delete();
             File dbFile = new File(DB_PATH);

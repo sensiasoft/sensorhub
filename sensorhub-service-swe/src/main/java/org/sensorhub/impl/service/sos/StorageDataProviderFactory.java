@@ -329,7 +329,7 @@ public class StorageDataProviderFactory implements ISOSDataProviderFactory, IEve
         if (!config.enabled)
             throw new ServiceException("Offering " + config.uri + " is disabled");
         
-        if (!storage.isEnabled())
+        if (!storage.isStarted())
             throw new ServiceException("Storage " + MsgUtils.moduleString(storage) + " is disabled");
     }
     
@@ -351,14 +351,14 @@ public class StorageDataProviderFactory implements ISOSDataProviderFactory, IEve
     @Override
     public boolean isEnabled()
     {
-        return (config.enabled && storage.isEnabled());
+        return (config.enabled && storage.isStarted());
     }
 
 
     @Override
     public void cleanup()
     {
-
+        storage.unregisterListener(this);
     }
     
     

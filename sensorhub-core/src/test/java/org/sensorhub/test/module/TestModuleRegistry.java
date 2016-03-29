@@ -69,7 +69,7 @@ public class TestModuleRegistry
         config2.id = UUID.randomUUID().toString();
         config2.name = "sensor1";
         config2.moduleClass = "org.sensorhub.sensor.SensorDriver";
-        config2.enabled = true;
+        config2.autoStart = true;
         config2.autoActivate = true;
         config2.hiddenIO = new String[] {"input1", "input3"};
         
@@ -77,21 +77,21 @@ public class TestModuleRegistry
         assertTrue(clone2.id.equals(config2.id));
         assertTrue(clone2.name.equals(config2.name));
         assertTrue(clone2.moduleClass.equals(config2.moduleClass));
-        assertTrue(clone2.enabled = config2.enabled);
+        assertTrue(clone2.autoStart = config2.autoStart);
         assertTrue(Arrays.deepEquals(clone2.hiddenIO, config2.hiddenIO));
         
         StorageConfig config4 = new StorageConfig();
         config4.id = UUID.randomUUID().toString();
         config4.name = "DB1";
         config4.moduleClass = "org.sensorhub.persistence.FeatureStorage";
-        config4.enabled = true;
+        config4.autoStart = true;
         config4.storagePath = "path/to/db";
         
         StorageConfig clone4 = (StorageConfig)config4.clone();
         assertTrue(clone4.id.equals(config4.id));
         assertTrue(clone4.name.equals(config4.name));
         assertTrue(clone4.moduleClass.equals(config4.moduleClass));
-        assertTrue(clone4.enabled = config4.enabled);
+        assertTrue(clone4.autoStart = config4.autoStart);
     }
     
     
@@ -120,7 +120,7 @@ public class TestModuleRegistry
     {
         MyConfig1 conf = new MyConfig1();
         conf.moduleClass = DummyModule.class.getCanonicalName();
-        conf.enabled = true;
+        conf.autoStart = true;
         conf.name = "Module1";
         conf.param1 = "text1";
         conf.param2 = 33;
@@ -132,7 +132,7 @@ public class TestModuleRegistry
     {   
         MyConfig2 conf = new MyConfig2();
         conf.moduleClass = DummyModule.class.getCanonicalName();
-        conf.enabled = true;
+        conf.autoStart = true;
         conf.name = "Module2";
         conf.param1 = "text2";
         conf.param2 = 0.3256;

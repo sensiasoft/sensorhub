@@ -60,14 +60,14 @@ public class TestWebUI
         
         // HTTP server
         HttpServerConfig httpConfig = new HttpServerConfig();
-        httpConfig.enabled = true;
+        httpConfig.autoStart = true;
         httpConfig.moduleClass = HttpServer.class.getCanonicalName();
         httpConfig.id = UUID.randomUUID().toString();
         configDB.add(httpConfig);
         
         // Admin UI
         AdminUIConfig adminConfig = new AdminUIConfig();
-        adminConfig.enabled = true;
+        adminConfig.autoStart = true;
         adminConfig.moduleClass = AdminUIModule.class.getCanonicalName();
         adminConfig.id = UUID.randomUUID().toString();
         adminConfig.customForms.add(new CustomUIConfig(HttpServerConfig.class.getCanonicalName(), HttpServerConfigForm.class.getCanonicalName()));
@@ -91,7 +91,7 @@ public class TestWebUI
                 
             config.id = UUID.randomUUID().toString();
             config.name = name;
-            config.enabled = true;
+            config.autoStart = true;
             config.moduleClass = DummyModule.class.getCanonicalName();
             configDB.add(config);   
         }

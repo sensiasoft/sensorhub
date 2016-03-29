@@ -203,7 +203,6 @@ public class HttpServer extends AbstractModule<HttpServerConfig>
                 server.stop();
                 servletHandler = null;
             }
-            log.info("HTTP server stopped");
         }
         catch (Exception e)
         {

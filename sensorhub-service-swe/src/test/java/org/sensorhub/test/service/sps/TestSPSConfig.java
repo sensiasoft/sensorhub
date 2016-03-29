@@ -38,7 +38,7 @@ public class TestSPSConfig
         config.id = UUID.randomUUID().toString();
         config.name = "SPS Service #1";
         config.moduleClass = SPSService.class.getCanonicalName();
-        config.enabled = true;
+        config.autoStart = true;
         config.enableSOAP = false;
         config.ogcCapabilitiesInfo.title = "SensorHub SPS Service";
         config.ogcCapabilitiesInfo.description = "An SPS service deployed on SensorHub that allows to control sensors";

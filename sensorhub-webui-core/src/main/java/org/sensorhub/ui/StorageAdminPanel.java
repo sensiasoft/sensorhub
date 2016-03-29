@@ -118,7 +118,7 @@ public class StorageAdminPanel extends DefaultModulePanel<IRecordStorageModule<?
     {        
         // measurement outputs
         int i = 1;        
-        if (storage.isEnabled())
+        if (storage.isStarted())
         {
             for (IRecordStoreInfo dsInfo: storage.getRecordStores().values())
             {

@@ -46,12 +46,22 @@ public class ModuleEvent extends Event<Type>
         DELETED,
         
         /**
-         * after module is enabled/started
+         * when module start is requested
+         */
+        STARTING,
+        
+        /**
+         * after module is started
          */
         STARTED,
         
         /**
-         * before module is disabled/stopped
+         * when module stop is requested asynchronously
+         */
+        STOPPING,
+        
+        /**
+         * after module is stopped
          */
         STOPPED,
         

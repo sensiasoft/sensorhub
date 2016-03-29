@@ -95,7 +95,7 @@ public class TestSPSService
         SPSServiceConfig serviceCfg = new SPSServiceConfig();
         serviceCfg.moduleClass = SPSService.class.getCanonicalName();
         serviceCfg.endPoint = SERVICE_ENDPOINT;
-        serviceCfg.enabled = true;
+        serviceCfg.autoStart = true;
         serviceCfg.name = "SPS";
         
         CapabilitiesInfo srvcMetadata = serviceCfg.ogcCapabilitiesInfo;
@@ -121,7 +121,7 @@ public class TestSPSService
     {
         // create test sensor
         SensorConfig sensorCfg = new SensorConfig();
-        sensorCfg.enabled = true;
+        sensorCfg.autoStart = true;
         sensorCfg.moduleClass = FakeSensor.class.getCanonicalName();
         sensorCfg.name = "Sensor1";
         FakeSensor sensor = (FakeSensor)SensorHub.getInstance().getModuleRegistry().loadModule(sensorCfg);
@@ -147,7 +147,7 @@ public class TestSPSService
     {
         // create test sensor
         SensorConfig sensorCfg = new SensorConfig();
-        sensorCfg.enabled = true;
+        sensorCfg.autoStart = true;
         sensorCfg.moduleClass = FakeSensor.class.getCanonicalName();
         sensorCfg.name = "Sensor2";
         FakeSensor sensor = (FakeSensor)SensorHub.getInstance().getModuleRegistry().loadModule(sensorCfg);
@@ -366,6 +366,7 @@ public class TestSPSService
         {
             SensorHub.getInstance().getModuleRegistry().shutdown(false, false);            
             HttpServer.getInstance().cleanup();
+            SensorHub.clearInstance();
             if (configFile != null)
                 configFile.delete();
         }

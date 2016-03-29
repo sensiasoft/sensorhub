@@ -23,7 +23,7 @@ import org.sensorhub.api.module.ModuleConfig;
 public class DummyModule implements IModule<ModuleConfig>
 {
     ModuleConfig config;            
-    public boolean isEnabled() { return config.enabled; }
+    public boolean isStarted() { return config.autoStart; }
     public void init(ModuleConfig config) { this.config = config; }
     public void updateConfig(ModuleConfig config) { }
     public ModuleConfig getConfiguration() { return config; }

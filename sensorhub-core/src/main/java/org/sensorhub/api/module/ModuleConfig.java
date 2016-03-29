@@ -15,6 +15,7 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 package org.sensorhub.api.module;
 
 import org.sensorhub.api.config.DisplayInfo;
+import com.google.gson.annotations.SerializedName;
 import com.rits.cloning.Cloner;
 
 
@@ -44,18 +45,13 @@ public class ModuleConfig implements Cloneable
     public String moduleClass;
     
     
-    /**
-     * User chosen name for the module
-     */
-    @DisplayInfo(label="Module Name")
+    @DisplayInfo(label="Module Name", desc="User chosen name for the module")
     public String name;
     
     
-    /**
-     * Reflects state of the module (enable/disable)
-     */
-    @DisplayInfo(label="Enable", desc="Module state (enabled or disabled)")
-    public boolean enabled = false;
+    @DisplayInfo(label="Auto Start", desc="Set to true to automatically start the module when it is loaded")
+    @SerializedName("enabled")
+    public boolean autoStart = false;
 
 
     @Override

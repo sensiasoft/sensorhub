@@ -170,13 +170,14 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     Map<String, ISOSDataConsumer> dataConsumers;
     Map<String, ISOSCustomSerializer> customFormats = new HashMap<String, ISOSCustomSerializer>();
         
+    boolean started;
     boolean needCapabilitiesTimeUpdate = false;
 
     
     @Override
-    public boolean isEnabled()
+    public boolean isStarted()
     {
-        return config.enabled;
+        return started;
     }
     
     
@@ -190,9 +191,12 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     @Override
     public void updateConfig(SOSServiceConfig config) throws SensorHubException
     {
-        stop();
+        boolean wasStarted = isStarted();
+        
+        if (wasStarted)
+            stop();        
         this.config = config;
-        if (config.enabled)
+        if (wasStarted)
             start();
     }    
     
@@ -413,6 +417,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
         
         // deploy servlet
         deploy();
+        started = true;
     }
     
     
@@ -431,7 +436,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     protected void deploy()
     {
         HttpServer httpServer = HttpServer.getInstance();        
-        if (httpServer == null || !httpServer.isEnabled())
+        if (httpServer == null || !httpServer.isStarted())
             return;
         
         // deploy ourself to HTTP server
@@ -442,7 +447,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     protected void undeploy()
     {
         HttpServer httpServer = HttpServer.getInstance();        
-        if (httpServer == null || !httpServer.isEnabled())
+        if (httpServer == null || !httpServer.isStarted())
             return;
         
         httpServer.undeployServlet(this);
@@ -469,7 +474,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
             {
                 try
                 {
-                    if (config.enabled)
+                    if (config.autoStart)
                         start();
                 }
                 catch (SensorHubException e1)
@@ -1145,7 +1150,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
                 if (!moduleReg.isModuleLoaded(sensorUID))
                 {
                     SOSVirtualSensorConfig sensorConfig = new SOSVirtualSensorConfig();
-                    sensorConfig.enabled = false;
+                    sensorConfig.autoStart = false;
                     sensorConfig.id = sensorUID;
                     sensorConfig.name = sensorName;
                     SOSVirtualSensor virtualSensor = (SOSVirtualSensor)moduleReg.loadModule(sensorConfig);
@@ -1181,7 +1186,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
                         StreamStorageConfig streamStorageConfig = new StreamStorageConfig();
                         streamStorageConfig.id = storageID;
                         streamStorageConfig.name = sensorName + " Storage";
-                        streamStorageConfig.enabled = true;
+                        streamStorageConfig.autoStart = true;
                         streamStorageConfig.dataSourceID = sensorUID;
                         streamStorageConfig.storageConfig = (StorageConfig)config.newStorageConfig.clone();
                         streamStorageConfig.storageConfig.storagePath = sensorUID + ".dat";

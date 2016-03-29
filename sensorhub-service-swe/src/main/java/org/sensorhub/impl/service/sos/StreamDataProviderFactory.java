@@ -248,7 +248,7 @@ public class StreamDataProviderFactory<ProducerType extends IDataProducerModule<
         if (!config.enabled)
             throw new ServiceException("Offering " + config.uri + " is disabled");
                 
-        if (!producer.isEnabled())
+        if (!producer.isStarted())
             throw new ServiceException(producerType + " " + MsgUtils.moduleString(producer) + " is disabled");
     }
 
@@ -270,14 +270,14 @@ public class StreamDataProviderFactory<ProducerType extends IDataProducerModule<
     @Override
     public void cleanup()
     {
-        //SensorHub.getInstance().unregisterListener(this);
+        producer.unregisterListener(this);
     }
 
 
     @Override
     public boolean isEnabled()
     {
-        return (config.enabled && producer.isEnabled());
+        return (config.enabled && producer.isStarted());
     }
     
     

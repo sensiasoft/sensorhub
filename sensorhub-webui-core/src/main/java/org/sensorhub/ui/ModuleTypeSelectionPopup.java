@@ -100,7 +100,7 @@ public class ModuleTypeSelectionPopup extends Window
                         config.id = UUID.randomUUID().toString();
                         config.moduleClass = provider.getModuleClass().getCanonicalName();
                         config.name = "New " + name;
-                        config.enabled = false;
+                        config.autoStart = false;
                         
                         // send back new config object
                         callback.configSelected(moduleType, config); 

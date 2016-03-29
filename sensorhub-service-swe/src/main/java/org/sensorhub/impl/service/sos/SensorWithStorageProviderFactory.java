@@ -56,7 +56,7 @@ public class SensorWithStorageProviderFactory extends StreamWithStorageProviderF
         
         if (timeRange.isBaseAtNow() || timeRange.isBeginNow())
         {
-            if (!producer.isEnabled())
+            if (!producer.isStarted())
                 throw new ServiceException("Sensor " + MsgUtils.moduleString(producer) + " is disabled");
             
             return new SensorDataProvider(producer, sensorProviderConfig, filter);

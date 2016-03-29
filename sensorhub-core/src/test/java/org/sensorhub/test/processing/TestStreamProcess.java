@@ -75,7 +75,7 @@ public class TestStreamProcess implements IEventListener
     {
         // create test sensor
         SensorConfig sensorCfg = new SensorConfig();
-        sensorCfg.enabled = false;
+        sensorCfg.autoStart = false;
         sensorCfg.moduleClass = FakeSensor.class.getCanonicalName();
         sensorCfg.id = FAKE_SENSOR1_ID;
         sensorCfg.name = "Sensor1";
@@ -108,7 +108,7 @@ public class TestStreamProcess implements IEventListener
     protected IStreamProcessModule<?> createStreamProcess(Class<?> processClass, StreamingDataSourceConfig... dataSources) throws Exception
     {
         StreamProcessConfig processCfg = new StreamProcessConfig();
-        processCfg.enabled = false;
+        processCfg.autoStart = false;
         processCfg.name = "Process #1";
         processCfg.moduleClass = processClass.getCanonicalName();
         for (StreamingDataSourceConfig dataSrc: dataSources)
@@ -192,7 +192,7 @@ public class TestStreamProcess implements IEventListener
     protected IStreamProcessModule<?> createSMLProcess(String smlUrl, StreamingDataSourceConfig... dataSources) throws Exception
     {
         SMLStreamProcessConfig processCfg = new SMLStreamProcessConfig();
-        processCfg.enabled = false;
+        processCfg.autoStart = false;
         processCfg.name = "SensorML Process #1";
         processCfg.moduleClass = SMLStreamProcess.class.getCanonicalName();
         processCfg.sensorML = smlUrl;

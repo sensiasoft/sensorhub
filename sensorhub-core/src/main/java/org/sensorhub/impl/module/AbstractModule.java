@@ -36,6 +36,7 @@ public abstract class AbstractModule<ConfigType extends ModuleConfig> implements
 {
     protected IEventHandler eventHandler;
     protected ConfigType config;
+    protected volatile boolean started;
 
 
     public AbstractModule()
@@ -65,14 +66,14 @@ public abstract class AbstractModule<ConfigType extends ModuleConfig> implements
 
     
     @Override
-    public boolean isEnabled()
+    public boolean isStarted()
     {
-        return config.enabled;
+        return started;
     }
 
 
     @Override
-    public void init(ConfigType config) throws SensorHubException
+    public synchronized void init(ConfigType config) throws SensorHubException
     {
         this.config = config;
         this.eventHandler = EventBus.getInstance().registerProducer(config.id, EventBus.MAIN_TOPIC);
@@ -80,16 +81,18 @@ public abstract class AbstractModule<ConfigType extends ModuleConfig> implements
 
 
     @Override
-    public void updateConfig(ConfigType config) throws SensorHubException
+    public synchronized void updateConfig(ConfigType config) throws SensorHubException
     {
-        this.config = config;
+        boolean wasStarted = isStarted();
         
         // by default we restart the module when config was changed
-        if (config.enabled)
-        {
+        if (wasStarted)
             stop();
+        
+        this.config = config;
+        
+        if (wasStarted)
             start();
-        }
     }
 
 

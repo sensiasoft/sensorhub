@@ -46,7 +46,7 @@ public class DbImport
         // open storage
         String dbPath = args[1];
         BasicStorageConfig dbConf = new BasicStorageConfig();
-        dbConf.enabled = true;
+        dbConf.autoStart = true;
         dbConf.memoryCacheSize = 1024;
         dbConf.storagePath = dbPath;
         BasicStorageImpl db = new BasicStorageImpl();

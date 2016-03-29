@@ -52,7 +52,7 @@ public class TestGenericStreamStorage
         
         // create test sensor
         SensorConfig sensorCfg = new SensorConfig();
-        sensorCfg.enabled = false;
+        sensorCfg.autoStart = false;
         sensorCfg.moduleClass = FakeSensor.class.getCanonicalName();
         sensorCfg.name = "Sensor1";
         ISensorModule<?> sensor = (ISensorModule<?>)registry.loadModule(sensorCfg);
@@ -64,7 +64,7 @@ public class TestGenericStreamStorage
         StreamStorageConfig genericStorageConfig = new StreamStorageConfig();
         genericStorageConfig.moduleClass = GenericStreamStorage.class.getCanonicalName();
         genericStorageConfig.name = "SensorStorageTest";
-        genericStorageConfig.enabled = true;
+        genericStorageConfig.autoStart = true;
         genericStorageConfig.dataSourceID = sensor.getLocalID();
         StorageConfig storageConfig = new StorageConfig();
         storageConfig.moduleClass = InMemoryBasicStorage.class.getCanonicalName();

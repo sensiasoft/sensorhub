@@ -54,10 +54,10 @@ public interface IModule<ConfigType extends ModuleConfig> extends IEventProducer
     
     
     /**
-     * Checks if module is enabled
-     * @return true if module is enabled, false otherwise
+     * Checks if module is started
+     * @return true if module is started, false otherwise
      */
-    public boolean isEnabled();
+    public boolean isStarted();
     
     
     /**
@@ -84,10 +84,11 @@ public interface IModule<ConfigType extends ModuleConfig> extends IEventProducer
     /**
      * Starts the module with the current configuration.<br/>
      * init() should always be called before start().<br/>
-     * If module fails to start, the enabled flag should be set to false in the configuration
+     * Implementations of this method must guarantee that the module is
+     * correctly started or send an exception before returning.
      * @throws SensorHubException
      */
-    public void start(/*callback to notify that module is actually started*/) throws SensorHubException;
+    public void start() throws SensorHubException;
     
     
     /**

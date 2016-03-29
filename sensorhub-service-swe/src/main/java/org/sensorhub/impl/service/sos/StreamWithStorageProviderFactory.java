@@ -65,7 +65,7 @@ public class StreamWithStorageProviderFactory<ProducerType extends IDataProducer
     {
         SOSOfferingCapabilities capabilities;
         
-        if (storage.isEnabled())
+        if (storage.isStarted())
         {
             capabilities = super.generateCapabilities();         
         
@@ -79,7 +79,7 @@ public class StreamWithStorageProviderFactory<ProducerType extends IDataProducer
         }
         
         // enable real-time requests only if streaming data source is enabled
-        if (producer.isEnabled())
+        if (producer.isStarted())
         {
             TimeExtent timeExtent = caps.getPhenomenonTime();
             if (timeExtent.isNull())
@@ -101,11 +101,11 @@ public class StreamWithStorageProviderFactory<ProducerType extends IDataProducer
         if (caps == null)
             return;
         
-        if (storage.isEnabled())
+        if (storage.isStarted())
             super.updateCapabilities();
         
         // enable real-time requests if streaming data source is enabled
-        if (producer.isEnabled())
+        if (producer.isStarted())
         {
             long now =  System.currentTimeMillis();
             
@@ -163,7 +163,7 @@ public class StreamWithStorageProviderFactory<ProducerType extends IDataProducer
         if (!config.enabled)
             throw new ServiceException("Offering " + config.uri + " is disabled");
         
-        if (!storage.isEnabled() && !producer.isEnabled())
+        if (!storage.isStarted() && !producer.isStarted())
             throw new ServiceException("Storage " + MsgUtils.moduleString(storage) + " is disabled");
     }
     
@@ -171,6 +171,14 @@ public class StreamWithStorageProviderFactory<ProducerType extends IDataProducer
     @Override
     public boolean isEnabled()
     {
-        return config.enabled && (producer.isEnabled() || storage.isEnabled());
+        return config.enabled && (producer.isStarted() || storage.isStarted());
+    }
+    
+    
+    @Override
+    public void cleanup()
+    {
+        super.cleanup();
+        producer.unregisterListener(this);
     }
 }

@@ -81,6 +81,8 @@ public class SPSService extends OWSServlet implements IServiceModule<SPSServiceC
     ITaskDB taskDB;
     //SPSNotificationSystem notifSystem;
     
+    boolean started;
+    
     
     public SPSService()
     {
@@ -99,7 +101,13 @@ public class SPSService extends OWSServlet implements IServiceModule<SPSServiceC
     @Override
     public void updateConfig(SPSServiceConfig config) throws SensorHubException
     {
+        boolean wasStarted = isStarted();
+        
+        if (wasStarted)
+            stop();        
         this.config = config;
+        if (wasStarted)
+            start();
     }
     
     
@@ -185,6 +193,7 @@ public class SPSService extends OWSServlet implements IServiceModule<SPSServiceC
         
         // deploy servlet
         deploy();
+        started = true;
     }
     
     
@@ -203,7 +212,7 @@ public class SPSService extends OWSServlet implements IServiceModule<SPSServiceC
     protected void deploy()
     {
         HttpServer httpServer = HttpServer.getInstance();        
-        if (httpServer == null || !httpServer.isEnabled())
+        if (httpServer == null || !httpServer.isStarted())
             return;
         
         // deploy ourself to HTTP server
@@ -214,7 +223,7 @@ public class SPSService extends OWSServlet implements IServiceModule<SPSServiceC
     protected void undeploy()
     {
         HttpServer httpServer = HttpServer.getInstance();        
-        if (httpServer == null || !httpServer.isEnabled())
+        if (httpServer == null || !httpServer.isStarted())
             return;
         
         httpServer.undeployServlet(this);
@@ -239,7 +248,7 @@ public class SPSService extends OWSServlet implements IServiceModule<SPSServiceC
             {
                 try
                 {
-                    if (config.enabled)
+                    if (config.autoStart)
                         start();
                 }
                 catch (SensorHubException e1)
@@ -277,9 +286,9 @@ public class SPSService extends OWSServlet implements IServiceModule<SPSServiceC
     
     
     @Override
-    public boolean isEnabled()
+    public boolean isStarted()
     {
-        return config.enabled;
+        return started;
     }
     
 

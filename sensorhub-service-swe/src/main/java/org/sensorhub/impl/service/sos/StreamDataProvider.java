@@ -245,7 +245,7 @@ public abstract class StreamDataProvider implements ISOSDataProvider, IEventList
      */
     private boolean hasMoreData()
     {
-        if (!dataSource.isEnabled())
+        if (!dataSource.isStarted())
             return false;
         
         boolean interfaceActive = false;

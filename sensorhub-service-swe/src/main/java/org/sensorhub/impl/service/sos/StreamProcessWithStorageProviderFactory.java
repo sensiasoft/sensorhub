@@ -52,7 +52,7 @@ public class StreamProcessWithStorageProviderFactory extends StreamWithStoragePr
         
         if (timeRange.isBaseAtNow() || timeRange.isBeginNow())
         {
-            if (!producer.isEnabled())
+            if (!producer.isStarted())
                 throw new ServiceException("Process " + MsgUtils.moduleString(producer) + " is disabled");
             
             return new StreamProcessDataProvider(producer, streamProviderConfig, filter);

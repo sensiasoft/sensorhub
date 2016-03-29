@@ -116,7 +116,7 @@ public class NetworkAdminPanel extends DefaultModulePanel<ICommNetwork<?>> imple
         scanButton = new Button("Start Scan");
         scanButton.setIcon(REFRESH_ICON);
         scanButton.addStyleName("scan-button");
-        scanButton.setEnabled(module.isEnabled());
+        scanButton.setEnabled(module.isStarted());
         form.addComponent(scanButton);
         
         // device table

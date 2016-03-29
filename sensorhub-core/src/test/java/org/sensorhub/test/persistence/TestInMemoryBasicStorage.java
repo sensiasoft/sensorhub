@@ -27,7 +27,7 @@ public class TestInMemoryBasicStorage extends AbstractTestBasicStorage<InMemoryB
     {
         StorageConfig config = new StorageConfig();
         config.name = "In-Memory Storage";
-        config.enabled = true;        
+        config.autoStart = true;        
         
         storage = new InMemoryBasicStorage();
         storage.init(config);

@@ -23,6 +23,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.UUID;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import org.sensorhub.api.common.IEventHandler;
 import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.common.IEventProducer;
@@ -61,13 +65,15 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
     IModuleConfigRepository configRepos;
     Map<String, IModule<?>> loadedModules;
     IEventHandler eventHandler;
+    ExecutorService asyncExec;
     
     
     public ModuleRegistry(IModuleConfigRepository configRepos)
     {
         this.configRepos = configRepos;
-        this.loadedModules = new LinkedHashMap<String, IModule<?>>();        
+        this.loadedModules = new LinkedHashMap<String, IModule<?>>();
         this.eventHandler = new BasicEventHandler();
+        this.asyncExec = Executors.newFixedThreadPool(4);
     }
     
     
@@ -83,6 +89,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
             try
             {
                 loadModule(config);
+                //loadModuleAsync(config);
             }
             catch (Exception e)
             {
@@ -126,16 +133,15 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
             loadedModules.put(config.id, module);
                         
             // send event
-            eventHandler.publishEvent(new ModuleEvent(module, ModuleEvent.Type.LOADED));
+            IEventHandler mEventHandler = EventBus.getInstance().registerProducer(config.id);
+            ModuleEvent event = new ModuleEvent(module, ModuleEvent.Type.LOADED);
+            mEventHandler.publishEvent(event);
+            eventHandler.publishEvent(event);
             log.debug("Module " + MsgUtils.moduleString(module) +  " loaded");
             
-            // start it if enabled by default
-            if (config.enabled)
-            {
-                module.start();
-                eventHandler.publishEvent(new ModuleEvent(module, ModuleEvent.Type.STARTED));
-                log.debug("Module " + MsgUtils.moduleString(module) +  " started");
-            }
+            // start it if autoStart is set
+            if (config.autoStart)
+                startModule(module);
             
             return module;
         }
@@ -148,6 +154,28 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
         {
             throw new SensorHubException("Cannot load module " + config.name, e);
         }
+    }
+    
+    
+    /**
+     * Loads the module with the given id<br/>
+     * This method is asynchronous so it returns immediately
+     * @param config Config of module to start
+     * @return A Future whose result is available when the module is actually loaded
+     */
+    public Future<IModule<?>> loadModuleAsync(final ModuleConfig config)
+    {
+        Callable<IModule<?>> c = new Callable<IModule<?>>()
+        {
+            @Override
+            public IModule<?> call() throws Exception
+            {
+                IModule<?> m = loadModule(config);
+                return m;
+            }            
+        };
+        
+        return asyncExec.submit(c);
     }
     
     
@@ -218,36 +246,30 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
     
     
     /**
-     * Enables/Start the module with the given id
+     * Starts the module with the given local ID<br/>
+     * This method is synchronous so it will block until the module is actually started
+     * or an exception is thrown
      * @param moduleID Local ID of module to enable
-     * @return enabled module instance
+     * @return module instance corresponding to moduleID
      * @throws SensorHubException 
      */
-    @SuppressWarnings("rawtypes")
     public synchronized IModule<?> startModule(String moduleID) throws SensorHubException
     {
         try
         {
             checkID(moduleID);        
-            IModule module = loadedModules.get(moduleID);
+            IModule<?> module = loadedModules.get(moduleID);
             
-            // load module if not already loaded
+            // load module if needed
             if (module == null)
             {
                 ModuleConfig config = configRepos.get(moduleID);
-                config.enabled = true;
-                module = loadModule(config);
+                return loadModule(config);
             }
             
-            // otherwise just start it
-            else
-            {
-                module.start();      
-                module.getConfiguration().enabled = true;
-                ModuleEvent event = new ModuleEvent(module, ModuleEvent.Type.STARTED);
-                EventBus.getInstance().registerProducer(moduleID).publishEvent(event);
-                log.debug("Module " + MsgUtils.moduleString(module) +  " started");
-            }
+            //  start it if not already started
+            if (!module.isStarted())
+                startModule(module);
             
             return module;
         }
@@ -259,41 +281,134 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
     }
     
     
+    protected IModule<?> startModule(IModule<?> module) throws SensorHubException
+    {
+        // get instance of module event handler
+        String moduleID = module.getLocalID();
+        IEventHandler mEventHandler = EventBus.getInstance().registerProducer(moduleID);
+        
+        // send STARTING event
+        ModuleEvent event = new ModuleEvent(module, ModuleEvent.Type.STARTING);
+        mEventHandler.publishEvent(event);
+        eventHandler.publishEvent(event);
+        log.trace("Module " + MsgUtils.moduleString(module) +  " starting");
+                        
+        // call module start method
+        module.start();
+        if (module instanceof AbstractModule)
+            ((AbstractModule<?>) module).started = true;
+        
+        // send STARTED event
+        if (module.isStarted())
+        {
+            event = new ModuleEvent(module, ModuleEvent.Type.STARTED);
+            mEventHandler.publishEvent(event);
+            eventHandler.publishEvent(event);
+            log.debug("Module " + MsgUtils.moduleString(module) +  " started");
+        }
+            
+        return module;
+    }
+    
+    
     /**
-     * Disables the module with the given id
+     * Starts the module with the given id<br/>
+     * This method is asynchronous so it returns immediately
+     * @param moduleID Local ID of module to start
+     * @return A Future whose result is available when the module is actually started
+     */
+    public Future<IModule<?>> startModuleAsync(final String moduleID)
+    {
+        Callable<IModule<?>> c = new Callable<IModule<?>>()
+        {
+            @Override
+            public IModule<?> call() throws Exception
+            {
+                IModule<?> m = startModule(moduleID);
+                return m;
+            }            
+        };
+        
+        return asyncExec.submit(c);
+    }
+    
+    
+    /**
+     * Stops the module with the given local ID<br/>
+     * This method is synchronous so it will block until the module is actually stopped
+     * or an exception is thrown
      * @param moduleID Local ID of module to disable
+     * @return module instance corresponding to moduleID
      * @throws SensorHubException 
      */
-    public synchronized void stopModule(String moduleID) throws SensorHubException
+    public synchronized IModule<?> stopModule(String moduleID) throws SensorHubException
     {
         try
         {
             checkID(moduleID);
                     
-            // stop module if it was loaded
+            // stop module if it is loaded and started
             IModule<?> module = loadedModules.get(moduleID);
-            if (module != null)
+            if (module != null && module.isStarted())
             {
                 try
                 {
+                    // get instance of module event handler
+                    IEventHandler mEventHandler = EventBus.getInstance().registerProducer(moduleID);
+                    
+                    // send STOPPING event
+                    ModuleEvent event = new ModuleEvent(module, ModuleEvent.Type.STOPPING);
+                    mEventHandler.publishEvent(event);
+                    eventHandler.publishEvent(event);
+                    log.trace("Module " + MsgUtils.moduleString(module) +  " stopping");
+                    
+                    // call module stop method
                     module.stop();
-                    module.getConfiguration().enabled = false;
+                    if (module instanceof AbstractModule)
+                        ((AbstractModule<?>)module).started = false;
+                    
+                    // send STOPPED event
+                    event = new ModuleEvent(module, ModuleEvent.Type.STOPPED);
+                    mEventHandler.publishEvent(event);
+                    eventHandler.publishEvent(event);
+                    
+                    log.debug("Module " + MsgUtils.moduleString(module) + " stopped");
                 }
                 catch (Exception e)
                 {
                     throw new SensorHubException("Error while stopping module " + MsgUtils.moduleString(module), e);
-                }                
-
-                ModuleEvent event = new ModuleEvent(module, ModuleEvent.Type.STOPPED);
-                EventBus.getInstance().registerProducer(moduleID).publishEvent(event);
-                log.debug("Module " + MsgUtils.moduleString(module) + " stopped");
+                }
             }
+            
+            return module;
         }
         catch (SensorHubException e)
         {
             log.error("Error while stopping module " + moduleID, e);
             throw e;
         }
+    }
+    
+    
+    /**
+     * Stops the module with the given id<br/>
+     * This method is asynchronous so it returns immediately
+     * @param moduleID Local ID of module to stop
+     * @return A Future whose result is available when the module is actually stopped
+     */
+    public Future<IModule<?>> stopModuleAsync(final String moduleID)
+    {
+        Callable<IModule<?>> c = new Callable<IModule<?>>()
+        {
+            @Override
+            public IModule<?> call() throws Exception
+            {
+                IModule<?> m = stopModule(moduleID);
+                return m;
+            }            
+        };
+        
+        return asyncExec.submit(c);
     }
     
     

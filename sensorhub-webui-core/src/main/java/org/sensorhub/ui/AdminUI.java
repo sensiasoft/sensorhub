@@ -386,13 +386,13 @@ public class AdminUI extends com.vaadin.ui.UI
             @Override
             public Boolean convertToModel(String value, Class<? extends Boolean> targetType, Locale locale) throws com.vaadin.data.util.converter.Converter.ConversionException
             {
-                return (value != null && value.equals("enabled"));
+                return (value != null && value.equals("Started"));
             }
 
             @Override
             public String convertToPresentation(Boolean value, Class<? extends String> targetType, Locale locale) throws com.vaadin.data.util.converter.Converter.ConversionException
             {
-                return value ? "enabled" : "disabled";
+                return value ? "Started" : "Stopped";
             }
 
             @Override
@@ -445,7 +445,7 @@ public class AdminUI extends com.vaadin.ui.UI
                                 
                 if (target != null)
                 {                    
-                    boolean enabled = ((MyBeanItem<ModuleConfig>)table.getItem(target)).getBean().enabled;
+                    boolean enabled = ((MyBeanItem<ModuleConfig>)table.getItem(target)).getBean().autoStart;
                     if (enabled)
                     {
                         actions.add(STOP_MODULE_ACTION);
@@ -545,7 +545,7 @@ public class AdminUI extends com.vaadin.ui.UI
                                     }
                                     catch (SensorHubException ex)
                                     {
-                                        String msg = "The module could not be enabled";
+                                        String msg = "The module could not be started";
                                         Notification.show("Error", msg + '\n' + ex.getMessage(), Notification.Type.ERROR_MESSAGE);
                                     }
                                 }
@@ -570,7 +570,7 @@ public class AdminUI extends com.vaadin.ui.UI
                                     }
                                     catch (SensorHubException ex)
                                     {
-                                        String msg = "The module could not be disabled";
+                                        String msg = "The module could not be stopped";
                                         Notification.show("Error", msg + '\n' + ex.getMessage(), Notification.Type.ERROR_MESSAGE);
                                     }
                                 }

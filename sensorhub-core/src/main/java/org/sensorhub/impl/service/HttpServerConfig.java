@@ -55,7 +55,7 @@ public class HttpServerConfig extends ModuleConfig
         this.id = "HTTP_SERVER_0";
         this.name = "HTTP Server";
         this.moduleClass = HttpServer.class.getCanonicalName();
-        this.enabled = true;
+        this.autoStart = true;
     }
     
     
