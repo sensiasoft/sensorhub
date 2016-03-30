@@ -13,7 +13,9 @@
       <profile>
          <id>core</id>
          <activation>
-            <activeByDefault>true</activeByDefault>
+            <property>
+	       <name>!skipCore</name>
+	    </property>
          </activation>
          <modules>
             <module>lib-swe-common/swe-common-all</module>
