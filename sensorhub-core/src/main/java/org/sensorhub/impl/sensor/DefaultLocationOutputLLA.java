@@ -18,8 +18,8 @@ import net.opengis.swe.v20.DataBlock;
 import org.sensorhub.api.sensor.ISensorModule;
 import org.sensorhub.api.sensor.SensorDataEvent;
 import org.sensorhub.api.sensor.SensorException;
+import org.vast.swe.GeoPosHelper;
 import org.vast.swe.SWEConstants;
-import org.vast.swe.SWEHelper;
 
 
 /**
@@ -44,7 +44,7 @@ public class DefaultLocationOutputLLA<SensorType extends ISensorModule<?>> exten
     @Override
     protected void init() throws SensorException
     {
-        SWEHelper fac = new SWEHelper();
+        GeoPosHelper fac = new GeoPosHelper();
         outputStruct = fac.newLocationVectorLLA(SWEConstants.DEF_SENSOR_LOC);
         outputEncoding = fac.newTextEncoding();
     }

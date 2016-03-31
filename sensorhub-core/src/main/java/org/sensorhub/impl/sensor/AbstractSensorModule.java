@@ -47,6 +47,7 @@ import org.sensorhub.impl.module.AbstractModule;
 import org.sensorhub.utils.MsgUtils;
 import org.vast.sensorML.PhysicalSystemImpl;
 import org.vast.sensorML.SMLUtils;
+import org.vast.swe.GeoPosHelper;
 import org.vast.swe.SWEConstants;
 import org.vast.swe.SWEHelper;
 
@@ -324,7 +325,7 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
             }
             else
             {
-                SWEHelper fac = new SWEHelper();
+                GeoPosHelper fac = new GeoPosHelper();
                 Vector locVector = fac.newLocationVectorLLA(SWEConstants.DEF_SENSOR_LOC);
                 locVector.setLocalFrame(getLocalFrameID(sensorDesc));
                 sensorDesc.addPositionAsVector(locVector);
