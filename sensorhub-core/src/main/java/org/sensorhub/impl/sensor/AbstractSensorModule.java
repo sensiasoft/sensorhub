@@ -47,9 +47,9 @@ import org.sensorhub.impl.module.AbstractModule;
 import org.sensorhub.utils.MsgUtils;
 import org.vast.sensorML.PhysicalSystemImpl;
 import org.vast.sensorML.SMLUtils;
-import org.vast.swe.GeoPosHelper;
 import org.vast.swe.SWEConstants;
 import org.vast.swe.SWEHelper;
+import org.vast.swe.helper.GeoPosHelper;
 
 
 /**

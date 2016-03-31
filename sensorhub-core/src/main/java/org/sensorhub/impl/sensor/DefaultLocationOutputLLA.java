@@ -18,8 +18,8 @@ import net.opengis.swe.v20.DataBlock;
 import org.sensorhub.api.sensor.ISensorModule;
 import org.sensorhub.api.sensor.SensorDataEvent;
 import org.sensorhub.api.sensor.SensorException;
-import org.vast.swe.GeoPosHelper;
 import org.vast.swe.SWEConstants;
+import org.vast.swe.helper.GeoPosHelper;
 
 
 /**
