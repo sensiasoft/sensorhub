@@ -27,10 +27,7 @@ import org.sensorhub.api.config.DisplayInfo;
  * @since Feb 5, 2016
  */
 public abstract class IPConfig extends CommConfig
-{
-	
+{	
     @DisplayInfo(desc="IP or DNS name of remote host")
-    public String remoteHost; // IP or host name
-    
-
+    public String remoteHost;
 }

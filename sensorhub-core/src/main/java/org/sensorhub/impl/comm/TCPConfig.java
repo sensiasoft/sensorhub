@@ -14,6 +14,8 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.impl.comm;
 
+import org.sensorhub.api.config.DisplayInfo;
+
 
 /**
  * <p>
@@ -24,8 +26,15 @@ package org.sensorhub.impl.comm;
  * @since Nov 5, 2010
  */
 public class TCPConfig extends IPConfig
-{	
+{    
+    @DisplayInfo(desc="Port number to connect to on remote host")
     public int remotePort;
+    
+    @DisplayInfo(label="User Name", desc="Remote user name")
+    public String user;
+    
+    @DisplayInfo(label="Password", desc="Remote password")
+    public String password;
 		
 
 	public TCPConfig()

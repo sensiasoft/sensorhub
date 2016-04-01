@@ -14,25 +14,20 @@ Copyright (C) 2012-2016 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.impl.comm;
 
-import org.sensorhub.api.config.DisplayInfo;
-
 
 /**
  * <p>
- * Generic configuration class for IP video cameras
+ * Generic configuration class for HTTP connections
  * </p>
  *
- * @author Mike Botts <mike.botts@botts-inc.com>
+ * @author Alex Robin
  * @since March 2016
  */
-public class URLConfig
+public class HTTPConfig extends TCPConfig
 {    
-    @DisplayInfo(desc="Remote camera address (IP address or host name)")
-    public String remoteHost;
-    
-    @DisplayInfo(label="User Name", desc="Remote camera user name")
-    public String user;
-    
-    @DisplayInfo(label="Password", desc="Remote camera password")
-    public String password;    
+        
+    public HTTPConfig()
+    {
+        this.remotePort = 80;
+    }
  }
