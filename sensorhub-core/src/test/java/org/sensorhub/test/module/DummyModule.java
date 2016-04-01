@@ -18,11 +18,12 @@ import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.module.IModule;
 import org.sensorhub.api.module.IModuleStateManager;
 import org.sensorhub.api.module.ModuleConfig;
+import org.sensorhub.api.module.ModuleEvent.ModuleState;
 
 
 public class DummyModule implements IModule<ModuleConfig>
 {
-    ModuleConfig config;            
+    ModuleConfig config;
     public boolean isStarted() { return config.autoStart; }
     public void init(ModuleConfig config) { this.config = config; }
     public void updateConfig(ModuleConfig config) { }
@@ -36,4 +37,5 @@ public class DummyModule implements IModule<ModuleConfig>
     public void cleanup() {}
     public void registerListener(IEventListener listener) {}
     public void unregisterListener(IEventListener listener) {}
+    public ModuleState getCurrentState() { return ModuleState.STARTED; }
 }

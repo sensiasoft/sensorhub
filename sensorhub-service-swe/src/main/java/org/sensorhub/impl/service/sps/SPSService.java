@@ -33,6 +33,7 @@ import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.module.IModuleStateManager;
 import org.sensorhub.api.module.ModuleEvent;
+import org.sensorhub.api.module.ModuleEvent.ModuleState;
 import org.sensorhub.api.service.IServiceModule;
 import org.sensorhub.impl.common.EventBus;
 import org.sensorhub.impl.service.HttpServer;
@@ -81,7 +82,7 @@ public class SPSService extends OWSServlet implements IServiceModule<SPSServiceC
     ITaskDB taskDB;
     //SPSNotificationSystem notifSystem;
     
-    boolean started;
+    ModuleState state;
     
     
     public SPSService()
@@ -193,7 +194,7 @@ public class SPSService extends OWSServlet implements IServiceModule<SPSServiceC
         
         // deploy servlet
         deploy();
-        started = true;
+        state = ModuleState.STARTED;
     }
     
     
@@ -244,7 +245,7 @@ public class SPSService extends OWSServlet implements IServiceModule<SPSServiceC
         if (e instanceof ModuleEvent && e.getSource() == HttpServer.getInstance())
         {
             // start when HTTP server is enabled
-            if (((ModuleEvent) e).type == ModuleEvent.Type.STARTED)
+            if (((ModuleEvent) e).type == ModuleEvent.ModuleState.STARTED)
             {
                 try
                 {
@@ -258,7 +259,7 @@ public class SPSService extends OWSServlet implements IServiceModule<SPSServiceC
             }
             
             // stop when HTTP server is disabled
-            else if (((ModuleEvent) e).type == ModuleEvent.Type.STOPPED)
+            else if (((ModuleEvent) e).type == ModuleEvent.ModuleState.STOPPED)
                 stop();
         }
     }
@@ -288,7 +289,7 @@ public class SPSService extends OWSServlet implements IServiceModule<SPSServiceC
     @Override
     public boolean isStarted()
     {
-        return started;
+        return (state == ModuleState.STARTED);
     }
     
 
@@ -623,5 +624,12 @@ public class SPSService extends OWSServlet implements IServiceModule<SPSServiceC
     protected String getDefaultVersion()
     {
         return "2.0";
+    }
+
+
+    @Override
+    public ModuleState getCurrentState()
+    {
+        return state;
     }
 }

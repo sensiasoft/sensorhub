@@ -20,7 +20,10 @@ import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.module.IModule;
 import org.sensorhub.api.module.IModuleStateManager;
 import org.sensorhub.api.module.ModuleConfig;
+import org.sensorhub.api.module.ModuleEvent.ModuleState;
 import org.sensorhub.impl.common.EventBus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -34,13 +37,14 @@ import org.sensorhub.impl.common.EventBus;
  */
 public abstract class AbstractModule<ConfigType extends ModuleConfig> implements IModule<ConfigType>
 {
+    protected Logger logger;
     protected IEventHandler eventHandler;
     protected ConfigType config;
-    protected volatile boolean started;
+    protected ModuleState state;
 
 
     public AbstractModule()
-    {        
+    {
     }
     
     
@@ -68,7 +72,14 @@ public abstract class AbstractModule<ConfigType extends ModuleConfig> implements
     @Override
     public boolean isStarted()
     {
-        return started;
+        return (state == ModuleState.STARTED);
+    }
+    
+    
+    @Override
+    public ModuleState getCurrentState()
+    {
+        return state;
     }
 
 
@@ -122,5 +133,13 @@ public abstract class AbstractModule<ConfigType extends ModuleConfig> implements
     {
         eventHandler.unregisterListener(listener);
     }
-
+    
+    
+    protected Logger getLogger()
+    {
+        if (logger == null)
+            logger = LoggerFactory.getLogger(this.getClass() + ":" + getLocalID());
+        
+        return logger;
+    }
 }

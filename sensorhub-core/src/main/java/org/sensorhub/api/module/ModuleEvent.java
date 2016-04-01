@@ -15,7 +15,7 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 package org.sensorhub.api.module;
 
 import org.sensorhub.api.common.Event;
-import org.sensorhub.api.module.ModuleEvent.Type;
+import org.sensorhub.api.module.ModuleEvent.ModuleState;
 
 
 /**
@@ -26,9 +26,9 @@ import org.sensorhub.api.module.ModuleEvent.Type;
  * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @since Sep 5, 2013
  */
-public class ModuleEvent extends Event<Type>
+public class ModuleEvent extends Event<ModuleState>
 {
-    public enum Type 
+    public enum ModuleState 
     {
         /**
          * after module class is first instantiated and init() has been called
@@ -46,12 +46,12 @@ public class ModuleEvent extends Event<Type>
         DELETED,
         
         /**
-         * when init is called
+         * when asynchronous processing goes on during init
          */
         INITIALIZING,
         
         /**
-         * after module is successfully initialized
+         * after module was successfully initialized
          */
         INITIALIZED,
         
@@ -61,7 +61,7 @@ public class ModuleEvent extends Event<Type>
         STARTING,
         
         /**
-         * after module is successfully started
+         * after module was successfully started
          */
         STARTED,
         
@@ -71,7 +71,7 @@ public class ModuleEvent extends Event<Type>
         STOPPING,
         
         /**
-         * after module is stopped
+         * after module was stopped
          */
         STOPPED,
         
@@ -82,11 +82,11 @@ public class ModuleEvent extends Event<Type>
     }
     
     
-    public Type type;
+    public ModuleState type;
     public ModuleConfig newConfig;
     
     
-    public ModuleEvent(IModule<?> moduleInstance, Type type)
+    public ModuleEvent(IModule<?> moduleInstance, ModuleState type)
     {
         this.source = moduleInstance;
         this.type = type;
@@ -96,7 +96,7 @@ public class ModuleEvent extends Event<Type>
     public ModuleEvent(IModule<?> moduleInstance, ModuleConfig newConfig)
     {
         this.source = moduleInstance;
-        this.type = Type.CONFIG_CHANGED;
+        this.type = ModuleState.CONFIG_CHANGED;
         this.newConfig = newConfig;
     } 
 }

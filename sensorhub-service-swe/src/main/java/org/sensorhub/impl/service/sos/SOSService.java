@@ -71,6 +71,7 @@ import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.module.IModuleStateManager;
 import org.sensorhub.api.module.ModuleConfig;
 import org.sensorhub.api.module.ModuleEvent;
+import org.sensorhub.api.module.ModuleEvent.ModuleState;
 import org.sensorhub.api.persistence.FoiFilter;
 import org.sensorhub.api.persistence.IFoiFilter;
 import org.sensorhub.api.persistence.StorageConfig;
@@ -170,14 +171,14 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     Map<String, ISOSDataConsumer> dataConsumers;
     Map<String, ISOSCustomSerializer> customFormats = new HashMap<String, ISOSCustomSerializer>();
         
-    boolean started;
+    ModuleState state;
     boolean needCapabilitiesTimeUpdate = false;
 
     
     @Override
     public boolean isStarted()
     {
-        return started;
+        return (state == ModuleState.STARTED);
     }
     
     
@@ -417,7 +418,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
         
         // deploy servlet
         deploy();
-        started = true;
+        state = ModuleState.STARTED;
     }
     
     
@@ -470,7 +471,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
         if (e instanceof ModuleEvent && e.getSource() == HttpServer.getInstance())
         {
             // start when HTTP server is enabled
-            if (((ModuleEvent) e).type == ModuleEvent.Type.STARTED)
+            if (((ModuleEvent) e).type == ModuleEvent.ModuleState.STARTED)
             {
                 try
                 {
@@ -484,7 +485,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
             }
             
             // stop when HTTP server is disabled
-            else if (((ModuleEvent) e).type == ModuleEvent.Type.STOPPED)
+            else if (((ModuleEvent) e).type == ModuleEvent.ModuleState.STOPPED)
                 stop();
         }
     }
@@ -1803,5 +1804,12 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     protected String getDefaultVersion()
     {
         return DEFAULT_VERSION;
+    }
+
+
+    @Override
+    public ModuleState getCurrentState()
+    {
+        return state;
     }
 }

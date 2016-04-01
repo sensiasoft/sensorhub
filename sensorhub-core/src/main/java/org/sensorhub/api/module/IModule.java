@@ -17,6 +17,7 @@ package org.sensorhub.api.module;
 import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.common.IEventProducer;
 import org.sensorhub.api.common.SensorHubException;
+import org.sensorhub.api.module.ModuleEvent.ModuleState;
 
 
 /**
@@ -58,6 +59,12 @@ public interface IModule<ConfigType extends ModuleConfig> extends IEventProducer
      * @return true if module is started, false otherwise
      */
     public boolean isStarted();
+    
+    
+    /**
+     * @return the current state of the module
+     */
+    public ModuleState getCurrentState();
     
     
     /**
