@@ -40,6 +40,11 @@ public interface IModule<ConfigType extends ModuleConfig> extends IEventProducer
     public ConfigType getConfiguration();
     
     
+    // so that a module can change values allowed for a given configuration
+    // option dynamically depending on its own state
+    //public DataConstraint getConfigFieldConstraint(String fieldName);
+    
+    
     /**
      * Helper method to get the module's name
      * @return name string
@@ -69,8 +74,8 @@ public interface IModule<ConfigType extends ModuleConfig> extends IEventProducer
     
     /**
      * Initializes the module with the specified configuration.<br/>
-     * Implementations of this method must guarantee that the module is
-     * correctly initialized or send an exception before returning.
+     * Implementations of this method must block until the module is
+     * successfully initialized or send an exception.
      * @param config
      * @throws SensorHubException 
      */
@@ -91,8 +96,8 @@ public interface IModule<ConfigType extends ModuleConfig> extends IEventProducer
     /**
      * Starts the module with the current configuration.<br/>
      * init() should always be called before start().<br/>
-     * Implementations of this method must guarantee that the module is
-     * correctly started or send an exception before returning.
+     * Implementations of this method must block until the module is
+     * successfully started or send an exception.
      * @throws SensorHubException
      */
     public void start() throws SensorHubException;
@@ -102,6 +107,8 @@ public interface IModule<ConfigType extends ModuleConfig> extends IEventProducer
      * Stops the module.<br/>
      * All temporary resources created by the module should be cleaned
      * when this is called (ex: memory, files, connections, etc.)<br/>
+     * Implementations of this method must block until the module is
+     * successfully stopped or send an exception.<br/>
      * stop() can be called right after init() even if start() hasn't been called.
      * @throws SensorHubException
      */
@@ -109,7 +116,9 @@ public interface IModule<ConfigType extends ModuleConfig> extends IEventProducer
     
     
     /**
-     * Saves the state of this module to the provided output stream
+     * Saves the state of this module.<br/> 
+     * Implementations of this method must block until the module state is
+     * successfully saved or send an exception.
      * @param saver
      * @throws SensorHubException 
      */
@@ -117,7 +126,9 @@ public interface IModule<ConfigType extends ModuleConfig> extends IEventProducer
     
     
     /**
-     * Restores the state of this module from info provided by the input stream
+     * Restores the state of this module<br/>
+     * Implementations of this method must block until the module state is
+     * successfully loaded or send an exception.
      * @param loader
      * @throws SensorHubException 
      */

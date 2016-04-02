@@ -77,7 +77,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
         this.loadedModules = new LinkedHashMap<String, IModule<?>>();
         this.loadingModules = new HashMap<String, Future<IModule<?>>>();
         this.eventHandler = new BasicEventHandler();
-        this.asyncExec = Executors.newFixedThreadPool(4);
+        this.asyncExec = Executors.newCachedThreadPool();
     }
     
     
@@ -143,11 +143,11 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
             module.loadState(getStateManager(config.id));
                         
             // set INITIALIZED state
-            setModuleState(module, ModuleState.INITIALIZED);
+            ensureModuleState(module, ModuleState.INITIALIZED);
             log.debug("Module " + MsgUtils.moduleString(module) +  " initialized");
             
-            // start it if autoStart is set
-            if (config.autoStart)
+            // start if autoStart is set
+            if (module.getCurrentState() == ModuleState.INITIALIZED && config.autoStart)
                 startModule(module);
             
             return module;
@@ -297,14 +297,14 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
     protected IModule<?> startModule(IModule<?> module) throws SensorHubException
     {
         // set STARTING state
-        setModuleState(module, ModuleState.STARTING);
+        ensureModuleState(module, ModuleState.STARTING);
         log.trace("Module " + MsgUtils.moduleString(module) +  " starting");
                         
         // call module start method
         module.start();
         
         // set STARTED state
-        setModuleState(module, ModuleState.STARTED);
+        ensureModuleState(module, ModuleState.STARTED);
         log.debug("Module " + MsgUtils.moduleString(module) +  " started");
             
         return module;
@@ -354,14 +354,14 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
                 try
                 {
                     // set STOPPING state
-                    setModuleState(module, ModuleState.STOPPING);
+                    ensureModuleState(module, ModuleState.STOPPING);
                     log.trace("Module " + MsgUtils.moduleString(module) +  " stopping");
                     
                     // call module stop method
                     module.stop();
                     
                     // set STOPPED state
-                    setModuleState(module, ModuleState.STOPPED);                    
+                    ensureModuleState(module, ModuleState.STOPPED);                    
                     log.debug("Module " + MsgUtils.moduleString(module) + " stopped");
                 }
                 catch (Exception e)
@@ -402,7 +402,12 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
     }
     
     
-    protected void setModuleState(IModule<?> module, ModuleState newState)
+    /*
+     * This method is used to maintain backward compatibilty with existing modules
+     * that don't properly set their state themselves. It won't work for the few modules
+     * that implement IModule interface directly without inheriting from AbstractModule
+     */
+    protected void ensureModuleState(IModule<?> module, ModuleState newState)
     {
         if (module instanceof AbstractModule)
             ((AbstractModule<?>)module).setState(newState);
