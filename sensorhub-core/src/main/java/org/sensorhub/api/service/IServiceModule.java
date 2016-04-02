@@ -19,7 +19,7 @@ import org.sensorhub.api.module.IModule;
 
 /**
  * <p>
- * TODO: Common base to all service interfaces
+ * Common base to all service interfaces
  * </p>
  *
  * @author Alex Robin <alex.robin@sensiasoftware.com>

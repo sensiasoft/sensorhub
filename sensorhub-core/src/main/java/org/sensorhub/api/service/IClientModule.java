@@ -8,27 +8,31 @@ Software distributed under the License is distributed on an "AS IS" basis,
 WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
 for the specific language governing rights and limitations under the License.
  
-Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
+Copyright (C) 2012-2016 Sensia Software LLC. All Rights Reserved.
  
 ******************************* END LICENSE BLOCK ***************************/
 
 package org.sensorhub.api.service;
 
-import org.sensorhub.api.config.DisplayInfo;
-import org.sensorhub.api.module.ModuleConfig;
+import org.sensorhub.api.module.IModule;
 
 
 /**
  * <p>
- * Common configuration options for all clients connecting to remote services
+ * Common base for client modules connecting to remote services
  * </p>
  *
  * @author Alex Robin <alex.robin@sensiasoftware.com>
- * @since Aug 9, 2015
+ * @param <ConfigType> 
+ * @since Apr 1, 2016
  */
-public class ClientConfig extends ModuleConfig
+public interface IClientModule<ConfigType extends ClientConfig> extends IModule<ConfigType>
 {
-
-    @DisplayInfo(label="Connection Timeout", desc="When connection is not available or lost, client will try to reconnect until successful or timeout is reached")
-    public long connectTimeout;
+    
+    /**
+     * Returns the client connection status.<br/>
+     * @return true if client is actually connected and can communicate with
+     * the remote service
+     */
+    public boolean isConnected();
 }
