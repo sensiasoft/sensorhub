@@ -71,8 +71,8 @@ public interface ISensorModule<ConfigType extends SensorConfig> extends IDataPro
 
     /**
      * Returns the sensor connection status.<br/>
-     * This method must do whatever it can to really detect the presence of the sensor. Consequently,
-     * the method can take a long time to complete and must not be called repeatedly.
+     * This method must do whatever it can to really detect the presence of the sensor.
+     * Consequently, this method can block for long periods of time.
      * @return true if sensor is actually connected and can communicate with the driver
      */
     public boolean isConnected();

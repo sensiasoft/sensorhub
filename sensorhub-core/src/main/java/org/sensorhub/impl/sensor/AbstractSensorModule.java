@@ -415,4 +415,32 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
         saver.put(STATE_LAST_SML_UPDATE, this.lastUpdatedSensorDescription);
         saver.flush();
     }
+    
+    
+    /**
+     * Waits until sensor is connected
+     * @param retryPeriod retry period in milliseconds
+     * @param timeOut timeout period in milliseconds
+     * @return true if sensor was connected, false if timeout was reached
+     */
+    protected boolean waitForConnection(long retryPeriod, long timeOut) throws InterruptedException
+    {
+        long beginTime = System.currentTimeMillis();
+        long lastCheckTime = beginTime;
+        
+        while (!isConnected())
+        {
+            long now = System.currentTimeMillis();
+            if (now - beginTime > timeOut)
+                return false;
+            
+            long sleepPeriod = retryPeriod - (now - lastCheckTime);
+            if (sleepPeriod > 0)
+                Thread.sleep(sleepPeriod);
+            
+            lastCheckTime = System.currentTimeMillis();
+        }
+        
+        return true;        
+    }
 }
