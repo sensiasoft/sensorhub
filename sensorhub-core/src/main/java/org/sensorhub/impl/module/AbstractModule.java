@@ -20,6 +20,7 @@ import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.module.IModule;
 import org.sensorhub.api.module.IModuleStateManager;
 import org.sensorhub.api.module.ModuleConfig;
+import org.sensorhub.api.module.ModuleEvent;
 import org.sensorhub.api.module.ModuleEvent.ModuleState;
 import org.sensorhub.impl.common.EventBus;
 import org.slf4j.Logger;
@@ -80,6 +81,21 @@ public abstract class AbstractModule<ConfigType extends ModuleConfig> implements
     public ModuleState getCurrentState()
     {
         return state;
+    }
+    
+    
+    /**
+     * Sets the module state and sends the appropriate event if it has changed
+     * @param newState
+     */
+    protected void setState(ModuleState newState)
+    {
+        if (newState != state)
+        {
+            this.state = newState;
+            ModuleEvent event = new ModuleEvent(this, newState);
+            eventHandler.publishEvent(event);
+        }
     }
 
 

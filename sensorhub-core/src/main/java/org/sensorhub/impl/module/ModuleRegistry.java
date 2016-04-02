@@ -28,6 +28,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import org.sensorhub.api.common.Event;
 import org.sensorhub.api.common.IEventHandler;
 import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.common.IEventProducer;
@@ -41,7 +42,6 @@ import org.sensorhub.api.module.ModuleConfig;
 import org.sensorhub.api.module.ModuleEvent;
 import org.sensorhub.api.module.ModuleEvent.ModuleState;
 import org.sensorhub.impl.common.BasicEventHandler;
-import org.sensorhub.impl.common.EventBus;
 import org.sensorhub.utils.MsgUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,7 +60,7 @@ import org.slf4j.LoggerFactory;
  * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @since Sep 2, 2013
  */
-public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProducer
+public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProducer, IEventListener
 {
     private static final Logger log = LoggerFactory.getLogger(ModuleRegistry.class);    
     
@@ -405,14 +405,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
     protected void setModuleState(IModule<?> module, ModuleState newState)
     {
         if (module instanceof AbstractModule)
-            ((AbstractModule<?>)module).state = newState;
-        
-        String moduleID = module.getLocalID();
-        IEventHandler mEventHandler = EventBus.getInstance().registerProducer(moduleID);
-        
-        ModuleEvent event = new ModuleEvent(module, newState);
-        eventHandler.publishEvent(event);
-        mEventHandler.publishEvent(event);
+            ((AbstractModule<?>)module).setState(newState);
     }
     
     
@@ -642,6 +635,15 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
     public void unregisterListener(IEventListener listener)
     {
         eventHandler.unregisterListener(listener);        
+    }
+
+
+    @Override
+    public void handleEvent(Event<?> e)
+    {
+        // forward all lifecycle events from modules loaded by this registry
+        if (e instanceof ModuleEvent)
+            eventHandler.publishEvent(e);
     }
 
 }
