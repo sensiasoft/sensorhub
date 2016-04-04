@@ -43,7 +43,8 @@ public abstract class AbstractModule<ConfigType extends ModuleConfig> implements
     protected IEventHandler eventHandler;
     protected ConfigType config;
     protected ModuleState state = ModuleState.LOADED;
-
+    protected final Object stateLock = new Object();
+    
 
     public AbstractModule()
     {
@@ -91,11 +92,16 @@ public abstract class AbstractModule<ConfigType extends ModuleConfig> implements
      */
     protected void setState(ModuleState newState)
     {
-        if (newState != state)
+        synchronized (stateLock)
         {
-            this.state = newState;
-            ModuleEvent event = new ModuleEvent(this, Type.STATE_CHANGED);
-            eventHandler.publishEvent(event);
+            if (newState != state)
+            {
+                this.state = newState;
+                stateLock.notifyAll();
+                
+                ModuleEvent event = new ModuleEvent(this, Type.STATE_CHANGED);                
+                eventHandler.publishEvent(event);
+            }
         }
     }
 
@@ -155,7 +161,7 @@ public abstract class AbstractModule<ConfigType extends ModuleConfig> implements
     protected Logger getLogger()
     {
         if (logger == null)
-            logger = LoggerFactory.getLogger(this.getClass() + ":" + getLocalID());
+            logger = LoggerFactory.getLogger(this.getClass().getCanonicalName() + ":" + getLocalID().substring(0, 4));
         
         return logger;
     }

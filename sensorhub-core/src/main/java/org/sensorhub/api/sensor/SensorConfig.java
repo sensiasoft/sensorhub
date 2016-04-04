@@ -34,16 +34,20 @@ public class SensorConfig extends ModuleConfig
     public String sensorML;
     
     
-    @DisplayInfo(desc="Check to automatically activate sensor when plugged in")
-    public boolean autoActivate = true;
-    
-    
     @DisplayInfo(desc="Enables/disables maintenance of SensorML history")    
     public boolean enableHistory = true;
     
     
+    @DisplayInfo(label="Auto-Detect Timeout", desc="Maximum time to wait for sensor to be connected (or re-connected)")
+    public int connectTimeout = 0;
+    
+    
     @DisplayInfo(desc="List of hidden sensor interfaces")    
     public String[] hiddenIO;
+    
+    
+    @DisplayInfo(desc="Static sensor position")    
+    public PositionConfig position = new PositionConfig();
     
     
     /**

@@ -18,7 +18,6 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,6 +40,7 @@ import org.sensorhub.api.module.IModuleStateManager;
 import org.sensorhub.api.module.ModuleConfig;
 import org.sensorhub.api.module.ModuleEvent;
 import org.sensorhub.api.module.ModuleEvent.ModuleState;
+import org.sensorhub.api.module.ModuleEvent.Type;
 import org.sensorhub.impl.common.BasicEventHandler;
 import org.sensorhub.utils.MsgUtils;
 import org.slf4j.Logger;
@@ -66,7 +66,6 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
     
     IModuleConfigRepository configRepos;
     Map<String, IModule<?>> loadedModules;
-    Map<String, Future<IModule<?>>> loadingModules;
     IEventHandler eventHandler;
     ExecutorService asyncExec;
     
@@ -74,8 +73,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
     public ModuleRegistry(IModuleConfigRepository configRepos)
     {
         this.configRepos = configRepos;
-        this.loadedModules = new LinkedHashMap<String, IModule<?>>();
-        this.loadingModules = new HashMap<String, Future<IModule<?>>>();
+        this.loadedModules = Collections.synchronizedMap(new LinkedHashMap<String, IModule<?>>());
         this.eventHandler = new BasicEventHandler();
         this.asyncExec = Executors.newCachedThreadPool();
     }
@@ -97,7 +95,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
             }
             catch (Exception e)
             {
-                log.error(e.getLocalizedMessage(), e);
+                log.error("Cannot load module", e);
             }
         }
     }
@@ -115,6 +113,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
         if (config.id != null && loadedModules.containsKey(config.id))
             return loadedModules.get(config.id);
         
+        IModule module = null;
         try
         {
             // first load needed modules if necessary
@@ -127,39 +126,44 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
                 config.id = UUID.randomUUID().toString();
                         
             // instantiate module class
-            IModule module = (IModule)loadClass(config.moduleClass);
+            module = (IModule)loadClass(config.moduleClass);
             
             // set LOADED state
-            eventHandler.publishEvent(new ModuleEvent(module, ModuleState.LOADED));
+            ensureModuleState(module, ModuleState.LOADED);
             log.debug("Module '" + config.name + "' [" + config.id + "] loaded");
             
             // keep track of what modules are loaded
             loadedModules.put(config.id, module);
+        }
+        catch (Exception e)
+        {
+            throw new SensorHubException("Error while loading module " + config.name, e);
+        }
             
-            // call init routine
-            module.init(config);
-                        
-            // load saved module state
-            module.loadState(getStateManager(config.id));
-                        
-            // set INITIALIZED state
-            ensureModuleState(module, ModuleState.INITIALIZED);
-            log.debug("Module " + MsgUtils.moduleString(module) +  " initialized");
-            
-            // start if autoStart is set
-            if (module.getCurrentState() == ModuleState.INITIALIZED && config.autoStart)
-                startModule(module);
+        try
+        {
+            synchronized (module)
+            {
+                // call init routine
+                module.init(config);
+                
+                // load saved module state
+                module.loadState(getStateManager(config.id));
+                
+                // set INITIALIZED state
+                ensureModuleState(module, ModuleState.INITIALIZED);
+                log.debug("Module " + MsgUtils.moduleString(module) + " initialized");
+                
+                // start if autoStart is set
+                if (module.getCurrentState() == ModuleState.INITIALIZED && config.autoStart)
+                    startModule(module);
+            }
             
             return module;
         }
         catch (SensorHubException e)
         {
-            log.error("Error while initializing module " + config.name, e);
-            throw e;
-        }
-        catch (Exception e)
-        {
-            throw new SensorHubException("Cannot load module " + config.name, e);
+            throw new SensorHubException("Error while initializing module " + MsgUtils.moduleString(module), e);
         }
     }
     
@@ -221,11 +225,11 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
      * @param moduleID
      * @throws SensorHubException
      */
-    public synchronized void unloadModule(String moduleID) throws SensorHubException
+    public void unloadModule(String moduleID) throws SensorHubException
     {
         stopModule(moduleID);        
         IModule<?> module = loadedModules.remove(moduleID);
-        eventHandler.publishEvent(new ModuleEvent(module, ModuleState.UNLOADED));        
+        eventHandler.publishEvent(new ModuleEvent(module, Type.UNLOADED));        
         log.debug("Module " + MsgUtils.moduleString(module) +  " unloaded");
     }
     
@@ -268,28 +272,30 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
      */
     public IModule<?> startModule(String moduleID) throws SensorHubException
     {
+        checkID(moduleID);        
+        IModule<?> module = loadedModules.get(moduleID);
+        
         try
         {
-            checkID(moduleID);        
-            IModule<?> module = loadedModules.get(moduleID);
-            
-            // load module if needed
-            if (module == null)
+            synchronized (module)
             {
-                ModuleConfig config = configRepos.get(moduleID);
-                return loadModule(config);
+                // load module if needed
+                if (module == null)
+                {
+                    ModuleConfig config = configRepos.get(moduleID);
+                    return loadModule(config);
+                }
+                
+                //  start it if not already started
+                if (!module.isStarted())
+                    startModule(module);
             }
-            
-            //  start it if not already started
-            if (!module.isStarted())
-                startModule(module);
             
             return module;
         }
         catch (SensorHubException e)
         {
-            log.error("Error while starting module " + moduleID, e);
-            throw e;
+            throw new SensorHubException("Error while starting module " + MsgUtils.moduleString(module), e);
         }
     }
     
@@ -306,7 +312,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
         // set STARTED state
         ensureModuleState(module, ModuleState.STARTED);
         log.debug("Module " + MsgUtils.moduleString(module) +  " started");
-            
+        
         return module;
     }
     
@@ -343,40 +349,35 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
      */
     public IModule<?> stopModule(String moduleID) throws SensorHubException
     {
+        checkID(moduleID);
+        IModule<?> module = loadedModules.get(moduleID);
+        
+        // stop module if it is loaded and started
         try
         {
-            checkID(moduleID);
-                    
-            // stop module if it is loaded and started
-            IModule<?> module = loadedModules.get(moduleID);
-            if (module != null && module.isStarted())
+            synchronized (module)
             {
-                try
-                {
+                if (module != null && module.isStarted())
+                {                        
                     // set STOPPING state
                     ensureModuleState(module, ModuleState.STOPPING);
-                    log.trace("Module " + MsgUtils.moduleString(module) +  " stopping");
-                    
+                    log.trace("Module " + MsgUtils.moduleString(module) + " stopping");
+
                     // call module stop method
                     module.stop();
-                    
+
                     // set STOPPED state
-                    ensureModuleState(module, ModuleState.STOPPED);                    
-                    log.debug("Module " + MsgUtils.moduleString(module) + " stopped");
-                }
-                catch (Exception e)
-                {
-                    throw new SensorHubException("Error while stopping module " + MsgUtils.moduleString(module), e);
+                    ensureModuleState(module, ModuleState.STOPPED);
+                    log.debug("Module " + MsgUtils.moduleString(module) + " stopped");                        
                 }
             }
-            
-            return module;
         }
-        catch (SensorHubException e)
+        catch (Exception e)
         {
-            log.error("Error while stopping module " + moduleID, e);
-            throw e;
+            throw new SensorHubException("Error while stopping module " + MsgUtils.moduleString(module), e);
         }
+        
+        return module;
     }
     
     
@@ -419,7 +420,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
      * @param moduleID Local ID of module to delete
      * @throws SensorHubException 
      */
-    public synchronized void destroyModule(String moduleID) throws SensorHubException
+    public void destroyModule(String moduleID) throws SensorHubException
     {
         checkID(moduleID);
         
@@ -435,7 +436,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
         if (configRepos.contains(moduleID))
             configRepos.remove(moduleID);
         
-        eventHandler.publishEvent(new ModuleEvent(module, ModuleEvent.ModuleState.DELETED));
+        eventHandler.publishEvent(new ModuleEvent(module, Type.DELETED));
         log.debug("Module " + MsgUtils.moduleString(module) +  " removed");
     }
     
@@ -443,7 +444,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
     /**
      * Save all modules current configuration to the repository
      */
-    public synchronized void saveModulesConfiguration()
+    public void saveModulesConfiguration()
     {
         int numModules = loadedModules.size();
         ModuleConfig[] configList = new ModuleConfig[numModules];
@@ -470,10 +471,6 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
     }
     
     
-    /*
-     * (non-Javadoc)
-     * @see org.sensorhub.api.module.IModuleManager#getLoadedModules()
-     */
     @Override
     public synchronized Collection<IModule<?>> getLoadedModules()
     {
@@ -481,10 +478,6 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
     }
     
     
-    /*
-     * (non-Javadoc)
-     * @see org.sensorhub.api.module.IModuleManager#getModuleById(java.lang.String)
-     */
     @Override
     public IModule<?> getModuleById(String moduleID) throws SensorHubException
     {
@@ -508,10 +501,36 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
     }
     
     
-    /*
-     * (non-Javadoc)
-     * @see org.sensorhub.api.module.IModuleManager#getAvailableModules()
+    /**
+     * Wait until the module reaches the specified state
+     * @param moduleID ID of module of interest
+     * @param state desired module state
+     * @param timeout maximum time to wait in milliseconds
+     * @return A weak reference to the module instance
+     * @throws SensorHubException
      */
+    public WeakReference<? extends IModule<?>> waitForModuleState(String moduleID, ModuleState state, long timeout) throws SensorHubException
+    {
+        IModule<?> module = getModuleById(moduleID);
+        
+        synchronized (module)
+        {
+            try
+            {
+                while (module.getCurrentState() != state)
+                {
+                    module.wait(timeout);
+                }
+            }
+            catch (InterruptedException e)
+            {
+            }
+        }
+        
+        return new WeakReference<IModule<?>>(module);
+    }
+    
+    
     @Override
     public synchronized Collection<ModuleConfig> getAvailableModules()
     {
@@ -615,11 +634,11 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
     /*
      * Checks if module id exists in registry
      */
-    private void checkID(String moduleID)
+    private void checkID(String moduleID) throws SensorHubException
     {
         // moduleID can exist either in live table, in config repository or both
         if (!loadedModules.containsKey(moduleID) && !configRepos.contains(moduleID))
-            throw new RuntimeException("Module with ID " + moduleID + " is not available");
+            throw new SensorHubException("Module with ID " + moduleID + " is not available");
     }
     
     
