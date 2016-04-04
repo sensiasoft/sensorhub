@@ -22,6 +22,7 @@ import org.sensorhub.api.module.IModuleStateManager;
 import org.sensorhub.api.module.ModuleConfig;
 import org.sensorhub.api.module.ModuleEvent;
 import org.sensorhub.api.module.ModuleEvent.ModuleState;
+import org.sensorhub.api.module.ModuleEvent.Type;
 import org.sensorhub.impl.common.EventBus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,7 +42,7 @@ public abstract class AbstractModule<ConfigType extends ModuleConfig> implements
     protected Logger logger;
     protected IEventHandler eventHandler;
     protected ConfigType config;
-    protected ModuleState state;
+    protected ModuleState state = ModuleState.LOADED;
 
 
     public AbstractModule()
@@ -93,7 +94,7 @@ public abstract class AbstractModule<ConfigType extends ModuleConfig> implements
         if (newState != state)
         {
             this.state = newState;
-            ModuleEvent event = new ModuleEvent(this, newState);
+            ModuleEvent event = new ModuleEvent(this, Type.STATE_CHANGED);
             eventHandler.publishEvent(event);
         }
     }

@@ -15,7 +15,7 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 package org.sensorhub.api.module;
 
 import org.sensorhub.api.common.Event;
-import org.sensorhub.api.module.ModuleEvent.ModuleState;
+import org.sensorhub.api.module.ModuleEvent.Type;
 
 
 /**
@@ -26,24 +26,38 @@ import org.sensorhub.api.module.ModuleEvent.ModuleState;
  * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @since Sep 5, 2013
  */
-public class ModuleEvent extends Event<ModuleState>
+public class ModuleEvent extends Event<Type>
 {
-    public enum ModuleState 
+    public enum Type
     {
         /**
-         * after module class is first instantiated and init() has been called
+         * after the module state has changed
          */
-        LOADED,
+        STATE_CHANGED,
         
         /**
-         * after module is stopped and unloaded from registry
+         * after the module configuration has been changed and accepted through updateConfig()
+         */
+        CONFIG_CHANGED,
+        
+        /**
+         * after module is unloaded from registry
          */
         UNLOADED,
         
         /**
          * after module is fully deleted (along with its configuration) 
          */
-        DELETED,
+        DELETED
+    }
+    
+    
+    public enum ModuleState 
+    {
+        /**
+         * after module class is first instantiated and init() has been called
+         */
+        LOADED,
         
         /**
          * when asynchronous processing goes on during init
@@ -73,30 +87,25 @@ public class ModuleEvent extends Event<ModuleState>
         /**
          * after module was stopped
          */
-        STOPPED,
-        
-        /**
-         * after the module configuration has been changed and accepted through updateConfig()
-         */
-        CONFIG_CHANGED
+        STOPPED
     }
     
     
-    public ModuleState type;
-    public ModuleConfig newConfig;
+    public Type type;
+    public ModuleState newState;
     
     
-    public ModuleEvent(IModule<?> moduleInstance, ModuleState type)
+    public ModuleEvent(IModule<?> module, Type type)
     {
-        this.source = moduleInstance;
+        this.source = module;
         this.type = type;
+        if (type == Type.STATE_CHANGED)
+            this.newState = module.getCurrentState();
     }
     
     
-    public ModuleEvent(IModule<?> moduleInstance, ModuleConfig newConfig)
+    public IModule<?> getModule()
     {
-        this.source = moduleInstance;
-        this.type = ModuleState.CONFIG_CHANGED;
-        this.newConfig = newConfig;
-    } 
+        return (IModule<?>)source;
+    }
 }

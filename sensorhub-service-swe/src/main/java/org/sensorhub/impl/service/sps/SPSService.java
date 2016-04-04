@@ -34,6 +34,7 @@ import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.module.IModuleStateManager;
 import org.sensorhub.api.module.ModuleEvent;
 import org.sensorhub.api.module.ModuleEvent.ModuleState;
+import org.sensorhub.api.module.ModuleEvent.Type;
 import org.sensorhub.api.service.IServiceModule;
 import org.sensorhub.impl.common.EventBus;
 import org.sensorhub.impl.service.HttpServer;
@@ -179,6 +180,8 @@ public class SPSService extends OWSServlet implements IServiceModule<SPSServiceC
     @Override
     public void start() throws SensorHubException
     {
+        setState(ModuleState.STARTING);
+        
         this.connectors = new LinkedHashMap<String, ISPSConnector>();
         this.procedureToOfferingMap = new HashMap<String, SPSOfferingCapabilities>();
         this.taskDB = new InMemoryTaskDB();
@@ -194,19 +197,24 @@ public class SPSService extends OWSServlet implements IServiceModule<SPSServiceC
         
         // deploy servlet
         deploy();
-        state = ModuleState.STARTED;
+        
+        setState(ModuleState.STARTED);        
     }
     
     
     @Override
     public void stop()
     {
+        setState(ModuleState.STOPPING);
+        
         // undeploy servlet
         undeploy();
         
         // clean all connectors
         for (ISPSConnector connector: connectors.values())
             connector.cleanup();
+        
+        setState(ModuleState.STOPPED);        
     }
     
     
@@ -245,7 +253,7 @@ public class SPSService extends OWSServlet implements IServiceModule<SPSServiceC
         if (e instanceof ModuleEvent && e.getSource() == HttpServer.getInstance())
         {
             // start when HTTP server is enabled
-            if (((ModuleEvent) e).type == ModuleEvent.ModuleState.STARTED)
+            if (((ModuleEvent) e).newState == ModuleState.STARTED)
             {
                 try
                 {
@@ -259,7 +267,7 @@ public class SPSService extends OWSServlet implements IServiceModule<SPSServiceC
             }
             
             // stop when HTTP server is disabled
-            else if (((ModuleEvent) e).type == ModuleEvent.ModuleState.STOPPED)
+            else if (((ModuleEvent) e).newState == ModuleState.STOPPED)
                 stop();
         }
     }
@@ -631,5 +639,16 @@ public class SPSService extends OWSServlet implements IServiceModule<SPSServiceC
     public ModuleState getCurrentState()
     {
         return state;
+    }
+    
+    
+    protected void setState(ModuleState newState)
+    {
+        if (newState != state)
+        {
+            this.state = newState;
+            ModuleEvent event = new ModuleEvent(this, Type.STATE_CHANGED);
+            eventHandler.publishEvent(event);
+        }
     }
 }

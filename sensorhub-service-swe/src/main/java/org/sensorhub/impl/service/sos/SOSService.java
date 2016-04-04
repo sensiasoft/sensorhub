@@ -66,18 +66,21 @@ import net.opengis.swe.v20.XMLEncoding;
 import org.eclipse.jetty.websocket.server.WebSocketServerFactory;
 import org.eclipse.jetty.websocket.servlet.WebSocketServletFactory;
 import org.sensorhub.api.common.Event;
+import org.sensorhub.api.common.IEventHandler;
 import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.module.IModuleStateManager;
 import org.sensorhub.api.module.ModuleConfig;
 import org.sensorhub.api.module.ModuleEvent;
 import org.sensorhub.api.module.ModuleEvent.ModuleState;
+import org.sensorhub.api.module.ModuleEvent.Type;
 import org.sensorhub.api.persistence.FoiFilter;
 import org.sensorhub.api.persistence.IFoiFilter;
 import org.sensorhub.api.persistence.StorageConfig;
 import org.sensorhub.api.service.IServiceModule;
 import org.sensorhub.api.service.ServiceException;
 import org.sensorhub.impl.SensorHub;
+import org.sensorhub.impl.common.EventBus;
 import org.sensorhub.impl.module.ModuleRegistry;
 import org.sensorhub.impl.persistence.StreamStorageConfig;
 import org.sensorhub.impl.sensor.sost.SOSVirtualSensorConfig;
@@ -171,7 +174,8 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     Map<String, ISOSDataConsumer> dataConsumers;
     Map<String, ISOSCustomSerializer> customFormats = new HashMap<String, ISOSCustomSerializer>();
         
-    ModuleState state;
+    IEventHandler eventHandler;
+    ModuleState state = ModuleState.LOADED;
     boolean needCapabilitiesTimeUpdate = false;
 
     
@@ -186,6 +190,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     public void init(SOSServiceConfig config) throws SensorHubException
     {        
         this.config = config;
+        this.eventHandler = EventBus.getInstance().registerProducer(config.id, EventBus.MAIN_TOPIC);
     }
     
     
@@ -401,6 +406,8 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     @Override
     public void start() throws SensorHubException
     {
+        setState(ModuleState.STARTING);
+        
         this.dataConsumers = new LinkedHashMap<String, ISOSDataConsumer>();
         this.procedureToOfferingMap = new HashMap<String, String>();
         this.templateToOfferingMap = new HashMap<String, String>();
@@ -418,19 +425,23 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
         
         // deploy servlet
         deploy();
-        state = ModuleState.STARTED;
+        setState(ModuleState.STARTED);
     }
     
     
     @Override
     public void stop()
     {
+        setState(ModuleState.STOPPING);
+        
         // undeploy servlet
         undeploy();
         
         // clean all providers
         for (ISOSDataProviderFactory provider: dataProviders.values())
             ((ISOSDataProviderFactory)provider).cleanup();
+        
+        setState(ModuleState.STARTED);
     }
    
     
@@ -471,7 +482,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
         if (e instanceof ModuleEvent && e.getSource() == HttpServer.getInstance())
         {
             // start when HTTP server is enabled
-            if (((ModuleEvent) e).type == ModuleEvent.ModuleState.STARTED)
+            if (((ModuleEvent) e).newState == ModuleState.STARTED)
             {
                 try
                 {
@@ -485,7 +496,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
             }
             
             // stop when HTTP server is disabled
-            else if (((ModuleEvent) e).type == ModuleEvent.ModuleState.STOPPED)
+            else if (((ModuleEvent) e).newState == ModuleState.STOPPED)
                 stop();
         }
     }
@@ -1811,5 +1822,16 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     public ModuleState getCurrentState()
     {
         return state;
+    }
+    
+    
+    protected void setState(ModuleState newState)
+    {
+        if (newState != state)
+        {
+            this.state = newState;
+            ModuleEvent event = new ModuleEvent(this, Type.STATE_CHANGED);
+            eventHandler.publishEvent(event);
+        }
     }
 }
