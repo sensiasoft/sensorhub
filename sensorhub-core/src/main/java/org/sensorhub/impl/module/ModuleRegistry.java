@@ -95,7 +95,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
             }
             catch (Exception e)
             {
-                log.error("Cannot load module", e);
+                // continue loading other modules
             }
         }
     }
@@ -137,7 +137,9 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
         }
         catch (Exception e)
         {
-            throw new SensorHubException("Error while loading module " + config.name, e);
+            String msg = "Error while loading module " + config.name + "' [" + config.id + "]";
+            log.error(msg, e);
+            throw new SensorHubException(msg, e);
         }
             
         try
@@ -155,7 +157,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
                 log.debug("Module " + MsgUtils.moduleString(module) + " initialized");
                 
                 // start if autoStart is set
-                if (module.getCurrentState() == ModuleState.INITIALIZED && config.autoStart)
+                if (config.autoStart)
                     startModule(module);
             }
             
@@ -163,7 +165,9 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
         }
         catch (SensorHubException e)
         {
-            throw new SensorHubException("Error while initializing module " + MsgUtils.moduleString(module), e);
+            String msg = "Error while initializing module " + MsgUtils.moduleString(module);
+            log.error(msg, e);
+            throw new SensorHubException(msg, e);
         }
     }
     
@@ -295,7 +299,9 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
         }
         catch (SensorHubException e)
         {
-            throw new SensorHubException("Error while starting module " + MsgUtils.moduleString(module), e);
+            String msg = "Error while starting module " + MsgUtils.moduleString(module);
+            log.error(msg, e);
+            throw new SensorHubException(msg, e);
         }
     }
     
@@ -374,7 +380,9 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
         }
         catch (Exception e)
         {
-            throw new SensorHubException("Error while stopping module " + MsgUtils.moduleString(module), e);
+            String msg = "Error while stopping module " + MsgUtils.moduleString(module);
+            log.error(msg, e);
+            throw new SensorHubException(msg, e);
         }
         
         return module;
