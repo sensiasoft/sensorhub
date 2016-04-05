@@ -97,6 +97,7 @@ public class SPSService extends OWSServlet implements IServiceModule<SPSServiceC
     {
         this.config = config;
         this.eventHandler = EventBus.getInstance().registerProducer(config.id);
+        setState(ModuleState.INITIALIZED);
     }
 
 

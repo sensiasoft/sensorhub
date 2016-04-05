@@ -190,7 +190,8 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     public void init(SOSServiceConfig config) throws SensorHubException
     {        
         this.config = config;
-        this.eventHandler = EventBus.getInstance().registerProducer(config.id, EventBus.MAIN_TOPIC);
+        this.eventHandler = EventBus.getInstance().registerProducer(config.id);
+        setState(ModuleState.INITIALIZED);
     }
     
     
