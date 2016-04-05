@@ -99,7 +99,7 @@ public abstract class AbstractModule<ConfigType extends ModuleConfig> implements
                 this.state = newState;
                 stateLock.notifyAll();
                 
-                if (eventHandler == null)
+                if (eventHandler != null)
                 {
                     ModuleEvent event = new ModuleEvent(this, Type.STATE_CHANGED);                
                     eventHandler.publishEvent(event);
