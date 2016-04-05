@@ -51,7 +51,7 @@ public class SMLStreamProcess extends AbstractStreamProcess<SMLStreamProcessConf
     @Override
     public void init(SMLStreamProcessConfig config) throws SensorHubException
     {
-        this.config = config;
+        super.init(config);
         
         // only go further if sensorML file was provided
         // otherwise we'll do it at the next update

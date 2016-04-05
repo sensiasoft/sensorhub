@@ -70,7 +70,6 @@ public class TestModuleRegistry
         config2.name = "sensor1";
         config2.moduleClass = "org.sensorhub.sensor.SensorDriver";
         config2.autoStart = true;
-        config2.autoActivate = true;
         config2.hiddenIO = new String[] {"input1", "input3"};
         
         SensorConfig clone2 = (SensorConfig)config2.clone();
