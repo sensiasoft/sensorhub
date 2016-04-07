@@ -161,7 +161,7 @@ public abstract class AbstractModule<ConfigType extends ModuleConfig> implements
     }
     
     
-    protected Logger getLogger()
+    public Logger getLogger()
     {
         if (logger == null)
             logger = LoggerFactory.getLogger(this.getClass().getCanonicalName() + ":" + getLocalID().substring(0, 4));
