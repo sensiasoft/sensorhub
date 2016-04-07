@@ -24,12 +24,12 @@ You can also go to this [Demo Page](http://sensiasoft.net:8181/demo.html) to see
 
 ## Building
 
-SensorHub can be built using Maven either from the command line or within Eclipse. Please see the [Developer's Guide](http://docs.opensensorhub.org/dev-guide/) for detailed instructions.
+SensorHub can be built using Maven either from the command line or within Eclipse. Please see the [Developer's Guide](http://docs.opensensorhub.org/dev/dev-guide/) for detailed instructions.
 
 
 ## Contributing
 
-Refer to the [Developer's Guide](http://docs.opensensorhub.org/dev-guide/) for instructions on how to setup your development environment in Eclipse.
+Refer to the [Developer's Guide](http://docs.opensensorhub.org/dev/dev-guide/) for instructions on how to setup your development environment in Eclipse.
 
 You can also find documentation in the [Javadocs](http://docs.opensensorhub.org/apidocs/) and [wiki](../../wiki/Home). 
 
