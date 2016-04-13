@@ -30,6 +30,12 @@ public interface IModuleWithDescription
 {
         
     /**
+     * @return The object's globally unique identifier
+     */
+    public String getUniqueIdentifier();
+    
+    
+    /**
      * Retrieves most current SensorML description of the entity whose data
      * is provided by this module. All implementations must return an instance
      * of AbstractProcess with a valid unique identifier.<br/>

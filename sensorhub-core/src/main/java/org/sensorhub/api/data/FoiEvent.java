@@ -111,7 +111,7 @@ public class FoiEvent extends EntityEvent<Type>
 	public FoiEvent(long timeStamp, IDataProducerModule<?> srcModule, AbstractFeature foi, double startTime)
     {
         this(timeStamp,
-             srcModule.getCurrentDescription().getUniqueIdentifier(),
+             srcModule.getUniqueIdentifier(),
              srcModule, foi, startTime);
     }
 	

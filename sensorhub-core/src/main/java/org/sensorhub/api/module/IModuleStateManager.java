@@ -32,6 +32,8 @@ public interface IModuleStateManager
     
     public InputStream getAsInputStream(String key);
     
+    public String getFolder();
+    
     public void put(String key, float value);
     
     public void put(String key, double value);
@@ -40,11 +42,11 @@ public interface IModuleStateManager
     
     public void put(String key, long value);
     
+    public void put(String key, String value);
+    
     public OutputStream getOutputStream(String key);
     
     public void flush();
-    
-    public String getFolder();
     
     public void cleanup();
 }

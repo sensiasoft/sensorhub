@@ -153,6 +153,13 @@ public abstract class AbstractStreamProcess<ConfigType extends StreamProcessConf
     {
         return null;
     }
+    
+    
+    @Override
+    public String getUniqueIdentifier()
+    {
+        return getCurrentDescription().getUniqueIdentifier();
+    }
 
 
     @Override

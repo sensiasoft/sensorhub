@@ -69,7 +69,7 @@ public class SensorEvent extends EntityEvent<Type>
 	public SensorEvent(long timeStamp, ISensorModule<?> sensorModule, Type type)
 	{
 	    this(timeStamp,
-	         sensorModule.getCurrentDescription().getUniqueIdentifier(),
+	         sensorModule.getUniqueIdentifier(),
 	         sensorModule,
 	         type);
 	}

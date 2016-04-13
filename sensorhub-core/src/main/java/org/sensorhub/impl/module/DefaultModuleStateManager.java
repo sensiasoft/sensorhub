@@ -159,6 +159,13 @@ public class DefaultModuleStateManager implements IModuleStateManager
     {
         stateProps.setProperty(key, Long.toString(value));
     }
+
+
+    @Override
+    public void put(String key, String value)
+    {
+        stateProps.setProperty(key, value);        
+    }
     
 
     @Override

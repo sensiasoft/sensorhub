@@ -70,16 +70,20 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
     protected final static String ERROR_NO_UPDATE = "Sensor Description update is not supported by driver ";
     protected final static String ERROR_NO_HISTORY = "History of sensor description is not supported by driver ";
     protected final static String ERROR_NO_ENTITIES = "Multiple entities are not supported by driver ";
+    
+    protected final static String STATE_UNIQUE_ID = "UniqueID";
     protected final static String STATE_LAST_SML_UPDATE = "LastUpdatedSensorDescription";
     
     private Map<String, ISensorDataInterface> obsOutputs = new LinkedHashMap<String, ISensorDataInterface>();
     private Map<String, ISensorDataInterface> statusOutputs = new LinkedHashMap<String, ISensorDataInterface>();
     private Map<String, ISensorControlInterface> controlInputs = new LinkedHashMap<String, ISensorControlInterface>();
+    private volatile boolean wasConnected = false;
+    
     protected DefaultLocationOutput<?> locationOutput;
     protected AbstractProcess sensorDescription = new PhysicalSystemImpl();
     protected long lastUpdatedSensorDescription = Long.MIN_VALUE;
-    private volatile boolean wasConnected = false;
-        
+    protected String uniqueID;
+            
     
     /**
      * Call this method to add each sensor observation or status output
@@ -134,6 +138,17 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
     protected void removeAllControlInputs()
     {
         controlInputs.clear();
+    }
+    
+    
+    @Override
+    public String getUniqueIdentifier()
+    {
+        // to stay backward compatible
+        if (uniqueID == null)
+            return this.getCurrentDescription().getUniqueIdentifier();
+        
+        return uniqueID;
     }
     
 
@@ -393,6 +408,7 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
         super.updateConfig(config);
         if (config.sensorML != null)
         {
+            // TODO detect if SensorML has really changed
             updateSensorDescription();
             notifyNewDescription(System.currentTimeMillis());
         }
@@ -403,6 +419,9 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
     public void loadState(IModuleStateManager loader) throws SensorHubException
     {
         super.loadState(loader);
+        
+        this.uniqueID = loader.getAsString(STATE_UNIQUE_ID);
+        
         Long lastUpdateTime = loader.getAsLong(STATE_LAST_SML_UPDATE);
         if (lastUpdateTime != null)
             this.lastUpdatedSensorDescription = lastUpdateTime;
@@ -413,6 +432,10 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
     public void saveState(IModuleStateManager saver) throws SensorHubException
     {
         super.saveState(saver);
+        
+        if (uniqueID != null)
+            saver.put(STATE_UNIQUE_ID, this.uniqueID);
+        
         saver.put(STATE_LAST_SML_UPDATE, this.lastUpdatedSensorDescription);
         saver.flush();
     }
