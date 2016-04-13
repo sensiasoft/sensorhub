@@ -119,7 +119,7 @@ public class PersistenceManagerImpl implements IPersistenceManager
         ArrayList<IRecordStorageModule<?>> sensorStorageList = new ArrayList<IRecordStorageModule<?>>();
         
         ISensorModule<?> sensorModule = SensorHub.getInstance().getSensorManager().getModuleById(sensorLocalID);
-        String sensorUID = sensorModule.getCurrentDescription().getUniqueIdentifier();
+        String sensorUID = sensorModule.getUniqueIdentifier();
         
         // find all basic storage modules whose data source UID is the same as the sensor UID
         Collection<IStorageModule<?>> storageModules = getLoadedModules();

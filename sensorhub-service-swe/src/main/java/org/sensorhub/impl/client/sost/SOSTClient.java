@@ -191,7 +191,7 @@ public class SOSTClient extends AbstractModule<SOSTClientConfig> implements IEve
         UpdateSensorRequest req = new UpdateSensorRequest(SOSUtils.SOS);
         req.setPostServer(config.sosEndpointUrl);
         req.setVersion("2.0");
-        req.setProcedureId(sensor.getCurrentDescription().getUniqueIdentifier());
+        req.setProcedureId(sensor.getUniqueIdentifier());
         req.setProcedureDescription(sensor.getCurrentDescription());
         req.setProcedureDescriptionFormat(InsertSensorRequest.DEFAULT_PROCEDURE_FORMAT);
         

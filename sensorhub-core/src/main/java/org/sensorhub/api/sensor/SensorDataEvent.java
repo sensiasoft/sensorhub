@@ -41,7 +41,7 @@ public class SensorDataEvent extends DataEvent
 	public SensorDataEvent(long timeStamp, ISensorDataInterface dataInterface, DataBlock ... records)
 	{
 		super(timeStamp,
-		      dataInterface.getParentModule().getCurrentDescription().getUniqueIdentifier(),
+		      dataInterface.getParentModule().getUniqueIdentifier(),
 		      dataInterface,
 		      records);
 	}
