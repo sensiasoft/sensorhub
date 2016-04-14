@@ -1283,7 +1283,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     {
         String format = request.getFormat();
         
-        // auto select format in some common cases
+        // auto select video format in some common cases
         if (format == null)
         {
             DataEncoding resultEncoding = dataProvider.getDefaultResultEncoding();
@@ -1304,10 +1304,10 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
                         
                 if (videoFrameSpec != null)
                 {            
-                    if (videoFrameSpec.getCompression().equals("H264"))
+                    if (isRequestFromBrowser(request) && videoFrameSpec.getCompression().equals("H264"))
                         format = "video/mp4";
                     
-                    else if (videoFrameSpec.getCompression().equals("JPEG") && isRequestForMJpegMimeMultipart(request))
+                    else if (isRequestFromBrowser(request) && videoFrameSpec.getCompression().equals("JPEG"))
                         format = "video/x-motion-jpeg";            
                 }
             }
@@ -1348,10 +1348,9 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     
     
     /*
-     * Check if we should insert MIME multipart boundaries between JPEG frames
-     * since it makes it work directly in some browsers image tags
+     * Check if request comes from a compatible browser
      */
-    protected boolean isRequestForMJpegMimeMultipart(GetResultRequest request)
+    protected boolean isRequestFromBrowser(GetResultRequest request)
     {
         // don't do multipart with websockets
         HttpServletRequest httpRequest = request.getHttpRequest();
