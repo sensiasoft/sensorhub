@@ -41,7 +41,7 @@ public class CommConfigForm extends GenericConfigForm
             field.setVisible(false);
         else if (propId.endsWith(UIConstants.PROP_NAME))
             field.setVisible(false);
-        else if (propId.endsWith(UIConstants.PROP_ENABLED))
+        else if (propId.endsWith(UIConstants.PROP_AUTOSTART))
             field.setVisible(false);
         
         return field;

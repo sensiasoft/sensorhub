@@ -67,7 +67,7 @@ public class SOSConfigForm extends GenericConfigForm
         {
             field.addValidator(new StringLengthValidator(MSG_REQUIRED_FIELD, 1, 256, false));
         }
-        else if (propId.endsWith(PROP_ENABLED))
+        else if (propId.endsWith(PROP_AUTOSTART))
         {
             field.setVisible(true);
         }

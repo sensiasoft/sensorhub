@@ -244,7 +244,7 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
             field.setVisible(false);
         else if (propId.endsWith("." + PROP_NAME))
             field.setVisible(false);
-        else if (propId.endsWith(PROP_ENABLED))
+        else if (propId.endsWith(PROP_AUTOSTART))
             field.setVisible(false);
         else if (propId.endsWith(PROP_MODULECLASS))
             field.setReadOnly(true);        

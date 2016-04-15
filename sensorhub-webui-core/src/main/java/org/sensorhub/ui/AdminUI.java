@@ -377,12 +377,12 @@ public class AdminUI extends com.vaadin.ui.UI
         table.setImmediate(true);
         table.setColumnReorderingAllowed(false);
         table.setContainerDataSource(container);
-        table.setVisibleColumns(new Object[] {UIConstants.PROP_NAME, UIConstants.PROP_ENABLED});
-        table.setColumnWidth(UIConstants.PROP_ENABLED, 100);
+        table.setVisibleColumns(new Object[] {UIConstants.PROP_NAME, UIConstants.PROP_AUTOSTART});
+        table.setColumnWidth(UIConstants.PROP_AUTOSTART, 100);
         table.setColumnHeaderMode(ColumnHeaderMode.HIDDEN);
         
         // value converter for enabled field
-        table.setConverter(UIConstants.PROP_ENABLED, new Converter<String, Boolean>() {
+        table.setConverter(UIConstants.PROP_AUTOSTART, new Converter<String, Boolean>() {
             @Override
             public Boolean convertToModel(String value, Class<? extends Boolean> targetType, Locale locale) throws com.vaadin.data.util.converter.Converter.ConversionException
             {
@@ -412,7 +412,7 @@ public class AdminUI extends com.vaadin.ui.UI
             @Override
             public String getStyle(Table source, Object itemId, Object propertyId)
             {
-                if (propertyId != null && propertyId.equals(UIConstants.PROP_ENABLED))
+                if (propertyId != null && propertyId.equals(UIConstants.PROP_AUTOSTART))
                 {
                     boolean val = (boolean)table.getItem(itemId).getItemProperty(propertyId).getValue();
                     if (val == true)
@@ -540,7 +540,7 @@ public class AdminUI extends com.vaadin.ui.UI
                                     try 
                                     {
                                         SensorHub.getInstance().getModuleRegistry().startModule(moduleId);
-                                        item.getItemProperty(UIConstants.PROP_ENABLED).setValue(true);
+                                        item.getItemProperty(UIConstants.PROP_AUTOSTART).setValue(true);
                                         openModuleInfo((MyBeanItem<ModuleConfig>)item);
                                     }
                                     catch (SensorHubException ex)
@@ -566,7 +566,7 @@ public class AdminUI extends com.vaadin.ui.UI
                                     try 
                                     {
                                         SensorHub.getInstance().getModuleRegistry().stopModule(moduleId);
-                                        item.getItemProperty(UIConstants.PROP_ENABLED).setValue(false);
+                                        item.getItemProperty(UIConstants.PROP_AUTOSTART).setValue(false);
                                     }
                                     catch (SensorHubException ex)
                                     {
@@ -592,7 +592,7 @@ public class AdminUI extends com.vaadin.ui.UI
                                     {
                                         SensorHub.getInstance().getModuleRegistry().stopModule(moduleId);
                                         SensorHub.getInstance().getModuleRegistry().startModule(moduleId);
-                                        item.getItemProperty(UIConstants.PROP_ENABLED).setValue(true);
+                                        item.getItemProperty(UIConstants.PROP_AUTOSTART).setValue(true);
                                     }
                                     catch (SensorHubException ex)
                                     {
