@@ -235,6 +235,10 @@ public class HttpServer extends AbstractModule<HttpServerConfig>
     
     public synchronized void undeployServlet(HttpServlet servlet)
     {
+        // nothing to do if server has already been shutdown
+        if (servletHandler == null)
+            return;
+        
         try
         {
             // there is no removeServlet method so we need to do it manually
