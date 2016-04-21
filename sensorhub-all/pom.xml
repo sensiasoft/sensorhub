@@ -78,6 +78,14 @@
             </configuration>
          </plugin>
       </plugins>
+      <resources>
+         <resource>
+            <directory>src</directory>
+            <excludes>
+               <exclude>**/empty</exclude>
+            </excludes>
+         </resource>
+      </resources>
       <extensions>
          <extension>
             <groupId>org.apache.maven.wagon</groupId>
