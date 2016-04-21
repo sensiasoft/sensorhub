@@ -41,7 +41,6 @@ import org.sensorhub.ui.api.IModuleConfigForm;
 import org.sensorhub.ui.api.IModuleAdminPanel;
 import org.sensorhub.ui.api.UIConstants;
 import org.sensorhub.ui.data.MyBeanItem;
-import org.sensorhub.ui.data.MyBeanItemContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.vaadin.annotations.Push;
@@ -80,9 +79,6 @@ import com.vaadin.ui.Window.CloseEvent;
 import com.vaadin.ui.Window.CloseListener;
 
 
-//@Theme("reindeer")
-//@Theme("runo")
-//@Theme("valo")
 @Theme("sensorhub")
 @Push(PushMode.MANUAL)
 public class AdminUI extends com.vaadin.ui.UI
@@ -93,10 +89,11 @@ public class AdminUI extends com.vaadin.ui.UI
     private static final Action REMOVE_MODULE_ACTION = new Action("Remove Module", new ThemeResource("icons/module_delete.png"));
     private static final Action START_MODULE_ACTION = new Action("Start", new ThemeResource("icons/enable.png"));
     private static final Action STOP_MODULE_ACTION = new Action("Stop", new ThemeResource("icons/disable.gif"));
-    private static final Action RESTART_MODULE_ACTION = new Action("Restart", new ThemeResource("icons/refresh.gif"));
+    private static final Action RESTART_MODULE_ACTION = new Action("Restart", new ThemeResource("icons/refresh.gif"));    
     private static final Resource LOGO_ICON = new ClassResource("/sensorhub_logo_128.png");
     private static final Resource ACC_TAB_ICON = new ThemeResource("icons/enable.png");    
     private static final String STYLE_LOGO = "logo";
+    private static final String STATE_STARTED = "started";
     
     protected static final Logger log = LoggerFactory.getLogger(AdminUI.class);
     private static AdminUI singleton;
@@ -105,7 +102,6 @@ public class AdminUI extends com.vaadin.ui.UI
     VerticalLayout configArea;
     AdminUIConfig uiConfig;
     
-    protected Map<Class<?>, MyBeanItemContainer<ModuleConfig>> moduleConfigLists = new HashMap<Class<?>, MyBeanItemContainer<ModuleConfig>>();
     protected Map<String, Class<? extends IModuleAdminPanel<?>>> customPanels = new HashMap<String, Class<? extends IModuleAdminPanel<?>>>();
     protected Map<String, Class<? extends IModuleConfigForm>> customForms = new HashMap<String, Class<? extends IModuleConfigForm>>();
     
@@ -126,7 +122,7 @@ public class AdminUI extends com.vaadin.ui.UI
     protected void init(VaadinRequest request)
     {
         String configClass = null;
-        moduleConfigLists.clear();
+        //moduleConfigLists.clear();
         
         // retrieve module config
         try
@@ -263,7 +259,7 @@ public class AdminUI extends com.vaadin.ui.UI
         layout = new VerticalLayout();
         tab = stack.addTab(layout, "Network");
         tab.setIcon(ACC_TAB_ICON);
-        buildNetworkConfig(layout);
+        buildNetworkModuleList(layout);
         
         leftPane.addComponent(stack);        
         leftPane.setExpandRatio(stack, 1);
@@ -333,56 +329,66 @@ public class AdminUI extends com.vaadin.ui.UI
     }
     
     
-    protected void buildNetworkConfig(VerticalLayout layout)
+    protected void buildNetworkModuleList(VerticalLayout layout)
     {
-        // add config objects to container
-        MyBeanItemContainer<ModuleConfig> container = new MyBeanItemContainer<ModuleConfig>(ModuleConfig.class);
-        container.addBean(HttpServer.getInstance().getConfiguration());
-        //container.addBean(uiConfig); 
-        buildModuleList(layout, container, NetworkConfig.class);
+        ModuleRegistry reg = SensorHub.getInstance().getModuleRegistry();
+        ArrayList<IModule<?>> moduleList = new ArrayList<IModule<?>>();
+        
+        // add network modules to list
+        moduleList.add(HttpServer.getInstance());
+        for (IModule<?> module: reg.getLoadedModules())
+        {
+            ModuleConfig config = module.getConfiguration();
+            if (NetworkConfig.class.isAssignableFrom(config.getClass()))
+                moduleList.add(module);
+        }        
+        
+        buildModuleList(layout, moduleList, NetworkConfig.class);
     }
     
     
     protected void buildModuleList(VerticalLayout layout, final Class<?> configType)
     {
-        MyBeanItemContainer<ModuleConfig> container = new MyBeanItemContainer<ModuleConfig>(ModuleConfig.class);
-        buildModuleList(layout, container, configType);
-    }
-    
-    
-    protected void buildModuleList(VerticalLayout layout, MyBeanItemContainer<ModuleConfig> container, final Class<?> configType)
-    {
         ModuleRegistry reg = SensorHub.getInstance().getModuleRegistry();
+        ArrayList<IModule<?>> moduleList = new ArrayList<IModule<?>>();
         
-        // build bean items and add them to container        
+        // add selected modules to list        
         for (IModule<?> module: reg.getLoadedModules())
         {
-            ModuleConfig config = module.getConfiguration().clone();
+            ModuleConfig config = module.getConfiguration();
             if (configType.isAssignableFrom(config.getClass()))
-                container.addBean(config);
+                moduleList.add(module);
         }
         
-        moduleConfigLists.put(configType, container);
-        displayModuleList(layout, container, configType);
+        buildModuleList(layout, moduleList, configType);
     }
     
     
     @SuppressWarnings("serial")
-    protected void displayModuleList(VerticalLayout layout, final MyBeanItemContainer<ModuleConfig> container, final Class<?> configType)
+    protected void buildModuleList(VerticalLayout layout, List<IModule<?>> moduleList, final Class<?> configType)
     {
+        final ModuleRegistry registry = SensorHub.getInstance().getModuleRegistry();
+        
         // create table to display module list
         final Table table = new Table();
         table.setSizeFull();
         table.setSelectable(true);
         table.setImmediate(true);
-        table.setColumnReorderingAllowed(false);
-        table.setContainerDataSource(container);
-        table.setVisibleColumns(new Object[] {UIConstants.PROP_NAME, UIConstants.PROP_AUTOSTART});
-        table.setColumnWidth(UIConstants.PROP_AUTOSTART, 100);
+        table.setColumnReorderingAllowed(false);       
+        table.addContainerProperty(UIConstants.PROP_NAME, String.class, false);
+        table.addContainerProperty(STATE_STARTED, Boolean.class, false);
+        table.setColumnWidth(STATE_STARTED, 100);
         table.setColumnHeaderMode(ColumnHeaderMode.HIDDEN);
         
-        // value converter for enabled field
-        table.setConverter(UIConstants.PROP_AUTOSTART, new Converter<String, Boolean>() {
+        // add modules info as table items       
+        for (IModule<?> module: moduleList)
+        {
+            ModuleConfig config = module.getConfiguration();
+            table.addItem(new Object[] {config.name, module.isStarted()}, config.id);
+        }
+        
+        // value converter for autostart field -> display as text and icon
+        table.setConverter(STATE_STARTED, new Converter<String, Boolean>() {
             @Override
             public Boolean convertToModel(String value, Class<? extends Boolean> targetType, Locale locale) throws com.vaadin.data.util.converter.Converter.ConversionException
             {
@@ -412,7 +418,7 @@ public class AdminUI extends com.vaadin.ui.UI
             @Override
             public String getStyle(Table source, Object itemId, Object propertyId)
             {
-                if (propertyId != null && propertyId.equals(UIConstants.PROP_AUTOSTART))
+                if (propertyId != null && propertyId.equals(STATE_STARTED))
                 {
                     boolean val = (boolean)table.getItem(itemId).getItemProperty(propertyId).getValue();
                     if (val == true)
@@ -431,7 +437,21 @@ public class AdminUI extends com.vaadin.ui.UI
             @Override
             public void itemClick(ItemClickEvent event)
             {
-                openModuleInfo((MyBeanItem<ModuleConfig>)event.getItem());
+                try
+                {
+                    String moduleID = (String)event.getItemId();
+                    IModule<?> module = registry.getModuleById(moduleID);
+                    
+                    // open bean item configuration
+                    ModuleConfig config = module.getConfiguration().clone();
+                    MyBeanItem<ModuleConfig> beanItem = new MyBeanItem<ModuleConfig>(config);
+                    openModuleInfo(beanItem);
+                }
+                catch (SensorHubException e)
+                {
+                    String msg = "Unexpected error when selecting module";
+                    Notification.show("Error", msg + '\n' + e.getMessage(), Notification.Type.ERROR_MESSAGE);
+                }
             }            
         });        
         layout.addComponent(table);
@@ -445,14 +465,15 @@ public class AdminUI extends com.vaadin.ui.UI
                                 
                 if (target != null)
                 {                    
-                    boolean enabled = ((MyBeanItem<ModuleConfig>)table.getItem(target)).getBean().autoStart;
-                    if (enabled)
+                    boolean started = (boolean)table.getItem(target).getItemProperty(STATE_STARTED).getValue();
+                    if (started)
                     {
                         actions.add(STOP_MODULE_ACTION);
                         actions.add(RESTART_MODULE_ACTION);
                     }
                     else
                         actions.add(START_MODULE_ACTION);
+                    
                     actions.add(REMOVE_MODULE_ACTION);
                 }
                 else
@@ -467,26 +488,29 @@ public class AdminUI extends com.vaadin.ui.UI
             public void handleAction(Action action, Object sender, Object target)
             {
                 final Object selectedId = table.getValue();
-                                
+                
                 if (action == ADD_MODULE_ACTION)
                 {
                     // show popup to select among available module types
                     ModuleTypeSelectionPopup popup = new ModuleTypeSelectionPopup(configType, new ModuleTypeSelectionCallback() {
                         public void configSelected(Class<?> moduleType, ModuleConfig config)
                         {
+                            IModule<?> module = null;
+                            
                             try
                             {
                                 // add to main config
-                                ModuleRegistry reg = SensorHub.getInstance().getModuleRegistry();
-                                reg.loadModule(config);
+                                module = registry.loadModule(config);
                             }
                             catch (Throwable e)
                             {
                                 String msg = "The module could not be initialized";
                                 Notification.show("Error", msg + '\n' + e.getMessage(), Notification.Type.ERROR_MESSAGE);
+                                return;
                             }
                             
-                            MyBeanItem<ModuleConfig> newBeanItem = container.addBean(config);
+                            table.addItem(new Object[] {config.name, module.isStarted()}, config.id);                            
+                            MyBeanItem<ModuleConfig> newBeanItem = new MyBeanItem<ModuleConfig>(config);
                             openModuleInfo(newBeanItem);
                         }
                     });
@@ -498,7 +522,7 @@ public class AdminUI extends com.vaadin.ui.UI
                 {
                     // possible actions when a module is selected
                     final Item item = table.getItem(selectedId);
-                    final String moduleId = (String)item.getItemProperty(UIConstants.PROP_ID).getValue();
+                    final String moduleId = (String)selectedId;
                     final String moduleName = (String)item.getItemProperty(UIConstants.PROP_NAME).getValue();
                     
                     if (action == REMOVE_MODULE_ACTION)
@@ -512,8 +536,8 @@ public class AdminUI extends com.vaadin.ui.UI
                                 {                    
                                     try
                                     {
-                                        SensorHub.getInstance().getModuleRegistry().destroyModule(moduleId);
-                                        container.removeItem(selectedId);
+                                        registry.destroyModule(moduleId);
+                                        table.removeItem(selectedId);
                                     }
                                     catch (SensorHubException ex)
                                     {                        
@@ -539,8 +563,8 @@ public class AdminUI extends com.vaadin.ui.UI
                                 {                    
                                     try 
                                     {
-                                        SensorHub.getInstance().getModuleRegistry().startModule(moduleId);
-                                        item.getItemProperty(UIConstants.PROP_AUTOSTART).setValue(true);
+                                        registry.startModule(moduleId);
+                                        item.getItemProperty(STATE_STARTED).setValue(true);
                                         openModuleInfo((MyBeanItem<ModuleConfig>)item);
                                     }
                                     catch (SensorHubException ex)
@@ -566,7 +590,7 @@ public class AdminUI extends com.vaadin.ui.UI
                                     try 
                                     {
                                         SensorHub.getInstance().getModuleRegistry().stopModule(moduleId);
-                                        item.getItemProperty(UIConstants.PROP_AUTOSTART).setValue(false);
+                                        item.getItemProperty(STATE_STARTED).setValue(false);
                                     }
                                     catch (SensorHubException ex)
                                     {
@@ -592,7 +616,7 @@ public class AdminUI extends com.vaadin.ui.UI
                                     {
                                         SensorHub.getInstance().getModuleRegistry().stopModule(moduleId);
                                         SensorHub.getInstance().getModuleRegistry().startModule(moduleId);
-                                        item.getItemProperty(UIConstants.PROP_AUTOSTART).setValue(true);
+                                        item.getItemProperty(STATE_STARTED).setValue(true);
                                     }
                                     catch (SensorHubException ex)
                                     {
