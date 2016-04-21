@@ -59,7 +59,7 @@ public class ClientAuth extends Authenticator
     public static void createInstance(String keystorePath)
     {
         if (instance != null)
-            throw new RuntimeException("The singleton instance has already been created");
+            return;
         
         instance = new ClientAuth(keystorePath);
         Authenticator.setDefault(instance);
@@ -68,7 +68,7 @@ public class ClientAuth extends Authenticator
     
     private ClientAuth(String keystorePath)
     {
-        try
+        /*try
         {
             // init key store
             this.keyStorePath = keystorePath;
@@ -85,7 +85,7 @@ public class ClientAuth extends Authenticator
         catch (Exception e)
         {
             throw new RuntimeException("Cannot initialize key store", e);
-        }
+        }*/
     }
     
     
@@ -95,7 +95,7 @@ public class ClientAuth extends Authenticator
     }
     
     
-    public void registerCredentials(String host, int port, String user, char[] passwd)
+    /*public void registerCredentials(String host, int port, String user, char[] passwd)
     {
         PBEKeySpec pwdSpec = new PBEKeySpec(passwd);
         
@@ -119,7 +119,7 @@ public class ClientAuth extends Authenticator
         {
             pwdSpec.clearPassword();
         }
-    }
+    }*/
     
     
     public void setUser(String user)
