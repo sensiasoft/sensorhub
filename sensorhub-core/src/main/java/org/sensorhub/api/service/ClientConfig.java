@@ -29,6 +29,6 @@ import org.sensorhub.api.module.ModuleConfig;
 public class ClientConfig extends ModuleConfig
 {
 
-    @DisplayInfo(label="Connection Timeout", desc="When connection is not available or lost, client will try to reconnect until successful or timeout is reached")
-    public long connectTimeout;
+    @DisplayInfo(label="Connection Timeout", desc="When connection is not available or lost, client will try to reconnect until successful or timeout is reached (in ms)")
+    public int connectTimeout;
 }
