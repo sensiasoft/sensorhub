@@ -41,7 +41,6 @@ public class DefaultLocationOutputLLA<SensorType extends ISensorModule<?>> exten
     }
 
     
-    @Override
     protected void init() throws SensorException
     {
         GeoPosHelper fac = new GeoPosHelper();

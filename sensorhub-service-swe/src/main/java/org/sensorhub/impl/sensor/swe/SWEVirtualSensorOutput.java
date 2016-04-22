@@ -45,13 +45,6 @@ public class SWEVirtualSensorOutput extends VarRateSensorOutput<SWEVirtualSensor
 
 
     @Override
-    protected void init() throws SensorException
-    {
-        
-    }
-
-
-    @Override
     public DataComponent getRecordDescription()
     {
         return recordStructure;

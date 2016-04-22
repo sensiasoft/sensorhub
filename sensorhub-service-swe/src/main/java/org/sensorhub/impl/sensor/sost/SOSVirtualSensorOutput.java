@@ -50,13 +50,6 @@ public class SOSVirtualSensorOutput extends AbstractSensorOutput<SOSVirtualSenso
 
 
     @Override
-    protected void init() throws SensorException
-    {
-        
-    }
-
-
-    @Override
     public double getAverageSamplingPeriod()
     {
         return avgSamplingPeriod;

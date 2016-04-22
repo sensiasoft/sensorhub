@@ -80,7 +80,6 @@ public class FakeSensorData extends AbstractSensorOutput<FakeSensor> implements 
     }
     
     
-    @Override
     public void init()
     {
         outputStruct = new DataRecordImpl(3);

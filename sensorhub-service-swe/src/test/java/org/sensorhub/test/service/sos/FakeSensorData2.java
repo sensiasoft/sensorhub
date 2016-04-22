@@ -78,7 +78,6 @@ public class FakeSensorData2 extends AbstractSensorOutput<FakeSensorWithFoi> imp
     }
     
     
-    @Override
     public void init()
     {        
         // generate output structure and encoding
