@@ -220,7 +220,7 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
                 sensorDescription.setUniqueIdentifier(getLocalID());
             
             // description
-            if (!sensorDescription.isSetDescription() && config.name != null)
+            if (sensorDescription.getName() == null && config.name != null)
                 sensorDescription.setName(config.name);
             
             // time validity
