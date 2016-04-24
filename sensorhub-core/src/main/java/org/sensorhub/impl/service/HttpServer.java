@@ -25,7 +25,6 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.eclipse.jetty.security.Authenticator;
 import org.eclipse.jetty.security.ConstraintMapping;
 import org.eclipse.jetty.security.ConstraintSecurityHandler;
 import org.eclipse.jetty.security.HashLoginService;
@@ -131,14 +130,14 @@ public class HttpServer extends AbstractModule<HttpServerConfig>
                 holder.setInitParameter("maxRequestMs", Long.toString(24*3600*1000L)); // we need persistent requests!
                 
                 // security handler
-                /*if (config.users != null && !config.users.isEmpty())
+                if (config.users != null && !config.users.isEmpty())
                 {
                     securityHandler = new ConstraintSecurityHandler();
-                    //securityHandler.setAuthenticator(new DigestAuthenticator());
-                    securityHandler.setAuthenticator((Authenticator)Class.forName("org.sensorhub.impl.security.oauth.OAuthAuthenticator").newInstance());
+                    securityHandler.setAuthenticator(new DigestAuthenticator());
+                    //securityHandler.setAuthenticator((Authenticator)Class.forName("org.sensorhub.impl.security.oauth.OAuthAuthenticator").newInstance());
                     securityHandler.setLoginService(loginService);
                     servletHandler.setSecurityHandler(securityHandler);
-                }*/
+                }
                 
                 // filter to add proper cross-origin headers
                 servletHandler.addFilter(CrossOriginFilter.class, "/*", EnumSet.of(DispatcherType.REQUEST));

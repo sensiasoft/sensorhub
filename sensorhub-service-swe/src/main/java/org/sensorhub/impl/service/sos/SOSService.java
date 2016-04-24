@@ -454,6 +454,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
         
         // deploy ourself to HTTP server
         httpServer.deployServlet(this, config.endPoint);
+        httpServer.addServletSecurity(config.endPoint, "sos");
     }
     
     

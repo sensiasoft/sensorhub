@@ -227,6 +227,7 @@ public class SPSService extends OWSServlet implements IServiceModule<SPSServiceC
         
         // deploy ourself to HTTP server
         httpServer.deployServlet(this, config.endPoint);
+        httpServer.addServletSecurity(config.endPoint, "sps");
     }
     
     
