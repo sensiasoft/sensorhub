@@ -108,4 +108,10 @@ public class ModuleEvent extends Event<Type>
     {
         return (IModule<?>)source;
     }
+    
+    
+    public ModuleState getNewState()
+    {
+        return newState;
+    }
 }

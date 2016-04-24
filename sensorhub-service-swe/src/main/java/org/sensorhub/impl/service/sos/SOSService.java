@@ -336,23 +336,34 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
     {
         SOSProviderConfig config = provider.getConfig();
         
-        // stop here if provider is already advertised
-        if (offeringCaps.containsKey(config.uri))
-            return;
-        
         try
         {
             // add offering metadata to capabilities
             SOSOfferingCapabilities offCaps = provider.generateCapabilities();
-            capabilities.getLayers().add(offCaps);
-            offeringCaps.put(offCaps.getIdentifier(), offCaps);
-            
-            // build procedure-offering map
             String procedureID = offCaps.getMainProcedure();
-            procedureToOfferingMap.put(procedureID, offCaps.getIdentifier());
             
-            if (log.isDebugEnabled())
-                log.debug("Offering " + "\"" + offCaps.getIdentifier() + "\" added for procedure " + procedureID);
+            // update offering if it was already advertised
+            if (offeringCaps.containsKey(config.uri))
+            {
+                // replace old offering
+                SOSOfferingCapabilities oldCaps = offeringCaps.put(config.uri, offCaps);
+                capabilities.getLayers().set(capabilities.getLayers().indexOf(oldCaps), offCaps);
+                
+                if (log.isDebugEnabled())
+                    log.debug("Offering " + "\"" + offCaps.getIdentifier() + "\" updated for procedure " + procedureID);
+            }
+            
+            // otherwise add new offering
+            else
+            {
+                // add to maps and layer list
+                offeringCaps.put(offCaps.getIdentifier(), offCaps);                
+                procedureToOfferingMap.put(procedureID, offCaps.getIdentifier());                
+                capabilities.getLayers().add(offCaps);
+                
+                if (log.isDebugEnabled())
+                    log.debug("Offering " + "\"" + offCaps.getIdentifier() + "\" added for procedure " + procedureID);
+            }
         }
         catch (Exception e)
         {

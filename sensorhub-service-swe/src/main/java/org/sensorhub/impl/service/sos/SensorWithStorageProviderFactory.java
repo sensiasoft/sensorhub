@@ -42,10 +42,13 @@ public class SensorWithStorageProviderFactory extends StreamWithStorageProviderF
               SensorHub.getInstance().getSensorManager().getModuleById(config.sensorID));
         this.sensorProviderConfig = config;
         
-        String liveSensorUID = producer.getCurrentDescription().getUniqueIdentifier();
-        String storageSensorUID = storage.getLatestDataSourceDescription().getUniqueIdentifier();
-        if (!liveSensorUID.equals(storageSensorUID))
-            throw new SensorHubException("Storage " + storage.getName() + " doesn't contain data for sensor " + producer.getName());
+        if (producer.isStarted() && storage.isStarted())
+        {
+            String liveSensorUID = producer.getCurrentDescription().getUniqueIdentifier();
+            String storageSensorUID = storage.getLatestDataSourceDescription().getUniqueIdentifier();
+            if (!liveSensorUID.equals(storageSensorUID))
+                throw new SensorHubException("Storage " + storage.getName() + " doesn't contain data for sensor " + producer.getName());
+        }
     }
 
 

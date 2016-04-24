@@ -27,6 +27,7 @@ import org.sensorhub.api.common.Event;
 import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.module.ModuleEvent;
+import org.sensorhub.api.module.ModuleEvent.ModuleState;
 import org.sensorhub.api.persistence.FoiFilter;
 import org.sensorhub.api.persistence.IFoiFilter;
 import org.sensorhub.api.persistence.IObsStorage;
@@ -337,13 +338,17 @@ public class StorageDataProviderFactory implements ISOSDataProviderFactory, IEve
     @Override
     public void handleEvent(Event<?> e)
     {
-        // if producer is enabled/disabled
+        // if storage is enabled/disabled
         if (e instanceof ModuleEvent && e.getSource() == storage)
         {
-            if (isEnabled())
-                service.showProviderCaps(this);
-            else
-                service.hideProviderCaps(this);
+            ModuleState state = ((ModuleEvent)e).getNewState();
+            if (state == ModuleState.STARTED || state.equals(ModuleState.STOPPING))
+            {
+                if (isEnabled())
+                    service.showProviderCaps(this);
+                else
+                    service.hideProviderCaps(this);
+            }
         }      
     }
 

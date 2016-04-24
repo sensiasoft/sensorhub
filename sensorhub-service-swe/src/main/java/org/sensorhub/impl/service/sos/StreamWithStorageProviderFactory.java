@@ -21,6 +21,7 @@ import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.data.IDataProducerModule;
 import org.sensorhub.api.data.IStreamingDataInterface;
 import org.sensorhub.api.module.ModuleEvent;
+import org.sensorhub.api.module.ModuleEvent.ModuleState;
 import org.sensorhub.api.persistence.IFoiFilter;
 import org.sensorhub.api.persistence.IObsStorage;
 import org.sensorhub.api.service.ServiceException;
@@ -57,6 +58,7 @@ public class StreamWithStorageProviderFactory<ProducerType extends IDataProducer
         
         // build alt provider to generate capabilities in case storage is disabled
         this.altProvider = new StreamDataProviderFactory<ProducerType>(service, config, producer, "Stream");
+        producer.unregisterListener(altProvider); // don't listen to events
     }
 
 
@@ -69,10 +71,6 @@ public class StreamWithStorageProviderFactory<ProducerType extends IDataProducer
         {
             capabilities = super.generateCapabilities();
             
-            // replace description
-            if (config.description == null)
-                capabilities.setDescription("Live and Archive data from " + producer.getName());
-        
             // if storage does support FOIs, list the current ones
             if (!(storage instanceof IObsStorage))
                 FoiUtils.updateFois(caps, producer, config.maxFois);
@@ -85,6 +83,11 @@ public class StreamWithStorageProviderFactory<ProducerType extends IDataProducer
         // enable real-time requests only if streaming data source is enabled
         if (producer.isStarted())
         {
+            // replace description
+            if (config.description == null && storage.isStarted())
+                capabilities.setDescription("Live and archive data from " + producer.getName());
+            
+            // enable live by setting end time to now
             TimeExtent timeExtent = caps.getPhenomenonTime();
             if (timeExtent.isNull())
             {
@@ -92,7 +95,7 @@ public class StreamWithStorageProviderFactory<ProducerType extends IDataProducer
                 timeExtent.setEndNow(true);
             }
             else            
-                timeExtent.setEndNow(true);        
+                timeExtent.setEndNow(true);     
         }
         
         return capabilities;
@@ -150,14 +153,18 @@ public class StreamWithStorageProviderFactory<ProducerType extends IDataProducer
     @Override
     public void handleEvent(Event<?> e)
     {
-        // if producer is enabled/disabled
+        // if producer or storage is enabled/disabled
         if (e instanceof ModuleEvent && (e.getSource() == producer || e.getSource() == storage))
         {
-            if (isEnabled())
-                service.showProviderCaps(this);
-            else
-                service.hideProviderCaps(this);
-        }      
+            ModuleState state = ((ModuleEvent)e).getNewState();
+            if (state == ModuleState.STARTED || state.equals(ModuleState.STOPPING))
+            {
+                if (isEnabled())
+                    service.showProviderCaps(this);
+                else
+                    service.hideProviderCaps(this);
+            }
+        }
     }
     
     

@@ -30,6 +30,7 @@ import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.data.IDataProducerModule;
 import org.sensorhub.api.data.IStreamingDataInterface;
 import org.sensorhub.api.module.ModuleEvent;
+import org.sensorhub.api.module.ModuleEvent.ModuleState;
 import org.sensorhub.api.persistence.IFoiFilter;
 import org.sensorhub.api.service.ServiceException;
 import org.sensorhub.utils.MsgUtils;
@@ -135,7 +136,7 @@ public class StreamDataProviderFactory<ProducerType extends IDataProducerModule<
         if (config.description != null)
             caps.setDescription(config.description);
         else
-            caps.setDescription("Data produced by " + producer.getName());
+            caps.setDescription("Live data from " + producer.getName());
     }
     
     
@@ -259,10 +260,14 @@ public class StreamDataProviderFactory<ProducerType extends IDataProducerModule<
         // if producer is enabled/disabled
         if (e instanceof ModuleEvent && e.getSource() == producer)
         {
-            if (isEnabled())
-                service.showProviderCaps(this);
-            else
-                service.hideProviderCaps(this);
+            ModuleState state = ((ModuleEvent)e).getNewState();
+            if (state == ModuleState.STARTED || state.equals(ModuleState.STOPPING))
+            {
+                if (isEnabled())
+                    service.showProviderCaps(this);
+                else
+                    service.hideProviderCaps(this);
+            }
         }      
     }
 
