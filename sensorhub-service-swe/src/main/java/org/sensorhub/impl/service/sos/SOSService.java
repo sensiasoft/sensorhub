@@ -307,7 +307,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
                 }
                 catch (Exception e)
                 {
-                    throw new SensorHubException("Error while initializing provider " + providerConf.uri, e);
+                    log.error("Error while initializing provider " + providerConf.uri, e);
                 }
             }
         }
