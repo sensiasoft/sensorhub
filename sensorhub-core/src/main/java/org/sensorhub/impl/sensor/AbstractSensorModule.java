@@ -217,7 +217,7 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
             if (gmlId == null || gmlId.length() == 0)
                 sensorDescription.setId(DEFAULT_ID);
             if (!sensorDescription.isSetIdentifier())
-                sensorDescription.setUniqueIdentifier(getLocalID());
+                sensorDescription.setUniqueIdentifier("urn:uuid:" + getLocalID());
             
             // description
             if (sensorDescription.getName() == null && config.name != null)
