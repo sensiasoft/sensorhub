@@ -82,9 +82,24 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
     protected DefaultLocationOutput<?> locationOutput;
     protected AbstractProcess sensorDescription = new PhysicalSystemImpl();
     protected long lastUpdatedSensorDescription = Long.MIN_VALUE;
+    
+    protected String xmlID;
     protected String uniqueID;
             
     
+    @Override
+    public synchronized void init(ConfigType config) throws SensorHubException
+    {
+        super.init(config);
+        
+        if (this.uniqueID == null)
+            this.uniqueID = "urn:uuid:" + getLocalID();
+        
+        if (this.xmlID == null)
+            this.xmlID = DEFAULT_ID + "";
+    }
+
+
     /**
      * Call this method to add each sensor observation or status output
      * @param dataInterface interface to add as sensor output
@@ -144,10 +159,6 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
     @Override
     public String getUniqueIdentifier()
     {
-        // to stay backward compatible
-        if (uniqueID == null)
-            return this.getCurrentDescription().getUniqueIdentifier();
-        
         return uniqueID;
     }
     
@@ -215,9 +226,9 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
             // default IDs
             String gmlId = sensorDescription.getId();
             if (gmlId == null || gmlId.length() == 0)
-                sensorDescription.setId(DEFAULT_ID);
+                sensorDescription.setId(xmlID);
             if (!sensorDescription.isSetIdentifier())
-                sensorDescription.setUniqueIdentifier("urn:uuid:" + getLocalID());
+                sensorDescription.setUniqueIdentifier(uniqueID);
             
             // description
             if (sensorDescription.getName() == null && config.name != null)
