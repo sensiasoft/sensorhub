@@ -118,7 +118,7 @@ public class StorageDataProviderFactory implements ISOSDataProviderFactory, IEve
             if (config.description != null)
                 caps.setDescription(config.description);
             else
-                caps.setDescription("Data available from storage " + storage.getName());
+                caps.setDescription("Archive data from " + storage.getName());
             
             // observable properties
             getObservablePropertiesFromStorage(caps.getObservableProperties());

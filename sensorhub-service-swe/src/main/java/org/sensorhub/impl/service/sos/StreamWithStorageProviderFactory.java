@@ -67,7 +67,11 @@ public class StreamWithStorageProviderFactory<ProducerType extends IDataProducer
         
         if (storage.isStarted())
         {
-            capabilities = super.generateCapabilities();         
+            capabilities = super.generateCapabilities();
+            
+            // replace description
+            if (config.description == null)
+                capabilities.setDescription("Live and Archive data from " + producer.getName());
         
             // if storage does support FOIs, list the current ones
             if (!(storage instanceof IObsStorage))
