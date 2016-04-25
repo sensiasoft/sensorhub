@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import org.sensorhub.api.module.IModule;
 import org.sensorhub.api.module.ModuleConfig;
+import org.sensorhub.impl.sensor.SensorSystemConfig.SensorMember;
 import org.sensorhub.ui.ModuleInstanceSelectionPopup.ModuleInstanceSelectionCallback;
 import org.sensorhub.ui.ModuleTypeSelectionPopup.ModuleTypeSelectionCallback;
 import org.sensorhub.ui.ObjectTypeSelectionPopup.ObjectTypeSelectionCallback;
@@ -125,7 +126,7 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
         // add widget for each visible attribute
         if (beanItem != null)
         {
-            fieldGroup = new FieldGroup(beanItem);            
+            fieldGroup = new FieldGroup(beanItem);
             for (Object propId: fieldGroup.getUnboundPropertyIds())
             {
                 Property<?> prop = fieldGroup.getItemDataSource().getItemProperty(propId);
@@ -134,6 +135,8 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
                 if (prop instanceof ContainerProperty)
                 {
                     Class<?> eltType = ((ContainerProperty)prop).getValue().getBeanType();
+                    if (eltType == SensorMember.class)
+                        continue;
                     
                     // use simple table for string lists
                     if (eltType == String.class)
@@ -245,7 +248,7 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
         else if (propId.endsWith("." + PROP_NAME))
             field.setVisible(false);
         else if (propId.endsWith(PROP_MODULECLASS))
-            field.setReadOnly(true);        
+            field.setReadOnly(true);
         
         if (propType.equals(String.class))
             field.setWidth(500, Unit.PIXELS);

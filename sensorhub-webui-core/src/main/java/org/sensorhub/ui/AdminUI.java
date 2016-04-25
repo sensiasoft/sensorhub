@@ -28,12 +28,14 @@ import org.sensorhub.api.module.IModule;
 import org.sensorhub.api.module.ModuleConfig;
 import org.sensorhub.api.persistence.StorageConfig;
 import org.sensorhub.api.processing.ProcessConfig;
+import org.sensorhub.api.sensor.ISensorModule;
 import org.sensorhub.api.sensor.SensorConfig;
 import org.sensorhub.api.service.ClientConfig;
 import org.sensorhub.api.service.ServiceConfig;
 import org.sensorhub.impl.SensorHub;
 import org.sensorhub.impl.module.ModuleRegistry;
 import org.sensorhub.impl.persistence.StreamStorageConfig;
+import org.sensorhub.impl.sensor.SensorSystem;
 import org.sensorhub.impl.service.HttpServer;
 import org.sensorhub.impl.service.HttpServerConfig;
 import org.sensorhub.ui.ModuleTypeSelectionPopup.ModuleTypeSelectionCallback;
@@ -74,6 +76,7 @@ import com.vaadin.ui.TabSheet.Tab;
 import com.vaadin.ui.Table;
 import com.vaadin.ui.Table.CellStyleGenerator;
 import com.vaadin.ui.Table.ColumnHeaderMode;
+import com.vaadin.ui.TreeTable;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window.CloseEvent;
 import com.vaadin.ui.Window.CloseListener;
@@ -93,7 +96,8 @@ public class AdminUI extends com.vaadin.ui.UI
     private static final Resource LOGO_ICON = new ClassResource("/sensorhub_logo_128.png");
     private static final Resource ACC_TAB_ICON = new ThemeResource("icons/enable.png");    
     private static final String STYLE_LOGO = "logo";
-    private static final String STATE_STARTED = "started";
+    private static final String PROP_STARTED = "started";
+    private static final String PROP_MODULE_OBJECT = "module";
     
     protected static final Logger log = LoggerFactory.getLogger(AdminUI.class);
     private static AdminUI singleton;
@@ -370,25 +374,40 @@ public class AdminUI extends com.vaadin.ui.UI
         final ModuleRegistry registry = SensorHub.getInstance().getModuleRegistry();
         
         // create table to display module list
-        final Table table = new Table();
+        final TreeTable table = new TreeTable();
         table.setSizeFull();
         table.setSelectable(true);
-        table.setImmediate(true);
-        table.setColumnReorderingAllowed(false);       
+        table.setImmediate(false);
+        table.setColumnReorderingAllowed(false);
         table.addContainerProperty(UIConstants.PROP_NAME, String.class, false);
-        table.addContainerProperty(STATE_STARTED, Boolean.class, false);
-        table.setColumnWidth(STATE_STARTED, 100);
+        table.addContainerProperty(PROP_STARTED, Boolean.class, false);
+        table.addContainerProperty(PROP_MODULE_OBJECT, IModule.class, null);
+        table.setColumnWidth(PROP_STARTED, 100);
         table.setColumnHeaderMode(ColumnHeaderMode.HIDDEN);
         
         // add modules info as table items       
         for (IModule<?> module: moduleList)
         {
             ModuleConfig config = module.getConfiguration();
-            table.addItem(new Object[] {config.name, module.isStarted()}, config.id);
+            table.addItem(new Object[] {config.name, module.isStarted(), module}, config.id);
+            
+            // add submodules
+            if (module instanceof SensorSystem)
+            {
+                for (ISensorModule<?> sensor: ((SensorSystem) module).getSensors().values())
+                {
+                    ModuleConfig subConfig = sensor.getConfiguration();
+                    table.addItem(new Object[] {subConfig.name, sensor.isStarted(), sensor}, subConfig.id);
+                    table.setParent(subConfig.id, config.id);
+                }
+            }
         }
         
+        // hide module object column!
+        table.setVisibleColumns(UIConstants.PROP_NAME, PROP_STARTED);
+        
         // value converter for autostart field -> display as text and icon
-        table.setConverter(STATE_STARTED, new Converter<String, Boolean>() {
+        table.setConverter(PROP_STARTED, new Converter<String, Boolean>() {
             @Override
             public Boolean convertToModel(String value, Class<? extends Boolean> targetType, Locale locale) throws com.vaadin.data.util.converter.Converter.ConversionException
             {
@@ -418,7 +437,7 @@ public class AdminUI extends com.vaadin.ui.UI
             @Override
             public String getStyle(Table source, Object itemId, Object propertyId)
             {
-                if (propertyId != null && propertyId.equals(STATE_STARTED))
+                if (propertyId != null && propertyId.equals(PROP_STARTED))
                 {
                     boolean val = (boolean)table.getItem(itemId).getItemProperty(propertyId).getValue();
                     if (val == true)
@@ -439,15 +458,14 @@ public class AdminUI extends com.vaadin.ui.UI
             {
                 try
                 {
-                    String moduleID = (String)event.getItemId();
-                    IModule<?> module = registry.getModuleById(moduleID);
+                    IModule<?> module = (IModule<?>)event.getItem().getItemProperty(PROP_MODULE_OBJECT).getValue();
                     
                     // open bean item configuration
                     ModuleConfig config = module.getConfiguration().clone();
                     MyBeanItem<ModuleConfig> beanItem = new MyBeanItem<ModuleConfig>(config);
                     openModuleInfo(beanItem);
                 }
-                catch (SensorHubException e)
+                catch (Exception e)
                 {
                     String msg = "Unexpected error when selecting module";
                     Notification.show("Error", msg + '\n' + e.getMessage(), Notification.Type.ERROR_MESSAGE);
@@ -465,7 +483,7 @@ public class AdminUI extends com.vaadin.ui.UI
                                 
                 if (target != null)
                 {                    
-                    boolean started = (boolean)table.getItem(target).getItemProperty(STATE_STARTED).getValue();
+                    boolean started = (boolean)table.getItem(target).getItemProperty(PROP_STARTED).getValue();
                     if (started)
                     {
                         actions.add(STOP_MODULE_ACTION);
@@ -564,7 +582,7 @@ public class AdminUI extends com.vaadin.ui.UI
                                     try 
                                     {
                                         registry.startModule(moduleId);
-                                        item.getItemProperty(STATE_STARTED).setValue(true);
+                                        item.getItemProperty(PROP_STARTED).setValue(true);
                                         openModuleInfo((MyBeanItem<ModuleConfig>)item);
                                     }
                                     catch (SensorHubException ex)
@@ -589,8 +607,8 @@ public class AdminUI extends com.vaadin.ui.UI
                                 {                    
                                     try 
                                     {
-                                        SensorHub.getInstance().getModuleRegistry().stopModule(moduleId);
-                                        item.getItemProperty(STATE_STARTED).setValue(false);
+                                        registry.stopModule(moduleId);
+                                        item.getItemProperty(PROP_STARTED).setValue(false);
                                     }
                                     catch (SensorHubException ex)
                                     {
@@ -616,7 +634,7 @@ public class AdminUI extends com.vaadin.ui.UI
                                     {
                                         SensorHub.getInstance().getModuleRegistry().stopModule(moduleId);
                                         SensorHub.getInstance().getModuleRegistry().startModule(moduleId);
-                                        item.getItemProperty(STATE_STARTED).setValue(true);
+                                        item.getItemProperty(PROP_STARTED).setValue(true);
                                     }
                                     catch (SensorHubException ex)
                                     {

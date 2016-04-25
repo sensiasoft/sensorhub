@@ -43,7 +43,7 @@ public class HttpServerConfig extends ModuleConfig
     
     
     @DisplayInfo(desc="Maximum number of requests per second allowed per session/connection")
-    public int maxRequestsPerSecond = 10;
+    public int maxRequestsPerSecond = 20;
     
     
     @DisplayInfo(desc="List of users with passwords and roles (format is user: password[, role1, role2 ...]")

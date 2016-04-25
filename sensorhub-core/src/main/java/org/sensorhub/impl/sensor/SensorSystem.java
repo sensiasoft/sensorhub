@@ -162,4 +162,16 @@ public class SensorSystem extends AbstractSensorModule<SensorSystemConfig>
         return true;
     }
 
+
+    public Map<String, ISensorModule<?>> getSensors()
+    {
+        return sensors;
+    }
+
+
+    public Map<String, IProcessModule<?>> getProcesses()
+    {
+        return processes;
+    }
+
 }
