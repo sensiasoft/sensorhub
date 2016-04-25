@@ -15,6 +15,7 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 package org.sensorhub.utils;
 
 import org.sensorhub.api.module.IModule;
+import org.sensorhub.api.module.ModuleConfig;
 
 
 /**
@@ -27,6 +28,12 @@ import org.sensorhub.api.module.IModule;
  */
 public class MsgUtils
 {
+    
+    public static String moduleString(ModuleConfig config)
+    {
+        return "'" + config.name + "' [" + config.id + "]";
+    }
+    
     
     public static String moduleString(IModule<?> module)
     {

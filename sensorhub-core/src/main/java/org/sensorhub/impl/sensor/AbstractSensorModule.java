@@ -64,7 +64,7 @@ import org.vast.swe.helper.GeoPosHelper;
  */
 public abstract class AbstractSensorModule<ConfigType extends SensorConfig> extends AbstractModule<ConfigType> implements ISensorModule<ConfigType>
 {
-    public final static String DEFAULT_ID = "SENSOR_DESC";
+    public final static String DEFAULT_ID = "SENSOR_";
     protected final static String LOCATION_OUTPUT_ID = "SENSOR_LOCATION";
     protected final static String LOCATION_OUTPUT_NAME = "sensorLocation";
     protected final static String ERROR_NO_UPDATE = "Sensor Description update is not supported by driver ";
@@ -96,7 +96,11 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
             this.uniqueID = "urn:uuid:" + getLocalID();
         
         if (this.xmlID == null)
-            this.xmlID = DEFAULT_ID + "";
+        {
+            int endIndex = Math.min(8, getLocalID().length());
+            String shortId = getLocalID().substring(0, endIndex);
+            this.xmlID = DEFAULT_ID + shortId;
+        }
     }
 
 
