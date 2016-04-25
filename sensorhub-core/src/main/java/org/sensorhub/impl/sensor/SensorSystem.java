@@ -16,6 +16,7 @@ package org.sensorhub.impl.sensor;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.UUID;
 import net.opengis.sensorml.v20.PhysicalSystem;
 import org.sensorhub.api.common.SensorHubException;
@@ -111,8 +112,8 @@ public class SensorSystem extends AbstractSensorModule<SensorSystemConfig>
             PhysicalSystem system = (PhysicalSystem)sensorDescription;
             
             // include sensor descriptions as components
-            for (ISensorModule<?> sensor: sensors.values())
-                system.addComponent(sensor.getName(), sensor.getCurrentDescription());
+            for (Entry<String, ISensorModule<?>> entry: sensors.entrySet())
+                system.addComponent(entry.getKey(), entry.getValue().getCurrentDescription());
         }
     }
 
