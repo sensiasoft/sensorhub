@@ -122,8 +122,20 @@ public class SensorSystem extends AbstractSensorModule<SensorSystemConfig>
     public void start() throws SensorHubException
     {
         for (ISensorModule<?> sensor: sensors.values())
+        {
             sensor.start();
-
+            
+            // add sensor outputs and control inputs now in case they didn't exist in init()
+            for (ISensorDataInterface output: sensor.getObservationOutputs().values())
+                this.addOutput(output, false);
+            
+            for (ISensorDataInterface output: sensor.getStatusOutputs().values())
+                this.addOutput(output, true);
+            
+            for (ISensorControlInterface input: sensor.getCommandInputs().values())
+                this.addControlInput(input);
+        }
+        
         for (IProcessModule<?> process: processes.values())
             process.start();
     }
