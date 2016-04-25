@@ -55,7 +55,6 @@ public class TestModuleConfigJsonFile
         config1.id = UUID.randomUUID().toString();
         config1.name = "Sensor1";
         config1.moduleClass = "org.sensorhub.sensor.***";
-        config1.enableHistory = true;
         configDb.add(config1);
         
         displayFile();
@@ -69,7 +68,6 @@ public class TestModuleConfigJsonFile
         config1.id = UUID.randomUUID().toString();
         config1.name = "Sensor1";
         config1.moduleClass = "org.sensorhub.sensor.***";
-        config1.enableHistory = true;
         configDb.add(config1);
         
         displayFile();
