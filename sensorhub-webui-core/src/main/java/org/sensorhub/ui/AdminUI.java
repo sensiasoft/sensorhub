@@ -377,7 +377,7 @@ public class AdminUI extends com.vaadin.ui.UI
         final TreeTable table = new TreeTable();
         table.setSizeFull();
         table.setSelectable(true);
-        table.setImmediate(false);
+        table.setImmediate(true);
         table.setColumnReorderingAllowed(false);
         table.addContainerProperty(UIConstants.PROP_NAME, String.class, false);
         table.addContainerProperty(PROP_STARTED, Boolean.class, false);
@@ -527,7 +527,12 @@ public class AdminUI extends com.vaadin.ui.UI
                                 return;
                             }
                             
-                            table.addItem(new Object[] {config.name, module.isStarted()}, config.id);                            
+                            table.addItem(new Object[] {config.name, module.isStarted()}, config.id);
+                            
+                            // for some reason, setting the module in the addItem call prevents it to show up in the tree
+                            // so we need to add it afterwards
+                            table.getItem(config.id).getItemProperty(PROP_MODULE_OBJECT).setValue(module);
+                            
                             MyBeanItem<ModuleConfig> newBeanItem = new MyBeanItem<ModuleConfig>(config);
                             openModuleInfo(newBeanItem);
                         }
