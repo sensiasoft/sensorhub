@@ -14,6 +14,8 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.impl.persistence.perst;
 
+import org.sensorhub.api.config.DisplayInfo;
+
 
 /**
  * <p>
@@ -25,8 +27,7 @@ package org.sensorhub.impl.persistence.perst;
  */
 public class BasicStorageConfig extends org.sensorhub.api.persistence.ObsStorageConfig
 {
-    /**
-     * Memory cache size in kilobytes
-     */
-    public int memoryCacheSize;
+    
+    @DisplayInfo(desc="Memory cache size in kilobytes")
+    public int memoryCacheSize = 1024;
 }
