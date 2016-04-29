@@ -17,6 +17,7 @@ package org.sensorhub.impl.service.sos;
 import java.util.ArrayList;
 import java.util.List;
 import org.sensorhub.api.common.SensorHubException;
+import org.sensorhub.api.config.DisplayInfo;
 
 
 /**
@@ -32,16 +33,12 @@ import org.sensorhub.api.common.SensorHubException;
 public class StorageDataProviderConfig extends SOSProviderConfig
 {
     
-    /**
-     * Local ID of storage to use as data source
-     */
+    @DisplayInfo(desc="Local ID of storage to use as data source")
     public String storageID;  
     
     
-    /**
-     * Names of data stores whose data will be hidden from the SOS
-     * If this is null, all streams offered by storage are exposed
-     */
+    @DisplayInfo(desc="Names of data stores whose data will be hidden from the SOS " +
+            "If this is null, all streams offered by storage are exposed")
     public List<String> hiddenOutputs = new ArrayList<String>();
     
 

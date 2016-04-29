@@ -15,41 +15,29 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 package org.sensorhub.impl.service.sos;
 
 import org.sensorhub.api.common.SensorHubException;
+import org.sensorhub.api.config.DisplayInfo;
 
 
 public abstract class SOSProviderConfig
 {
 
-    /**
-     * Flag set if provider is enabled, unset if disabled
-     */
+    @DisplayInfo(desc="Flag set if provider is enabled, unset if disabled")
     public boolean enabled;
     
     
-    /**
-     * Provider/Offering URI
-     * If null, it will be auto-generated from server URL and source metadata
-     */
+    @DisplayInfo(desc="Offering URI as exposed in capabilities")
     public String uri;
     
     
-    /**
-     * Provider name
-     * If null, it will be auto-generated from name of data source
-     */
+    @DisplayInfo(desc="Provider name (if null, it will be set to the name of the data source)")
     public String name;
     
     
-    /**
-     * Provider description
-     * It null, it will be auto-generated from source description
-     */
+    @DisplayInfo(desc="Provider description (if null, it will be auto-generated from the data source name)")
     public String description;
     
     
-    /**
-     * Maximum number of FoI IDs listed in capabilities
-     */
+    @DisplayInfo(desc="Maximum number of FoI IDs listed in capabilities")
     public int maxFois = 10;
     
     

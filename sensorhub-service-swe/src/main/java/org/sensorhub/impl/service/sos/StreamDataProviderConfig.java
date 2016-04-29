@@ -16,6 +16,7 @@ package org.sensorhub.impl.service.sos;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.sensorhub.api.config.DisplayInfo;
 
 
 /**
@@ -31,31 +32,21 @@ import java.util.List;
 public abstract class StreamDataProviderConfig extends SOSProviderConfig
 {
     
-    /**
-     * Local ID of storage containing the process data
-     * to use as data source for archive requests
-     */
+    @DisplayInfo(desc="Local ID of storage to use as data source for archive requests")
     public String storageID;
     
     
-    /**
-     * Names of process outputs to hide from SOS
-     */
+    @DisplayInfo(desc="Names of process outputs to hide from SOS")
     public List<String> hiddenOutputs = new ArrayList<String>();
     
     
-    /**
-     * If true, forward "new data" events via the WS-Notification
-     * interface of the service
-     */
+    @DisplayInfo(desc="If true, forward new data events via the WS-Notification interface of the service")
     public boolean activateNotifications;
     
     
-    /**
-     * Time-out after which real-time requests are disabled if no more
-     * measurements are received. Real-time is reactivated as soon as
-     * new records start being received again.
-     */
+    @DisplayInfo(desc="Time-out after which real-time requests are disabled if no more "
+            + "measurements are received (in seconds). Real-time is reactivated as soon as "
+            + "new records start being received again")
     public double liveDataTimeout = 10.0;
 
 }

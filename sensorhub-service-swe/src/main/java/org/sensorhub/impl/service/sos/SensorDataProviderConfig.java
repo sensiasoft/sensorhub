@@ -16,6 +16,7 @@ package org.sensorhub.impl.service.sos;
 
 
 import org.sensorhub.api.common.SensorHubException;
+import org.sensorhub.api.config.DisplayInfo;
 
 
 /**
@@ -31,10 +32,7 @@ import org.sensorhub.api.common.SensorHubException;
 public class SensorDataProviderConfig extends StreamDataProviderConfig
 {
 
-    /**
-     * Local ID of sensor module to use as data source for
-     * live-stream requests
-     */
+    @DisplayInfo(desc="Local ID of sensor module to use as data source for live-stream requests")
     public String sensorID;
     
     
