@@ -117,7 +117,7 @@ public class StreamWithStorageProviderFactory<ProducerType extends IDataProducer
             long now =  System.currentTimeMillis();
             
             // check latest record time
-            long lastRecordTime = Long.MIN_VALUE;
+            long lastRecordTime = producer.getLastDescriptionUpdate(); // default to date of sensor registration
             for (IStreamingDataInterface output: producer.getAllOutputs().values())
             {
                 // skip hidden outputs
@@ -125,7 +125,7 @@ public class StreamWithStorageProviderFactory<ProducerType extends IDataProducer
                     continue;
                 
                 long recTime = output.getLatestRecordTime();
-                if (recTime != Long.MIN_VALUE && recTime > lastRecordTime)
+                if (recTime > lastRecordTime)
                     lastRecordTime = recTime;
             }
             
