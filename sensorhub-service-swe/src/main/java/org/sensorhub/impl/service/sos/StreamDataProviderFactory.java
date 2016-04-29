@@ -56,16 +56,18 @@ public class StreamDataProviderFactory<ProducerType extends IDataProducerModule<
     final SOSService service;
     final StreamDataProviderConfig config;
     final String producerType;
-    final ProducerType producer;    
+    final ProducerType producer;
+    long liveDataTimeOut;
     SOSOfferingCapabilities caps;
     
     
     protected StreamDataProviderFactory(SOSService service, StreamDataProviderConfig config, ProducerType producer, String producerType) throws SensorHubException
     {
         this.service = service;
-        this.config = config;
-        this.producer = producer;
+        this.config = config;        
         this.producerType = producerType;
+        this.producer = producer;
+        this.liveDataTimeOut = (long)(config.liveDataTimeout * 1000);
         
         // listen to producer lifecycle events
         producer.registerListener(this);
@@ -95,11 +97,15 @@ public class StreamDataProviderFactory<ProducerType extends IDataProducerModule<
             caps.getObservableProperties().addAll(sensorOutputDefs);
             
             // phenomenon time
-            TimeExtent phenTime = new TimeExtent();
-            phenTime.setBeginNow(true);
-            phenTime.setEndNow(true);
-            //phenTime.setTimeStep(getLowestSamplingPeriodFromProducer());
-            caps.setPhenomenonTime(phenTime);
+            // enable real-time requests only if streaming data source is enabled
+            TimeExtent timeExtent = new TimeExtent();
+            if (producer.isStarted())
+            {
+                timeExtent.setBeginNow(true);
+                timeExtent.setEndNow(true);
+                //timeExtent.setTimeStep(getLowestSamplingPeriodFromProducer());
+            }
+            caps.setPhenomenonTime(timeExtent);
         
             // use producer uniqueID as procedure ID
             caps.getProcedures().add(producer.getCurrentDescription().getUniqueIdentifier());
@@ -149,6 +155,34 @@ public class StreamDataProviderFactory<ProducerType extends IDataProducerModule<
             
         updateNameAndDescription();
         FoiUtils.updateFois(caps, producer, config.maxFois);
+        
+        // enable real-time requests if streaming data source is enabled
+        if (producer.isStarted())
+        {
+            long now =  System.currentTimeMillis();
+            
+            // check latest record time
+            long lastRecordTime = producer.getLastDescriptionUpdate(); // default to date of sensor registration
+            for (IStreamingDataInterface output: producer.getAllOutputs().values())
+            {
+                // skip hidden outputs
+                if (config.hiddenOutputs != null && config.hiddenOutputs.contains(output.getName()))
+                    continue;
+                
+                long recTime = output.getLatestRecordTime();
+                if (recTime > lastRecordTime)
+                    lastRecordTime = recTime;
+            }
+            
+            // if latest record is not too old, enable real-time
+            if (lastRecordTime != Long.MIN_VALUE && now - lastRecordTime < liveDataTimeOut)
+            {
+                caps.getPhenomenonTime().setBeginNow(true);
+                caps.getPhenomenonTime().setEndNow(true);
+            }
+            else
+                caps.getPhenomenonTime().nullify();
+        }
     }
 
 
