@@ -21,6 +21,7 @@ import java.util.UUID;
 import net.opengis.sensorml.v20.PhysicalSystem;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.module.IModule;
+import org.sensorhub.api.module.IModuleStateManager;
 import org.sensorhub.api.module.ModuleConfig;
 import org.sensorhub.api.processing.IProcessModule;
 import org.sensorhub.api.sensor.ISensorControlInterface;
@@ -28,6 +29,8 @@ import org.sensorhub.api.sensor.ISensorDataInterface;
 import org.sensorhub.api.sensor.ISensorModule;
 import org.sensorhub.api.sensor.SensorConfig;
 import org.sensorhub.api.sensor.SensorException;
+import org.sensorhub.impl.SensorHub;
+import org.sensorhub.impl.module.ModuleRegistry;
 import org.sensorhub.impl.sensor.SensorSystemConfig.SensorMember;
 
 
@@ -173,6 +176,48 @@ public class SensorSystem extends AbstractSensorModule<SensorSystemConfig>
         }
         
         return true;
+    }
+
+
+    @Override
+    public void loadState(IModuleStateManager loader) throws SensorHubException
+    {
+        super.loadState(loader);
+        
+        // also load sub modules state
+        ModuleRegistry reg = SensorHub.getInstance().getModuleRegistry();
+        for (ISensorModule<?> sensor: sensors.values())
+        {
+            loader = reg.getStateManager(sensor.getLocalID());
+            sensor.loadState(loader);
+        }
+        
+        for (IProcessModule<?> process: processes.values())
+        {
+            loader = reg.getStateManager(process.getLocalID());
+            process.loadState(loader);
+        }
+    }
+
+
+    @Override
+    public void saveState(IModuleStateManager saver) throws SensorHubException
+    {
+        super.saveState(saver);
+        
+        // also save sub modules state
+        ModuleRegistry reg = SensorHub.getInstance().getModuleRegistry();
+        for (ISensorModule<?> sensor: sensors.values())
+        {
+            saver = reg.getStateManager(sensor.getLocalID());
+            sensor.saveState(saver);
+        }
+        
+        for (IProcessModule<?> process: processes.values())
+        {
+            saver = reg.getStateManager(process.getLocalID());
+            process.saveState(saver);
+        }
     }
 
 

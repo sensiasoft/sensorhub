@@ -650,7 +650,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
     }
     
     
-    private IModuleStateManager getStateManager(String localID)
+    public IModuleStateManager getStateManager(String localID)
     {
         return new DefaultModuleStateManager(localID);
     }
