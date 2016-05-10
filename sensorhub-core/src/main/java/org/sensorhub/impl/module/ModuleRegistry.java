@@ -146,11 +146,11 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
         {
             synchronized (module)
             {
-                // call init routine
-                module.init(config);
-                
                 // load saved module state
                 module.loadState(getStateManager(config.id));
+                
+                // call init routine
+                module.init(config);
                 
                 // set INITIALIZED state
                 ensureModuleState(module, ModuleState.INITIALIZED);
