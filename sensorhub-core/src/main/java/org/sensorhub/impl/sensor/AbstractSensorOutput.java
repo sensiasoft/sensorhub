@@ -23,6 +23,8 @@ import org.sensorhub.api.sensor.ISensorModule;
 import org.sensorhub.api.sensor.SensorException;
 import org.sensorhub.impl.common.EventBus;
 import org.sensorhub.utils.MsgUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -39,6 +41,7 @@ public abstract class AbstractSensorOutput<SensorType extends ISensorModule<?>> 
 {
     protected static String ERROR_NO_STORAGE = "Data storage is not supported by driver ";
     protected SensorType parentSensor;
+    protected Logger log;
     protected String name;
     protected IEventHandler eventHandler;
     protected DataBlock latestRecord;
@@ -55,6 +58,12 @@ public abstract class AbstractSensorOutput<SensorType extends ISensorModule<?>> 
     {
         this.name = name;
         this.parentSensor = parentSensor;
+        
+        // setup log
+        if (parentSensor instanceof AbstractSensorModule)
+            this.log = ((AbstractSensorModule<?>)parentSensor).getLogger();
+        else
+            this.log = LoggerFactory.getLogger(getClass().getCanonicalName());
         
         // obtain an event handler for this output
         String moduleID = parentSensor.getLocalID();
