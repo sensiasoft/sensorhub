@@ -146,11 +146,11 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
         {
             synchronized (module)
             {
-                // load saved module state
-                module.loadState(getStateManager(config.id));
-                
                 // call init routine
                 module.init(config);
+                
+                // load saved module state
+                module.loadState(getStateManager(config.id));
                 
                 // set INITIALIZED state
                 ensureModuleState(module, ModuleState.INITIALIZED);
@@ -301,7 +301,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
         {
             String msg = "Error while starting module " + MsgUtils.moduleString(module);
             log.error(msg, e);
-            throw new SensorHubException(msg, e);
+            throw e;
         }
     }
     
@@ -382,7 +382,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
         {
             String msg = "Error while stopping module " + MsgUtils.moduleString(module);
             log.error(msg, e);
-            throw new SensorHubException(msg, e);
+            throw e;
         }
         
         return module;
