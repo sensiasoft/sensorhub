@@ -39,6 +39,10 @@ public class SOSTClientConfig extends ClientConfig
     
     @DisplayInfo(desc="Set to true to use a persistent Insertresult connection")
     public boolean usePersistentConnection;
+    
+    
+    @DisplayInfo(desc="Maximum number of records in upload queue (used to compensate for variable bandwidth)")
+    public int maxQueueSize = 100;
 
     
     @DisplayInfo(desc="Maximum number of connection errors before we stop sending data to remote server")

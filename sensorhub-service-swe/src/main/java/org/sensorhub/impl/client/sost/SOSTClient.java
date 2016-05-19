@@ -17,7 +17,6 @@ package org.sensorhub.impl.client.sost;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.net.HttpURLConnection;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -39,10 +38,7 @@ import org.sensorhub.api.service.ServiceException;
 import org.sensorhub.impl.SensorHub;
 import org.sensorhub.impl.module.AbstractModule;
 import org.sensorhub.utils.MsgUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.vast.cdm.common.DataStreamWriter;
-import org.vast.data.DataBlockList;
 import org.vast.ogc.om.IObservation;
 import org.vast.ogc.om.ObservationImpl;
 import org.vast.ows.OWSException;
@@ -68,8 +64,6 @@ import org.vast.swe.SWEData;
  */
 public class SOSTClient extends AbstractModule<SOSTClientConfig> implements IEventListener
 {
-    protected static final Logger log = LoggerFactory.getLogger(SOSTClient.class);
-   
     ISensorModule<?> sensor;
     SOSUtils sosUtils = new SOSUtils();    
     String offering;
@@ -85,6 +79,7 @@ public class SOSTClient extends AbstractModule<SOSTClientConfig> implements IEve
         private SWEData resultData = new SWEData();
         private ThreadPoolExecutor threadPool;
         private DataStreamWriter persistentWriter;
+        private volatile boolean connecting = false;
     }
     
     
@@ -100,7 +95,7 @@ public class SOSTClient extends AbstractModule<SOSTClientConfig> implements IEve
         sensor = SensorHub.getInstance().getSensorManager().getModuleById(config.sensorID);
         if (!sensor.isConnected())
         {
-            log.info("Sensor {} is not connected. Not connecting to SOS", MsgUtils.moduleString(sensor) );
+            getLogger().info("Sensor {} is not connected. Not connecting to SOS", MsgUtils.moduleString(sensor) );
             return;
         }
         
@@ -108,12 +103,12 @@ public class SOSTClient extends AbstractModule<SOSTClientConfig> implements IEve
         {
             // register sensor
             registerSensor(sensor);
-            log.info("Sensor " + MsgUtils.moduleString(sensor) + " registered with SOS");
+            getLogger().info("Sensor " + MsgUtils.moduleString(sensor) + " registered with SOS");
             
             // register all templates
             for (ISensorDataInterface o: sensor.getAllOutputs().values())
                 registerDataStream(o);
-            log.info("Result templates registered with SOS");
+            getLogger().info("Result templates registered with SOS");
         }
         catch (Exception e)
         {
@@ -140,8 +135,15 @@ public class SOSTClient extends AbstractModule<SOSTClientConfig> implements IEve
         // unregister listeners
         output.unregisterListener(this);
         
-        // stop threads
-        streamInfo.threadPool.shutdown();
+        // stop thread pool
+        try
+        {
+            streamInfo.threadPool.shutdownNow();
+            streamInfo.threadPool.awaitTermination(3, TimeUnit.SECONDS);
+        }
+        catch (InterruptedException e)
+        {
+        }
         
         // close open HTTP streams
         try
@@ -234,7 +236,7 @@ public class SOSTClient extends AbstractModule<SOSTClientConfig> implements IEve
         dataStreams.put(sensorOutput, streamInfo);
         
         // start thread pool
-        BlockingQueue<Runnable> workQueue = new ArrayBlockingQueue<Runnable>(2);
+        BlockingQueue<Runnable> workQueue = new ArrayBlockingQueue<Runnable>(config.maxQueueSize);
         streamInfo.threadPool = new ThreadPoolExecutor(1, 1, 10, TimeUnit.SECONDS, workQueue);
         
         // register to data events
@@ -256,7 +258,7 @@ public class SOSTClient extends AbstractModule<SOSTClientConfig> implements IEve
                 }
                 catch (OWSException ex)
                 {
-                    log.error("Error when sending updates sensor description to SOS-T", ex);
+                    getLogger().error("Error when sending updates sensor description to SOS-T", ex);
                 }
             }
         }
@@ -273,7 +275,7 @@ public class SOSTClient extends AbstractModule<SOSTClientConfig> implements IEve
             if (streamInfo.errorCount >= config.maxConnectErrors)
             {
                 String outputName = ((SensorDataEvent)e).getSource().getName();
-                log.error("Too many errors sending '" + outputName + "' data to SOS-T from " + MsgUtils.moduleString(sensor) + ". Stopping Stream.");
+                getLogger().error("Too many errors sending '" + outputName + "' data to SOS-T from " + MsgUtils.moduleString(sensor) + ". Stopping Stream.");
                 stopStream((ISensorDataInterface)e.getSource(), streamInfo);
                 return;
             }
@@ -282,17 +284,13 @@ public class SOSTClient extends AbstractModule<SOSTClientConfig> implements IEve
             if (streamInfo.threadPool.getQueue().remainingCapacity() == 0)
             {
                 String outputName = ((SensorDataEvent)e).getSource().getName();
-                if (log.isDebugEnabled())
-                    log.debug("Too many requests to SOS-T for '" + outputName + "' of " + MsgUtils.moduleString(sensor) + ". Bandwidth cannot keep up.");
+                if (getLogger().isDebugEnabled())
+                    getLogger().debug("Too many records sending '" + outputName + "' data to SOS-T from " + MsgUtils.moduleString(sensor) + ". Bandwidth cannot keep up.");
                 return;
             }
             
             // record last event time
             streamInfo.lastEventTime = e.getTimeStamp();
-            
-            // append records to buffer
-            for (DataBlock record: ((SensorDataEvent)e).getRecords())
-                streamInfo.resultData.pushNextDataBlock(record);
             
             // send record using one of 2 methods
             if (config.usePersistentConnection)
@@ -305,6 +303,10 @@ public class SOSTClient extends AbstractModule<SOSTClientConfig> implements IEve
     
     private void sendAsNewRequest(final SensorDataEvent e, final StreamInfo streamInfo)
     {
+        // append records to buffer
+        for (DataBlock record: ((SensorDataEvent)e).getRecords())
+            streamInfo.resultData.pushNextDataBlock(record);
+        
         // send request if min record count is reached
         if (streamInfo.resultData.getNumElements() >= streamInfo.minRecordsPerRequest)
         {
@@ -324,10 +326,11 @@ public class SOSTClient extends AbstractModule<SOSTClientConfig> implements IEve
                 {
                     try
                     {
-                        if (log.isDebugEnabled())
+                        if (getLogger().isTraceEnabled())
                         {
                             String outputName = e.getSource().getName();
-                            log.debug("Sending '" + outputName + "' record(s) to SOS-T");
+                            int numRecords = req.getResultData().getComponentCount();
+                            getLogger().trace("Sending " + numRecords + " '" + outputName + "' record(s) to SOS-T");
                         }
                         
                         //sosUtils.writeXMLQuery(System.out, req);
@@ -336,7 +339,7 @@ public class SOSTClient extends AbstractModule<SOSTClientConfig> implements IEve
                     catch (Exception ex)
                     {
                         String outputName = e.getSource().getName();
-                        log.error("Error when sending '" + outputName + "' data to SOS-T from " + MsgUtils.moduleString(sensor), ex);
+                        getLogger().error("Error when sending '" + outputName + "' data to SOS-T from " + MsgUtils.moduleString(sensor), ex);
                         streamInfo.errorCount++;
                     }
                 }           
@@ -350,9 +353,9 @@ public class SOSTClient extends AbstractModule<SOSTClientConfig> implements IEve
     
     private void sendInPersistentRequest(final SensorDataEvent e, final StreamInfo streamInfo)
     {
-        // create new container for future data
-        final DataBlockList dataBlockList = (DataBlockList)streamInfo.resultData.getData();
-        streamInfo.resultData.clearData();
+        // skip records while we are connecting to remote SOS
+        if (streamInfo.connecting)
+            return;
         
         // create send request task
         Runnable sendTask = new Runnable() {
@@ -364,8 +367,9 @@ public class SOSTClient extends AbstractModule<SOSTClientConfig> implements IEve
                     // connect if not already connected
                     if (streamInfo.persistentWriter == null)
                     {                        
-                        if (log.isDebugEnabled())
-                            log.debug("Connecting to " + config.sosEndpointUrl + "...");
+                        streamInfo.connecting = true;
+                        if (getLogger().isDebugEnabled())
+                            getLogger().debug("Connecting to " + config.sosEndpointUrl + "...");
                         
                         final InsertResultRequest req = new InsertResultRequest();
                         req.setPostServer(config.sosEndpointUrl);
@@ -381,27 +385,26 @@ public class SOSTClient extends AbstractModule<SOSTClientConfig> implements IEve
                         // prepare writer
                         streamInfo.persistentWriter = streamInfo.resultData.getDataWriter();
                         streamInfo.persistentWriter.setOutput(new BufferedOutputStream(conn.getOutputStream()));
+                        streamInfo.connecting = false;
                     }
                     
-                    // write record to output stream
-                    Iterator<DataBlock> it = dataBlockList.blockIterator();
-                    while (it.hasNext())
+                    if (getLogger().isTraceEnabled())
                     {
-                        if (log.isDebugEnabled())
-                        {
-                            String outputName = e.getSource().getName();
-                            log.debug("Sending '" + outputName + "' record(s) to SOS-T");
-                        }
-                        
-                        streamInfo.persistentWriter.write(it.next());
+                        String outputName = e.getSource().getName();
+                        getLogger().trace("Sending '" + outputName + "' record(s) to SOS-T");
+                        getLogger().trace("Queue size is " + streamInfo.threadPool.getQueue().size());
                     }
+                    
+                    // write records to output stream
+                    for (DataBlock record: e.getRecords())
+                        streamInfo.persistentWriter.write(record);
                     
                     streamInfo.persistentWriter.flush();
                 }
                 catch (Exception ex)
                 {
                     String outputName = e.getSource().getName();
-                    log.error("Error when sending '" + outputName + "' data to SOS-T from " + MsgUtils.moduleString(sensor), ex);
+                    getLogger().error("Error when sending '" + outputName + "' data to SOS-T from " + MsgUtils.moduleString(sensor), ex);
                     streamInfo.errorCount++;
                     
                     try
@@ -416,7 +419,7 @@ public class SOSTClient extends AbstractModule<SOSTClientConfig> implements IEve
                     streamInfo.persistentWriter = null;
                     
                     // wait a little before trying to reconnect
-                    log.debug("Waiting to reconnect...");
+                    getLogger().info("Waiting to reconnect...");
                     try { Thread.sleep(3000L); }
                     catch (InterruptedException e1) { }
                 }
