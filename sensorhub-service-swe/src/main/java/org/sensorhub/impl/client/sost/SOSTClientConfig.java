@@ -42,7 +42,7 @@ public class SOSTClientConfig extends ClientConfig
     
     
     @DisplayInfo(desc="Maximum number of records in upload queue (used to compensate for variable bandwidth)")
-    public int maxQueueSize = 100;
+    public int maxQueueSize = 10;
 
     
     @DisplayInfo(desc="Maximum number of connection errors before we stop sending data to remote server")
