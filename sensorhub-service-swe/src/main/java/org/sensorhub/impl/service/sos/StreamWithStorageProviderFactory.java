@@ -88,7 +88,7 @@ public class StreamWithStorageProviderFactory<ProducerType extends IDataProducer
                 capabilities.setDescription("Live and archive data from " + producer.getName());
             
             // enable live by setting end time to now
-            TimeExtent timeExtent = caps.getPhenomenonTime();
+            TimeExtent timeExtent = capabilities.getPhenomenonTime();
             if (timeExtent.isNull())
             {
                 timeExtent.setBeginNow(true);

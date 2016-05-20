@@ -40,6 +40,8 @@ import org.sensorhub.api.data.FoiEvent;
 import org.sensorhub.api.data.IDataProducerModule;
 import org.sensorhub.api.data.IMultiSourceDataProducer;
 import org.sensorhub.api.data.IStreamingDataInterface;
+import org.sensorhub.api.module.ModuleEvent;
+import org.sensorhub.api.module.ModuleEvent.ModuleState;
 import org.sensorhub.api.persistence.DataKey;
 import org.sensorhub.api.persistence.IBasicStorage;
 import org.sensorhub.api.persistence.IFoiFilter;
@@ -121,46 +123,10 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
         IDataProducerModule<?> dataSource = dataSourceRef.get();
         if (dataSource != null)
         {        
-            // if storage is empty, initialize it
-            if (storage.getLatestDataSourceDescription() == null)
-                configureStorageForDataSource(dataSource, storage);
+            if (dataSource.isStarted())
+                connectToDataSource(dataSource);
             
-            // otherwise just get the latest sensor description in case we were down during the last update
-            else if (dataSource.getLastDescriptionUpdate() != Long.MIN_VALUE)
-                storage.storeDataSourceDescription(dataSource.getCurrentDescription());
-            
-            // also init current FOI
-            if (dataSource instanceof IMultiSourceDataProducer)
-            {
-                for (String entityID: ((IMultiSourceDataProducer)dataSource).getEntityIDs())
-                {
-                    AbstractFeature foi = ((IMultiSourceDataProducer)dataSource).getCurrentFeatureOfInterest(entityID);
-                    if (foi != null)
-                    {
-                        currentFoiMap.put(entityID, foi.getUniqueIdentifier());
-                        if (storage instanceof IObsStorage)
-                            ((IObsStorage)storage).storeFoi(entityID, foi);
-                    }
-                }
-            }
-            else
-            {
-                String producerID = dataSource.getCurrentDescription().getUniqueIdentifier();
-                AbstractFeature foi = dataSource.getCurrentFeatureOfInterest();
-                if (foi != null)
-                {
-                    currentFoi = foi.getUniqueIdentifier();
-                    currentFoiMap.put(producerID, currentFoi);
-                    if (storage instanceof IObsStorage)
-                        ((IObsStorage)storage).storeFoi(producerID, foi);
-                }
-            }
-            
-            // register to data events
-            for (IStreamingDataInterface output: getSelectedOutputs(dataSource))
-                prepareToReceiveEvents(output);
-            
-            // register to datasource change events
+            // register to data source change events
             dataSource.registerListener(this);
         }
         else
@@ -185,7 +151,7 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
     /*
      * Initializes storage by loading initial sensor description and FOI, and creating appropriate record stores
      */
-    protected void configureStorageForDataSource(IDataProducerModule<?> dataSource, IRecordStorageModule<?> storage) throws StorageException
+    protected void configureStorageForDataSource(IDataProducerModule<?> dataSource, IRecordStorageModule<?> storage)
     {
         if (storage.getRecordStores().size() > 0)
             throw new RuntimeException("Storage " + MsgUtils.moduleString(storage) + " is already configured");
@@ -227,6 +193,9 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
     }
     
     
+    /*
+     * Ensures metadata for the new producer is stored (for multi-producer sources)
+     */
     protected void ensureProducerInfo(String producerID)
     {
         if (storage instanceof IMultiSourceStorage)
@@ -253,6 +222,55 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
     }
     
     
+    /*
+     * Connects to data source and store initial metadata for all selected streams
+     */
+    protected void connectToDataSource(IDataProducerModule<?> dataSource)
+    {
+        // if storage is empty, initialize it
+        if (storage.getLatestDataSourceDescription() == null)
+            configureStorageForDataSource(dataSource, storage);
+        
+        // otherwise just get the latest sensor description in case we were down during the last update
+        else if (dataSource.getLastDescriptionUpdate() != Long.MIN_VALUE)
+            storage.storeDataSourceDescription(dataSource.getCurrentDescription());
+        
+        // also init current FOI
+        if (dataSource instanceof IMultiSourceDataProducer)
+        {
+            for (String entityID: ((IMultiSourceDataProducer)dataSource).getEntityIDs())
+            {
+                AbstractFeature foi = ((IMultiSourceDataProducer)dataSource).getCurrentFeatureOfInterest(entityID);
+                if (foi != null)
+                {
+                    currentFoiMap.put(entityID, foi.getUniqueIdentifier());
+                    if (storage instanceof IObsStorage)
+                        ((IObsStorage)storage).storeFoi(entityID, foi);
+                }
+            }
+        }
+        else
+        {
+            String producerID = dataSource.getCurrentDescription().getUniqueIdentifier();
+            AbstractFeature foi = dataSource.getCurrentFeatureOfInterest();
+            if (foi != null)
+            {
+                currentFoi = foi.getUniqueIdentifier();
+                currentFoiMap.put(producerID, currentFoi);
+                if (storage instanceof IObsStorage)
+                    ((IObsStorage)storage).storeFoi(producerID, foi);
+            }
+        }
+        
+        // register to data events
+        for (IStreamingDataInterface output: getSelectedOutputs(dataSource))
+            prepareToReceiveEvents(output);
+    }
+    
+    
+    /*
+     * Listen to events and prepare to index time stamps for given stream
+     */
     protected void prepareToReceiveEvents(IStreamingDataInterface output)
     {
         // create time stamp indexer
@@ -302,6 +320,16 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
     @Override
     public void handleEvent(Event<?> e)
     {
+        if (e instanceof ModuleEvent)
+        {
+            // in case data source wasn't started, we listen for start events
+            if (((ModuleEvent) e).getNewState() == ModuleState.STARTED)
+            {
+                connectToDataSource(dataSourceRef.get());
+                setState(ModuleState.STARTED);
+            }
+        }
+        
         if (config.processEvents)
         {
             // new data events
@@ -676,5 +704,16 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
     {
         if (storage == null)
             throw new RuntimeException("Storage is disabled");
+    }
+
+
+    @Override
+    protected void setState(ModuleState newState)
+    {
+        // we can't start if data source metadata was never fetched
+        if (newState == ModuleState.STARTED && storage.getLatestDataSourceDescription() == null)
+            return;
+            
+        super.setState(newState);
     }
 }
