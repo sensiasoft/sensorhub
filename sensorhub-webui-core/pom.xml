@@ -10,7 +10,7 @@
    <name>SensorHub Web UI Core</name>
    <description>Web based admin user interface for SensorHub</description>
    <properties>
-      <vaadin.version>7.4.0</vaadin.version>
+      <vaadin.version>7.4.8</vaadin.version>
    </properties>
    <repositories>
       <repository>
@@ -35,6 +35,12 @@
          <version>${project.version}</version>
          <type>test-jar</type>
          <scope>test</scope>
+      </dependency>
+      <dependency>
+         <groupId>org.sensorhub</groupId>
+         <artifactId>sensorhub-service-swe</artifactId>
+         <version>${project.version}</version>
+         <type>bundle</type>
       </dependency>
       <dependency>
          <groupId>org.sensorhub</groupId>

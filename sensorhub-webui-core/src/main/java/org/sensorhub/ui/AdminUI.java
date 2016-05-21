@@ -62,6 +62,7 @@ import com.vaadin.server.ThemeResource;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.server.VaadinSession;
 import com.vaadin.shared.communication.PushMode;
+import com.vaadin.shared.ui.ui.Transport;
 import com.vaadin.ui.Accordion;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
@@ -83,7 +84,7 @@ import com.vaadin.ui.Window.CloseListener;
 
 
 @Theme("sensorhub")
-@Push(PushMode.MANUAL)
+@Push(value=PushMode.MANUAL, transport=Transport.WEBSOCKET)
 public class AdminUI extends com.vaadin.ui.UI
 {
     private static final long serialVersionUID = 4069325051233125115L;
