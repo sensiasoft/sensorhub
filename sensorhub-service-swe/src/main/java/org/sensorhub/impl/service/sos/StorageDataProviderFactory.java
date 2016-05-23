@@ -83,9 +83,9 @@ public class StorageDataProviderFactory implements ISOSDataProviderFactory, IEve
             // get handle to data storage instance
             storageModule = SensorHub.getInstance().getPersistenceManager().getModuleById(config.storageID);
         }
-        catch (SensorHubException e)
+        catch (Exception e)
         {
-            throw new ServiceException("Storage " + config.storageID + " doesn't exist");
+            throw new ServiceException("Storage " + config.storageID + " is not available", e);
         }
         
         try
