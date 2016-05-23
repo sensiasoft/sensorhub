@@ -21,6 +21,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.regex.Pattern;
 
 
 /**
@@ -33,6 +34,7 @@ import java.nio.file.attribute.BasicFileAttributes;
  */
 public class FileUtils
 {
+    private static String ALLOWED_FILE_CHARS = "a-zA-Z0-9\\.\\-_";
     
     
     /**
@@ -42,7 +44,47 @@ public class FileUtils
      */
     public static String safeFileName(String name)
     {
-        return name.replaceAll("[^a-zA-Z0-9.-]", "_");
+        return name.replaceAll("[^" + ALLOWED_FILE_CHARS + "]+", "_");
+    }
+    
+    
+    /**
+     * Checks if string can be used as file name
+     * @param name
+     * @return true if the name is a valid file name
+     */
+    public static boolean isSafeFileName(String name)
+    {
+        return (name != null) && (name.matches("[" + ALLOWED_FILE_CHARS + "]*"));
+    }
+    
+    
+    /**
+     * Checks if string can be used as file path
+     * @param path
+     * @return true if the path is a valid file path
+     */
+    public static boolean isSafeFilePath(String path)
+    {
+        if (path == null)
+            return false;
+        
+        Pattern regex = Pattern.compile("[" + ALLOWED_FILE_CHARS + "]*");
+        String[] parts = path.split(File.separator);
+        
+        for (int i = 0; i < parts.length; i++)
+        {
+            String part = parts[i];
+            
+            // allow ':' suffix in first part for drive letters
+            if (i == 0 && part.endsWith(":"))
+                part = part.substring(0, part.length()-1);
+            
+            if (!regex.matcher(part).matches())
+                return false;
+        }
+        
+        return true;
     }
     
     
