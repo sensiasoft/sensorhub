@@ -78,10 +78,18 @@ public class StorageDataProviderFactory implements ISOSDataProviderFactory, IEve
         this.config = config;
         IStorageModule<?> storageModule = null;
         
-        // get handle to data storage instance
         try
         {
+            // get handle to data storage instance
             storageModule = SensorHub.getInstance().getPersistenceManager().getModuleById(config.storageID);
+        }
+        catch (SensorHubException e)
+        {
+            throw new ServiceException("Storage " + config.storageID + " doesn't exist");
+        }
+        
+        try
+        {
             this.storage = (IRecordStorageModule<?>)storageModule;
             
             // listen to storage lifecycle events
