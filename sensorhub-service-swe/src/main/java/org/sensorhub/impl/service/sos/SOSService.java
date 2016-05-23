@@ -88,6 +88,7 @@ import org.sensorhub.impl.sensor.sost.SOSVirtualSensor;
 import org.sensorhub.impl.service.HttpServer;
 import org.sensorhub.impl.service.ogc.OGCServiceConfig.CapabilitiesInfo;
 import org.sensorhub.impl.service.sos.ISOSDataConsumer.Template;
+import org.sensorhub.utils.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vast.cdm.common.DataSource;
@@ -1214,7 +1215,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
                         streamStorageConfig.autoStart = true;
                         streamStorageConfig.dataSourceID = sensorUID;
                         streamStorageConfig.storageConfig = (StorageConfig)config.newStorageConfig.clone();
-                        streamStorageConfig.storageConfig.storagePath = sensorUID + ".dat";
+                        streamStorageConfig.storageConfig.storagePath = FileUtils.safeFileName(sensorUID) + ".dat";
                         moduleReg.loadModule(streamStorageConfig);
                         configSaveList.add(streamStorageConfig);
                         
