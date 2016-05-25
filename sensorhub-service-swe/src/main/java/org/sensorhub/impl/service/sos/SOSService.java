@@ -1181,6 +1181,7 @@ public class SOSService extends SOSServlet implements IServiceModule<SOSServiceC
                     sensorConfig.name = sensorName;
                     SOSVirtualSensor virtualSensor = (SOSVirtualSensor)moduleReg.loadModule(sensorConfig);
                     virtualSensor.updateSensorDescription(request.getProcedureDescription(), false);
+                    sensorConfig.autoStart = true;
                     configSaveList.add(sensorConfig);
                 }
                 
