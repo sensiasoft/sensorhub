@@ -36,6 +36,7 @@ import net.opengis.swe.v20.DataEncoding;
 import net.opengis.swe.v20.DataStream;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.module.IModuleStateManager;
+import org.sensorhub.api.module.ModuleEvent.ModuleState;
 import org.sensorhub.api.sensor.SensorEvent;
 import org.sensorhub.api.sensor.SensorException;
 import org.sensorhub.impl.sensor.AbstractSensorModule;
@@ -117,8 +118,11 @@ public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfi
 
     public void newObservation(IObservation... observations) throws Exception
     {
-        // TODO Auto-generated method stub
+        // don't do anything if sensor is not started
+        if (state != ModuleState.STARTED)
+            return;
 
+        // TODO implement insert observation
         // also register template
     }
 
@@ -239,9 +243,13 @@ public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfi
 
     public void newResultRecord(String templateID, DataBlock... dataBlocks) throws Exception
     {
+        // don't do anything if sensor is not started
+        if (state != ModuleState.STARTED)
+            return;
+        
         String outputName = getOutputNameFromTemplateID(templateID);
         
-        SOSVirtualSensorOutput output = (SOSVirtualSensorOutput)getObservationOutputs().get(outputName);
+        SOSVirtualSensorOutput output = (SOSVirtualSensorOutput)getAllOutputs().get(outputName);
         log.trace("New record received for output " + output.getName());
         
         for (DataBlock dataBlock: dataBlocks)
@@ -263,13 +271,15 @@ public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfi
 
     @Override
     public void start() throws SensorHubException
-    {        
+    {
+        setState(ModuleState.STARTED);
     }
 
 
     @Override
     public void stop() throws SensorHubException
     {
+        setState(ModuleState.STOPPED);
     }
 
 
