@@ -58,6 +58,7 @@ public class StreamDataProviderFactory<ProducerType extends IDataProducerModule<
     final String producerType;
     final ProducerType producer;
     long liveDataTimeOut;
+    long refTimeOut;
     SOSOfferingCapabilities caps;
     
     
@@ -68,6 +69,7 @@ public class StreamDataProviderFactory<ProducerType extends IDataProducerModule<
         this.producerType = producerType;
         this.producer = producer;
         this.liveDataTimeOut = (long)(config.liveDataTimeout * 1000);
+        this.refTimeOut = System.currentTimeMillis(); // initial ref for timeout is SOS startup time
         
         // listen to producer lifecycle events
         producer.registerListener(this);
@@ -159,23 +161,8 @@ public class StreamDataProviderFactory<ProducerType extends IDataProducerModule<
         // enable real-time requests if streaming data source is enabled
         if (producer.isStarted())
         {
-            long now =  System.currentTimeMillis();
-            
-            // check latest record time
-            long lastRecordTime = producer.getLastDescriptionUpdate(); // default to date of sensor registration
-            for (IStreamingDataInterface output: producer.getAllOutputs().values())
-            {
-                // skip hidden outputs
-                if (config.hiddenOutputs != null && config.hiddenOutputs.contains(output.getName()))
-                    continue;
-                
-                long recTime = output.getLatestRecordTime();
-                if (recTime > lastRecordTime)
-                    lastRecordTime = recTime;
-            }
-            
             // if latest record is not too old, enable real-time
-            if (lastRecordTime != Long.MIN_VALUE && now - lastRecordTime < liveDataTimeOut)
+            if (getTimeSinceLastRecord() < liveDataTimeOut)
             {
                 caps.getPhenomenonTime().setBeginNow(true);
                 caps.getPhenomenonTime().setEndNow(true);
@@ -183,6 +170,27 @@ public class StreamDataProviderFactory<ProducerType extends IDataProducerModule<
             else
                 caps.getPhenomenonTime().nullify();
         }
+    }
+    
+    
+    protected long getTimeSinceLastRecord()
+    {
+        long now =  System.currentTimeMillis();
+        
+        // check latest record time
+        long lastRecordTime = refTimeOut;
+        for (IStreamingDataInterface output: producer.getAllOutputs().values())
+        {
+            // skip hidden outputs
+            if (config.hiddenOutputs != null && config.hiddenOutputs.contains(output.getName()))
+                continue;
+            
+            long recTime = output.getLatestRecordTime();
+            if (recTime > lastRecordTime)
+                lastRecordTime = recTime;
+        }
+        
+        return now - lastRecordTime;
     }
 
 

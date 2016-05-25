@@ -19,7 +19,6 @@ import net.opengis.gml.v32.AbstractFeature;
 import org.sensorhub.api.common.Event;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.data.IDataProducerModule;
-import org.sensorhub.api.data.IStreamingDataInterface;
 import org.sensorhub.api.module.ModuleEvent;
 import org.sensorhub.api.module.ModuleEvent.ModuleState;
 import org.sensorhub.api.persistence.IFoiFilter;
@@ -114,23 +113,9 @@ public class StreamWithStorageProviderFactory<ProducerType extends IDataProducer
         // enable real-time requests if streaming data source is enabled
         if (producer.isStarted())
         {
-            long now =  System.currentTimeMillis();
-            
-            // check latest record time
-            long lastRecordTime = producer.getLastDescriptionUpdate(); // default to date of sensor registration
-            for (IStreamingDataInterface output: producer.getAllOutputs().values())
-            {
-                // skip hidden outputs
-                if (config.hiddenOutputs != null && config.hiddenOutputs.contains(output.getName()))
-                    continue;
-                
-                long recTime = output.getLatestRecordTime();
-                if (recTime > lastRecordTime)
-                    lastRecordTime = recTime;
-            }
-            
             // if latest record is not too old, enable real-time
-            if (lastRecordTime != Long.MIN_VALUE && now - lastRecordTime < liveDataTimeOut)
+            long delta = altProvider.getTimeSinceLastRecord();
+            if (delta < liveDataTimeOut)
                 caps.getPhenomenonTime().setEndNow(true);
             
             // if storage does support FOIs, list the current ones

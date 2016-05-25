@@ -80,10 +80,6 @@ public abstract class StreamDataProvider implements ISOSDataProvider, IEventList
             if (config.hiddenOutputs != null && config.hiddenOutputs.contains(outputInterface.getName()))
                 continue;
             
-            // skip if disabled
-            if (!outputInterface.isEnabled())
-                continue;
-            
             // keep it if we can find one of the observables
             DataIterator it = new DataIterator(outputInterface.getRecordDescription());
             while (it.hasNext())
