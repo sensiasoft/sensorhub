@@ -119,7 +119,7 @@ public class FakeSensorData extends AbstractSensorOutput<FakeSensor> implements 
     @Override
     public void start()
     {
-        // we start sending if we are started and have listeners
+        // we start sending only if we have listeners
         if (hasListeners)
             startSending();
         started = true;
@@ -316,9 +316,10 @@ public class FakeSensorData extends AbstractSensorOutput<FakeSensor> implements 
     {
         super.registerListener(listener);
         
-        // we start sending if we are started and have listeners
+        // we start sending only if start has been called
         if (started)
             startSending();
+        
         hasListeners = true;
     }
 
