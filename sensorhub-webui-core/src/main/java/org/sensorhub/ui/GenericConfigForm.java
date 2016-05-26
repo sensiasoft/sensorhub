@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import org.sensorhub.api.module.IModule;
 import org.sensorhub.api.module.ModuleConfig;
+import org.sensorhub.impl.sensor.SensorSystemConfig.ProcessMember;
 import org.sensorhub.impl.sensor.SensorSystemConfig.SensorMember;
 import org.sensorhub.ui.ModuleInstanceSelectionPopup.ModuleInstanceSelectionCallback;
 import org.sensorhub.ui.ModuleTypeSelectionPopup.ModuleTypeSelectionCallback;
@@ -135,7 +136,7 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
                 if (prop instanceof ContainerProperty)
                 {
                     Class<?> eltType = ((ContainerProperty)prop).getValue().getBeanType();
-                    if (eltType == SensorMember.class)
+                    if (eltType == SensorMember.class || eltType == ProcessMember.class)
                         continue;
                     
                     // use simple table for string lists

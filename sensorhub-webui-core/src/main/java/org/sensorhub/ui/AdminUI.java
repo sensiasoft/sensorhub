@@ -464,7 +464,7 @@ public class AdminUI extends com.vaadin.ui.UI
                     // open bean item configuration
                     ModuleConfig config = module.getConfiguration().clone();
                     MyBeanItem<ModuleConfig> beanItem = new MyBeanItem<ModuleConfig>(config);
-                    openModuleInfo(beanItem);
+                    openModuleInfo(beanItem, module);
                 }
                 catch (Exception e)
                 {
@@ -535,7 +535,7 @@ public class AdminUI extends com.vaadin.ui.UI
                             table.getItem(config.id).getItemProperty(PROP_MODULE_OBJECT).setValue(module);
                             
                             MyBeanItem<ModuleConfig> newBeanItem = new MyBeanItem<ModuleConfig>(config);
-                            openModuleInfo(newBeanItem);
+                            openModuleInfo(newBeanItem, module);
                         }
                     });
                     popup.setModal(true);
@@ -587,9 +587,9 @@ public class AdminUI extends com.vaadin.ui.UI
                                 {                    
                                     try 
                                     {
-                                        registry.startModule(moduleId);
+                                        IModule<?> module = registry.startModule(moduleId);
                                         item.getItemProperty(PROP_STARTED).setValue(true);
-                                        openModuleInfo((MyBeanItem<ModuleConfig>)item);
+                                        openModuleInfo((MyBeanItem<ModuleConfig>)item, module);
                                     }
                                     catch (SensorHubException ex)
                                     {
@@ -661,14 +661,9 @@ public class AdminUI extends com.vaadin.ui.UI
     }
         
     
-    protected void openModuleInfo(MyBeanItem<ModuleConfig> beanItem)
+    protected void openModuleInfo(MyBeanItem<ModuleConfig> beanItem, IModule<?> module)
     {
         configArea.removeAllComponents();
-        
-        // this will load the module (i.e. call init) if not already loaded
-        IModule<?> module = null;                
-        try { module = SensorHub.getInstance().getModuleRegistry().getModuleById(beanItem.getBean().id); }
-        catch (Exception e) {}
         
         // get panel for this config object        
         Class<?> configClass = beanItem.getBean().getClass();
