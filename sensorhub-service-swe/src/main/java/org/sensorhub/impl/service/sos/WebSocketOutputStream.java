@@ -60,6 +60,10 @@ public class WebSocketOutputStream extends ByteArrayOutputStream
         if (closed)
             throw new EOFException();
         
+        // do nothing if no more bytes have been written since last call
+        if (count == 0)
+            return;
+        
         // detect when buffer has grown
         if (count > buffer.capacity())
             this.buffer = ByteBuffer.wrap(this.buf);
