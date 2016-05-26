@@ -41,6 +41,7 @@ import org.sensorhub.api.persistence.StorageEvent;
 import org.sensorhub.api.persistence.StorageException;
 import org.sensorhub.api.persistence.StorageEvent.Type;
 import org.sensorhub.impl.module.AbstractModule;
+import org.sensorhub.utils.FileUtils;
 
 
 /**
@@ -66,6 +67,10 @@ public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> impleme
         try
         {
             this.autoCommit = true;
+            
+            // check file path is valid
+            if (!FileUtils.isSafeFilePath(config.storagePath))
+                throw new StorageException("Storage path contains illegal characters: " + config.storagePath);
             
             // acquire file lock on DB file
             MappedFile dbFile = new MappedFile(config.storagePath, 100*1024, false);
