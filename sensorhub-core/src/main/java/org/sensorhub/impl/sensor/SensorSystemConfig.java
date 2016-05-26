@@ -18,6 +18,10 @@ import java.util.ArrayList;
 import java.util.List;
 import org.sensorhub.api.config.DisplayInfo;
 import org.sensorhub.api.processing.ProcessConfig;
+import org.sensorhub.api.sensor.PositionConfig;
+import org.sensorhub.api.sensor.PositionConfig.CartesianLocation;
+import org.sensorhub.api.sensor.PositionConfig.EulerOrientation;
+import org.sensorhub.api.sensor.PositionConfig.LLALocation;
 import org.sensorhub.api.sensor.SensorConfig;
 
 
@@ -36,13 +40,48 @@ public class SensorSystemConfig extends SensorConfig
     {
         public String name;
         public SensorConfig config;
+        public CartesianLocation location;
+        public EulerOrientation orientation;
     }
     
+    
+    public static class ProcessMember
+    {
+        public String name;
+        public ProcessConfig config;
+    }
+    
+        
+    @DisplayInfo(desc="Unique ID (full URN or only suffix) to use for the sensor system or 'auto' to use the UUID randomly generated the first time the module is initialized")
+    public String uniqueID;
+    
+    
+    @DisplayInfo(label="Fixed Position", desc="Fixed system position on earth")
+    public PositionConfig position;
     
     
     @DisplayInfo(label="System Sensors", desc="Configuration of sensor components of this sensor system")
     public List<SensorMember> sensors = new ArrayList<SensorMember>();    
     
+    
     @DisplayInfo(label="System Processes", desc="Configuration of processing components of this sensor system")
-    public List<ProcessConfig> processes = new ArrayList<ProcessConfig>();
+    public List<ProcessMember> processes = new ArrayList<ProcessMember>();
+
+
+    @Override
+    public LLALocation getLocation()
+    {
+        if (position == null)
+            return null;
+        return position.location;
+    }
+
+
+    @Override
+    public EulerOrientation getOrientation()
+    {
+        if (position == null)
+            return null;
+        return position.orientation;
+    }
 }

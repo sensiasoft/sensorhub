@@ -27,11 +27,11 @@ import org.sensorhub.api.processing.IProcessModule;
 import org.sensorhub.api.sensor.ISensorControlInterface;
 import org.sensorhub.api.sensor.ISensorDataInterface;
 import org.sensorhub.api.sensor.ISensorModule;
-import org.sensorhub.api.sensor.SensorConfig;
-import org.sensorhub.api.sensor.SensorException;
 import org.sensorhub.impl.SensorHub;
 import org.sensorhub.impl.module.ModuleRegistry;
+import org.sensorhub.impl.sensor.SensorSystemConfig.ProcessMember;
 import org.sensorhub.impl.sensor.SensorSystemConfig.SensorMember;
+import org.sensorhub.utils.MsgUtils;
 
 
 /**
@@ -48,6 +48,10 @@ import org.sensorhub.impl.sensor.SensorSystemConfig.SensorMember;
  */
 public class SensorSystem extends AbstractSensorModule<SensorSystemConfig>
 {
+    public final static String AUTO_ID = "auto";    
+    private final static String HTTP_PREFIX = "http://";
+    private final static String URN_PREFIX = "urn:";
+    
     Map<String, ISensorModule<?>> sensors;
     Map<String, IProcessModule<?>> processes;
     
@@ -59,18 +63,34 @@ public class SensorSystem extends AbstractSensorModule<SensorSystemConfig>
         
         // generate XML ID
         this.xmlID.replace(DEFAULT_ID, "SYSTEM_");
-                
+        
+        // set unique ID
+        if (config.uniqueID != null && !config.uniqueID.equals(AUTO_ID))
+        {
+            if (config.uniqueID.startsWith(HTTP_PREFIX) || config.uniqueID.startsWith(URN_PREFIX))
+                this.uniqueID = config.uniqueID;
+            else
+                this.uniqueID = URN_PREFIX + "osh:system:" + config.uniqueID;
+        }
+        
         // load all sensor modules        
         sensors = new LinkedHashMap<String, ISensorModule<?>>();
         for (SensorMember member: config.sensors)
         {
-            ISensorModule<SensorConfig> sensor = (ISensorModule<SensorConfig>)loadModule(member.config);
-            sensors.put(member.name, sensor);
+            ISensorModule<?> sensor = (ISensorModule<?>)loadModule(member.config);
+            if (sensor != null)
+                sensors.put(member.name, sensor);
         }
         
-        // TODO load all processing modules
+        // load all processing modules
         processes = new LinkedHashMap<String, IProcessModule<?>>();        
-                
+        for (ProcessMember member: config.processes)
+        {
+            IProcessModule<?> process = (IProcessModule<?>)loadModule(member.config);
+            if (process != null)
+                processes.put(member.name, process);
+        }
+        
         // aggregate all sensors outputs and control inputs
         for (ISensorModule<?> sensor: sensors.values())
         {
@@ -86,7 +106,7 @@ public class SensorSystem extends AbstractSensorModule<SensorSystemConfig>
     }
     
     
-    private IModule<?> loadModule(ModuleConfig config) throws SensorException
+    private IModule<?> loadModule(ModuleConfig config)
     {
         try
         {
@@ -100,8 +120,8 @@ public class SensorSystem extends AbstractSensorModule<SensorSystemConfig>
         }
         catch (Exception e)
         {
-            throw new SensorException("Cannot initialize system component " + config.name +
-                                      " (" + config.moduleClass + ")", e);
+            getLogger().error("Cannot initialize system component {}", MsgUtils.moduleString(config), e);
+            return null;
         }
     }
 
@@ -126,21 +146,37 @@ public class SensorSystem extends AbstractSensorModule<SensorSystemConfig>
     {
         for (ISensorModule<?> sensor: sensors.values())
         {
-            sensor.start();
-            
-            // add sensor outputs and control inputs now in case they didn't exist in init()
-            for (ISensorDataInterface output: sensor.getObservationOutputs().values())
-                this.addOutput(output, false);
-            
-            for (ISensorDataInterface output: sensor.getStatusOutputs().values())
-                this.addOutput(output, true);
-            
-            for (ISensorControlInterface input: sensor.getCommandInputs().values())
-                this.addControlInput(input);
+            try
+            {
+                sensor.start();
+                
+                // add sensor outputs and control inputs now in case they didn't exist in init()
+                for (ISensorDataInterface output: sensor.getObservationOutputs().values())
+                    this.addOutput(output, false);
+                
+                for (ISensorDataInterface output: sensor.getStatusOutputs().values())
+                    this.addOutput(output, true);
+                
+                for (ISensorControlInterface input: sensor.getCommandInputs().values())
+                    this.addControlInput(input);
+            }
+            catch (Exception e)
+            {
+                getLogger().error("Cannot start system sensor {}", MsgUtils.moduleString(sensor), e);
+            }
         }
         
         for (IProcessModule<?> process: processes.values())
-            process.start();
+        {
+            try
+            {
+                process.start();
+            }
+            catch (Exception e)
+            {
+                getLogger().error("Cannot start system process {}", MsgUtils.moduleString(process), e);
+            }
+        }
     }
 
 

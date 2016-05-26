@@ -546,7 +546,7 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
         
         // set unique ID to the one previously saved
         String uniqueID = loader.getAsString(STATE_UNIQUE_ID);
-        if (uniqueID != null)
+        if (uniqueID != null && this.uniqueID.startsWith(UUID_URI_PREFIX))
             this.uniqueID = uniqueID;
         
         Long lastUpdateTime = loader.getAsLong(STATE_LAST_SML_UPDATE);
