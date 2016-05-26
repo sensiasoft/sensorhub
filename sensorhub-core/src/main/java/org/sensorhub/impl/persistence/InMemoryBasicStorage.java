@@ -410,7 +410,7 @@ public class InMemoryBasicStorage extends AbstractModule<StorageConfig> implemen
      */
     public class TimeSeriesImpl implements IRecordStoreInfo
     {
-        List<DBRecord> recordList = new LinkedList<DBRecord>();;
+        List<DBRecord> recordList = Collections.synchronizedList(new LinkedList<DBRecord>());
         DataComponent recordDescription;
         DataEncoding recommendedEncoding;
         
