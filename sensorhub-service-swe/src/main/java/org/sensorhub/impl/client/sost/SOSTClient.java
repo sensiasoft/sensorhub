@@ -34,6 +34,7 @@ import org.sensorhub.api.sensor.ISensorDataInterface;
 import org.sensorhub.api.sensor.ISensorModule;
 import org.sensorhub.api.sensor.SensorDataEvent;
 import org.sensorhub.api.sensor.SensorEvent;
+import org.sensorhub.api.service.IClientModule;
 import org.sensorhub.api.service.ServiceException;
 import org.sensorhub.impl.SensorHub;
 import org.sensorhub.impl.module.AbstractModule;
@@ -62,7 +63,7 @@ import org.vast.swe.SWEData;
  * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @since Feb 6, 2015
  */
-public class SOSTClient extends AbstractModule<SOSTClientConfig> implements IEventListener
+public class SOSTClient extends AbstractModule<SOSTClientConfig> implements IClientModule<SOSTClientConfig>, IEventListener
 {
     ISensorModule<?> sensor;
     SOSUtils sosUtils = new SOSUtils();    
@@ -93,11 +94,6 @@ public class SOSTClient extends AbstractModule<SOSTClientConfig> implements IEve
     public void start() throws SensorHubException
     {
         sensor = SensorHub.getInstance().getSensorManager().getModuleById(config.sensorID);
-        if (!sensor.isConnected())
-        {
-            getLogger().info("Sensor {} is not connected. Not connecting to SOS", MsgUtils.moduleString(sensor) );
-            return;
-        }
         
         try
         {
@@ -105,7 +101,7 @@ public class SOSTClient extends AbstractModule<SOSTClientConfig> implements IEve
             registerSensor(sensor);
             getLogger().info("Sensor " + MsgUtils.moduleString(sensor) + " registered with SOS");
             
-            // register all templates
+            // register all stream templates
             for (ISensorDataInterface o: sensor.getAllOutputs().values())
                 registerDataStream(o);
             getLogger().info("Result templates registered with SOS");
@@ -431,6 +427,7 @@ public class SOSTClient extends AbstractModule<SOSTClientConfig> implements IEve
     }
     
     
+    @Override
     public boolean isConnected()
     {
         return (offering != null);
