@@ -291,14 +291,14 @@ public class TestSOSService
     protected FakeSensor startSending(SensorDataProviderConfig sosProviderConfig, boolean waitForFirstRecord) throws Exception
     {
         final ReentrantLock lock = new ReentrantLock();
-        final Condition condition = lock.newCondition();
+        final Condition firstRecord = lock.newCondition();
         
         FakeSensor sensor = (FakeSensor)SensorHub.getInstance().getModuleRegistry().startModule(sosProviderConfig.sensorID);
         sensor.getAllOutputs().get(NAME_OUTPUT1).registerListener(new IEventListener() {
             public void handleEvent(Event<?> event)
             { 
                 lock.lock();
-                condition.signal();
+                firstRecord.signal();
                 lock.unlock();
             }
         });
@@ -306,7 +306,7 @@ public class TestSOSService
         if (waitForFirstRecord)
         {
             lock.lock();
-            assertTrue("No data available before timeout", condition.await(10, TimeUnit.SECONDS));
+            assertTrue("No data available before timeout", firstRecord.await(10, TimeUnit.SECONDS));
             lock.unlock();
         }
         
@@ -767,11 +767,8 @@ public class TestSOSService
         deployService(provider1);
         startSending(provider1, true);
         
-        String[] records = sendGetResult(URI_OFFERING1, URI_PROP1_FIELD1, TIMERANGE_NOW);
+        String[] records = sendGetResult(URI_OFFERING1, URI_PROP1_FIELD2, TIMERANGE_NOW);
         checkGetResultResponse(records, 1, 2);
-        
-        records = sendGetResult(URI_OFFERING1, URI_PROP1, TIMERANGE_NOW);
-        checkGetResultResponse(records, 1, 4);
     }
     
     
