@@ -17,6 +17,8 @@ package org.sensorhub.api.sensor;
 import java.net.URL;
 import org.sensorhub.api.config.DisplayInfo;
 import org.sensorhub.api.module.ModuleConfig;
+import org.sensorhub.api.sensor.PositionConfig.LLALocation;
+import org.sensorhub.api.sensor.PositionConfig.EulerOrientation;
 
 
 /**
@@ -42,10 +44,6 @@ public class SensorConfig extends ModuleConfig
     public String[] hiddenIO;
     
     
-    @DisplayInfo(desc="Static sensor position")    
-    public PositionConfig position = new PositionConfig();
-    
-    
     /**
      * Gets the URL of the SensorML template.<br/>
      * If the {@link #sensorML} field is not a URL, it is interpreted as a
@@ -63,5 +61,27 @@ public class SensorConfig extends ModuleConfig
         // else try to get java resource
         URL resourceUrl = getClass().getResource(sensorML);
         return (resourceUrl == null) ? null : resourceUrl.toString();
+    }
+    
+    
+    /**
+     * This method must be overriden to give access to static sensor
+     * location provided in specific sensor configuration
+     * @return null in the default implementation
+     */
+    public LLALocation getLocation()
+    {
+        return null;
+    }
+    
+    
+    /**
+     * This method must be overriden to give access to static sensor
+     * orientation provided in specific sensor configuration
+     * @return null in the default implementation
+     */
+    public EulerOrientation getOrientation()
+    {
+        return null;
     }
 }

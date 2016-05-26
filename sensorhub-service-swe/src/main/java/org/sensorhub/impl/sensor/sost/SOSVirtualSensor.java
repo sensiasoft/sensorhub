@@ -22,6 +22,7 @@ import java.util.Map;
 import net.opengis.OgcProperty;
 import net.opengis.gml.v32.AbstractFeature;
 import net.opengis.gml.v32.TimePeriod;
+import net.opengis.sensorml.v20.AbstractPhysicalProcess;
 import net.opengis.sensorml.v20.AbstractProcess;
 import net.opengis.sensorml.v20.DataInterface;
 import net.opengis.sensorml.v20.IOPropertyList;
@@ -304,7 +305,7 @@ public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfi
     
     public void updateSensorDescription(AbstractProcess systemDesc, boolean recordHistory) throws SensorException
     {
-        sensorDescription = systemDesc;
+        sensorDescription = (AbstractPhysicalProcess)systemDesc;
         
         // generate output hashcodes to compare with insert result templates
         structureToOutputMap.clear();
@@ -326,7 +327,7 @@ public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfi
      */
     public void setSensorDescription(AbstractProcess systemDesc)
     {
-        sensorDescription = systemDesc;
+        sensorDescription = (AbstractPhysicalProcess)systemDesc;
         long unixTime = System.currentTimeMillis();
         lastUpdatedSensorDescription = unixTime;
     }
@@ -373,7 +374,7 @@ public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfi
             InputStream is = loader.getAsInputStream(STATE_SML_DESC);
             if (is != null)
             {
-                sensorDescription = new SMLUtils(SMLUtils.V2_0).readProcess(is);
+                sensorDescription = (AbstractPhysicalProcess)new SMLUtils(SMLUtils.V2_0).readProcess(is);
                 int timeListSize = sensorDescription.getValidTimeList().size();
                 if (timeListSize > 0)
                 {

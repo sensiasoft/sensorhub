@@ -17,6 +17,7 @@ package org.sensorhub.impl.sensor.swe;
 import java.util.ArrayList;
 import java.util.List;
 import net.opengis.gml.v32.AbstractFeature;
+import net.opengis.sensorml.v20.AbstractPhysicalProcess;
 import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataChoice;
 import net.opengis.swe.v20.DataComponent;
@@ -136,7 +137,7 @@ public class SWEVirtualSensor extends AbstractSensorModule<SWEVirtualSensorConfi
                             try
                             {
                                 if (outputNum == 1 && config.sensorML == null)
-                                    this.sensorDescription = sos.getSensorDescription(config.sensorUID);
+                                    this.sensorDescription = (AbstractPhysicalProcess)sos.getSensorDescription(config.sensorUID);
                             }
                             catch (SensorHubException e)
                             {

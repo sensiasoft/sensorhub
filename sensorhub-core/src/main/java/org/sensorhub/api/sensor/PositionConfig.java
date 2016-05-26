@@ -27,28 +27,52 @@ import org.sensorhub.api.config.DisplayInfo;
  */
 public class PositionConfig
 {
-    public static class Location
+    
+    public static class LLALocation
     {
+        @DisplayInfo(label="Latitude", desc="Geodetic latitude, in degrees")
         public double lat;
+        
+        @DisplayInfo(label="Longitude", desc="Longitude, in degrees")
         public double lon;
+        
+        @DisplayInfo(label="Altitude", desc="Height above ellipsoid, in meters")
         public double alt;
     }
     
     
-    public static class Orientation
+    public static class CartesianLocation
     {
-        public double pitch;
-        public double roll;
+        @DisplayInfo(desc="X coordinate, in meters")
+        public double x;
+        
+        @DisplayInfo(desc="Y coordinate, in meters")
+        public double y;
+        
+        @DisplayInfo(desc="Z coordinate, in meters")
+        public double z;
+    }
+    
+    
+    public static class EulerOrientation
+    {
+        @DisplayInfo(desc="Heading (or yaw) angle about Z axis in degrees")
         public double heading;
+        
+        @DisplayInfo(desc="Pitch angle about X axis, in degrees")
+        public double pitch;
+        
+        @DisplayInfo(desc="Roll angle about Y axis, in degrees")
+        public double roll;
     }
     
     
     @DisplayInfo(desc="Location in EPSG:4979 coordinate reference frame")
-    public Location location;
+    public LLALocation location;
     
     
-    @DisplayInfo(desc="Orientation in ENU coordinate reference frame")
-    public Orientation orientation;
+    @DisplayInfo(desc="Orientation as Euler angles in ENU coordinate reference frame.\nOrder of rotations is z-x’-y\" (in rotating frame) or y-x-z (in fixed frame)")
+    public EulerOrientation orientation;
     
     
 }
