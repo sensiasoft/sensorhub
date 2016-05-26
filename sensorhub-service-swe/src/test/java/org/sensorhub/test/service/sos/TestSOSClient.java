@@ -43,7 +43,7 @@ public class TestSOSClient implements SOSRecordListener
     public void testConnectHttp() throws Exception
     {
         GetResultRequest req = new GetResultRequest();
-        req.setGetServer(TestSOSService.SERVICE_ENDPOINT);
+        req.setGetServer(TestSOSService.HTTP_ENDPOINT);
         req.setVersion("2.0");
         req.setOffering(TestSOSService.URI_OFFERING1);
         req.getObservables().add(TestSOSService.URI_PROP1);
@@ -67,7 +67,7 @@ public class TestSOSClient implements SOSRecordListener
     public void testConnectWebsockets() throws Exception
     {
         GetResultRequest req = new GetResultRequest();
-        req.setGetServer(TestSOSService.SERVICE_ENDPOINT);
+        req.setGetServer(TestSOSService.HTTP_ENDPOINT);
         req.setVersion("2.0");
         req.setOffering(TestSOSService.URI_OFFERING1);
         req.getObservables().add(TestSOSService.URI_PROP1);

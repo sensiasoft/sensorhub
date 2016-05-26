@@ -20,18 +20,26 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.InputStream;
 import java.io.StringWriter;
+import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 import org.apache.commons.io.IOUtils;
+import org.eclipse.jetty.websocket.api.WebSocketAdapter;
+import org.eclipse.jetty.websocket.client.WebSocketClient;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -100,7 +108,8 @@ public class TestSOSService
     static final int NUM_GEN_FEATURES = 3;
     static final int SERVER_PORT = 8888;
     static final String SERVICE_PATH = "/sos";
-    static final String SERVICE_ENDPOINT = "http://localhost:" + SERVER_PORT + "/sensorhub" + SERVICE_PATH;
+    static final String HTTP_ENDPOINT = "http://localhost:" + SERVER_PORT + "/sensorhub" + SERVICE_PATH;
+    static final String WS_ENDPOINT = HTTP_ENDPOINT.replace("http://", "ws://"); 
     static final String GETCAPS_REQUEST = "?service=SOS&version=2.0&request=GetCapabilities";
     static final String OFFERING_NODES = "contents/Contents/offering/*";
     static final String TIMERANGE_FUTURE = "now/2080-01-01";
@@ -373,7 +382,7 @@ public class TestSOSService
         try
         {
             InsertResultRequest req = new InsertResultRequest();
-            req.setPostServer(SERVICE_ENDPOINT);
+            req.setPostServer(HTTP_ENDPOINT);
             req.setVersion("2.0");
             req.setTemplateId("template01");
             SWEData sweData = new SWEData();
@@ -432,7 +441,7 @@ public class TestSOSService
     public void testGetCapabilitiesOneOffering1() throws Exception
     {
         deployService(buildSensorProvider1());
-        InputStream is = new URL(SERVICE_ENDPOINT + GETCAPS_REQUEST).openStream();
+        InputStream is = new URL(HTTP_ENDPOINT + GETCAPS_REQUEST).openStream();
         checkOfferings(is, new String[] {UID_SENSOR1});
     }
     
@@ -441,7 +450,7 @@ public class TestSOSService
     public void testGetCapabilitiesTwoOfferings() throws Exception
     {
         deployService(buildSensorProvider1(), buildSensorProvider2());
-        InputStream is = new URL(SERVICE_ENDPOINT + GETCAPS_REQUEST).openStream();
+        InputStream is = new URL(HTTP_ENDPOINT + GETCAPS_REQUEST).openStream();
         checkOfferings(is, new String[] {UID_SENSOR1, UID_SENSOR2});
     }
     
@@ -452,7 +461,7 @@ public class TestSOSService
         deployService(buildSensorProvider1());
         
         GetCapabilitiesRequest getCaps = new GetCapabilitiesRequest();
-        getCaps.setPostServer(SERVICE_ENDPOINT);
+        getCaps.setPostServer(HTTP_ENDPOINT);
         getCaps.setSoapVersion(OWSUtils.SOAP12_URI);
         DOMHelper dom = sendSoapRequest(getCaps);
         
@@ -469,7 +478,7 @@ public class TestSOSService
         deployService(buildSensorProvider1(), buildSensorProvider2());
         
         GetCapabilitiesRequest getCaps = new GetCapabilitiesRequest();
-        getCaps.setPostServer(SERVICE_ENDPOINT);
+        getCaps.setPostServer(HTTP_ENDPOINT);
         getCaps.setSoapVersion(OWSUtils.SOAP11_URI);
         DOMHelper dom = sendSoapRequest(getCaps);
         
@@ -488,7 +497,7 @@ public class TestSOSService
         provider1.sensorID = "bad_ID";
         deployService(provider1, buildSensorProvider2());
         
-        InputStream is = new URL(SERVICE_ENDPOINT + GETCAPS_REQUEST).openStream();
+        InputStream is = new URL(HTTP_ENDPOINT + GETCAPS_REQUEST).openStream();
         checkOfferings(is, new String[] {UID_SENSOR2});
     }
     
@@ -535,27 +544,27 @@ public class TestSOSService
         Thread.sleep(((long)(provider2.liveDataTimeout*1000)));
         
         // sensor1 is not started, sensor2 is started but not sending data
-        InputStream is = new URL(SERVICE_ENDPOINT + GETCAPS_REQUEST).openStream();
+        InputStream is = new URL(HTTP_ENDPOINT + GETCAPS_REQUEST).openStream();
         DOMHelper dom = checkOfferings(is, new String[] {UID_SENSOR2});
         checkOfferingTimeRange(dom, 0, "unknown", "unknown");
         
         // start sensor1
         SensorHub.getInstance().getModuleRegistry().startModule(provider1.sensorID);
-        is = new URL(SERVICE_ENDPOINT + GETCAPS_REQUEST).openStream();
+        is = new URL(HTTP_ENDPOINT + GETCAPS_REQUEST).openStream();
         dom = checkOfferings(is, new String[] {UID_SENSOR2, UID_SENSOR1});
         checkOfferingTimeRange(dom, 0, "unknown", "unknown");
         checkOfferingTimeRange(dom, 1, "unknown", "unknown");
         
         // trigger measurements from sensor1, wait for measurements and check capabilities again
         startSending(provider1, true);
-        is = new URL(SERVICE_ENDPOINT + GETCAPS_REQUEST).openStream();
+        is = new URL(HTTP_ENDPOINT + GETCAPS_REQUEST).openStream();
         dom = checkOfferings(is, new String[] {UID_SENSOR2, UID_SENSOR1});
         checkOfferingTimeRange(dom, 0, "unknown", "unknown");
         checkOfferingTimeRange(dom, 1, "now", "now");
         
         // trigger measurements from sensor2, wait for measurements and check capabilities again
         FakeSensor sensor2 = startSending(provider2, true);
-        is = new URL(SERVICE_ENDPOINT + GETCAPS_REQUEST).openStream();
+        is = new URL(HTTP_ENDPOINT + GETCAPS_REQUEST).openStream();
         dom = checkOfferings(is, new String[] {UID_SENSOR2, UID_SENSOR1});
         checkOfferingTimeRange(dom, 0, "now", "now");
         checkOfferingTimeRange(dom, 1, "now", "now");
@@ -564,7 +573,7 @@ public class TestSOSService
         while (sensor2.getAllOutputs().get(NAME_OUTPUT1).isEnabled())
             Thread.sleep((long)(SAMPLING_PERIOD*1000));
         Thread.sleep((long)(provider2.liveDataTimeout*1000));
-        is = new URL(SERVICE_ENDPOINT + GETCAPS_REQUEST).openStream();
+        is = new URL(HTTP_ENDPOINT + GETCAPS_REQUEST).openStream();
         dom = checkOfferings(is, new String[] {UID_SENSOR2, UID_SENSOR1});
         checkOfferingTimeRange(dom, 0, "unknown", "unknown");
         checkOfferingTimeRange(dom, 1, "unknown", "unknown");
@@ -584,7 +593,7 @@ public class TestSOSService
         Thread.sleep(((long)(SAMPLING_PERIOD*1000)));
         
         // sensor1 is not started, sensor2 is started and sending data
-        InputStream is = new URL(SERVICE_ENDPOINT + GETCAPS_REQUEST).openStream();
+        InputStream is = new URL(HTTP_ENDPOINT + GETCAPS_REQUEST).openStream();
         DOMHelper dom = checkOfferings(is, new String[] {UID_SENSOR2});
         String currentIsoTime = new DateTimeFormat().formatIso(System.currentTimeMillis()/1000., 0);
         checkOfferingTimeRange(dom, 0, currentIsoTime, "now");
@@ -593,7 +602,7 @@ public class TestSOSService
         SensorHub.getInstance().getModuleRegistry().startModule(provider1.sensorID);
         Thread.sleep(((long)(SAMPLING_PERIOD*1000)));
         
-        is = new URL(SERVICE_ENDPOINT + GETCAPS_REQUEST).openStream();
+        is = new URL(HTTP_ENDPOINT + GETCAPS_REQUEST).openStream();
         dom = checkOfferings(is, new String[] {UID_SENSOR2, UID_SENSOR1});
         currentIsoTime = new DateTimeFormat().formatIso(System.currentTimeMillis()/1000., 0);
         checkOfferingTimeRange(dom, 0, currentIsoTime, "now");
@@ -615,7 +624,7 @@ public class TestSOSService
         while (sensor1.getAllOutputs().get(NAME_OUTPUT1).isEnabled())
             Thread.sleep((long)(SAMPLING_PERIOD*1000));
         Thread.sleep((long)((SAMPLING_PERIOD+provider1.liveDataTimeout)*1000));
-        InputStream is = new URL(SERVICE_ENDPOINT + GETCAPS_REQUEST).openStream();
+        InputStream is = new URL(HTTP_ENDPOINT + GETCAPS_REQUEST).openStream();
         DOMHelper dom = checkOfferings(is, new String[] {UID_SENSOR2, UID_SENSOR1});
         String currentIsoTime = new DateTimeFormat().formatIso(System.currentTimeMillis()/1000., 0);
         checkOfferingTimeRange(dom, 0, currentIsoTime, "now");
@@ -656,22 +665,86 @@ public class TestSOSService
     
     protected String[] sendGetResult(String offering, String observables, String timeRange) throws Exception
     {
-        String url = SERVICE_ENDPOINT + 
+        return sendGetResult(offering, observables, timeRange, false);
+    }
+    
+    
+    protected String[] sendGetResult(String offering, String observables, String timeRange, boolean useWebsocket) throws Exception
+    {
+        String url = (useWebsocket ? WS_ENDPOINT : HTTP_ENDPOINT) + 
                 "?service=SOS&version=2.0&request=GetResult" + 
                 "&offering=" + offering +
                 "&observedProperty=" + observables + 
                 "&temporalfilter=time," + timeRange;
-        InputStream is = new URL(url).openStream();
         
-        StringWriter writer = new StringWriter();
-        IOUtils.copy(is, writer);
-        String respString = writer.toString(); 
+        String currentTime = new DateTimeFormat().formatIso(System.currentTimeMillis()/1000., 0);
         
-        assertFalse("Unexpected XML response received:\n" + respString, respString.startsWith("<?xml"));        
-        assertFalse("Response is empty", respString.trim().length() == 0);
+        if (useWebsocket)
+        {
+            WebSocketClient client = new WebSocketClient();
+            final ReentrantLock lock = new ReentrantLock();
+            final Condition endData = lock.newCondition();
+            
+            class MyWsHandler extends WebSocketAdapter
+            {
+                ArrayList<String> records = new ArrayList<String>();
+                
+                public void onWebSocketBinary(byte payload[], int offset, int len)
+                {
+                    String rec = new String(payload, offset, len);
+                    System.out.print("Received: " + rec);
+                    records.add(rec);
+                }
+
+                public void onWebSocketClose(int arg0, String arg1)
+                {
+                    lock.lock();
+                    try { endData.signalAll(); }
+                    finally { lock.unlock(); }
+                }            
+            };
+            
+            System.out.println("Sending WebSocket request @ " + currentTime);
+            MyWsHandler wsHandler = new MyWsHandler();
+            client.start();
+            client.connect(wsHandler, new URI(url));
+            
+            lock.lock();
+            try { assertTrue("No data received before timeout", endData.await(5, TimeUnit.SECONDS)); }
+            finally { lock.unlock(); }
+            
+            return wsHandler.records.toArray(new String[0]);
+        }
+        else
+        {
+            System.out.println("Sending HTTP GET request @ " + currentTime);
+            InputStream is = new URL(url).openStream();
+            
+            StringWriter writer = new StringWriter();
+            IOUtils.copy(is, writer);
+            String respString = writer.toString(); 
+            
+            assertFalse("Unexpected XML response received:\n" + respString, respString.startsWith("<?xml"));        
+            assertFalse("Response is empty", respString.trim().length() == 0);
+            
+            System.out.println(respString);
+            return respString.split("\n");
+        }
+    }
+    
+    
+    protected Future<String[]> sendGetResultAsync(final String offering, final String observables, final String timeRange, final boolean useWebsocket) throws Exception
+    {
+        ExecutorService exec = Executors.newSingleThreadExecutor();
         
-        System.out.println(respString);
-        return respString.split("\n");
+        Future<String[]> result = exec.submit(new Callable<String[]>() {
+            public String[] call() throws Exception
+            {
+                return sendGetResult(offering, observables, timeRange, useWebsocket);
+            }
+        });
+        
+        return result;
     }
     
     
@@ -709,7 +782,7 @@ public class TestSOSService
         provider1.liveDataTimeout = 0;
         deployService(provider1);
         
-        InputStream is = new URL(SERVICE_ENDPOINT + 
+        InputStream is = new URL(HTTP_ENDPOINT + 
                 "?service=SOS&version=2.0&request=GetResult"
                 + "&offering=" + URI_OFFERING1
                 + "&observedProperty=" + URI_PROP1
@@ -722,7 +795,8 @@ public class TestSOSService
     @Test
     public void testGetResultRealTimeAllObservables() throws Exception
     {
-        deployService(buildSensorProvider1());        
+        deployService(buildSensorProvider1());      
+        
         String[] records = sendGetResult(URI_OFFERING1, URI_PROP1, TIMERANGE_FUTURE);
         checkGetResultResponse(records, NUM_GEN_SAMPLES, 4);
     }
@@ -762,11 +836,36 @@ public class TestSOSService
     
     
     @Test
+    public void testGetResultBeforeDataIsAvailable() throws Exception
+    {
+        deployService(buildSensorProvider1(false));
+        FakeSensor sensor1 = getSensorModule(0);
+        sensor1.setStartedState();
+        
+        Future<String[]> future = sendGetResultAsync(URI_OFFERING1, URI_PROP1_FIELD1, TIMERANGE_FUTURE, false);
+        
+        // actually start sending data after only 1s
+        Thread.sleep(1000);
+        sensor1.start();
+
+        try
+        {
+            String[] records = future.get(5, TimeUnit.SECONDS);
+            checkGetResultResponse(records, NUM_GEN_SAMPLES, 2);
+        }
+        catch (Exception e)
+        {
+            assertTrue("No data received before timeout", false);
+        }        
+    }
+    
+    
+    @Test
     public void testGetResultWrongOffering() throws Exception
     {
         deployService(buildSensorProvider1(), buildSensorProvider2());
         
-        InputStream is = new URL(SERVICE_ENDPOINT + 
+        InputStream is = new URL(HTTP_ENDPOINT + 
                 "?service=SOS&version=2.0&request=GetResult"
                 + "&offering=urn:mysos:wrong"
                 + "&observedProperty=urn:blabla:temperature").openStream();
@@ -780,12 +879,67 @@ public class TestSOSService
     {
         deployService(buildSensorProvider1(), buildSensorProvider2());
         
-        InputStream is = new URL(SERVICE_ENDPOINT + 
+        InputStream is = new URL(HTTP_ENDPOINT + 
                 "?service=SOS&version=2.0&request=GetResult"
                 + "&offering=" + URI_OFFERING1
                 + "&observedProperty=urn:blabla:wrong").openStream();
                         
         checkServiceException(is, "observedProperty");
+    }
+    
+    
+    @Test
+    public void testGetResultWebSocketAllObservables() throws Exception
+    {
+        deployService(buildSensorProvider1());
+        
+        String[] records = sendGetResult(URI_OFFERING1, URI_PROP1, TIMERANGE_FUTURE, true);
+        checkGetResultResponse(records, NUM_GEN_SAMPLES, 4);
+    }
+    
+    
+    @Test
+    public void testGetResultWebSocketOneObservable() throws Exception
+    {
+        deployService(buildSensorProvider1());
+                
+        String[] records = sendGetResult(URI_OFFERING1, URI_PROP1_FIELD1, TIMERANGE_FUTURE, true);
+        checkGetResultResponse(records, NUM_GEN_SAMPLES, 2);
+    }
+    
+    
+    @Test
+    public void testGetResultWebSocketTwoObservables() throws Exception
+    {
+        deployService(buildSensorProvider1());
+                
+        String[] records = sendGetResult(URI_OFFERING1, URI_PROP1_FIELD1 + "," + URI_PROP1_FIELD2, TIMERANGE_FUTURE, true);
+        checkGetResultResponse(records, NUM_GEN_SAMPLES, 3);
+    }
+    
+    
+    @Test
+    public void testGetResultWebSocketBeforeDataIsAvailable() throws Exception
+    {
+        deployService(buildSensorProvider1(false));
+        FakeSensor sensor1 = getSensorModule(0);
+        sensor1.setStartedState();
+        
+        Future<String[]> future = sendGetResultAsync(URI_OFFERING1, URI_PROP1_FIELD1, TIMERANGE_FUTURE, true);
+        
+        // actually start sending data after only 1s
+        Thread.sleep(1000);
+        sensor1.start();
+
+        try
+        {
+            String[] records = future.get(5, TimeUnit.SECONDS);
+            checkGetResultResponse(records, NUM_GEN_SAMPLES, 2);
+        }
+        catch (Exception e)
+        {
+            assertTrue("No data received before timeout", false);
+        }        
     }
     
     
@@ -832,7 +986,7 @@ public class TestSOSService
             Thread.sleep(((long)SAMPLING_PERIOD*500));
                 
         // first get capabilities to know available time range
-        SOSServiceCapabilities caps = (SOSServiceCapabilities)new OWSUtils().getCapabilities(SERVICE_ENDPOINT, "SOS", "2.0");
+        SOSServiceCapabilities caps = (SOSServiceCapabilities)new OWSUtils().getCapabilities(HTTP_ENDPOINT, "SOS", "2.0");
         TimeExtent timePeriod = ((SOSOfferingCapabilities)caps.getLayer(URI_OFFERING1)).getPhenomenonTime();
         System.out.println("Available time period is " + timePeriod.getIsoString(0));
         
@@ -890,7 +1044,7 @@ public class TestSOSService
     {
         deployService(buildSensorProvider1());
         
-        InputStream is = new URL(SERVICE_ENDPOINT + "?service=SOS&version=2.0&request=GetObservation&offering=urn:mysos:sensor1&observedProperty=urn:blabla:temperature&responseFormat=badformat").openStream();
+        InputStream is = new URL(HTTP_ENDPOINT + "?service=SOS&version=2.0&request=GetObservation&offering=urn:mysos:sensor1&observedProperty=urn:blabla:temperature&responseFormat=badformat").openStream();
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         IOUtils.copy(is, os);
         
@@ -907,7 +1061,7 @@ public class TestSOSService
     protected DescribeSensorRequest generateDescribeSensor(String procId)
     {
         DescribeSensorRequest ds = new DescribeSensorRequest();
-        ds.setGetServer(SERVICE_ENDPOINT);
+        ds.setGetServer(HTTP_ENDPOINT);
         ds.setVersion("2.0");
         ds.setProcedureID(procId);
         return ds;
@@ -917,7 +1071,7 @@ public class TestSOSService
     protected GetObservationRequest generateGetObs(String offeringId, String obsProp)
     {
         GetObservationRequest getObs = new GetObservationRequest();
-        getObs.setGetServer(SERVICE_ENDPOINT);
+        getObs.setGetServer(HTTP_ENDPOINT);
         getObs.setVersion("2.0");
         getObs.setOffering(offeringId);
         getObs.getObservables().add(obsProp);
@@ -994,7 +1148,7 @@ public class TestSOSService
         deployService(buildSensorProvider2WithObsStorage());
                 
         GetFeatureOfInterestRequest req = new GetFeatureOfInterestRequest();
-        req.setGetServer(SERVICE_ENDPOINT);
+        req.setGetServer(HTTP_ENDPOINT);
         req.setVersion("2.0");
         req.setSoapVersion(OWSUtils.SOAP12_URI);
         req.getFoiIDs().add(FakeSensorWithFoi.FOI_UID_PREFIX+1);
@@ -1008,7 +1162,7 @@ public class TestSOSService
     protected void testGetFoisByID(int... foiNums) throws Exception
     {
         GetFeatureOfInterestRequest req = new GetFeatureOfInterestRequest();
-        req.setGetServer(SERVICE_ENDPOINT);
+        req.setGetServer(HTTP_ENDPOINT);
         req.setVersion("2.0");
         for (int foiNum: foiNums)
             req.getFoiIDs().add(FakeSensorWithFoi.FOI_UID_PREFIX + foiNum);
@@ -1049,7 +1203,7 @@ public class TestSOSService
     protected void testGetFoisByBbox(Bbox bbox, int... foiNums) throws Exception
     {
         GetFeatureOfInterestRequest req = new GetFeatureOfInterestRequest();
-        req.setGetServer(SERVICE_ENDPOINT);
+        req.setGetServer(HTTP_ENDPOINT);
         req.setVersion("2.0");
         req.setBbox(bbox);
         
@@ -1088,7 +1242,7 @@ public class TestSOSService
     protected void testGetFoisByProcedure(List<String> procIDs, int... foiNums) throws Exception
     {
         GetFeatureOfInterestRequest req = new GetFeatureOfInterestRequest();
-        req.setGetServer(SERVICE_ENDPOINT);
+        req.setGetServer(HTTP_ENDPOINT);
         req.setVersion("2.0");
         req.getProcedures().addAll(procIDs);
         
@@ -1129,7 +1283,7 @@ public class TestSOSService
     protected void testGetFoisByObservables(List<String> obsIDs, int... foiNums) throws Exception
     {
         GetFeatureOfInterestRequest req = new GetFeatureOfInterestRequest();
-        req.setGetServer(SERVICE_ENDPOINT);
+        req.setGetServer(HTTP_ENDPOINT);
         req.setVersion("2.0");
         req.getObservables().addAll(obsIDs);
         

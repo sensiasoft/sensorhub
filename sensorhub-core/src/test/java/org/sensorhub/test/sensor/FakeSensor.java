@@ -18,6 +18,7 @@ import net.opengis.gml.v32.Point;
 import net.opengis.gml.v32.impl.PointImpl;
 import net.opengis.sensorml.v20.PhysicalSystem;
 import org.sensorhub.api.common.SensorHubException;
+import org.sensorhub.api.module.ModuleEvent.ModuleState;
 import org.sensorhub.api.sensor.ISensorControlInterface;
 import org.sensorhub.api.sensor.ISensorDataInterface;
 import org.sensorhub.api.sensor.SensorConfig;
@@ -104,5 +105,11 @@ public class FakeSensor extends AbstractSensorModule<SensorConfig>
     @Override
     public void cleanup() throws SensorHubException
     {
+    }
+    
+    
+    public void setStartedState()
+    {
+        setState(ModuleState.STARTED);
     }
 }
