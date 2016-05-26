@@ -182,7 +182,7 @@ public class TestSOSService
         // create test sensor
         SensorConfig sensorCfg = new SensorConfig();
         sensorCfg.autoStart = false;
-        sensorCfg.moduleClass = FakeSensorWithFoi.class.getCanonicalName();
+        sensorCfg.moduleClass = FakeSensorNetWithFoi.class.getCanonicalName();
         sensorCfg.name = "Sensor1";
         FakeSensor sensor = (FakeSensor)SensorHub.getInstance().getModuleRegistry().loadModule(sensorCfg);
         sensor.setSensorUID(UID_SENSOR1);
@@ -213,9 +213,9 @@ public class TestSOSService
         // create test sensor
         SensorConfig sensorCfg = new SensorConfig();
         sensorCfg.autoStart = false;
-        sensorCfg.moduleClass = FakeSensorWithFoi.class.getCanonicalName();
+        sensorCfg.moduleClass = FakeSensorNetWithFoi.class.getCanonicalName();
         sensorCfg.name = "Sensor2";
-        FakeSensorWithFoi sensor = (FakeSensorWithFoi)SensorHub.getInstance().getModuleRegistry().loadModule(sensorCfg);
+        FakeSensorNetWithFoi sensor = (FakeSensorNetWithFoi)SensorHub.getInstance().getModuleRegistry().loadModule(sensorCfg);
         sensor.setSensorUID(UID_SENSOR2);
         sensor.setDataInterfaces(
                 new FakeSensorData(sensor, NAME_OUTPUT1, 1, SAMPLING_PERIOD, NUM_GEN_SAMPLES),
@@ -1109,7 +1109,7 @@ public class TestSOSService
     {
         GetObservationRequest getObs = generateGetObs(offeringId, obsProp);
         for (int foiNum: foiNums)
-            getObs.getFoiIDs().add(FakeSensorWithFoi.FOI_UID_PREFIX + foiNum);
+            getObs.getFoiIDs().add(FakeSensorNetWithFoi.FOI_UID_PREFIX + foiNum);
         return getObs;
     }
     
@@ -1151,7 +1151,7 @@ public class TestSOSService
         req.setGetServer(HTTP_ENDPOINT);
         req.setVersion("2.0");
         req.setSoapVersion(OWSUtils.SOAP12_URI);
-        req.getFoiIDs().add(FakeSensorWithFoi.FOI_UID_PREFIX+1);
+        req.getFoiIDs().add(FakeSensorNetWithFoi.FOI_UID_PREFIX+1);
         DOMHelper dom = sendSoapRequest(req);
         
         assertEquals(OWSUtils.SOAP12_URI, dom.getBaseElement().getNamespaceURI());
@@ -1165,7 +1165,7 @@ public class TestSOSService
         req.setGetServer(HTTP_ENDPOINT);
         req.setVersion("2.0");
         for (int foiNum: foiNums)
-            req.getFoiIDs().add(FakeSensorWithFoi.FOI_UID_PREFIX + foiNum);
+            req.getFoiIDs().add(FakeSensorNetWithFoi.FOI_UID_PREFIX + foiNum);
         
         DOMHelper dom = sendRequest(req, false); 
         assertEquals("Wrong number of features returned", foiNums.length, dom.getElements("*/*").getLength());

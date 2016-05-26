@@ -44,7 +44,7 @@ import org.vast.swe.SWEHelper;
  * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @since Sep 20, 2013
  */
-public class FakeSensorData2 extends AbstractSensorOutput<FakeSensorWithFoi> implements IFakeSensorOutput
+public class FakeSensorData2 extends AbstractSensorOutput<FakeSensorNetWithFoi> implements IFakeSensorOutput
 {
     static int ARRAY_SIZE = 12000;
     
@@ -61,13 +61,13 @@ public class FakeSensorData2 extends AbstractSensorOutput<FakeSensorWithFoi> imp
     boolean hasListeners;
     
     
-    public FakeSensorData2(FakeSensorWithFoi sensor, String name, double samplingPeriod, int maxSampleCount)
+    public FakeSensorData2(FakeSensorNetWithFoi sensor, String name, double samplingPeriod, int maxSampleCount)
     {
         this(sensor, name, samplingPeriod, maxSampleCount, null);   
     }
     
     
-    public FakeSensorData2(FakeSensorWithFoi sensor, String name, double samplingPeriod, int maxSampleCount, Map<Integer, Integer> obsFoiMap)
+    public FakeSensorData2(FakeSensorNetWithFoi sensor, String name, double samplingPeriod, int maxSampleCount, Map<Integer, Integer> obsFoiMap)
     {
         super(sensor);
         this.name = name;
@@ -173,7 +173,7 @@ public class FakeSensorData2 extends AbstractSensorOutput<FakeSensorWithFoi> imp
                         Integer foiNum = obsFoiMap.get(sampleCount);
                         if (foiNum != null)
                         {
-                            String entityID = FakeSensorWithFoi.SENSOR_UID_PREFIX + foiNum;
+                            String entityID = FakeSensorNetWithFoi.SENSOR_UID_PREFIX + foiNum;
                             AbstractFeature foi = FakeSensorData2.this.getParentModule().getCurrentFeatureOfInterest(entityID);
                             eventHandler.publishEvent(new FoiEvent(latestRecordTime, getParentModule(), foi, latestRecordTime/1000.));
                             System.out.println("Observing FOI #" + foiNum);

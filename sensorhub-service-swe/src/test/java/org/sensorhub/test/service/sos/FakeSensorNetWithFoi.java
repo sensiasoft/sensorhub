@@ -32,7 +32,7 @@ import org.vast.ogc.gml.GenericFeatureImpl;
 import org.vast.sensorML.SMLHelper;
 
 
-public class FakeSensorWithFoi extends FakeSensor implements IMultiSourceDataProducer
+public class FakeSensorNetWithFoi extends FakeSensor implements IMultiSourceDataProducer
 {
     static int MAX_FOIS = 3;
     static String FOI_UID_PREFIX = "urn:blabla:myfois:";
@@ -42,7 +42,7 @@ public class FakeSensorWithFoi extends FakeSensor implements IMultiSourceDataPro
     Set<String> foiIDs;
     
     
-    public FakeSensorWithFoi()
+    public FakeSensorNetWithFoi()
     {
         fois = new LinkedHashMap<String, AbstractFeature>();
         foiIDs = new LinkedHashSet<String>();
