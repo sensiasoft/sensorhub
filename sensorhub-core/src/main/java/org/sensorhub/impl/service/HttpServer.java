@@ -158,7 +158,6 @@ public class HttpServer extends AbstractModule<HttpServerConfig>
                         }
                     }
                 }),"/test");
-                addServletSecurity("/test", "admin");
             }
             
             server.setHandler(handlers);
@@ -210,6 +209,13 @@ public class HttpServer extends AbstractModule<HttpServerConfig>
     }
     
     
+    protected void checkStarted()
+    {
+        if (!isStarted())
+            throw new RuntimeException("HTTP service must be started before servlets can be deployed");
+    }
+    
+    
     public void deployServlet(HttpServlet servlet, String path)
     {
         deployServlet(servlet, null, path);
@@ -218,6 +224,8 @@ public class HttpServer extends AbstractModule<HttpServerConfig>
     
     public synchronized void deployServlet(HttpServlet servlet, Map<String, String> initParams, String... paths)
     {
+        checkStarted();
+        
         ServletHolder holder = new ServletHolder(servlet);
         if (initParams != null)
             holder.setInitParameters(initParams);
@@ -234,7 +242,7 @@ public class HttpServer extends AbstractModule<HttpServerConfig>
     
     public synchronized void undeployServlet(HttpServlet servlet)
     {
-        // nothing to do if server has already been shutdown
+        // silently do nothing if server has already been shutdown
         if (servletHandler == null)
             return;
         
@@ -278,6 +286,8 @@ public class HttpServer extends AbstractModule<HttpServerConfig>
     
     public void addServletSecurity(String pathSpec, String... roles)
     {
+        checkStarted();
+        
         if (securityHandler != null)
         {
             Constraint constraint = new Constraint();
