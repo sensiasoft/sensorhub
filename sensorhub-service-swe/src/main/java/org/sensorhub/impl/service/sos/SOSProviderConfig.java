@@ -46,5 +46,5 @@ public abstract class SOSProviderConfig
      * @param service Parent SOS service
      * @return
      */
-    protected abstract ISOSDataProviderFactory getFactory(SOSService service) throws SensorHubException;
+    protected abstract ISOSDataProviderFactory getFactory(SOSServlet service) throws SensorHubException;
 }

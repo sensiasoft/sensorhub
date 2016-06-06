@@ -14,46 +14,14 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.impl.service.sps;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Map.Entry;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import net.opengis.swe.v20.DataBlock;
-import net.opengis.swe.v20.DataComponent;
 import org.sensorhub.api.common.Event;
-import org.sensorhub.api.common.IEventHandler;
 import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.common.SensorHubException;
-import org.sensorhub.api.module.IModuleStateManager;
 import org.sensorhub.api.module.ModuleEvent;
 import org.sensorhub.api.module.ModuleEvent.ModuleState;
-import org.sensorhub.api.module.ModuleEvent.Type;
 import org.sensorhub.api.service.IServiceModule;
-import org.sensorhub.impl.common.EventBus;
+import org.sensorhub.impl.module.AbstractModule;
 import org.sensorhub.impl.service.HttpServer;
-import org.sensorhub.impl.service.ogc.OGCServiceConfig.CapabilitiesInfo;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.vast.data.DataBlockList;
-import org.vast.ows.GetCapabilitiesRequest;
-import org.vast.ows.OWSExceptionReport;
-import org.vast.ows.OWSRequest;
-import org.vast.ows.server.OWSServlet;
-import org.vast.ows.sos.SOSException;
-import org.vast.ows.sps.*;
-import org.vast.ows.sps.StatusReport.TaskStatus;
-import org.vast.ows.swe.DescribeSensorRequest;
-import org.vast.ows.util.PostRequestFilter;
-import org.vast.sensorML.SMLUtils;
-import org.vast.xml.DOMHelper;
-import org.w3c.dom.Element;
 
 
 /**
@@ -67,113 +35,25 @@ import org.w3c.dom.Element;
  * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @since Jan 15, 2015
  */
-@SuppressWarnings("serial")
-public class SPSService extends OWSServlet implements IServiceModule<SPSServiceConfig>, IEventListener
+public class SPSService extends AbstractModule<SPSServiceConfig> implements IServiceModule<SPSServiceConfig>, IEventListener
 {
-    private static final Logger log = LoggerFactory.getLogger(SPSService.class);
-    
-    String endpointUrl;
-    SPSServiceConfig config;
-    SPSServiceCapabilities capabilities;
-    Map<String, SPSOfferingCapabilities> procedureToOfferingMap;
-    Map<String, ISPSConnector> connectors;
-    IEventHandler eventHandler;
-    
-    SMLUtils smlUtils = new SMLUtils(SMLUtils.V2_0);
-    ITaskDB taskDB;
-    //SPSNotificationSystem notifSystem;
-    
-    ModuleState state;
-    
-    
-    public SPSService()
-    {
-        this.owsUtils = new SPSUtils();
-    }
+    SPSServlet servlet;
     
     
     @Override
-    public void init(SPSServiceConfig config) throws SensorHubException
+    public void requestStart() throws SensorHubException
     {
-        this.config = config;
-        this.eventHandler = EventBus.getInstance().registerProducer(config.id);
-        setState(ModuleState.INITIALIZED);
-    }
-
-
-    @Override
-    public void updateConfig(SPSServiceConfig config) throws SensorHubException
-    {
-        boolean wasStarted = isStarted();
-        
-        if (wasStarted)
-            stop();        
-        this.config = config;
-        if (wasStarted)
-            start();
-    }
-    
-    
-    /**
-     * Generates the SPSServiceCapabilities object with info obtained from connector
-     */
-    protected void generateCapabilities()
-    {
-        connectors.clear();
-        procedureToOfferingMap.clear();
-        capabilities = new SPSServiceCapabilities();
-        
-        // get main capabilities info from config
-        CapabilitiesInfo serviceInfo = config.ogcCapabilitiesInfo;
-        capabilities.getIdentification().setTitle(serviceInfo.title);
-        capabilities.getIdentification().setDescription(serviceInfo.description);
-        capabilities.setFees(serviceInfo.fees);
-        capabilities.setAccessConstraints(serviceInfo.accessConstraints);
-        capabilities.setServiceProvider(serviceInfo.serviceProvider);
-        
-        // supported operations
-        capabilities.getGetServers().put("GetCapabilities", config.endPoint);
-        capabilities.getGetServers().put("DescribeSensor", config.endPoint);
-        capabilities.getPostServers().putAll(capabilities.getGetServers());
-        capabilities.getPostServers().put("Submit", config.endPoint);
-        
-        // generate profile list
-        /*capabilities.getProfiles().add(SOSServiceCapabilities.PROFILE_RESULT_RETRIEVAL);
-        if (config.enableTransactional)
+        if (canStart())
         {
-            capabilities.getProfiles().add(SOSServiceCapabilities.PROFILE_RESULT_INSERTION);
-            capabilities.getProfiles().add(SOSServiceCapabilities.PROFILE_OBS_INSERTION);
-        }*/
-        
-        // process each provider config
-        if (config.connectors != null)
-        {
-            for (SPSConnectorConfig providerConf: config.connectors)
-            {
-                try
-                {
-                    // instantiate provider factories and map them to offering URIs
-                    ISPSConnector connector = providerConf.getConnector();
-                    if (!connector.isEnabled())
-                        continue;
-                                    
-                    // add offering metadata to capabilities
-                    SPSOfferingCapabilities offCaps = connector.generateCapabilities();
-                    capabilities.getLayers().add(offCaps);
-                    
-                    // add connector and offering caps to maps
-                    String procedureID = offCaps.getMainProcedure();
-                    connectors.put(procedureID, connector);
-                    procedureToOfferingMap.put(procedureID, offCaps);
-                    
-                    if (log.isDebugEnabled())
-                        log.debug("Offering " + "\"" + offCaps.toString() + "\" generated for procedure " + procedureID);
-                }
-                catch (Exception e)
-                {
-                    log.error("Error while initializing connector " + providerConf.uri, e);
-                }
-            }
+            HttpServer httpServer = HttpServer.getInstance();
+            if (httpServer == null)
+                throw new SensorHubException("HTTP server module is not loaded");
+            
+            // subscribe to server lifecycle events
+            httpServer.registerListener(this);
+            
+            // we actually start in the handleEvent() method when
+            // a STARTED event is received from HTTP server
         }
     }
     
@@ -181,22 +61,9 @@ public class SPSService extends OWSServlet implements IServiceModule<SPSServiceC
     @Override
     public void start() throws SensorHubException
     {
-        setState(ModuleState.STARTING);
-        
-        this.connectors = new LinkedHashMap<String, ISPSConnector>();
-        this.procedureToOfferingMap = new HashMap<String, SPSOfferingCapabilities>();
-        this.taskDB = new InMemoryTaskDB();
-        
-        // pre-generate capabilities
-        generateCapabilities();
-                
-        // subscribe to server lifecycle events
-        HttpServer httpServer = HttpServer.getInstance();
-        if (httpServer == null)
-            throw new RuntimeException("HTTP server must be started");
-        httpServer.registerListener(this);
-        
         // deploy servlet
+        servlet = new SPSServlet(config, getLogger());
+        servlet.start();
         deploy();
         
         setState(ModuleState.STARTED);        
@@ -206,451 +73,73 @@ public class SPSService extends OWSServlet implements IServiceModule<SPSServiceC
     @Override
     public void stop()
     {
-        setState(ModuleState.STOPPING);
-        
         // undeploy servlet
-        undeploy();
+        undeploy();        
+        if (servlet != null)
+            servlet.stop();
+        servlet = null;
         
-        // clean all connectors
-        for (ISPSConnector connector: connectors.values())
-            connector.cleanup();
-        
-        setState(ModuleState.STOPPED);        
+        setState(ModuleState.STOPPED);
     }
     
     
-    protected void deploy()
+    protected void deploy() throws SensorHubException
     {
-        HttpServer httpServer = HttpServer.getInstance();        
+        HttpServer httpServer = HttpServer.getInstance();
         if (httpServer == null || !httpServer.isStarted())
-            return;
+            throw new SensorHubException("An HTTP server instance must be started");
         
         // deploy ourself to HTTP server
-        httpServer.deployServlet(this, config.endPoint);
+        httpServer.deployServlet(servlet, config.endPoint);
         httpServer.addServletSecurity(config.endPoint, "sps");
     }
     
     
     protected void undeploy()
     {
-        HttpServer httpServer = HttpServer.getInstance();        
+        HttpServer httpServer = HttpServer.getInstance();
+        
+        // return silently if HTTP server missing on stop
         if (httpServer == null || !httpServer.isStarted())
             return;
         
-        httpServer.undeployServlet(this);
+        httpServer.undeployServlet(servlet);
     }
     
     
     @Override
     public void cleanup() throws SensorHubException
     {
-        // TODO unregister listeners
+        HttpServer httpServer = HttpServer.getInstance();
+        if (httpServer != null)
+            httpServer.unregisterListener(this);
     }
     
     
     @Override
     public void handleEvent(Event<?> e)
     {
-        // what's important here is to redeploy if HTTP server is restarted
+        // catch HTTP server lifecycle events
         if (e instanceof ModuleEvent && e.getSource() == HttpServer.getInstance())
         {
+            ModuleState newState = ((ModuleEvent) e).getNewState();
+            
             // start when HTTP server is enabled
-            if (((ModuleEvent) e).newState == ModuleState.STARTED)
+            if (newState == ModuleState.STARTED)
             {
                 try
                 {
-                    if (config.autoStart)
-                        start();
+                    start();
                 }
-                catch (SensorHubException e1)
+                catch (SensorHubException ex)
                 {
-                    log.error("SPS Service could not be restarted", e);
+                    reportError("SPS Service could not be started", ex);
                 }
             }
             
             // stop when HTTP server is disabled
-            else if (((ModuleEvent) e).newState == ModuleState.STOPPED)
+            else if (newState == ModuleState.STOPPED)
                 stop();
-        }
-    }
-
-
-    @Override
-    public SPSServiceConfig getConfiguration()
-    {
-        return config;
-    }
-
-
-    @Override
-    public String getName()
-    {
-        return config.name;
-    }
-    
-    
-    @Override
-    public String getLocalID()
-    {
-        return config.id;
-    }
-    
-    
-    @Override
-    public boolean isStarted()
-    {
-        return (state == ModuleState.STARTED);
-    }
-    
-
-    @Override
-    public void saveState(IModuleStateManager saver) throws SensorHubException
-    {
-    }
-
-
-    @Override
-    public void loadState(IModuleStateManager loader) throws SensorHubException
-    {
-    }
-
-
-    @Override
-    public void registerListener(IEventListener listener)
-    {
-        eventHandler.registerListener(listener);        
-    }
-
-
-    @Override
-    public void unregisterListener(IEventListener listener)
-    {
-        eventHandler.unregisterListener(listener);
-    }
-    
-    
-    /////////////////////////////////////////////
-    /// methods working with OWSServlet logic ///
-    /////////////////////////////////////////////
-    
-    @Override
-    protected OWSRequest parseRequest(HttpServletRequest req, HttpServletResponse resp, boolean post) throws Exception
-    {
-        if (post)
-        {
-            InputStream xmlRequest = new PostRequestFilter(new BufferedInputStream(req.getInputStream()));
-            DOMHelper dom = new DOMHelper(xmlRequest, false);
-            
-            Element requestElt = dom.getBaseElement();
-            OWSRequest owsRequest;
-            
-            // detect and skip SOAP envelope if present
-            String soapVersion = getSoapVersion(dom);
-            if (soapVersion != null)
-                requestElt = getSoapBody(dom);
-            
-            // case of tasking request, need to get tasking params for the selected procedure
-            if (isTaskingRequest(requestElt))
-            {
-                String procID = dom.getElementValue(requestElt, "procedure");
-                SPSOfferingCapabilities offering = procedureToOfferingMap.get(procID);
-                if (offering == null)
-                    throw new SPSException(SPSException.invalid_param_code, "procedure", procID);
-                DescribeTaskingResponse paramDesc = offering.getParametersDescription();
-                
-                // use full tasking params or updatable subset
-                DataComponent taskingParams;
-                if (requestElt.getLocalName().equals("Update"))
-                    taskingParams = paramDesc.getUpdatableParameters();
-                else
-                    taskingParams = paramDesc.getTaskingParameters();
-                
-                owsRequest = ((SPSUtils)owsUtils).readSpsRequest(dom, requestElt, taskingParams);
-            }
-            
-            // case of normal request
-            else
-                owsRequest = owsUtils.readXMLQuery(dom, requestElt);
-            
-            if (soapVersion != null)
-                owsRequest.setSoapVersion(soapVersion);
-            
-            return owsRequest;
-        }
-        else
-        {
-            return super.parseRequest(req, resp, post);
-        }
-    }
-    
-    
-    protected boolean isTaskingRequest(Element requestElt)
-    {
-        String localName = requestElt.getLocalName();
-        
-        if (localName.equals("GetFeasibility"))
-            return true;
-        else if (localName.equals("Submit"))
-            return true;
-        else if (localName.equals("Update"))
-            return true;
-        else if (localName.equals("Reserve"))
-            return true;
-        
-        return false;
-    }
-    
-    
-    @Override
-    protected void handleRequest(OWSRequest request) throws Exception
-    {
-        if (request instanceof GetCapabilitiesRequest)
-            handleRequest((GetCapabilitiesRequest)request);
-        else if (request instanceof DescribeSensorRequest)
-            handleRequest((DescribeSensorRequest)request);
-        else if (request instanceof DescribeTaskingRequest)
-            handleRequest((DescribeTaskingRequest)request);
-        else if (request instanceof GetStatusRequest)
-            handleRequest((GetStatusRequest)request);
-        else if (request instanceof GetFeasibilityRequest)
-            handleRequest((GetFeasibilityRequest)request);
-        else if (request instanceof SubmitRequest)
-            handleRequest((SubmitRequest)request);
-        else if (request instanceof UpdateRequest)
-            handleRequest((UpdateRequest)request);
-        else if (request instanceof CancelRequest)
-            handleRequest((CancelRequest)request);
-        else if (request instanceof ReserveRequest)
-            handleRequest((ReserveRequest)request);
-        else if (request instanceof ConfirmRequest)
-            handleRequest((ConfirmRequest)request);
-        else if (request instanceof DescribeResultAccessRequest)
-            handleRequest((DescribeResultAccessRequest)request);
-    }
-    
-    
-    protected void handleRequest(GetCapabilitiesRequest request) throws Exception
-    {
-        // update operation URLs
-        if (endpointUrl == null)
-        {
-            endpointUrl = request.getHttpRequest().getRequestURL().toString();
-            for (Entry<String, String> op: capabilities.getGetServers().entrySet())
-                capabilities.getGetServers().put(op.getKey(), endpointUrl);
-            for (Entry<String, String> op: capabilities.getPostServers().entrySet())
-                capabilities.getPostServers().put(op.getKey(), endpointUrl);
-        }
-        
-        sendResponse(request, capabilities);
-    }
-    
-    
-    protected void handleRequest(DescribeSensorRequest request) throws Exception
-    {
-        String procedureID = request.getProcedureID();
-        
-        OWSExceptionReport report = new OWSExceptionReport();
-        ISPSConnector connector = getConnectorByProcedureID(procedureID, report);
-        checkQueryProcedureFormat(procedureID, request.getFormat(), report);
-        report.process();
-        
-        // serialize and send SensorML description
-        OutputStream os = new BufferedOutputStream(request.getResponseStream());
-        smlUtils.writeProcess(os, connector.generateSensorMLDescription(Double.NaN), true);
-    }
-    
-    
-    protected void handleRequest(DescribeTaskingRequest request) throws Exception
-    {
-        String procID = request.getProcedureID();
-        SPSOfferingCapabilities offering = procedureToOfferingMap.get(procID);
-        
-        if (offering != null)
-            sendResponse(request, offering.getParametersDescription());
-        else
-            throw new SPSException(SPSException.invalid_param_code, "procedure", procID);
-    }
-    
-    
-    protected ITask findTask(String taskID) throws SPSException
-    {
-        ITask task = taskDB.getTask(taskID);
-        
-        if (task == null)
-            throw new SPSException(SPSException.invalid_param_code, "task", taskID);
-        
-        return task;
-    }
-    
-    
-    protected void handleRequest(GetStatusRequest request) throws Exception
-    {
-        ITask task = findTask(request.getTaskID());
-        StatusReport status = task.getStatusReport();
-        
-        GetStatusResponse gsResponse = new GetStatusResponse();
-        gsResponse.setVersion("2.0.0");
-        gsResponse.getReportList().add(status);
-        
-        sendResponse(request, gsResponse);
-    }
-    
-    
-    protected GetFeasibilityResponse handleRequest(GetFeasibilityRequest request) throws Exception
-    {               
-        /*GetFeasibilityResponse gfResponse = new GetFeasibilityResponse();
-        
-        // create task in DB
-        ITask newTask = taskDB.createNewTask(request);
-        String studyId = newTask.getID();
-        
-        // launch feasibility study
-        //FeasibilityResult result = doFeasibilityStudy(request);
-        String sensorId = request.getSensorID();
-        
-        // create response
-        GetFeasibilityResponse gfResponse = new GetFeasibilityResponse();
-        gfResponse.setVersion("2.0.0");
-        FeasibilityReport report = gfResponse.getReport();
-        report.setTitle("Automatic Feasibility Results");
-        report.setTaskID(studyId);
-        report.setSensorID(sensorId);
-                
-        if (!isFeasible(result))
-        {
-            report.setRequestStatus(RequestStatus.Rejected);
-        }
-        else
-        {
-            report.setRequestStatus(RequestStatus.Accepted);
-            report.setPercentCompletion(1.0f);            
-        }
-        
-        report.touch();
-        taskDB.updateTaskStatus(report);
-        
-        return gfResponse;*/  
-        throw new SPSException(SPSException.unsupported_op_code, request.getOperation());
-    }
-    
-    
-    protected void handleRequest(SubmitRequest request) throws Exception
-    {
-        // validate task parameters
-        request.validate();
-        
-        // create task in DB
-        ITask newTask = taskDB.createNewTask(request);
-        final String taskID = newTask.getID();
-        
-        // send command through connector
-        ISPSConnector conn = connectors.get(request.getProcedureID());
-        DataBlockList dataBlockList = (DataBlockList)request.getParameters().getData();
-        Iterator<DataBlock> it = dataBlockList.blockIterator();
-        while (it.hasNext())
-            conn.sendSubmitData(newTask, it.next());        
-        
-        // add report and send response
-        SubmitResponse sResponse = new SubmitResponse();
-        sResponse.setVersion("2.0");
-        ITask task = findTask(taskID);
-        task.getStatusReport().setTaskStatus(TaskStatus.Completed);
-        task.getStatusReport().touch();
-        sResponse.setReport(task.getStatusReport());
-        
-        sendResponse(request, sResponse);
-    }
-    
-
-    protected void handleRequest(UpdateRequest request) throws Exception
-    {
-        throw new SPSException(SPSException.unsupported_op_code, request.getOperation());
-    }
-    
-    
-    protected void handleRequest(CancelRequest request) throws Exception
-    {
-        throw new SPSException(SPSException.unsupported_op_code, request.getOperation());
-    }
-    
-
-    protected void handleRequest(ReserveRequest request) throws Exception
-    {
-        throw new SPSException(SPSException.unsupported_op_code, request.getOperation());
-    }
-    
-    
-    protected void handleRequest(ConfirmRequest request) throws Exception
-    {
-        throw new SPSException(SPSException.unsupported_op_code, request.getOperation());
-    }
-    
-    
-    protected void handleRequest(DescribeResultAccessRequest request) throws Exception
-    {
-        /*ITask task = findTask(request.getTaskID());
-        
-        DescribeResultAccessResponse resp = new DescribeResultAccessResponse();     
-        StatusReport status = task.getStatusReport();
-        
-        // TODO DescribeResultAccess
-        
-        return resp;*/
-        throw new SPSException(SPSException.unsupported_op_code, request.getOperation());
-    }
-    
-    
-    protected final ISPSConnector getConnectorByProcedureID(String procedureID, OWSExceptionReport report) throws Exception
-    {
-        ISPSConnector connector = connectors.get(procedureID);
-        
-        if (connector == null)
-            report.add(new SPSException(SPSException.invalid_param_code, "procedure", procedureID));
-        
-        return connector;
-    }
-    
-    
-    protected void checkQueryProcedureFormat(String procedureID, String format, OWSExceptionReport report) throws SOSException
-    {
-        // ok if default format can be used
-        if (format == null)
-            return;
-        
-        SPSOfferingCapabilities offering = this.procedureToOfferingMap.get(procedureID);
-        if (!offering.getProcedureFormats().contains(format))
-            report.add(new SOSException(SOSException.invalid_param_code, "procedureDescriptionFormat", format, "Procedure description format " + format + " is not available for procedure " + procedureID));
-    }
-
-
-    @Override
-    protected String getServiceType()
-    {
-        return SPSUtils.SPS;
-    }
-
-
-    @Override
-    protected String getDefaultVersion()
-    {
-        return "2.0";
-    }
-
-
-    @Override
-    public ModuleState getCurrentState()
-    {
-        return state;
-    }
-    
-    
-    protected void setState(ModuleState newState)
-    {
-        if (newState != state)
-        {
-            this.state = newState;
-            ModuleEvent event = new ModuleEvent(this, Type.STATE_CHANGED);
-            eventHandler.publishEvent(event);
         }
     }
 }

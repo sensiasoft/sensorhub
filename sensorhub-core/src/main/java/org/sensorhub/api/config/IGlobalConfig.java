@@ -21,6 +21,9 @@ public interface IGlobalConfig
     public String getModuleConfigPath();
     
     
+    public String getModuleDataPath();
+    
+    
     public String getBaseStoragePath();
     
     

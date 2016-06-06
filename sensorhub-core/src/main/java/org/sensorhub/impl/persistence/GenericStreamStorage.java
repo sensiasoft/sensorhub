@@ -93,8 +93,35 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
     
     
     @Override
+    public void requestStart() throws SensorHubException
+    {
+        if (canStart())
+        {
+            try
+            {
+                // retrieve reference to data source
+                ModuleRegistry moduleReg = SensorHub.getInstance().getModuleRegistry();
+                dataSourceRef = (WeakReference<IDataProducerModule<?>>)moduleReg.getModuleRef(config.dataSourceID);
+                
+                // register to receive data source events
+                IDataProducerModule<?> dataSource = dataSourceRef.get();
+                if (dataSource != null)
+                    dataSource.registerListener(this);
+            }
+            catch (Exception e)
+            {
+                throw new StorageException("Unknown data source " + config.dataSourceID, e);
+            }
+        }
+    }
+    
+    
+    @Override
     public void start() throws SensorHubException
     {
+        if (config.storageConfig == null)
+            throw new StorageException("Underlying storage configuration must be provided");
+        
         // instantiate and start underlying storage
         StorageConfig storageConfig = null;
         try
@@ -109,28 +136,8 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
         }
         catch (Exception e)
         {
-            if (storageConfig == null)
-                throw new StorageException("Underlying storage configuration must be provided for generic storage " + config.name);
-            else
-                throw new StorageException("Cannot instantiate underlying storage " + storageConfig.moduleClass, e);
+            throw new StorageException("Cannot instantiate underlying storage " + storageConfig.moduleClass, e);
         }
-        
-        // retrieve reference to data source
-        ModuleRegistry moduleReg = SensorHub.getInstance().getModuleRegistry();
-        dataSourceRef = (WeakReference<IDataProducerModule<?>>)moduleReg.getModuleRef(config.dataSourceID);
-        
-        // connect to data source to fetch initial info
-        IDataProducerModule<?> dataSource = dataSourceRef.get();
-        if (dataSource != null)
-        {        
-            if (dataSource.isStarted())
-                connectToDataSource(dataSource);
-            
-            // register to data source change events
-            dataSource.registerListener(this);
-        }
-        else
-            log.warn("Data source is unavailable for stream storage " + MsgUtils.moduleString(this));
         
         // start auto-purge timer thread if policy is specified and enabled
         if (config.autoPurgeConfig != null && config.autoPurgeConfig.enabled)
@@ -145,6 +152,11 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
             };            
             autoPurgeTimer.schedule(task, 0, (long)(config.autoPurgeConfig.purgePeriod*1000)); 
         }
+        
+        // connect to data source
+        connectToDataSource(dataSourceRef.get());
+        
+        setState(ModuleState.STARTED);
     }
     
     
@@ -322,15 +334,22 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
     {
         if (e instanceof ModuleEvent)
         {
-            // in case data source wasn't started, we listen for start events
+            // connect to data source only when it's started
             if (((ModuleEvent) e).getNewState() == ModuleState.STARTED)
-            {
-                connectToDataSource(dataSourceRef.get());
-                setState(ModuleState.STARTED);
+            {                
+                try
+                {
+                    if (!isStarted())
+                        start();
+                }
+                catch (SensorHubException ex)
+                {
+                    reportError("Module could not be started", ex);
+                }
             }
         }
         
-        if (config.processEvents)
+        else if (config.processEvents)
         {
             // new data events
             if (e instanceof DataEvent)

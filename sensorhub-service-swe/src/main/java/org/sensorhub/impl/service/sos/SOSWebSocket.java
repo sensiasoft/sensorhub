@@ -42,13 +42,13 @@ public class SOSWebSocket implements WebSocketCreator, WebSocketListener, Runnab
     private static final Logger log = LoggerFactory.getLogger(SOSWebSocket.class);
     
     Session session;
-    SOSService parentService;
+    SOSServlet parentService;
     OWSRequest request;
     WebSocketOutputStream respOutputStream;
     Executor threadPool;
     
     
-    public SOSWebSocket(SOSService parentService, OWSRequest request)//, Executor threadPool)
+    public SOSWebSocket(SOSServlet parentService, OWSRequest request)//, Executor threadPool)
     {
         this.parentService = parentService;
         this.request = request;

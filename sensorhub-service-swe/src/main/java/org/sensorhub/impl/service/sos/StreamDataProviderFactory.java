@@ -53,7 +53,7 @@ import org.vast.util.TimeExtent;
  */
 public class StreamDataProviderFactory<ProducerType extends IDataProducerModule<?>> implements ISOSDataProviderFactory, IEventListener
 {
-    final SOSService service;
+    final SOSServlet service;
     final StreamDataProviderConfig config;
     final String producerType;
     final ProducerType producer;
@@ -62,7 +62,7 @@ public class StreamDataProviderFactory<ProducerType extends IDataProducerModule<
     SOSOfferingCapabilities caps;
     
     
-    protected StreamDataProviderFactory(SOSService service, StreamDataProviderConfig config, ProducerType producer, String producerType) throws SensorHubException
+    protected StreamDataProviderFactory(SOSServlet service, StreamDataProviderConfig config, ProducerType producer, String producerType) throws SensorHubException
     {
         this.service = service;
         this.config = config;        
@@ -73,6 +73,19 @@ public class StreamDataProviderFactory<ProducerType extends IDataProducerModule<
         
         // listen to producer lifecycle events
         producer.registerListener(this);
+    }
+    
+    
+    /*
+     * Constructor for use as alt provider
+     * In this mode, we purposely don't handle events
+     */
+    protected StreamDataProviderFactory(StreamDataProviderConfig config, ProducerType producer, String producerType) throws SensorHubException
+    {
+        this.service = null;
+        this.config = config;        
+        this.producerType = producerType;
+        this.producer = producer;
     }
     
     
@@ -303,7 +316,7 @@ public class StreamDataProviderFactory<ProducerType extends IDataProducerModule<
         if (e instanceof ModuleEvent && e.getSource() == producer)
         {
             ModuleState state = ((ModuleEvent)e).getNewState();
-            if (state == ModuleState.STARTED || state.equals(ModuleState.STOPPING))
+            if (state == ModuleState.STARTED || state == ModuleState.STOPPING)
             {
                 if (isEnabled())
                     service.showProviderCaps(this);

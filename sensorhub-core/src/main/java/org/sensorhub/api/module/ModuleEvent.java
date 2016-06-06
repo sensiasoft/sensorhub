@@ -40,6 +40,10 @@ public class ModuleEvent extends Event<Type>
          */
         CONFIG_CHANGED,
         
+        
+        // the items below cannot be module states because the module object
+        // doesn't even exist anymore when these events are generated
+        
         /**
          * after module is unloaded from registry
          */
@@ -48,7 +52,12 @@ public class ModuleEvent extends Event<Type>
         /**
          * after module is fully deleted (along with its configuration) 
          */
-        DELETED
+        DELETED,
+        
+        /**
+         * when an error occurs during asynchronous module execution
+         */
+        ERROR
     }
     
     
@@ -87,20 +96,45 @@ public class ModuleEvent extends Event<Type>
         /**
          * after module was stopped
          */
-        STOPPED
+        STOPPED;
+        
+        private Throwable error;
+        
+        public Throwable getError() 
+        {
+            return error;
+        }
     }
     
     
-    public Type type;
-    public ModuleState newState;
+    protected ModuleState newState;
+    protected Throwable error;
     
     
     public ModuleEvent(IModule<?> module, Type type)
     {
+        this.timeStamp = System.currentTimeMillis();
         this.source = module;
         this.type = type;
+        
         if (type == Type.STATE_CHANGED)
             this.newState = module.getCurrentState();
+        if (type == Type.ERROR)
+            this.error = module.getCurrentError();
+    }
+    
+    
+    public ModuleEvent(IModule<?> module, ModuleState newState)
+    {
+        this(module, Type.STATE_CHANGED);
+        this.newState = newState;
+    }
+    
+    
+    public ModuleEvent(IModule<?> module, Throwable error)
+    {
+        this(module, Type.ERROR);
+        this.error = error;
     }
     
     
@@ -113,5 +147,11 @@ public class ModuleEvent extends Event<Type>
     public ModuleState getNewState()
     {
         return newState;
+    }
+    
+    
+    public Throwable getError()
+    {
+        return error;
     }
 }

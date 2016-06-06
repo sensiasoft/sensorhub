@@ -36,7 +36,7 @@ public class SensorWithStorageProviderFactory extends StreamWithStorageProviderF
     SensorDataProviderConfig sensorProviderConfig;
     
     
-    public SensorWithStorageProviderFactory(SOSService service, SensorDataProviderConfig config) throws SensorHubException
+    public SensorWithStorageProviderFactory(SOSServlet service, SensorDataProviderConfig config) throws SensorHubException
     {
         super(service, config,
               SensorHub.getInstance().getSensorManager().getModuleById(config.sensorID));

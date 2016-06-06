@@ -128,6 +128,8 @@ public class SensorHub
     
     public void start()
     {
+        log.info("Starting SensorHub...");
+        
         // prepare client authenticator (e.g. for HTTP connections, etc...)
         ClientAuth.createInstance("keystore");
                 
@@ -233,11 +235,10 @@ public class SensorHub
                 public void run()
                 {
                     sh.stop();
-                    System.out.println("SensorHub was cleanly stopped");
+                    log.info("SensorHub was cleanly stopped");
                 }            
             });
             
-            System.out.println("Starting SensorHub...");
             instance.start();
         }
         catch (Exception e)

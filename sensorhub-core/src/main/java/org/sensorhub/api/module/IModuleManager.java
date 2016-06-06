@@ -57,7 +57,7 @@ public interface IModuleManager<ModuleType extends IModule<?>>
      * Retrieves a module instance by its local ID
      * @param moduleID Id of module to retrieve
      * @return direct reference to the module instance
-     * @throws SensorHubException 
+     * @throws SensorHubException if no module with given ID can be found
      */
     public ModuleType getModuleById(String moduleID) throws SensorHubException;
 

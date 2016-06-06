@@ -63,7 +63,7 @@ public class StorageDataProviderConfig extends SOSProviderConfig
     
     
     @Override
-    protected ISOSDataProviderFactory getFactory(SOSService service) throws SensorHubException
+    protected ISOSDataProviderFactory getFactory(SOSServlet service) throws SensorHubException
     {
         return new StorageDataProviderFactory(service, this);
     }

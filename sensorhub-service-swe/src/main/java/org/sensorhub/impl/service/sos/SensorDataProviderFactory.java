@@ -35,7 +35,7 @@ public class SensorDataProviderFactory extends StreamDataProviderFactory<ISensor
 {
     
     
-    protected SensorDataProviderFactory(SOSService service, SensorDataProviderConfig config) throws SensorHubException
+    protected SensorDataProviderFactory(SOSServlet service, SensorDataProviderConfig config) throws SensorHubException
     {
         super(service, config,
               SensorHub.getInstance().getSensorManager().getModuleById(config.sensorID),

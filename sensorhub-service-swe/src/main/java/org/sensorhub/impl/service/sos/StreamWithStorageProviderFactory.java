@@ -46,18 +46,17 @@ public class StreamWithStorageProviderFactory<ProducerType extends IDataProducer
     long liveDataTimeOut;
     
     
-    public StreamWithStorageProviderFactory(SOSService service, StreamDataProviderConfig config, ProducerType producer) throws SensorHubException
+    public StreamWithStorageProviderFactory(SOSServlet service, StreamDataProviderConfig config, ProducerType producer) throws SensorHubException
     {
         super(service, new StorageDataProviderConfig(config));
         this.producer = producer;
         this.liveDataTimeOut = (long)(config.liveDataTimeout * 1000);
         
+        // build alt provider to generate capabilities in case storage is disabled
+        this.altProvider = new StreamDataProviderFactory<ProducerType>(config, producer, "Stream");
+        
         // listen to producer lifecycle events
         producer.registerListener(this);
-        
-        // build alt provider to generate capabilities in case storage is disabled
-        this.altProvider = new StreamDataProviderFactory<ProducerType>(service, config, producer, "Stream");
-        producer.unregisterListener(altProvider); // don't listen to events
     }
 
 
@@ -138,11 +137,16 @@ public class StreamWithStorageProviderFactory<ProducerType extends IDataProducer
     @Override
     public void handleEvent(Event<?> e)
     {
+        // we can receive events before producer is even set because we first
+        // register only to storage, so just ignore those
+        if (producer == null)
+            return;
+        
         // if producer or storage is enabled/disabled
         if (e instanceof ModuleEvent && (e.getSource() == producer || e.getSource() == storage))
         {
             ModuleState state = ((ModuleEvent)e).getNewState();
-            if (state == ModuleState.STARTED || state.equals(ModuleState.STOPPING))
+            if (state == ModuleState.STARTED || state == ModuleState.STOPPING)
             {
                 if (isEnabled())
                     service.showProviderCaps(this);
@@ -167,7 +171,16 @@ public class StreamWithStorageProviderFactory<ProducerType extends IDataProducer
     @Override
     public boolean isEnabled()
     {
-        return config.enabled && (producer.isStarted() || storage.isStarted());
+        if (config.enabled)
+        {
+            if (storage != null && storage.isStarted())
+                return true;
+            
+            if (producer != null && producer.isStarted())
+                return true;
+        }
+        
+        return false;
     }
     
     
@@ -175,6 +188,7 @@ public class StreamWithStorageProviderFactory<ProducerType extends IDataProducer
     public void cleanup()
     {
         super.cleanup();
-        producer.unregisterListener(this);
+        if (producer != null)
+            producer.unregisterListener(this);
     }
 }

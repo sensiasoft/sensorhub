@@ -66,13 +66,13 @@ import org.vast.util.TimeExtent;
  */
 public class StorageDataProviderFactory implements ISOSDataProviderFactory, IEventListener
 {
-    final SOSService service;
+    final SOSServlet service;
     final StorageDataProviderConfig config;
     final IRecordStorageModule<?> storage;
     SOSOfferingCapabilities caps;
     
     
-    protected StorageDataProviderFactory(SOSService service, StorageDataProviderConfig config) throws SensorHubException
+    protected StorageDataProviderFactory(SOSServlet service, StorageDataProviderConfig config) throws SensorHubException
     {
         this.service = service;
         this.config = config;
@@ -350,7 +350,7 @@ public class StorageDataProviderFactory implements ISOSDataProviderFactory, IEve
         if (e instanceof ModuleEvent && e.getSource() == storage)
         {
             ModuleState state = ((ModuleEvent)e).getNewState();
-            if (state == ModuleState.STARTED || state.equals(ModuleState.STOPPING))
+            if (state == ModuleState.STARTED || state == ModuleState.STOPPING)
             {
                 if (isEnabled())
                     service.showProviderCaps(this);

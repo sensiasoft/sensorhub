@@ -15,6 +15,7 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 package org.sensorhub.test.module;
 
 import org.sensorhub.api.common.IEventListener;
+import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.module.IModule;
 import org.sensorhub.api.module.IModuleStateManager;
 import org.sensorhub.api.module.ModuleConfig;
@@ -24,9 +25,11 @@ import org.sensorhub.api.module.ModuleEvent.ModuleState;
 public class DummyModule implements IModule<ModuleConfig>
 {
     ModuleConfig config;
-    public boolean isStarted() { return config.autoStart; }
+    public boolean isInitialized() { return true; }
+    public boolean isStarted() { return true; }
     public void init(ModuleConfig config) { this.config = config; }
     public void updateConfig(ModuleConfig config) { }
+    public void setConfiguration(ModuleConfig config) { this.config = config; }
     public ModuleConfig getConfiguration() { return config; }
     public String getName() { return config.name; }
     public String getLocalID() { return null; }
@@ -38,4 +41,22 @@ public class DummyModule implements IModule<ModuleConfig>
     public void registerListener(IEventListener listener) {}
     public void unregisterListener(IEventListener listener) {}
     public ModuleState getCurrentState() { return ModuleState.STARTED; }
+    public Throwable getCurrentError() { return null; }
+    
+    public void requestInit(ModuleConfig config) throws SensorHubException
+    {
+        init(config);
+    }
+    
+    public void requestStart() throws SensorHubException
+    {
+        start();
+    }
+
+    public void requestStop() throws SensorHubException
+    {
+        stop();
+    }
+    
+    
 }
