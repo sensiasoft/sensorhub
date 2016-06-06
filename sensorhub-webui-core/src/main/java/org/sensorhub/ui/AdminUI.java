@@ -23,9 +23,12 @@ import java.util.Map;
 import java.util.Properties;
 import org.sensorhub.api.comm.CommConfig;
 import org.sensorhub.api.comm.NetworkConfig;
+import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.module.IModule;
 import org.sensorhub.api.module.ModuleConfig;
+import org.sensorhub.api.module.ModuleEvent;
+import org.sensorhub.api.module.ModuleEvent.ModuleState;
 import org.sensorhub.api.persistence.StorageConfig;
 import org.sensorhub.api.processing.ProcessConfig;
 import org.sensorhub.api.sensor.ISensorModule;
@@ -33,6 +36,7 @@ import org.sensorhub.api.sensor.SensorConfig;
 import org.sensorhub.api.service.ClientConfig;
 import org.sensorhub.api.service.ServiceConfig;
 import org.sensorhub.impl.SensorHub;
+import org.sensorhub.impl.common.EventBus;
 import org.sensorhub.impl.module.ModuleRegistry;
 import org.sensorhub.impl.persistence.StreamStorageConfig;
 import org.sensorhub.impl.sensor.SensorSystem;
@@ -85,7 +89,7 @@ import com.vaadin.ui.Window.CloseListener;
 
 @Theme("sensorhub")
 @Push(value=PushMode.MANUAL, transport=Transport.WEBSOCKET)
-public class AdminUI extends com.vaadin.ui.UI
+public class AdminUI extends com.vaadin.ui.UI implements IEventListener
 {
     private static final long serialVersionUID = 4069325051233125115L;
     
@@ -97,18 +101,18 @@ public class AdminUI extends com.vaadin.ui.UI
     private static final Resource LOGO_ICON = new ClassResource("/sensorhub_logo_128.png");
     private static final Resource ACC_TAB_ICON = new ThemeResource("icons/enable.png");    
     private static final String STYLE_LOGO = "logo";
-    private static final String PROP_STARTED = "started";
+    private static final String PROP_STATE = "started";
     private static final String PROP_MODULE_OBJECT = "module";
     
     protected static final Logger log = LoggerFactory.getLogger(AdminUI.class);
     private static AdminUI singleton;
     
     
-    VerticalLayout configArea;
     AdminUIConfig uiConfig;
-    
-    protected Map<String, Class<? extends IModuleAdminPanel<?>>> customPanels = new HashMap<String, Class<? extends IModuleAdminPanel<?>>>();
-    protected Map<String, Class<? extends IModuleConfigForm>> customForms = new HashMap<String, Class<? extends IModuleConfigForm>>();
+    VerticalLayout configArea;
+    List<Table> moduleTables = new ArrayList<Table>();
+    Map<String, Class<? extends IModuleConfigForm>> customForms = new HashMap<String, Class<? extends IModuleConfigForm>>();
+    Map<String, Class<? extends IModuleAdminPanel<?>>> customPanels = new HashMap<String, Class<? extends IModuleAdminPanel<?>>>();
     
     
     public static AdminUI getInstance()
@@ -141,16 +145,19 @@ public class AdminUI extends com.vaadin.ui.UI
             throw new RuntimeException("Cannot get UI module configuration", e);
         }
         
+        // load custom forms
         try
         {
-            // load default form builders
+            customForms.clear();
+                    
+            // default form builders
             customForms.put(HttpServerConfig.class.getCanonicalName(), HttpServerConfigForm.class);
             customForms.put(StreamStorageConfig.class.getCanonicalName(), GenericStorageConfigForm.class);
             customForms.put(CommConfig.class.getCanonicalName(), CommConfigForm.class);
             customForms.put(SOSConfigForm.SOS_PACKAGE + "SOSServiceConfig", SOSConfigForm.class);
             customForms.put(SOSConfigForm.SOS_PACKAGE + "SOSProviderConfig", SOSConfigForm.class);
             
-            // load custom form builders defined in config
+            // custom form builders defined in config
             for (CustomUIConfig customForm: uiConfig.customForms)
             {
                 configClass = customForm.configClass;
@@ -164,8 +171,11 @@ public class AdminUI extends com.vaadin.ui.UI
             log.error("Error while instantiating form builder for config class " + configClass, e);
         }
         
+        // load custom panels
         try
         {
+            customPanels.clear();
+            
             // load default panel builders
             customPanels.put(SensorConfig.class.getCanonicalName(), SensorAdminPanel.class);        
             customPanels.put(StorageConfig.class.getCanonicalName(), StorageAdminPanel.class);
@@ -231,11 +241,12 @@ public class AdminUI extends com.vaadin.ui.UI
         leftPane.setExpandRatio(toolbar, 0);
         
         // accordion with several sections
+        moduleTables.clear();
         Accordion stack = new Accordion();
         stack.setSizeFull();
         VerticalLayout layout;
         Tab tab;
-        
+                
         layout = new VerticalLayout();
         tab = stack.addTab(layout, "Sensors");
         tab.setIcon(ACC_TAB_ICON);
@@ -274,6 +285,9 @@ public class AdminUI extends com.vaadin.ui.UI
         configArea = new VerticalLayout();
         configArea.setMargin(true);
         splitPanel.addComponent(configArea);
+        
+        // register to module registry events
+        EventBus.getInstance().registerListener(ModuleRegistry.ID, EventBus.MAIN_TOPIC, this);
     }
     
     
@@ -344,7 +358,7 @@ public class AdminUI extends com.vaadin.ui.UI
         for (IModule<?> module: reg.getLoadedModules())
         {
             ModuleConfig config = module.getConfiguration();
-            if (NetworkConfig.class.isAssignableFrom(config.getClass()))
+            if (config != null && NetworkConfig.class.isAssignableFrom(config.getClass()))
                 moduleList.add(module);
         }        
         
@@ -361,7 +375,7 @@ public class AdminUI extends com.vaadin.ui.UI
         for (IModule<?> module: reg.getLoadedModules())
         {
             ModuleConfig config = module.getConfiguration();
-            if (configType.isAssignableFrom(config.getClass()))
+            if (config != null && configType.isAssignableFrom(config.getClass()))
                 moduleList.add(module);
         }
         
@@ -381,16 +395,17 @@ public class AdminUI extends com.vaadin.ui.UI
         table.setImmediate(true);
         table.setColumnReorderingAllowed(false);
         table.addContainerProperty(UIConstants.PROP_NAME, String.class, false);
-        table.addContainerProperty(PROP_STARTED, Boolean.class, false);
+        table.addContainerProperty(PROP_STATE, ModuleState.class, false);
         table.addContainerProperty(PROP_MODULE_OBJECT, IModule.class, null);
-        table.setColumnWidth(PROP_STARTED, 100);
+        table.setColumnWidth(PROP_STATE, 100);
         table.setColumnHeaderMode(ColumnHeaderMode.HIDDEN);
+        moduleTables.add(table);
         
         // add modules info as table items       
         for (IModule<?> module: moduleList)
         {
             ModuleConfig config = module.getConfiguration();
-            table.addItem(new Object[] {config.name, module.isStarted(), module}, config.id);
+            table.addItem(new Object[] {config.name, module.getCurrentState(), module}, config.id);
             
             // add submodules
             if (module instanceof SensorSystem)
@@ -398,33 +413,33 @@ public class AdminUI extends com.vaadin.ui.UI
                 for (ISensorModule<?> sensor: ((SensorSystem) module).getSensors().values())
                 {
                     ModuleConfig subConfig = sensor.getConfiguration();
-                    table.addItem(new Object[] {subConfig.name, sensor.isStarted(), sensor}, subConfig.id);
+                    table.addItem(new Object[] {subConfig.name, sensor.getCurrentState(), sensor}, subConfig.id);
                     table.setParent(subConfig.id, config.id);
                 }
             }
         }
         
         // hide module object column!
-        table.setVisibleColumns(UIConstants.PROP_NAME, PROP_STARTED);
+        table.setVisibleColumns(UIConstants.PROP_NAME, PROP_STATE);
         
-        // value converter for autostart field -> display as text and icon
-        table.setConverter(PROP_STARTED, new Converter<String, Boolean>() {
+        // value converter for state field -> display as text and icon
+        table.setConverter(PROP_STATE, new Converter<String, ModuleState>() {
             @Override
-            public Boolean convertToModel(String value, Class<? extends Boolean> targetType, Locale locale) throws com.vaadin.data.util.converter.Converter.ConversionException
+            public ModuleState convertToModel(String value, Class<? extends ModuleState> targetType, Locale locale) throws com.vaadin.data.util.converter.Converter.ConversionException
             {
-                return (value != null && value.equals("Started"));
+                return ModuleState.valueOf(value);
             }
 
             @Override
-            public String convertToPresentation(Boolean value, Class<? extends String> targetType, Locale locale) throws com.vaadin.data.util.converter.Converter.ConversionException
+            public String convertToPresentation(ModuleState value, Class<? extends String> targetType, Locale locale) throws com.vaadin.data.util.converter.Converter.ConversionException
             {
-                return value ? "Started" : "Stopped";
+                return value.toString();
             }
 
             @Override
-            public Class<Boolean> getModelType()
+            public Class<ModuleState> getModelType()
             {
-                return boolean.class;
+                return ModuleState.class;
             }
 
             @Override
@@ -438,10 +453,10 @@ public class AdminUI extends com.vaadin.ui.UI
             @Override
             public String getStyle(Table source, Object itemId, Object propertyId)
             {
-                if (propertyId != null && propertyId.equals(PROP_STARTED))
+                if (propertyId != null && propertyId.equals(PROP_STATE))
                 {
-                    boolean val = (boolean)table.getItem(itemId).getItemProperty(propertyId).getValue();
-                    if (val == true)
+                    ModuleState state = (ModuleState)table.getItem(itemId).getItemProperty(propertyId).getValue();
+                    if (state == ModuleState.STARTED)
                         return "green";
                     else
                         return "red";
@@ -484,8 +499,8 @@ public class AdminUI extends com.vaadin.ui.UI
                                 
                 if (target != null)
                 {                    
-                    boolean started = (boolean)table.getItem(target).getItemProperty(PROP_STARTED).getValue();
-                    if (started)
+                    ModuleState state = (ModuleState)table.getItem(target).getItemProperty(PROP_STATE).getValue();
+                    if (state == ModuleState.STARTED)
                     {
                         actions.add(STOP_MODULE_ACTION);
                         actions.add(RESTART_MODULE_ACTION);
@@ -587,8 +602,8 @@ public class AdminUI extends com.vaadin.ui.UI
                                 {                    
                                     try 
                                     {
-                                        IModule<?> module = registry.startModule(moduleId);
-                                        item.getItemProperty(PROP_STARTED).setValue(true);
+                                        IModule<?> module = registry.startModuleAsync(moduleId, AdminUI.this);
+                                        item.getItemProperty(PROP_STATE).setValue(true);
                                         openModuleInfo((MyBeanItem<ModuleConfig>)item, module);
                                     }
                                     catch (SensorHubException ex)
@@ -613,8 +628,8 @@ public class AdminUI extends com.vaadin.ui.UI
                                 {                    
                                     try 
                                     {
-                                        registry.stopModule(moduleId);
-                                        item.getItemProperty(PROP_STARTED).setValue(false);
+                                        registry.stopModuleAsync(moduleId, AdminUI.this);
+                                        item.getItemProperty(PROP_STATE).setValue(false);
                                     }
                                     catch (SensorHubException ex)
                                     {
@@ -638,9 +653,9 @@ public class AdminUI extends com.vaadin.ui.UI
                                 {                    
                                     try 
                                     {
-                                        SensorHub.getInstance().getModuleRegistry().stopModule(moduleId);
-                                        SensorHub.getInstance().getModuleRegistry().startModule(moduleId);
-                                        item.getItemProperty(PROP_STARTED).setValue(true);
+                                        registry.stopModule(moduleId);
+                                        registry.startModuleAsync(moduleId, AdminUI.this);
+                                        item.getItemProperty(PROP_STATE).setValue(true);
                                     }
                                     catch (SensorHubException ex)
                                     {
@@ -720,6 +735,52 @@ public class AdminUI extends com.vaadin.ui.UI
         {
             throw new RuntimeException("Cannot instantiate UI class", e);
         }
+    }
+
+
+    @Override
+    public void handleEvent(final org.sensorhub.api.common.Event<?> e)
+    {
+        if (e instanceof ModuleEvent)
+        {
+            String moduleID = ((IModule<?>)e.getSource()).getLocalID();
+            
+            // find table item corresponding to module
+            Item item = null;
+            for (Table table: moduleTables)
+            {
+                item = table.getItem(moduleID);
+                if (item != null)
+                    break;
+            }
+            
+            // update item
+            final Item foundItem = item;
+            if (foundItem != null)
+            {
+                access(new Runnable() {
+                    public void run()
+                    {
+                        switch (((ModuleEvent)e).getType())
+                        {
+                            case CONFIG_CHANGED:
+                                ModuleConfig config = ((IModule<?>)e.getSource()).getConfiguration();
+                                foundItem.getItemProperty(UIConstants.PROP_NAME).setValue(config.name);
+                                push();
+                                break;
+                                
+                            case STATE_CHANGED:
+                                ModuleState state = ((IModule<?>)e.getSource()).getCurrentState();
+                                foundItem.getItemProperty(PROP_STATE).setValue(state);
+                                push();
+                                break;
+                                
+                            default:  
+                        }
+                    }
+                });
+            }
+        }        
     }
 
 }

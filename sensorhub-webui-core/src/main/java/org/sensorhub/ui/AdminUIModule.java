@@ -20,6 +20,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.LogManager;
 import org.sensorhub.api.common.SensorHubException;
+import org.sensorhub.api.module.ModuleEvent.ModuleState;
+import org.sensorhub.api.service.ServiceException;
 import org.sensorhub.impl.module.AbstractModule;
 import org.sensorhub.impl.service.HttpServer;
 import com.vaadin.server.VaadinServlet;
@@ -48,15 +50,23 @@ public class AdminUIModule extends AbstractModule<AdminUIConfig>
             initParams.put(WIDGETSET, config.widgetSet);
         initParams.put("productionMode", "true");  // set to false to compile theme on-the-fly
         
+        // get HTTP server instance
+        HttpServer httpServer = HttpServer.getInstance();
+        if (!httpServer.waitForState(ModuleState.STARTED, 10000))
+            throw new ServiceException("HTTP server hasn't started before timeout");
+        
         // deploy servlet
         // HACK: we have to disable std err to hide message due to Vaadin duplicate implementation of SL4J
+        // Note that this may hide error messages in other modules now that startup sequence is multithreaded
         PrintStream oldStdErr = System.err;
         System.setErr(new PrintStream(new OutputStream() {
             public void write(int b) { }
         }));
-        HttpServer.getInstance().deployServlet(vaadinServlet, initParams, "/admin/*", "/VAADIN/*");
+        httpServer.deployServlet(vaadinServlet, initParams, "/admin/*", "/VAADIN/*");
         System.setErr(oldStdErr);
-        HttpServer.getInstance().addServletSecurity("/admin/*", "admin");
+        
+        // setup security
+        httpServer.addServletSecurity("/admin/*", "admin");
     }
     
 
