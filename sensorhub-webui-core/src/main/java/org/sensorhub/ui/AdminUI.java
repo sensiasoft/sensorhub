@@ -67,6 +67,7 @@ import com.vaadin.server.VaadinRequest;
 import com.vaadin.server.VaadinSession;
 import com.vaadin.shared.communication.PushMode;
 import com.vaadin.shared.ui.ui.Transport;
+import com.vaadin.ui.AbstractSelect.ItemDescriptionGenerator;
 import com.vaadin.ui.Accordion;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
@@ -88,7 +89,7 @@ import com.vaadin.ui.Window.CloseListener;
 
 
 @Theme("sensorhub")
-@Push(value=PushMode.MANUAL, transport=Transport.WEBSOCKET)
+@Push(value=PushMode.MANUAL, transport=Transport.STREAMING)
 public class AdminUI extends com.vaadin.ui.UI implements IEventListener
 {
     private static final long serialVersionUID = 4069325051233125115L;
@@ -456,10 +457,45 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener
                 if (propertyId != null && propertyId.equals(PROP_STATE))
                 {
                     ModuleState state = (ModuleState)table.getItem(itemId).getItemProperty(propertyId).getValue();
-                    if (state == ModuleState.STARTED)
-                        return "green";
+                    IModule<?> module = (IModule<?>)table.getItem(itemId).getItemProperty(PROP_MODULE_OBJECT).getValue();
+                    Throwable error = module.getCurrentError();
+                    
+                    if (error == null)
+                    {
+                        if (state == ModuleState.STARTED)
+                            return "green";
+                        else
+                            return "red";
+                    }
                     else
-                        return "red";
+                    {
+                        return "error";
+                    }
+                }
+                
+                return null;
+            }
+        });
+        
+        table.setItemDescriptionGenerator(new ItemDescriptionGenerator() {                             
+            public String generateDescription(Component source, Object itemId, Object propertyId) {
+                if (propertyId != null && propertyId.equals(PROP_STATE))
+                {
+                    IModule<?> module = (IModule<?>)table.getItem(itemId).getItemProperty(PROP_MODULE_OBJECT).getValue();
+                    Throwable error = module.getCurrentError();
+                    if (error != null)
+                    {
+                        StringBuilder buf = new StringBuilder();
+                        buf.append(error.getMessage());
+                        if (error.getCause() != null)
+                        {
+                            buf.append("<br/>");
+                            buf.append(error.getCause().getMessage());
+                        }
+                        return buf.toString();
+                    }
+                    else
+                        return module.getStatusMessage();
                 }
                 
                 return null;
@@ -603,7 +639,6 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener
                                     try 
                                     {
                                         IModule<?> module = registry.startModuleAsync(moduleId, AdminUI.this);
-                                        item.getItemProperty(PROP_STATE).setValue(true);
                                         openModuleInfo((MyBeanItem<ModuleConfig>)item, module);
                                     }
                                     catch (SensorHubException ex)
@@ -629,7 +664,6 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener
                                     try 
                                     {
                                         registry.stopModuleAsync(moduleId, AdminUI.this);
-                                        item.getItemProperty(PROP_STATE).setValue(false);
                                     }
                                     catch (SensorHubException ex)
                                     {
@@ -655,7 +689,6 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener
                                     {
                                         registry.stopModule(moduleId);
                                         registry.startModuleAsync(moduleId, AdminUI.this);
-                                        item.getItemProperty(PROP_STATE).setValue(true);
                                     }
                                     catch (SensorHubException ex)
                                     {
@@ -770,17 +803,18 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener
                                 break;
                                 
                             case STATE_CHANGED:
+                            case ERROR:
                                 ModuleState state = ((IModule<?>)e.getSource()).getCurrentState();
                                 foundItem.getItemProperty(PROP_STATE).setValue(state);
                                 push();
-                                break;
+                                break;                                
                                 
                             default:  
                         }
                     }
                 });
             }
-        }        
+        }     
     }
 
 }

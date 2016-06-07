@@ -106,10 +106,14 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
                 // register to receive data source events
                 IDataProducerModule<?> dataSource = dataSourceRef.get();
                 if (dataSource != null)
+                {
+                    reportStatus("Waiting for data source " + MsgUtils.moduleString(dataSource) + " to start...");
                     dataSource.registerListener(this);
+                }
             }
             catch (Exception e)
             {
+                this.state = ModuleState.STOPPED;
                 throw new StorageException("Unknown data source " + config.dataSourceID, e);
             }
         }
@@ -157,6 +161,7 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
         connectToDataSource(dataSourceRef.get());
         
         setState(ModuleState.STARTED);
+        clearStatus();
     }
     
     
@@ -303,9 +308,12 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
     {
         if (dataSourceRef != null)
         {
+            // unregister all listeners
             IDataProducerModule<?> dataSource = dataSourceRef.get();
             if (dataSource != null)
             {            
+                dataSource.unregisterListener(this);
+                
                 for (IStreamingDataInterface output: getSelectedOutputs(dataSource))
                     output.unregisterListener(this);
             }
@@ -344,7 +352,7 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
                 }
                 catch (SensorHubException ex)
                 {
-                    reportError("Module could not be started", ex);
+                    reportError("Cannot start module", ex);
                 }
             }
         }

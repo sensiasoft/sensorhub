@@ -76,8 +76,15 @@ public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> impleme
             // cannot use MappedFile because current implementation is limited to 2GB size
             //MappedFile dbFile = new MappedFile(config.storagePath, 100*1024, false);
             OSFile dbFile = new OSFile(config.storagePath, false, false);
-            if (!dbFile.tryLock(false))
-                throw new StorageException("Storage file " + config.storagePath + " is already opened by another SensorHub process");
+            try
+            {
+                if (!dbFile.tryLock(false))
+                    throw new StorageException("Storage file " + config.storagePath + " is already opened by another SensorHub process");
+            }
+            catch (Exception e)
+            {
+                throw new StorageException("Storage file " + config.storagePath + " is already locked by the JVM");
+            }
             
             db = StorageFactory.getInstance().createStorage();    
             db.setProperty("perst.concurrent.iterator", true);

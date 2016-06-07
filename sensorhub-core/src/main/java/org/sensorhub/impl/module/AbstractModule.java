@@ -52,8 +52,9 @@ public abstract class AbstractModule<ConfigType extends ModuleConfig> implements
     protected IEventHandler eventHandler;
     protected ConfigType config;
     protected ModuleState state = ModuleState.LOADED;
-    protected Throwable lastError;
     protected final Object stateLock = new Object();
+    protected Throwable lastError;
+    protected String statusMsg;
     
 
     public AbstractModule()
@@ -178,19 +179,23 @@ public abstract class AbstractModule<ConfigType extends ModuleConfig> implements
     
     /**
      * Sets the module error state
-     * @param error
+     * @param msg
+     * @param error 
      */
-    protected void reportError(String msg, Throwable error)
+    public void reportError(String msg, Throwable error)
     {
         if (error != this.lastError)
         {
-            this.lastError = error;
+            if (msg != null)
+                this.lastError = new Exception(msg, error);
+            else
+                this.lastError = error;
             
             if (error != null)
             {
                 if (eventHandler != null)
                 {
-                    ModuleEvent event = new ModuleEvent(this, error);               
+                    ModuleEvent event = new ModuleEvent(this, this.lastError);               
                     eventHandler.publishEvent(event);
                 }
                 
@@ -200,9 +205,33 @@ public abstract class AbstractModule<ConfigType extends ModuleConfig> implements
     }
     
     
-    protected void clearErrorState()
+    public void clearError()
     {
         this.lastError = null;
+    }
+    
+    
+    @Override
+    public String getStatusMessage()
+    {
+        return statusMsg;
+    }
+    
+    
+    /**
+     * Sets the module status message
+     * @param msg
+     */
+    public void reportStatus(String msg)
+    {
+        this.statusMsg = msg;
+        getLogger().info(msg);
+    }
+    
+    
+    public void clearStatus()
+    {
+        this.statusMsg = null;
     }
     
     
@@ -295,7 +324,7 @@ public abstract class AbstractModule<ConfigType extends ModuleConfig> implements
     {
         synchronized (stateLock)
         {
-            if (this.state != ModuleState.STARTED)
+            if (this.state != ModuleState.STARTED && this.state != ModuleState.STARTING)
                 return false;
             
             setState(ModuleState.STOPPING);
@@ -343,7 +372,10 @@ public abstract class AbstractModule<ConfigType extends ModuleConfig> implements
     {
         synchronized (stateLock)
         {
-            eventHandler.registerListener(listener);            
+            eventHandler.registerListener(listener);
+            
+            // notify current state synchronously while we're locked
+            // so the listener can't miss it
             if (this.state != ModuleState.LOADED)
                 listener.handleEvent(new ModuleEvent(this, this.state));
         }

@@ -83,6 +83,13 @@ $v-layout-margin-top: 25px;
       text-indent: 20px;
    }
    
+   .v-table .v-table-cell-content-error {
+      background-image: url("icons/cross.png");
+      background-repeat: no-repeat;
+      background-position: 5px;
+      text-indent: 20px;
+   }
+   
    .v-tooltip {
       background-color: rgba(255, 255, 255, 0.9);
       color: black;

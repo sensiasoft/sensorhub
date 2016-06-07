@@ -87,6 +87,12 @@ public interface IModule<ConfigType extends ModuleConfig> extends IEventProducer
     
     
     /**
+     * @return the current status message
+     */
+    public String getStatusMessage();
+    
+    
+    /**
      * @return the last error that occured executing the module
      */
     public Throwable getCurrentError();
@@ -106,7 +112,7 @@ public interface IModule<ConfigType extends ModuleConfig> extends IEventProducer
      * Initializes the module synchronously with the specified configuration.<br/>
      * Implementations of this method must block until the module is
      * successfully initialized or send an exception.<br/>
-     * Module lifecycle events are not generated when calling this method.<br/>
+     * Module lifecycle events may not be generated when calling this method directly.<br/>
      * @param config
      * @throws SensorHubException 
      */
@@ -137,7 +143,7 @@ public interface IModule<ConfigType extends ModuleConfig> extends IEventProducer
      * Starts the module synchronously with the current configuration.<br/>
      * Implementations of this method must block until the module is
      * successfully started or send an exception.<br/>
-     * Module lifecycle events are not generated when calling this method.<br/>
+     * Module lifecycle events may not be generated when calling this method directly.<br/>
      * init() should always be called before start().
      * @throws SensorHubException
      */
@@ -160,7 +166,7 @@ public interface IModule<ConfigType extends ModuleConfig> extends IEventProducer
      * when this is called (ex: memory, files, connections, etc.)<br/>
      * Implementations of this method must block until the module is
      * successfully stopped or send an exception.<br/>
-     * Module lifecycle events are not generated when calling this method.<br/>
+     * Module lifecycle events may not be generated when calling this method directly.<br/>
      * stop() can be called right after init() even if start() hasn't been called.
      * @throws SensorHubException
      */

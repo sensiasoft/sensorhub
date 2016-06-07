@@ -41,6 +41,7 @@ public class DummyModule implements IModule<ModuleConfig>
     public void registerListener(IEventListener listener) {}
     public void unregisterListener(IEventListener listener) {}
     public ModuleState getCurrentState() { return ModuleState.STARTED; }
+    public String getStatusMessage() { return null; }
     public Throwable getCurrentError() { return null; }
     
     public void requestInit(ModuleConfig config) throws SensorHubException
@@ -56,7 +57,6 @@ public class DummyModule implements IModule<ModuleConfig>
     public void requestStop() throws SensorHubException
     {
         stop();
-    }
-    
+    }   
     
 }
