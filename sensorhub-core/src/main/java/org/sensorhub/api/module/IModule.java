@@ -99,19 +99,30 @@ public interface IModule<ConfigType extends ModuleConfig> extends IEventProducer
     
     
     /**
-     * Requests to initialize the module with the specified configuration.<br/>
+     * Requests to initialize the module with the current configuration.<br/>
      * Implementations of this method block until the module is initialized or
      * return immediately while they wait for the proper init conditions.
-     * @param config 
      * @throws SensorHubException
      */
-    public void requestInit(ConfigType config) throws SensorHubException;
+    public void requestInit() throws SensorHubException;
+    
+    
+    /**
+     * Initializes the module synchronously with the current configuration.<br/>
+     * Implementations of this method must block until the module is
+     * successfully initialized or send an exception.<br/>
+     * Module lifecycle events may not be generated when calling this method directly.<br/>
+     * @throws SensorHubException 
+     */
+    public void init() throws SensorHubException;
     
     
     /**
      * Initializes the module synchronously with the specified configuration.<br/>
      * Implementations of this method must block until the module is
      * successfully initialized or send an exception.<br/>
+     * This is equivalent to calling {@link #setConfiguration(ModuleConfig)}
+     * and then {@link #init()} with no arguments.<br/>
      * Module lifecycle events may not be generated when calling this method directly.<br/>
      * @param config
      * @throws SensorHubException 

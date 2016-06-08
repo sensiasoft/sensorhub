@@ -14,49 +14,158 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.test.module;
 
+import org.sensorhub.api.common.IEventHandler;
 import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.module.IModule;
 import org.sensorhub.api.module.IModuleStateManager;
 import org.sensorhub.api.module.ModuleConfig;
+import org.sensorhub.api.module.ModuleEvent;
 import org.sensorhub.api.module.ModuleEvent.ModuleState;
+import org.sensorhub.impl.common.EventBus;
 
 
 public class DummyModule implements IModule<ModuleConfig>
 {
     ModuleConfig config;
-    public boolean isInitialized() { return true; }
-    public boolean isStarted() { return true; }
-    public void init(ModuleConfig config) { this.config = config; }
-    public void updateConfig(ModuleConfig config) { }
-    public void setConfiguration(ModuleConfig config) { this.config = config; }
-    public ModuleConfig getConfiguration() { return config; }
-    public String getName() { return config.name; }
-    public String getLocalID() { return null; }
-    public void start() {};
-    public void stop() {}
-    public void saveState(IModuleStateManager saver) {}
-    public void loadState(IModuleStateManager loader) {}
-    public void cleanup() {}
-    public void registerListener(IEventListener listener) {}
-    public void unregisterListener(IEventListener listener) {}
-    public ModuleState getCurrentState() { return ModuleState.STARTED; }
-    public String getStatusMessage() { return null; }
-    public Throwable getCurrentError() { return null; }
-    
-    public void requestInit(ModuleConfig config) throws SensorHubException
+    ModuleState state = ModuleState.LOADED;
+    IEventHandler eventHandler;
+
+
+    public boolean isInitialized()
     {
-        init(config);
+        return true;
+    }
+
+
+    public boolean isStarted()
+    {
+        return (state == ModuleState.STARTED);
+    }
+
+
+    public void init()
+    {
     }
     
+    
+    public void init(ModuleConfig config)
+    {
+        this.config = config;
+        init();
+    }
+
+
+    public void updateConfig(ModuleConfig config)
+    {
+    }
+
+
+    public void setConfiguration(ModuleConfig config)
+    {
+        this.config = config;
+        this.eventHandler = EventBus.getInstance().registerProducer(config.id);
+    }
+
+
+    public ModuleConfig getConfiguration()
+    {
+        return config;
+    }
+
+
+    public String getName()
+    {
+        return config.name;
+    }
+
+
+    public String getLocalID()
+    {
+        return config.id;
+    }
+
+
+    public void start()
+    {
+    }
+
+
+    public void stop()
+    {
+    }
+
+
+    public void saveState(IModuleStateManager saver)
+    {
+    }
+
+
+    public void loadState(IModuleStateManager loader)
+    {
+    }
+
+
+    public void cleanup()
+    {
+    }
+
+
+    public void registerListener(IEventListener listener)
+    {
+        eventHandler.registerListener(listener);
+    }
+
+
+    public void unregisterListener(IEventListener listener)
+    {
+        eventHandler.registerListener(listener);
+    }
+
+
+    public ModuleState getCurrentState()
+    {
+        return this.state;
+    }
+
+
+    public String getStatusMessage()
+    {
+        return null;
+    }
+
+
+    public Throwable getCurrentError()
+    {
+        return null;
+    }
+
+
+    public void requestInit() throws SensorHubException
+    {
+        init();
+        setState(ModuleState.INITIALIZED);
+    }
+
+
     public void requestStart() throws SensorHubException
     {
         start();
+        setState(ModuleState.STARTED);
     }
+
 
     public void requestStop() throws SensorHubException
     {
         stop();
-    }   
+        setState(ModuleState.STOPPED);
+    }
     
+    
+    protected void setState(ModuleState newState)
+    {
+        this.state = newState;
+        eventHandler.publishEvent(new ModuleEvent(this, newState));
+    }
+
 }

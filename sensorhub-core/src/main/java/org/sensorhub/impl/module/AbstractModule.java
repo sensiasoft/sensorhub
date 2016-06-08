@@ -235,7 +235,7 @@ public abstract class AbstractModule<ConfigType extends ModuleConfig> implements
     }
     
     
-    protected boolean canInit(ConfigType config) throws SensorHubException
+    protected boolean canInit() throws SensorHubException
     {
         synchronized (stateLock)
         {
@@ -249,21 +249,28 @@ public abstract class AbstractModule<ConfigType extends ModuleConfig> implements
     
     
     @Override
-    public void requestInit(ConfigType config) throws SensorHubException
+    public void requestInit() throws SensorHubException
     {
-        if (canInit(config))
+        if (canInit())
         {
             // default implementation just calls init()
-            init(config);
+            init();
             setState(ModuleState.INITIALIZED);
         }
     }
 
 
     @Override
+    public void init() throws SensorHubException
+    {           
+    }
+    
+    
+    @Override
     public void init(ConfigType config) throws SensorHubException
     {   
-        setConfiguration(config);        
+        setConfiguration(config);
+        init();
     }
 
 

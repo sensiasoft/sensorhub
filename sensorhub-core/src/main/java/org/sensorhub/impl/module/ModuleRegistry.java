@@ -279,7 +279,6 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
             module.registerListener(listener);
         
         // init module in separate thread
-        final ModuleConfig config = module.getConfiguration();
         asyncExec.submit(new Runnable()
         {
             @Override
@@ -287,7 +286,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
             {
                 try
                 {
-                    module.requestInit(config);
+                    module.requestInit();
                 }
                 catch (Exception e)
                 {
@@ -486,7 +485,14 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
         if (listener != null)
             module.registerListener(listener);
         
-        // start module in separate thread
+        stopModuleAsync(module);
+        return module;
+    }
+    
+    
+    protected void stopModuleAsync(final IModule<?> module)
+    {        
+        // stop module in separate thread
         asyncExec.submit(new Runnable()
         {
             @Override
@@ -503,8 +509,6 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
                 }
             }            
         });
-        
-        return module;
     }
 
     
@@ -679,7 +683,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
                 }
                 
                 // request to stop module
-                stopModuleAsync(module.getLocalID(), null);
+                stopModuleAsync(module);
             }
             catch (Exception e)
             {
