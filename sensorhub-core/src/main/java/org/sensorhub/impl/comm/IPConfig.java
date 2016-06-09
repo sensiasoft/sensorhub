@@ -28,6 +28,12 @@ import org.sensorhub.api.config.DisplayInfo;
  */
 public abstract class IPConfig extends CommConfig
 {	
+    public final static String AUTO_NETIF = "AUTO";
+    
+    
     @DisplayInfo(desc="IP or DNS name of remote host")
-    public String remoteHost;
+    public String remoteHost;    
+    
+    @DisplayInfo(desc="IP of local network interface to bind to or 'AUTO' to determine it automatically")
+    public String localAddress = AUTO_NETIF;
 }
