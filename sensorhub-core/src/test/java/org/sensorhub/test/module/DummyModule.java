@@ -168,4 +168,11 @@ public class DummyModule implements IModule<ModuleConfig>
         eventHandler.publishEvent(new ModuleEvent(this, newState));
     }
 
+
+    @Override
+    public boolean waitForState(ModuleState state, long timeout)
+    {
+        return true;
+    }
+
 }

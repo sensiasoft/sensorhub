@@ -14,18 +14,21 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.test.module;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import java.io.File;
 import java.util.Arrays;
 import java.util.UUID;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.sensorhub.api.common.Event;
+import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.module.IModule;
 import org.sensorhub.api.module.IModuleProvider;
 import org.sensorhub.api.module.ModuleConfig;
+import org.sensorhub.api.module.ModuleEvent;
+import org.sensorhub.api.module.ModuleEvent.ModuleState;
 import org.sensorhub.api.persistence.StorageConfig;
 import org.sensorhub.api.processing.ProcessConfig;
 import org.sensorhub.api.sensor.SensorConfig;
@@ -44,11 +47,39 @@ public class TestModuleRegistry
     @Before
     public void setup()
     {
+        System.out.println("\n*****************************");
         configFile = new File("test-conf.json");
         configFile.deleteOnExit();
         configDb = new ModuleConfigJsonFile(configFile.getAbsolutePath());        
         registry = new ModuleRegistry(configDb);
         registry.loadAllModules();
+    }    
+    
+    
+    private ModuleConfig createConfModule1()
+    {
+        MyConfig1 conf = new MyConfig1();
+        conf.moduleClass = DummyModule.class.getCanonicalName();
+        conf.id = "MOD1";
+        conf.autoStart = true;
+        conf.name = "Module1";
+        conf.param1 = "text1";
+        conf.param2 = 33;
+        return conf;
+    }
+    
+    
+    private ModuleConfig createConfModule2(String dependencyID)
+    {   
+        MyConfig2 conf = new MyConfig2();
+        conf.moduleClass = DummyModule.class.getCanonicalName();
+        conf.id = "MOD2";
+        conf.autoStart = true;
+        conf.name = "Module2";
+        conf.param1 = "text2";
+        conf.param2 = 0.3256;
+        conf.moduleID = dependencyID;
+        return conf;
     }
     
     
@@ -115,42 +146,20 @@ public class TestModuleRegistry
     }
     
     
-    private ModuleConfig createConfModule1()
-    {
-        MyConfig1 conf = new MyConfig1();
-        conf.moduleClass = DummyModule.class.getCanonicalName();
-        conf.autoStart = true;
-        conf.name = "Module1";
-        conf.param1 = "text1";
-        conf.param2 = 33;
-        return conf;
-    }
-    
-    
-    private ModuleConfig createConfModule2(String dependencyID)
-    {   
-        MyConfig2 conf = new MyConfig2();
-        conf.moduleClass = DummyModule.class.getCanonicalName();
-        conf.autoStart = true;
-        conf.name = "Module2";
-        conf.param1 = "text2";
-        conf.param2 = 0.3256;
-        conf.moduleID = dependencyID;
-        return conf;
-    }   
-    
-
     @Test
     public void testLoadModule() throws Exception
     {
         ModuleConfig config = createConfModule1();
-        registry.loadModule(config);
+        IModule<?> module = registry.loadModule(config);
         
         System.out.println(registry.getLoadedModules());
         assertEquals(1, registry.getLoadedModules().size());
         
         for (IModule<?> m: registry.getLoadedModules())
             assertTrue(m.getName().equals(config.name));
+        
+        assertNotNull("Module instance is null", module);
+        assertNotNull("Module configuration is null", module.getConfiguration());
     }
     
     
@@ -179,6 +188,184 @@ public class TestModuleRegistry
                 assertTrue(m.getName().equals(conf2.name));
             i++;
         }
+    }
+    
+    
+    @Test
+    public void testLoadModuleAsyncAutoStart() throws Exception
+    {
+        AsyncModuleConfig conf = new AsyncModuleConfig();
+        conf.moduleClass = AsyncModule.class.getCanonicalName();
+        conf.id = "MOD_ASYNC2";
+        conf.autoStart = true;
+        conf.name = "ModuleAsync2";
+        conf.initDelay = 100;
+        conf.initExecTime = 150;
+        conf.startDelay = 200;
+        conf.startExecTime = 250;        
+        long timeOut = 10000;
+        
+        IModule<?> module = registry.loadModule(conf);
+                
+        long t0 = System.currentTimeMillis();
+        module.waitForState(ModuleState.INITIALIZED, timeOut);
+        long t1 = System.currentTimeMillis();
+        module.waitForState(ModuleState.STARTED, timeOut);
+        long t2 = System.currentTimeMillis();
+        
+        long expectedDelay = conf.initDelay + conf.initExecTime;
+        long delay = t1 - t0;
+        assertTrue("Init never executed", delay >= expectedDelay);
+        assertTrue("Init timeout reached", delay < timeOut);
+        
+        expectedDelay = conf.startDelay + conf.startExecTime;
+        delay = t2 - t1;
+        assertTrue("Start never executed", delay >= expectedDelay);
+        assertTrue("Start timeout reached", delay < timeOut);
+    }
+    
+    
+    @Test
+    public void testInitModuleAsync() throws Exception
+    {
+        final AsyncModuleConfig conf = new AsyncModuleConfig();
+        conf.moduleClass = AsyncModule.class.getCanonicalName();
+        conf.id = "MOD_ASYNC2";
+        conf.autoStart = false;
+        conf.name = "ModuleAsync2";
+        conf.initDelay = 100;
+        conf.initExecTime = 200;
+        long timeOut = 10000;
+        
+        IModule<?> module = registry.loadModule(conf);
+        
+        long t0 = System.currentTimeMillis();
+        registry.initModuleAsync(conf.id, new IEventListener()
+        {
+            public void handleEvent(Event<?> e)
+            {
+                if (((ModuleEvent)e).getNewState() == ModuleState.INITIALIZED)
+                    conf.initEventReceived = true;
+            }            
+        });
+        module.waitForState(ModuleState.INITIALIZED, timeOut);
+        long t1 = System.currentTimeMillis();
+        
+        long expectedDelay = conf.initDelay + conf.initExecTime;
+        long delay = t1 - t0;
+        assertTrue("No INITIALIZED event received", conf.initEventReceived);
+        assertTrue("Init never executed", delay >= expectedDelay);
+        assertTrue("Init timeout reached", delay < timeOut);
+    }
+    
+    
+    @Test
+    public void testInitModuleAsyncTimeout() throws Exception
+    {
+        final AsyncModuleConfig conf = new AsyncModuleConfig();
+        conf.moduleClass = AsyncModule.class.getCanonicalName();
+        conf.id = "MOD_ASYNC2";
+        conf.autoStart = false;
+        conf.name = "ModuleAsync2";
+        conf.initDelay = 100;
+        conf.initExecTime = 200;
+        long timeOut = 100;
+        
+        IModule<?> module = registry.loadModule(conf);
+        registry.initModuleAsync(conf.id, null);
+        boolean noTimeOut = module.waitForState(ModuleState.INITIALIZED, timeOut);
+        
+        assertFalse("Init timeout flag not set", noTimeOut);
+    }
+    
+    
+    @Test
+    public void testStartModuleAsync() throws Exception
+    {
+        final AsyncModuleConfig conf = new AsyncModuleConfig();
+        conf.moduleClass = AsyncModule.class.getCanonicalName();
+        conf.id = "MOD_ASYNC2";
+        conf.autoStart = false;
+        conf.name = "ModuleAsync2";
+        conf.initDelay = 100;
+        conf.initExecTime = 150;
+        conf.startDelay = 50;
+        conf.startExecTime = 100;
+        long timeOut = 10000;
+        
+        IModule<?> module = registry.loadModule(conf);
+        
+        long t0 = System.currentTimeMillis();
+        registry.startModuleAsync(conf.id, new IEventListener()
+        {
+            public void handleEvent(Event<?> e)
+            {
+                if (((ModuleEvent)e).getNewState() == ModuleState.INITIALIZED)
+                    conf.initEventReceived = true;
+                else if (((ModuleEvent)e).getNewState() == ModuleState.STARTED)
+                    conf.startEventReceived = true;
+            }            
+        });
+        module.waitForState(ModuleState.INITIALIZED, timeOut);
+        long t1 = System.currentTimeMillis();
+        module.waitForState(ModuleState.STARTED, timeOut);
+        long t2 = System.currentTimeMillis();
+        
+        long expectedDelay = conf.initDelay + conf.initExecTime;
+        long delay = t1 - t0;
+        assertTrue("No INITIALIZED event received", conf.initEventReceived);
+        assertTrue("Init never executed", delay >= expectedDelay);
+        assertTrue("Init timeout reached", delay < timeOut);
+        
+        expectedDelay = conf.startDelay + conf.startExecTime;
+        delay = t2 - t1;
+        assertTrue("No STARTED event received", conf.startEventReceived);
+        assertTrue("Start never executed", delay >= expectedDelay);
+        assertTrue("Start timeout reached", delay < timeOut);
+    }
+    
+    
+    @Test
+    public void testRestartModuleAsync() throws Exception
+    {
+        final AsyncModuleConfig conf = new AsyncModuleConfig();
+        conf.moduleClass = AsyncModule.class.getCanonicalName();
+        conf.id = "MOD_ASYNC2";
+        conf.autoStart = false;
+        conf.name = "ModuleAsync2";
+        conf.initDelay = 500;
+        conf.initExecTime = 500;
+        long timeOut = 10000;
+        
+        IModule<?> module = registry.loadModule(conf);
+        
+        // start module once
+        registry.startModuleAsync(conf.id, null);
+        module.waitForState(ModuleState.STARTED, timeOut);
+        assertEquals("Module was not started", ModuleState.STARTED, module.getCurrentState());
+        
+        // now restart it
+        long t0 = System.currentTimeMillis();
+        registry.stopModuleAsync(conf.id, new IEventListener()
+        {
+            public void handleEvent(Event<?> e)
+            {
+                if (((ModuleEvent)e).getNewState() == ModuleState.STOPPED)
+                    conf.stopEventReceived = true;
+                else if (((ModuleEvent)e).getNewState() == ModuleState.STARTED)
+                    conf.startEventReceived = true;
+            }            
+        });
+        registry.startModuleAsync(conf.id, null);
+        module.waitForState(ModuleState.STARTED, timeOut);
+        long t1 = System.currentTimeMillis();
+        
+        long expectedDelay = conf.startDelay + conf.startExecTime;
+        long delay = t1 - t0;
+        assertTrue("No STOPPED event received", conf.stopEventReceived);
+        assertTrue("No STARTED event received", conf.startEventReceived);
+        assertTrue("Start never executed", delay >= expectedDelay);
+        assertTrue("Start timeout reached", delay < timeOut);
     }
     
     

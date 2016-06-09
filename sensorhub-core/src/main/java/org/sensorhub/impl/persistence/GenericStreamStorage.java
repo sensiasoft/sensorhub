@@ -40,6 +40,7 @@ import org.sensorhub.api.data.FoiEvent;
 import org.sensorhub.api.data.IDataProducerModule;
 import org.sensorhub.api.data.IMultiSourceDataProducer;
 import org.sensorhub.api.data.IStreamingDataInterface;
+import org.sensorhub.api.module.IModule;
 import org.sensorhub.api.module.ModuleEvent;
 import org.sensorhub.api.module.ModuleEvent.ModuleState;
 import org.sensorhub.api.persistence.DataKey;
@@ -93,34 +94,6 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
     
     
     @Override
-    public void requestStart() throws SensorHubException
-    {
-        if (canStart())
-        {
-            try
-            {
-                // retrieve reference to data source
-                ModuleRegistry moduleReg = SensorHub.getInstance().getModuleRegistry();
-                dataSourceRef = (WeakReference<IDataProducerModule<?>>)moduleReg.getModuleRef(config.dataSourceID);
-                
-                // register to receive data source events
-                IDataProducerModule<?> dataSource = dataSourceRef.get();
-                if (dataSource != null)
-                {
-                    reportStatus("Waiting for data source " + MsgUtils.moduleString(dataSource) + " to start...");
-                    dataSource.registerListener(this);
-                }
-            }
-            catch (Exception e)
-            {
-                this.state = ModuleState.STOPPED;
-                throw new StorageException("Unknown data source " + config.dataSourceID, e);
-            }
-        }
-    }
-    
-    
-    @Override
     public void start() throws SensorHubException
     {
         if (config.storageConfig == null)
@@ -157,11 +130,22 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
             autoPurgeTimer.schedule(task, 0, (long)(config.autoPurgeConfig.purgePeriod*1000)); 
         }
         
-        // connect to data source
-        connectToDataSource(dataSourceRef.get());
+        // retrieve reference to data source
+        ModuleRegistry moduleReg = SensorHub.getInstance().getModuleRegistry();
+        dataSourceRef = (WeakReference<IDataProducerModule<?>>)moduleReg.getModuleRef(config.dataSourceID);
         
-        setState(ModuleState.STARTED);
-        clearStatus();
+        // register to receive data source events
+        IDataProducerModule<?> dataSource = dataSourceRef.get();
+        if (dataSource != null)
+        {
+            reportStatus("Waiting for data source " + MsgUtils.moduleString(dataSource));
+            dataSource.registerListener(this);
+        }
+                
+        // set as started only if we already have data in storage
+        // otherwise we have to wait for data source to start
+        if (storage.getLatestDataSourceDescription() != null)
+            setState(ModuleState.STARTED);
     }
     
     
@@ -282,6 +266,9 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
         // register to data events
         for (IStreamingDataInterface output: getSelectedOutputs(dataSource))
             prepareToReceiveEvents(output);
+        
+        setState(ModuleState.STARTED);
+        clearStatus();
     }
     
     
@@ -342,18 +329,15 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
     {
         if (e instanceof ModuleEvent)
         {
+            IModule<?> eventSrc = (IModule<?>)e.getSource();
+            ModuleState state = ((ModuleEvent) e).getNewState();
+            
             // connect to data source only when it's started
-            if (((ModuleEvent) e).getNewState() == ModuleState.STARTED)
-            {                
-                try
-                {
-                    if (!isStarted())
-                        start();
-                }
-                catch (SensorHubException ex)
-                {
-                    reportError("Cannot start module", ex);
-                }
+            IDataProducerModule<?> dataSource = dataSourceRef.get();
+            if (dataSource == eventSrc)
+            {
+                if (state == ModuleState.STARTED)
+                    connectToDataSource(dataSourceRef.get());
             }
         }
         

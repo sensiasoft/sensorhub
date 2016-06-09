@@ -53,6 +53,7 @@ public abstract class AbstractModule<ConfigType extends ModuleConfig> implements
     protected ConfigType config;
     protected ModuleState state = ModuleState.LOADED;
     protected final Object stateLock = new Object();
+    protected boolean startRequested;
     protected Throwable lastError;
     protected String statusMsg;
     
@@ -134,18 +135,23 @@ public abstract class AbstractModule<ConfigType extends ModuleConfig> implements
                     ModuleEvent event = new ModuleEvent(this, newState);
                     eventHandler.publishEvent(event);
                 }
+                
+                // process delayed start request
+                try
+                {
+                    if (startRequested && (newState == ModuleState.INITIALIZED || newState == ModuleState.STOPPED))
+                        requestStart();
+                }
+                catch (SensorHubException e)
+                {
+                    getLogger().error("Error during delayed start");
+                }
             }
         }
     }
     
     
-    /**
-     * Waits until the module reaches the specified state.<br/>
-     * This method will return immediately if the state is already reached.
-     * @param state state to wait for
-     * @param timeout maximum time to wait in milliseconds or <= 0 to wait forever
-     * @return true if module state has been reached before timeout, false otherwise
-     */
+    @Override
     public boolean waitForState(ModuleState state, long timeout)
     {
         synchronized (stateLock)
@@ -239,9 +245,15 @@ public abstract class AbstractModule<ConfigType extends ModuleConfig> implements
     {
         synchronized (stateLock)
         {
+            // error if config hasn't been set
+            if (this.config == null)
+                throw new SensorHubException("Module configuration must be set");
+            
+            // do nothing if we are already intializing or initialized
             if (state.ordinal() >= ModuleState.INITIALIZING.ordinal())
                 return false;
             
+            // otherwise actually init the module
             setState(ModuleState.INITIALIZING);            
             return true;
         }
@@ -253,16 +265,26 @@ public abstract class AbstractModule<ConfigType extends ModuleConfig> implements
     {
         if (canInit())
         {
-            // default implementation just calls init()
-            init();
-            setState(ModuleState.INITIALIZED);
+            try
+            {
+                // default implementation just calls init()
+                // for backward compatibility, we must call the old init method
+                init(config);
+                setState(ModuleState.INITIALIZED);
+            }
+            catch (Exception e)
+            {
+                reportError("Error while initializing module", e);
+                setState(ModuleState.LOADED);
+                throw e;
+            }
         }
     }
 
 
     @Override
     public void init() throws SensorHubException
-    {           
+    {        
     }
     
     
@@ -295,12 +317,24 @@ public abstract class AbstractModule<ConfigType extends ModuleConfig> implements
     {
         synchronized (stateLock)
         {
-            if (this.state == ModuleState.STARTED || this.state == ModuleState.STARTING)
+            // error if we were never initialized
+            if (this.state == ModuleState.LOADED)
+                throw new SensorHubException("Module must be initialized");
+            
+            // do nothing if we're already started or starting
+            if (this.state == ModuleState.STARTED ||
+                this.state == ModuleState.STARTING)
                 return false;
             
-            if (this.state != ModuleState.INITIALIZED && this.state != ModuleState.STOPPED)
-                throw new SensorHubException("Module must be initialized first");
+            // set to start later if we're still initializing or stopping
+            if (this.state == ModuleState.INITIALIZING ||
+                this.state == ModuleState.STOPPING)
+            {
+                this.startRequested = true;
+                return false;
+            }
             
+            // actually start if we're either initialized or stopped
             setState(ModuleState.STARTING);
             return true;
         }
@@ -318,9 +352,10 @@ public abstract class AbstractModule<ConfigType extends ModuleConfig> implements
                 start();
                 setState(ModuleState.STARTED);
             }
-            catch (SensorHubException e)
+            catch (Exception e)
             {
                 reportError("Error while starting module", e);
+                setState(ModuleState.STOPPED);
                 throw e;
             }
         }
@@ -331,9 +366,12 @@ public abstract class AbstractModule<ConfigType extends ModuleConfig> implements
     {
         synchronized (stateLock)
         {
-            if (this.state != ModuleState.STARTED && this.state != ModuleState.STARTING)
+            // do nothing if we're already stopping
+            if (this.state == ModuleState.STOPPING)
                 return false;
             
+            // otherwise we allow stop at any time
+            // modules have to handle that properly
             setState(ModuleState.STOPPING);
             return true;
         }
@@ -349,12 +387,15 @@ public abstract class AbstractModule<ConfigType extends ModuleConfig> implements
             {
                 // default implementation just calls stop()
                 stop();
-                setState(ModuleState.STOPPED);
             }
             catch (SensorHubException e)
             {
                 reportError("Error while stopping module", e);
                 throw e;
+            }
+            finally
+            {
+                setState(ModuleState.STOPPED);
             }
         }
     }
@@ -405,20 +446,19 @@ public abstract class AbstractModule<ConfigType extends ModuleConfig> implements
             String loggerId = Integer.toHexString(Math.abs(localID.hashCode()));
             logger = LoggerFactory.getLogger(this.getClass().getCanonicalName() + ":" + loggerId);
         
-            if (logger instanceof ch.qos.logback.classic.Logger)
+            // also configure logger to append to log file in module folder
+            File moduleDataFolder = SensorHub.getInstance().getModuleRegistry().getModuleDataFolder(localID);
+            if (moduleDataFolder != null && logger instanceof ch.qos.logback.classic.Logger)
             {
                 LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
-                ch.qos.logback.classic.Logger logback = (ch.qos.logback.classic.Logger)logger;
-                
-                // configure to append to log file in module folder
-                File moduleDataFolder = SensorHub.getInstance().getModuleRegistry().getModuleDataFolder(localID);
-                File logFile = new File(moduleDataFolder, "log.txt");
+                ch.qos.logback.classic.Logger logback = (ch.qos.logback.classic.Logger)logger;                
                 
                 PatternLayoutEncoder ple = new PatternLayoutEncoder();
                 ple.setPattern("%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] - %msg%n");
                 ple.setContext(lc);
                 ple.start();
                 
+                File logFile = new File(moduleDataFolder, "log.txt");
                 FileAppender<ILoggingEvent> fa = new FileAppender<ILoggingEvent>();
                 fa.setFile(logFile.getAbsolutePath());
                 fa.setEncoder(ple);

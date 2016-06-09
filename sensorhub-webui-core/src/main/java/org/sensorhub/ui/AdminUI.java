@@ -536,7 +536,7 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener
                 if (target != null)
                 {                    
                     ModuleState state = (ModuleState)table.getItem(target).getItemProperty(PROP_STATE).getValue();
-                    if (state == ModuleState.STARTED)
+                    if (state == ModuleState.STARTED || state == ModuleState.STARTING)
                     {
                         actions.add(STOP_MODULE_ACTION);
                         actions.add(RESTART_MODULE_ACTION);
@@ -638,7 +638,7 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener
                                 {                    
                                     try 
                                     {
-                                        IModule<?> module = registry.startModuleAsync(moduleId, AdminUI.this);
+                                        IModule<?> module = registry.startModuleAsync(moduleId, null);
                                         openModuleInfo((MyBeanItem<ModuleConfig>)item, module);
                                     }
                                     catch (SensorHubException ex)
@@ -663,7 +663,7 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener
                                 {                    
                                     try 
                                     {
-                                        registry.stopModuleAsync(moduleId, AdminUI.this);
+                                        registry.stopModuleAsync(moduleId, null);
                                     }
                                     catch (SensorHubException ex)
                                     {
@@ -687,8 +687,8 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener
                                 {                    
                                     try 
                                     {
-                                        registry.stopModule(moduleId);
-                                        registry.startModuleAsync(moduleId, AdminUI.this);
+                                        registry.stopModuleAsync(moduleId, null);
+                                        registry.startModuleAsync(moduleId, null);
                                     }
                                     catch (SensorHubException ex)
                                     {
