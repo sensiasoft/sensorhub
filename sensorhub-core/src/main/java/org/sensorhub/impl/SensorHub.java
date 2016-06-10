@@ -15,7 +15,6 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 package org.sensorhub.impl;
 
 import org.sensorhub.api.comm.INetworkManager;
-import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.config.IGlobalConfig;
 import org.sensorhub.api.module.IModuleConfigRepository;
 import org.sensorhub.api.persistence.IPersistenceManager;
@@ -51,6 +50,7 @@ public class SensorHub
     private IGlobalConfig config;
     private EventBus eventBus;
     private ModuleRegistry registry;
+    private volatile boolean stopped;
     
     
     /**
@@ -150,13 +150,18 @@ public class SensorHub
     }
     
     
-    public void stop(boolean saveConfig, boolean saveState)
+    public synchronized void stop(boolean saveConfig, boolean saveState)
     {
         try
         {
-            registry.shutdown(saveConfig, saveState);
+            if (!stopped)
+            {
+                registry.shutdown(saveConfig, saveState);
+                stopped = true;
+                log.info("SensorHub was cleanly stopped");
+            }
         }
-        catch (SensorHubException e)
+        catch (Exception e)
         {
             log.error("Error while stopping SensorHub", e);
         }
@@ -234,8 +239,7 @@ public class SensorHub
             Runtime.getRuntime().addShutdownHook(new Thread() {
                 public void run()
                 {
-                    sh.stop();
-                    log.info("SensorHub was cleanly stopped");
+                    sh.stop();                    
                 }            
             });
             
