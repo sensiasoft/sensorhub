@@ -152,6 +152,19 @@ public class BasicEventHandler implements IEventHandler
                 it.remove();
         }
     }
+    
+    
+    @Override
+    public synchronized int getNumListeners()
+    {
+        int count = 0;
+        for (WeakReference<IEventListener> listener: listeners)
+        {
+            if (listener.get() != null)
+                count++;
+        }
+        return count;
+    }
 
 
     @Override

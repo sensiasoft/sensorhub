@@ -38,6 +38,12 @@ public interface IEventHandler extends IEventProducer
     
     
     /**
+     * @return the number of listeners currently registered
+     */
+    public int getNumListeners();
+    
+    
+    /**
      * Clear all listeners.
      * Usually called on producer side during cleanup phase
      */

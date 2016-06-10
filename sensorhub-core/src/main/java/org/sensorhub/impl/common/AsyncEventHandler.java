@@ -14,7 +14,9 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.impl.common;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -39,7 +41,7 @@ public class AsyncEventHandler implements IEventHandler
 {
     private Thread dispatchThread;
     private BlockingQueue<Event<?>> eventQueue;
-    private List<IEventListener> listeners;
+    private List<WeakReference<IEventListener>> listeners;
     private boolean started;
     private boolean paused;
     
@@ -47,7 +49,7 @@ public class AsyncEventHandler implements IEventHandler
     public AsyncEventHandler()
     {
         this.eventQueue = new LinkedBlockingQueue<Event<?>>();
-        this.listeners = new ArrayList<IEventListener>();
+        this.listeners = new ArrayList<WeakReference<IEventListener>>();
         
         dispatchThread = new Thread() {            
             public void run()
@@ -57,8 +59,16 @@ public class AsyncEventHandler implements IEventHandler
                     synchronized (this)
                     {
                         Event<?> e = eventQueue.poll();
-                        for (IEventListener l : listeners)
-                            l.handleEvent(e);
+                        
+                        // call all listeners
+                        for (Iterator<WeakReference<IEventListener>> it = listeners.iterator(); it.hasNext(); )
+                        {
+                            IEventListener listener = it.next().get();
+                            if (listener != null)
+                                listener.handleEvent(e);
+                            else
+                                it.remove(); // purge cleared references
+                        }
                         
                         try
                         {
@@ -113,14 +123,33 @@ public class AsyncEventHandler implements IEventHandler
     @Override
     public synchronized void registerListener(IEventListener listener)
     {
-        listeners.add(listener);        
+        listeners.add(new WeakReference<IEventListener>(listener));
     }
 
 
     @Override
     public synchronized void unregisterListener(IEventListener listener)
     {
-        listeners.remove(listener);        
+        for (Iterator<WeakReference<IEventListener>> it = listeners.iterator(); it.hasNext(); )
+        {
+            IEventListener l = it.next().get();
+            if (l == null || l == listener)  // also purge cleared references
+                it.remove();
+        }
+    }
+    
+    
+    @Override
+    public synchronized int getNumListeners()
+    {
+        int count = 0;
+        for (WeakReference<IEventListener> listener: listeners)
+        {
+            if (listener.get() != null)
+                count++;
+        }
+        
+        return count;
     }
     
     
