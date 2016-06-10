@@ -56,6 +56,7 @@ public abstract class StreamDataProvider implements ISOSDataProvider, IEventList
     BlockingDeque<DataEvent> eventQueue;
     long timeOut;
     long stopTime;
+    boolean latestRecordOnly;
     
     DataEvent lastDataEvent;
     int nextEventRecordIndex = 0;
@@ -108,6 +109,7 @@ public abstract class StreamDataProvider implements ISOSDataProvider, IEventList
                 eventQueue.offerLast(new DataEvent(System.currentTimeMillis(), outputInterface, data));
                 stopTime = Long.MAX_VALUE; // make sure stoptime does not cause us to return null
                 timeOut = 0L;
+                latestRecordOnly = true;
             }
             
             // otherwise register listener
@@ -292,8 +294,11 @@ public abstract class StreamDataProvider implements ISOSDataProvider, IEventList
     @Override
     public void close()
     {
-        for (IStreamingDataInterface outputInterface: sourceOutputs)
-            outputInterface.unregisterListener(this);
+        if (!latestRecordOnly)
+        {
+            for (IStreamingDataInterface outputInterface: sourceOutputs)
+                outputInterface.unregisterListener(this);
+        }
         
         eventQueue.clear();
     }
