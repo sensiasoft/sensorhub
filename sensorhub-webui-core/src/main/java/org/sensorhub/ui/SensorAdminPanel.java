@@ -22,6 +22,7 @@ import org.sensorhub.api.sensor.ISensorDataInterface;
 import org.sensorhub.api.sensor.ISensorModule;
 import org.sensorhub.ui.api.IModuleAdminPanel;
 import org.sensorhub.ui.data.MyBeanItem;
+import com.vaadin.shared.ui.label.ContentMode;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
@@ -63,7 +64,7 @@ public class SensorAdminPanel extends DefaultModulePanel<ISensorModule<?>> imple
         form.setSpacing(true);
         
         // section title
-        form.addComponent(new Label(""));
+        form.addComponent(new Label("&nbsp;", ContentMode.HTML));
         HorizontalLayout titleBar = new HorizontalLayout();
         titleBar.setSpacing(true);
         Label sectionLabel = new Label("Inputs/Outputs");

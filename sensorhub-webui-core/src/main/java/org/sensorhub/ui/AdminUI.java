@@ -21,6 +21,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Timer;
+import java.util.TimerTask;
 import org.sensorhub.api.comm.CommConfig;
 import org.sensorhub.api.comm.NetworkConfig;
 import org.sensorhub.api.common.IEventListener;
@@ -61,6 +63,7 @@ import com.vaadin.event.Action.Handler;
 import com.vaadin.event.ItemClickEvent;
 import com.vaadin.event.ItemClickEvent.ItemClickListener;
 import com.vaadin.server.ClassResource;
+import com.vaadin.server.FontAwesome;
 import com.vaadin.server.Resource;
 import com.vaadin.server.ThemeResource;
 import com.vaadin.server.VaadinRequest;
@@ -241,6 +244,9 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener
         leftPane.addComponent(toolbar);
         leftPane.setExpandRatio(toolbar, 0);
         
+        // spacer
+        leftPane.addComponent(new Label(""));
+        
         // accordion with several sections
         moduleTables.clear();
         Accordion stack = new Accordion();
@@ -320,14 +326,74 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener
         HorizontalLayout toolbar = new HorizontalLayout();
         toolbar.setWidth(100.0f, Unit.PERCENTAGE);
         
+        // shutdown button
+        Button shutdownButton = new Button("Shutdown");
+        shutdownButton.setDescription("Shutdown SensorHub");
+        shutdownButton.setIcon(UIConstants.DEL_ICON);
+        shutdownButton.addStyleName(UIConstants.STYLE_SMALL);
+        shutdownButton.setWidth(100.0f, Unit.PERCENTAGE);
+        shutdownButton.addClickListener(new Button.ClickListener() {
+            private static final long serialVersionUID = 1L;
+            public void buttonClick(ClickEvent event)
+            {
+                SensorHub.getInstance().getModuleRegistry().unregisterListener(AdminUI.this);
+                
+                Notification notif = new Notification(
+                        FontAwesome.WARNING.getHtml() + "&nbsp; Shutdown Initiated...",
+                        "UI will stop responding",
+                        Notification.Type.ERROR_MESSAGE);
+                notif.setHtmlContentAllowed(true);
+                notif.show(AdminUI.getInstance().getPage());
+                
+                // shutdown in separate thread
+                new Timer().schedule(new TimerTask() {
+                    public void run()
+                    {
+                        SensorHub.getInstance().stop(false, true);
+                        System.exit(0);
+                    }
+                }, 1000);
+            }
+        });
+        toolbar.addComponent(shutdownButton);
+        
+        // restart button
+        Button restartButton = new Button("Restart");
+        restartButton.setDescription("Restart SensorHub");
+        restartButton.setIcon(UIConstants.REFRESH_ICON);
+        restartButton.addStyleName(UIConstants.STYLE_SMALL);
+        restartButton.setWidth(100.0f, Unit.PERCENTAGE);
+        restartButton.addClickListener(new Button.ClickListener() {
+            private static final long serialVersionUID = 1L;
+            public void buttonClick(ClickEvent event)
+            {
+                SensorHub.getInstance().getModuleRegistry().unregisterListener(AdminUI.this);
+                
+                Notification notif = new Notification(
+                        FontAwesome.WARNING.getHtml() + "&nbsp; Restart Initiated...",
+                        "UI will stop responding",
+                        Notification.Type.ERROR_MESSAGE);
+                notif.setHtmlContentAllowed(true);
+                notif.show(AdminUI.getInstance().getPage());
+                
+                // shutdown in separate thread
+                new Timer().schedule(new TimerTask() {
+                    public void run()
+                    {
+                        SensorHub.getInstance().stop(false, true);
+                        System.exit(10); // return code 10 means restart
+                    }
+                }, 1000);
+            }
+        });
+        toolbar.addComponent(restartButton);
+        
         // apply changes button
         Button saveButton = new Button("Save Config");
         saveButton.setDescription("Save Config");
         saveButton.setIcon(UIConstants.APPLY_ICON);
         saveButton.addStyleName(UIConstants.STYLE_SMALL);
         saveButton.setWidth(100.0f, Unit.PERCENTAGE);
-        
-        // apply button action
         saveButton.addClickListener(new Button.ClickListener() {
             private static final long serialVersionUID = 1L;
             public void buttonClick(ClickEvent event)
@@ -335,16 +401,16 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener
                 try
                 {
                     SensorHub.getInstance().getModuleRegistry().saveModulesConfiguration();
+                    DisplayUtils.showOperationSuccessful("SensorHub Configuration Saved");
                 }
                 catch (Exception e)
                 {
-                    AdminUI.log.error("Error while saving SensorHub configuration", e);
                     Notification.show("Error", e.getMessage(), Notification.Type.ERROR_MESSAGE);
                 }
             }
-        });        
-
+        });
         toolbar.addComponent(saveButton);
+        
         return toolbar;
     }
     
@@ -393,6 +459,7 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener
         final TreeTable table = new TreeTable();
         table.setSizeFull();
         table.setSelectable(true);
+        table.setNullSelectionAllowed(false);
         table.setImmediate(true);
         table.setColumnReorderingAllowed(false);
         table.addContainerProperty(UIConstants.PROP_NAME, String.class, false);
@@ -417,6 +484,10 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener
                     table.addItem(new Object[] {subConfig.name, sensor.getCurrentState(), sensor}, subConfig.id);
                     table.setParent(subConfig.id, config.id);
                 }
+            }
+            else
+            {
+                table.setChildrenAllowed(config.id, false);
             }
         }
         
@@ -510,9 +581,11 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener
             {
                 try
                 {
-                    IModule<?> module = (IModule<?>)event.getItem().getItemProperty(PROP_MODULE_OBJECT).getValue();
+                    // make sure row is selected even on right click
+                    table.select(event.getItemId());
                     
                     // open bean item configuration
+                    IModule<?> module = (IModule<?>)event.getItem().getItemProperty(PROP_MODULE_OBJECT).getValue();
                     ModuleConfig config = module.getConfiguration().clone();
                     MyBeanItem<ModuleConfig> beanItem = new MyBeanItem<ModuleConfig>(config);
                     openModuleInfo(beanItem, module);

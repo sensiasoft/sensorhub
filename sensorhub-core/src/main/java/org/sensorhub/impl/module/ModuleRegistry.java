@@ -566,17 +566,25 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
      */
     public void saveModulesConfiguration()
     {
-        int numModules = loadedModules.size();
-        ModuleConfig[] configList = new ModuleConfig[numModules];
-        
-        int i = 0;
-        for (IModule<?> module: loadedModules.values())
+        try
         {
-            configList[i] = module.getConfiguration();
-            i++;
+            int numModules = loadedModules.size();
+            ModuleConfig[] configList = new ModuleConfig[numModules];
+            
+            int i = 0;
+            for (IModule<?> module: loadedModules.values())
+            {
+                configList[i] = module.getConfiguration();
+                i++;
+            }
+            
+            configRepos.update(configList);
         }
-        
-        configRepos.update(configList);
+        catch (Exception e)
+        {
+            log.error("Error while saving SensorHub configuration", e);
+            throw e;
+        }
     }
     
     

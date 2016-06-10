@@ -14,6 +14,9 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.ui;
 
+import com.vaadin.server.FontAwesome;
+import com.vaadin.ui.Notification;
+
 
 public class DisplayUtils
 {
@@ -39,5 +42,15 @@ public class DisplayUtils
         }
         
         return buf.toString();
+    }
+    
+    
+    public static void showOperationSuccessful(String text)
+    {
+        Notification notif = new Notification(
+                "<span style=\"color:green\">" + FontAwesome.CHECK_CIRCLE_O.getHtml() +
+                "</span>&nbsp;&nbsp;" + text, Notification.Type.WARNING_MESSAGE);
+        notif.setHtmlContentAllowed(true);
+        notif.show(AdminUI.getInstance().getPage());
     }
 }

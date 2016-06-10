@@ -75,6 +75,13 @@ public interface ICommNetwork<ConfigType extends ModuleConfig> extends IModule<C
     
     
     /*
+     * Check if network can route packets to the public Internet
+     * @return true if network is connected to Internet
+     */
+    //public boolean isConnectedToInternet();
+    
+    
+    /*
      * Checks if address is reachable through this network
      * @param address
      * @return

@@ -305,7 +305,7 @@ public abstract class AbstractModule<ConfigType extends ModuleConfig> implements
         if (wasStarted)
             stop();
         
-        this.config = config;
+        setConfiguration(config);
         eventHandler.publishEvent(new ModuleEvent(this, ModuleEvent.Type.CONFIG_CHANGED));
         
         if (wasStarted)
@@ -395,6 +395,7 @@ public abstract class AbstractModule<ConfigType extends ModuleConfig> implements
             }
             finally
             {
+                // force the stopped state
                 setState(ModuleState.STOPPED);
             }
         }

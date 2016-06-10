@@ -14,6 +14,8 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.ui;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import org.sensorhub.api.module.IModule;
 import org.sensorhub.api.module.ModuleConfig;
 import org.sensorhub.ui.api.IModuleConfigForm;
@@ -21,7 +23,9 @@ import org.sensorhub.ui.api.IModuleAdminPanel;
 import org.sensorhub.ui.api.UIConstants;
 import org.sensorhub.ui.data.MyBeanItem;
 import com.vaadin.server.Page;
+import com.vaadin.shared.ui.label.ContentMode;
 import com.vaadin.ui.Button;
+import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.VerticalLayout;
@@ -59,6 +63,44 @@ public class DefaultModulePanel<ModuleType extends IModule<? extends ModuleConfi
         title.setDescription(className);
         title.setStyleName(STYLE_H2);
         addComponent(title);
+        addComponent(new Label("<hr/>", ContentMode.HTML));
+        
+        // label with status message
+        String statusMsg = module.getStatusMessage();
+        if (statusMsg != null)
+        {
+            Button status = new Button();
+            status.setIcon(INFO_ICON);
+            status.setCaption(statusMsg);
+            addComponent(status);
+        }
+        
+        // label and popup box for error
+        final Throwable errorObj = module.getCurrentError();
+        if (errorObj != null)
+        {
+            Button error = new Button();
+            error.setIcon(ERROR_ICON);
+            String errorMsg = errorObj.getMessage().trim();
+            if (!errorMsg.endsWith("."))
+                errorMsg += ". ";
+            if (errorObj.getCause() != null && errorObj.getCause().getMessage() != null)
+                errorMsg += errorObj.getCause().getMessage();
+            error.setCaption(errorMsg);
+            
+            error.addClickListener(new ClickListener() {
+                public void buttonClick(ClickEvent event)
+                {
+                    StringWriter writer = new StringWriter();
+                    errorObj.printStackTrace(new PrintWriter(writer));
+                    String stackTrace = writer.toString();
+                    stackTrace.replace("Caused By:", "\nCaused By:");
+                    Notification.show("Error\n", writer.toString(), Notification.Type.ERROR_MESSAGE);
+                }
+            });
+            
+            addComponent(error);
+        }
         
         // apply changes button
         Button applyButton = new Button("Apply Changes");
@@ -80,7 +122,10 @@ public class DefaultModulePanel<ModuleType extends IModule<? extends ModuleConfi
                 {
                     form.commit();
                     if (module != null)
+                    {
                         ((IModule<ModuleConfig>)module).updateConfig(beanItem.getBean());
+                        DisplayUtils.showOperationSuccessful("Module Configuration Updated");
+                    }
                 }
                 catch (Exception e)
                 {

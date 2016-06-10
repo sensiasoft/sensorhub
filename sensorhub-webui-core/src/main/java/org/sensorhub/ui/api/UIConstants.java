@@ -35,6 +35,9 @@ public interface UIConstants
     public static final Resource LINK_ICON = new ThemeResource("icons/link.png");
     public static final Resource APPLY_ICON = new ThemeResource("icons/save.png");
     public static final Resource REFRESH_ICON = new ThemeResource("icons/refresh.gif");
+    public static final Resource ERROR_ICON = new ThemeResource("icons/errorwarning.gif");
+    public static final Resource INFO_ICON = new ThemeResource("icons/info.gif");
+    public static final Resource HELP_ICON = new ThemeResource("icons/help.gif");
     
     // constants for messages
     public static final String MSG_REQUIRED_FIELD = "Value is required";

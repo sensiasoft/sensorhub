@@ -74,7 +74,7 @@ public class AdminUIModule extends AbstractModule<AdminUIConfig>
     public void stop() throws SensorHubException
     {
         if (vaadinServlet != null)
-            HttpServer.getInstance().undeployServlet(vaadinServlet);        
+            HttpServer.getInstance().undeployServlet(vaadinServlet);
     }
     
 

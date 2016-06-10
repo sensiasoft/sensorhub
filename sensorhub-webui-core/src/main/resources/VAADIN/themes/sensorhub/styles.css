@@ -12764,7 +12764,7 @@ div.v-layout.v-horizontal.v-widget {
 }
 
 .sensorhub .v-table .v-table-cell-content-error {
-	background-image: url("icons/cross.png");
+	background-image: url("icons/errorwarning.gif");
 	background-repeat: no-repeat;
 	background-position: 5px;
 	text-indent: 20px;
@@ -12773,6 +12773,14 @@ div.v-layout.v-horizontal.v-widget {
 .sensorhub .v-tooltip {
 	background-color: rgba(255, 255, 255, 0.9);
 	color: black;
+}
+
+.sensorhub .v-Notification p {
+	max-width: 50em;
+}
+
+.sensorhub .v-Notification.error p {
+	display: block;
 }
 
 .sensorhub img.logo {

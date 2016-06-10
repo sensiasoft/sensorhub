@@ -15,7 +15,10 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 package org.sensorhub.impl.comm;
 
 import org.sensorhub.api.comm.CommConfig;
+import org.sensorhub.api.comm.ICommNetwork.NetworkType;
 import org.sensorhub.api.config.DisplayInfo;
+import org.sensorhub.api.config.DisplayInfo.AddressType;
+import org.sensorhub.api.config.DisplayInfo.StringType;
 
 
 /**
@@ -31,9 +34,12 @@ public abstract class IPConfig extends CommConfig
     public final static String AUTO_NETIF = "AUTO";
     
     
-    @DisplayInfo(desc="IP or DNS name of remote host")
-    public String remoteHost;    
+    @DisplayInfo(desc="IP or DNS name of remote host", type=StringType.REMOTE_ADDRESS)
+    @AddressType(NetworkType.IP)
+    public String remoteHost; 
     
-    @DisplayInfo(desc="IP of local network interface to bind to or 'AUTO' to determine it automatically")
+    
+    @DisplayInfo(desc="IP of local network interface to bind to or 'AUTO' to select it automatically", type=StringType.LOCAL_ADDRESS)
+    @AddressType(NetworkType.IP)
     public String localAddress = AUTO_NETIF;
 }

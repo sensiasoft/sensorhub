@@ -15,6 +15,8 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 package org.sensorhub.impl.comm;
 
 import org.sensorhub.api.config.DisplayInfo;
+import org.sensorhub.api.config.DisplayInfo.Range;
+import org.sensorhub.api.config.DisplayInfo.StringType;
 
 
 /**
@@ -28,12 +30,13 @@ import org.sensorhub.api.config.DisplayInfo;
 public class TCPConfig extends IPConfig
 {    
     @DisplayInfo(desc="Port number to connect to on remote host")
+    @Range(min=0, max=65535)
     public int remotePort;
     
     @DisplayInfo(label="User Name", desc="Remote user name")
     public String user;
     
-    @DisplayInfo(label="Password", desc="Remote password")
+    @DisplayInfo(label="Password", desc="Remote password", type=StringType.PASSWORD)
     public String password;
 		
 

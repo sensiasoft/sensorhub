@@ -47,11 +47,6 @@ public interface IModule<ConfigType extends ModuleConfig> extends IEventProducer
     public ConfigType getConfiguration();
     
     
-    // so that a module can change values allowed for a given configuration
-    // option dynamically depending on its own state
-    //public DataConstraint getConfigFieldConstraint(String fieldName);
-    
-    
     /**
      * Helper method to get the module's name
      * @return name string
