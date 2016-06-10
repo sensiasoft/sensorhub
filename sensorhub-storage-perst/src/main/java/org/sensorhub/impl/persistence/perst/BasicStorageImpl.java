@@ -25,10 +25,10 @@ import net.opengis.sensorml.v20.AbstractProcess;
 import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataEncoding;
-import org.garret.perst.MappedFile;
 import org.garret.perst.Persistent;
 import org.garret.perst.Storage;
 import org.garret.perst.StorageFactory;
+import org.garret.perst.impl.OSFile;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.persistence.DataKey;
 import org.sensorhub.api.persistence.IBasicStorage;
@@ -73,8 +73,9 @@ public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> impleme
                 throw new StorageException("Storage path contains illegal characters: " + config.storagePath);
             
             // acquire file lock on DB file
-            MappedFile dbFile = new MappedFile(config.storagePath, 100*1024, false);
-            //OSFile dbFile = new OSFile(config.storagePath, false, false);
+            // cannot use MappedFile because current implementation is limited to 2GB size
+            //MappedFile dbFile = new MappedFile(config.storagePath, 100*1024, false);
+            OSFile dbFile = new OSFile(config.storagePath, false, false);
             if (!dbFile.tryLock(false))
                 throw new StorageException("Storage file " + config.storagePath + " is already opened by another SensorHub process");
             
