@@ -33,6 +33,7 @@ import org.sensorhub.api.persistence.StorageConfig;
 import org.sensorhub.api.processing.ProcessConfig;
 import org.sensorhub.api.sensor.SensorConfig;
 import org.sensorhub.api.service.IServiceModule;
+import org.sensorhub.impl.common.EventBus;
 import org.sensorhub.impl.module.ModuleConfigJsonFile;
 import org.sensorhub.impl.module.ModuleRegistry;
 
@@ -51,7 +52,7 @@ public class TestModuleRegistry
         configFile = new File("test-conf.json");
         configFile.deleteOnExit();
         configDb = new ModuleConfigJsonFile(configFile.getAbsolutePath());        
-        registry = new ModuleRegistry(configDb);
+        registry = new ModuleRegistry(configDb, new EventBus());
         registry.loadAllModules();
     }    
     
@@ -356,6 +357,7 @@ public class TestModuleRegistry
                     conf.startEventReceived = true;
             }            
         });
+        module.waitForState(ModuleState.STOPPING, timeOut);
         registry.startModuleAsync(conf.id, null);
         module.waitForState(ModuleState.STARTED, timeOut);
         long t1 = System.currentTimeMillis();

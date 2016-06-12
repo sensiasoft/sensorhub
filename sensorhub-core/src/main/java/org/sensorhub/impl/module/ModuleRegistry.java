@@ -29,8 +29,6 @@ import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.ReentrantLock;
 import org.sensorhub.api.common.Event;
 import org.sensorhub.api.common.IEventHandler;
 import org.sensorhub.api.common.IEventListener;
@@ -80,10 +78,11 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
     volatile boolean shutdownCalled;
     
     
-    public ModuleRegistry(IModuleConfigRepository configRepos)
+    public ModuleRegistry(IModuleConfigRepository configRepos, EventBus eventBus)
     {
         this.configRepos = configRepos;
         this.loadedModules = Collections.synchronizedMap(new LinkedHashMap<String, IModule<?>>());
+        this.eventHandler = eventBus.registerProducer(ID);
         this.asyncExec = new ThreadPoolExecutor(0, Integer.MAX_VALUE,
                                                 10L, TimeUnit.SECONDS,
                                                 new SynchronousQueue<Runnable>());
@@ -96,8 +95,6 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
      */
     public synchronized void loadAllModules()
     {
-        this.eventHandler = EventBus.getInstance().registerProducer(ID);
-        
         List<ModuleConfig> moduleConfs = configRepos.getAllModulesConfigurations();
         for (ModuleConfig config: moduleConfs)
         {
@@ -229,41 +226,8 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
      */
     public IModule<?> initModule(String moduleID, long timeOut) throws SensorHubException
     {
-        final ReentrantLock lock = new ReentrantLock();
-        final Condition initialized = lock.newCondition();
-        
-        IModule<?> module = initModuleAsync(moduleID, new IEventListener() 
-        {
-            @Override
-            public void handleEvent(Event<?> e)
-            {
-                if (e instanceof ModuleEvent)
-                {
-                    if (((ModuleEvent) e).getNewState() == ModuleState.INITIALIZED)
-                    {
-                        lock.lock();
-                        initialized.signal();
-                        lock.unlock();
-                    }
-                }
-            }
-        });
-        
-        // wait for INITIALIZED state unless already started
-        try
-        {
-            lock.lock();
-            if (module.getCurrentState() != ModuleState.INITIALIZED)
-            {
-                if (!initialized.await(timeOut, TimeUnit.MILLISECONDS))
-                    throw new SensorHubException("Module " + MsgUtils.moduleString(module) + " could not initialize before timeout");
-            }
-            lock.unlock();
-        }
-        catch (InterruptedException e1)
-        {
-        }
-        
+        IModule<?> module = initModuleAsync(moduleID, null);
+        module.waitForState(ModuleState.INITIALIZED, timeOut);
         return module;
     }
     
@@ -331,41 +295,8 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
      */
     public IModule<?> startModule(String moduleID, long timeOut) throws SensorHubException
     {
-        final ReentrantLock lock = new ReentrantLock();
-        final Condition started = lock.newCondition();
-        
-        IModule<?> module = startModuleAsync(moduleID, new IEventListener() 
-        {
-            @Override
-            public void handleEvent(Event<?> e)
-            {
-                if (e instanceof ModuleEvent)
-                {
-                    if (((ModuleEvent) e).getNewState() == ModuleState.STARTED)
-                    {
-                        lock.lock();
-                        started.signal();
-                        lock.unlock();
-                    }
-                }
-            }
-        });
-        
-        // wait for STARTED state unless already started
-        try
-        {
-            lock.lock();
-            if (module.getCurrentState() != ModuleState.STARTED)
-            {
-                if (!started.await(timeOut, TimeUnit.MILLISECONDS))
-                    throw new SensorHubException("Module " + MsgUtils.moduleString(module) + " could not start before timeout");
-            }
-            lock.unlock();
-        }
-        catch (InterruptedException e1)
-        {
-        }
-        
+        IModule<?> module = startModuleAsync(moduleID, null);
+        module.waitForState(ModuleState.STARTED, timeOut);
         return module;
     }
     
@@ -446,41 +377,8 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
      */
     public IModule<?> stopModule(String moduleID, long timeOut) throws SensorHubException
     {
-        final ReentrantLock lock = new ReentrantLock();
-        final Condition stopped = lock.newCondition();
-        
-        IModule<?> module = stopModuleAsync(moduleID, new IEventListener() 
-        {
-            @Override
-            public void handleEvent(Event<?> e)
-            {
-                if (e instanceof ModuleEvent)
-                {
-                    if (((ModuleEvent) e).getNewState() == ModuleState.STOPPED)
-                    {
-                        lock.lock();
-                        stopped.signal();
-                        lock.unlock();
-                    }
-                }
-            }
-        });
-        
-        // wait for STOPPED state unless already stopped
-        try
-        {
-            lock.lock();
-            if (module.getCurrentState() != ModuleState.STOPPED)
-            {
-                if (!stopped.await(timeOut, TimeUnit.MILLISECONDS))
-                    throw new SensorHubException("Module " + MsgUtils.moduleString(module) + " could not stop before timeout");
-            }
-            lock.unlock();
-        }
-        catch (InterruptedException e1)
-        {
-        }
-        
+        IModule<?> module = stopModuleAsync(moduleID, null);
+        module.waitForState(ModuleState.STOPPED, timeOut);
         return module;
     }
     

@@ -53,30 +53,37 @@ public class SensorHub
     private volatile boolean stopped;
     
     
+    
     /**
-     * Creates the singleton instance with the given config and JSON module DB
+     * Creates the singleton instance with default registry and event bus implementations
      * @param config
      * @return the singleton instance
      */
     public static SensorHub createInstance(IGlobalConfig config)
     {
         if (instance == null)
-            instance = new SensorHub(config);
+        {
+            EventBus eventBus = new EventBus();
+            IModuleConfigRepository configDB = new ModuleConfigJsonFile(config.getModuleConfigPath());
+            ModuleRegistry registry = new ModuleRegistry(configDB, eventBus);
+            instance = new SensorHub(config, registry, eventBus);
+        }
         
         return instance;
     }
     
     
     /**
-     * Creates the singleton instance with the given config and registry
+     * Creates the singleton instance with the given config, registry and event bus
      * @param config
      * @param registry
+     * @param eventBus 
      * @return the singleton instance
      */
-    public static SensorHub createInstance(IGlobalConfig config, ModuleRegistry registry)
+    public static SensorHub createInstance(IGlobalConfig config, ModuleRegistry registry, EventBus eventBus)
     {
         if (instance == null)
-            instance = new SensorHub(config, registry);
+            instance = new SensorHub(config, registry, eventBus);
         
         return instance;
     }
@@ -91,8 +98,10 @@ public class SensorHub
     {
         if (instance == null)
         {
+            EventBus eventBus = new EventBus();
             IModuleConfigRepository configDB = new InMemoryConfigDb();
-            instance = new SensorHub(null, new ModuleRegistry(configDB));
+            ModuleRegistry registry = new ModuleRegistry(configDB, eventBus);
+            instance = new SensorHub(null, registry, eventBus);
         }
         
         return instance;
@@ -108,21 +117,11 @@ public class SensorHub
     }
     
     
-    private SensorHub(IGlobalConfig config)
-    {
-        this(config, 
-             new ModuleRegistry(
-                new ModuleConfigJsonFile(config.getModuleConfigPath())
-             )
-        );
-    }
-    
-    
-    private SensorHub(IGlobalConfig config, ModuleRegistry registry)
+    private SensorHub(IGlobalConfig config, ModuleRegistry registry, EventBus eventBus)
     {
         this.config = config;
         this.registry = registry;
-        this.eventBus = new EventBus();
+        this.eventBus = eventBus;
     }
     
     
