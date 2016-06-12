@@ -159,11 +159,24 @@ public abstract class AbstractModule<ConfigType extends ModuleConfig> implements
             try
             {
                 long stopWait = System.currentTimeMillis() + timeout;
-                while (this.state.ordinal() < state.ordinal())
+                
+                // special case if we wait for restart
+                boolean waitForRestart = false;
+                if (this.state.ordinal() > ModuleState.STARTED.ordinal() &&
+                    (state == ModuleState.STARTED || state == ModuleState.STARTING))
+                    waitForRestart = true;
+                    
+                while (this.state.ordinal() < state.ordinal() || (waitForRestart && this.state != state) )
                 {
-                    if (timeout > 0 && System.currentTimeMillis() > stopWait)
-                        return false;
-                    stateLock.wait(timeout/10);
+                    if (timeout > 0)
+                    {
+                        long waitTime = stopWait - System.currentTimeMillis();
+                        if (waitTime <= 0)
+                            return false;
+                        stateLock.wait(waitTime);
+                    }
+                    else
+                        stateLock.wait();
                 }
             }
             catch (InterruptedException e)

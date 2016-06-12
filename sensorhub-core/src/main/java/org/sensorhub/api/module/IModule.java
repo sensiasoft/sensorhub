@@ -83,7 +83,7 @@ public interface IModule<ConfigType extends ModuleConfig> extends IEventProducer
     
     /**
      * Waits until the module reaches the specified state or times out.<br/>
-     * This method will return immediately if the state is already reached.
+     * This method will return immediately if the state has already been reached.
      * @param state state to wait for
      * @param timeout maximum time to wait in milliseconds or <= 0 to wait forever
      * @return true if module state has been reached before timeout, false otherwise
