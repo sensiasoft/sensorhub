@@ -717,6 +717,9 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
             return null;
         
         String moduleDataRoot = SensorHub.getInstance().getConfig().getModuleDataPath();
+        if (moduleDataRoot == null)
+            return null;
+        
         return new File(moduleDataRoot, FileUtils.safeFileName(moduleID));
     }
 

@@ -29,7 +29,7 @@ import org.sensorhub.api.config.IGlobalConfig;
 public class SensorHubConfig implements IGlobalConfig
 {
     private String moduleConfigPath;
-    private String moduleDataPath = "modules";
+    private String moduleDataPath;
     private String baseStoragePath;
     
     
@@ -41,6 +41,7 @@ public class SensorHubConfig implements IGlobalConfig
     public SensorHubConfig(String moduleConfigPath, String baseStoragePath)
     {
         this.moduleConfigPath = moduleConfigPath;
+        this.moduleDataPath = "modules";
         
         this.baseStoragePath = baseStoragePath;
         if (baseStoragePath != null && !baseStoragePath.endsWith(File.separator))

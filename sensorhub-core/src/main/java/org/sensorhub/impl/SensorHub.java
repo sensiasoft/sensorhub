@@ -101,7 +101,7 @@ public class SensorHub
             EventBus eventBus = new EventBus();
             IModuleConfigRepository configDB = new InMemoryConfigDb();
             ModuleRegistry registry = new ModuleRegistry(configDB, eventBus);
-            instance = new SensorHub(null, registry, eventBus);
+            instance = new SensorHub(new SensorHubConfig(), registry, eventBus);
         }
         
         return instance;
