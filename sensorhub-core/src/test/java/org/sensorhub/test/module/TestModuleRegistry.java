@@ -206,7 +206,7 @@ public class TestModuleRegistry
         conf.startExecTime = 250;        
         long timeOut = 10000;
         
-        IModule<?> module = registry.loadModule(conf);
+        IModule<?> module = registry.loadModuleAsync(conf, null);
                 
         long t0 = System.currentTimeMillis();
         module.waitForState(ModuleState.INITIALIZED, timeOut);

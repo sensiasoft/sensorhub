@@ -100,7 +100,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
         {
             try
             {
-                loadModule(config);
+                loadModuleAsync(config, null);
             }
             catch (Exception e)
             {
@@ -111,14 +111,52 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
     
     
     /**
-     * Instantiates one module using the given configuration
+     * Instantiates and loads a module using the given configuration<br/>
+     * This method is synchronous so it will block forever until the module is actually
+     * loaded, and it will also wait for it to be started if 'autostart' was requested.
      * @param config Configuration class to use to instantiate the module
      * @return loaded module instance
      * @throws SensorHubException 
      */
-    @SuppressWarnings("rawtypes")
     public IModule<?> loadModule(ModuleConfig config) throws SensorHubException
     {        
+        return loadModule(config, Long.MAX_VALUE);
+    }
+    
+    
+    /**
+     * Instantiates and loads a module using the given configuration<br/>
+     * This method is synchronous so it will block until the module is actually loaded,
+     * and it will also wait for it to be started if 'autostart' was requested.
+     * @param config Configuration class to use to instantiate the module
+     * @param timeOut Maximum time to wait for load and startup to complete
+     * @return loaded module instance
+     * @throws SensorHubException 
+     */
+    public IModule<?> loadModule(ModuleConfig config, long timeOut) throws SensorHubException
+    {        
+        IModule<?> module = loadModuleAsync(config, null);
+        
+        if (config.autoStart)
+            module.waitForState(ModuleState.STARTED, timeOut);
+        
+        return module;
+    }
+    
+    
+    /**
+     * Instantiates and loads a module using the given configuration<br/>
+     * This method is asynchronous so, when it returns without error, the module is guaranteed
+     * to be loaded but not necessarilly initialized or started. The listener will be notified
+     * when the module's state changes further.
+     * @param config Configuration class to use to instantiate the module
+     * @param listener Listener to register for receiving the module's events
+     * @return loaded module instance (may not yet be started when this method returns)
+     * @throws SensorHubException if no module with given ID can be found
+     */
+    @SuppressWarnings("rawtypes")
+    public IModule<?> loadModuleAsync(ModuleConfig config, IEventListener listener) throws SensorHubException
+    {
         if (config.id != null && loadedModules.containsKey(config.id))
             return loadedModules.get(config.id);
         
@@ -138,6 +176,8 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
             
             // listen to module lifecycle events
             module.registerListener(this);
+            if (listener != null)
+                module.registerListener(listener);
             
             // keep track of what modules are loaded
             loadedModules.put(config.id, module);            
@@ -238,7 +278,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
      * when the module is actually initialized
      * @param moduleID Local ID of module to initialize
      * @param listener Listener to register for receiving the module's events
-     * @return the module instance (it may not yet be started when this method returns)
+     * @return the module instance (may not yet be initialized when this method returns)
      * @throws SensorHubException if no module with given ID can be found
      */
     public IModule<?> initModuleAsync(final String moduleID, IEventListener listener) throws SensorHubException
@@ -307,7 +347,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
      * when the module is actually started
      * @param moduleID Local ID of module to start
      * @param listener Listener to register for receiving the module's events
-     * @return the module instance (it may not yet be started when this method returns)
+     * @return the module instance (may not yet be started when this method returns)
      * @throws SensorHubException if no module with given ID can be found
      */
     public IModule<?> startModuleAsync(final String moduleID, IEventListener listener) throws SensorHubException
@@ -389,7 +429,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
      * when the module is actually stopped
      * @param moduleID Local ID of module to stop
      * @param listener Listener to register for receiving the module's events
-     * @return the module instance (it may not yet be stopped when this method returns)
+     * @return the module instance (may not yet be stopped when this method returns)
      * @throws SensorHubException if no module with given ID can be found
      */
     public IModule<?> stopModuleAsync(final String moduleID, IEventListener listener) throws SensorHubException
@@ -511,7 +551,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
         if (!loadedModules.containsKey(moduleID))
         {
             if (configRepos.contains(moduleID))
-                loadModule(configRepos.get(moduleID));
+                loadModuleAsync(configRepos.get(moduleID), null);
             else
                 throw new SensorHubException("Unknown module " + moduleID);
         }
