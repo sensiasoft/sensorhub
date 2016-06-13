@@ -42,6 +42,7 @@ import org.eclipse.jetty.servlet.ServletMapping;
 import org.eclipse.jetty.util.security.Constraint;
 import org.eclipse.jetty.util.security.Credential;
 import org.sensorhub.api.common.SensorHubException;
+import org.sensorhub.api.module.ModuleEvent.ModuleState;
 import org.sensorhub.impl.module.AbstractModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -163,6 +164,8 @@ public class HttpServer extends AbstractModule<HttpServerConfig>
             server.setHandler(handlers);
             server.start();
             log.info("HTTP server started on port " + config.httpPort);
+            
+            setState(ModuleState.STARTED);
         }
         catch (Exception e)
         {

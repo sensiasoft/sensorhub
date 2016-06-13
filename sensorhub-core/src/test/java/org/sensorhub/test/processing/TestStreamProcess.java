@@ -14,7 +14,6 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.test.processing;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import org.junit.After;
@@ -32,7 +31,6 @@ import org.sensorhub.api.processing.StreamingDataSourceConfig;
 import org.sensorhub.api.sensor.ISensorModule;
 import org.sensorhub.api.sensor.SensorConfig;
 import org.sensorhub.impl.SensorHub;
-import org.sensorhub.impl.SensorHubConfig;
 import org.sensorhub.impl.processing.SMLStreamProcess;
 import org.sensorhub.impl.processing.SMLStreamProcessConfig;
 import org.sensorhub.test.sensor.FakeSensor;
@@ -52,8 +50,7 @@ public class TestStreamProcess implements IEventListener
     static final double SAMPLING_PERIOD = 0.1;
     static final int SAMPLE_COUNT = 10;
     final static String auto = StreamingDataSourceConfig.AUTO_CREATE;
-    
-    File configFile;
+
     DataStreamWriter writer;
     int eventCount = 0;
         
@@ -61,11 +58,10 @@ public class TestStreamProcess implements IEventListener
     @Before
     public void setupFramework() throws Exception
     {
-        // init sensorhub
-        configFile = new File("junit-test.json");
-        configFile.deleteOnExit();
-        SensorHub.createInstance(new SensorHubConfig(configFile.getAbsolutePath(), configFile.getParent()));
+        // init sensorhub with in-memory config
+        SensorHub.getInstance();
         
+        // init process map
         URL processMapUrl = TestSMLProcessing.class.getResource("ProcessMap.xml");
         ProcessLoader.loadMaps(processMapUrl.toString(), false);
     }
@@ -114,7 +110,11 @@ public class TestStreamProcess implements IEventListener
         for (StreamingDataSourceConfig dataSrc: dataSources)
             processCfg.dataSources.add(dataSrc);
         
-        return (IStreamProcessModule<?>)SensorHub.getInstance().getModuleRegistry().loadModule(processCfg);
+        @SuppressWarnings("rawtypes")
+        IStreamProcessModule process = (IStreamProcessModule)SensorHub.getInstance().getModuleRegistry().loadModule(processCfg);
+        process.init(processCfg);
+        
+        return process;
     }
     
     
@@ -199,7 +199,8 @@ public class TestStreamProcess implements IEventListener
         for (StreamingDataSourceConfig dataSrc: dataSources)
             processCfg.dataSources.add(dataSrc);
         
-        IStreamProcessModule<?> process = (IStreamProcessModule<?>)SensorHub.getInstance().getModuleRegistry().loadModule(processCfg);
+        IStreamProcessModule<SMLStreamProcessConfig> process = (IStreamProcessModule<SMLStreamProcessConfig>)SensorHub.getInstance().getModuleRegistry().loadModule(processCfg);
+        process.init(processCfg);
         for (IStreamingDataInterface output: process.getAllOutputs().values())
             output.registerListener(this);
         
@@ -252,9 +253,8 @@ public class TestStreamProcess implements IEventListener
     {
         try
         {
-            if (configFile != null)
-                configFile.delete();
             SensorHub.getInstance().getModuleRegistry().shutdown(false, false);
+            SensorHub.clearInstance();
         }
         catch (Exception e)
         {

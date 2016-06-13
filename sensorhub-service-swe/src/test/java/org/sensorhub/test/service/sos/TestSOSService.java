@@ -45,7 +45,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.sensorhub.api.common.Event;
 import org.sensorhub.api.common.IEventListener;
-import org.sensorhub.api.module.IModule;
 import org.sensorhub.api.module.ModuleEvent.ModuleState;
 import org.sensorhub.api.persistence.IRecordStorageModule;
 import org.sensorhub.api.persistence.StorageConfig;
@@ -92,6 +91,7 @@ import org.w3c.dom.NodeList;
 
 public class TestSOSService
 {
+    static final long TIMEOUT = 10000;
     static String NAME_OUTPUT1 = "weatherOut";
     static String NAME_OUTPUT2 = "imageOut";
     static String UID_SENSOR1 = "urn:sensors:mysensor:001";
@@ -137,8 +137,7 @@ public class TestSOSService
         // start HTTP server
         HttpServerConfig httpConfig = new HttpServerConfig();
         httpConfig.httpPort = SERVER_PORT;
-        IModule<?> httpServer = SensorHub.getInstance().getModuleRegistry().loadModule(httpConfig);
-        assertTrue("HTTP server couldn't start", httpServer.waitForState(ModuleState.STARTED, 10000));
+        SensorHub.getInstance().getModuleRegistry().loadModule(httpConfig, TIMEOUT);
     }
     
     
@@ -162,7 +161,7 @@ public class TestSOSService
         srvcMetadata.accessConstraints = "NONE";
         
         // start module
-        SOSService sos = (SOSService)SensorHub.getInstance().getModuleRegistry().loadModule(serviceCfg);
+        SOSService sos = (SOSService)SensorHub.getInstance().getModuleRegistry().loadModule(serviceCfg, TIMEOUT);
         
         // save config
         SensorHub.getInstance().getModuleRegistry().saveModulesConfiguration();
@@ -188,7 +187,7 @@ public class TestSOSService
         sensor.setSensorUID(UID_SENSOR1);
         sensor.setDataInterfaces(new FakeSensorData(sensor, NAME_OUTPUT1, 10, SAMPLING_PERIOD, NUM_GEN_SAMPLES));
         if (start)
-            SensorHub.getInstance().getModuleRegistry().startModule(sensorCfg.id);
+            SensorHub.getInstance().getModuleRegistry().startModule(sensorCfg.id, TIMEOUT);
         
         // create SOS data provider config
         SensorDataProviderConfig provCfg = new SensorDataProviderConfig();
@@ -221,7 +220,7 @@ public class TestSOSService
                 new FakeSensorData(sensor, NAME_OUTPUT1, 1, SAMPLING_PERIOD, NUM_GEN_SAMPLES),
                 new FakeSensorData2(sensor, NAME_OUTPUT2, SAMPLING_PERIOD, NUM_GEN_SAMPLES, obsFoiMap));
         if (start)
-            SensorHub.getInstance().getModuleRegistry().startModule(sensorCfg.id);
+            SensorHub.getInstance().getModuleRegistry().startModule(sensorCfg.id, TIMEOUT);
         
         // create SOS data provider config
         SensorDataProviderConfig provCfg = new SensorDataProviderConfig();
@@ -254,7 +253,11 @@ public class TestSOSService
         streamStorageConfig.dataSourceID = sosProviderConfig.sensorID;
         
         // start storage module
-        IRecordStorageModule<?> storage = (IRecordStorageModule<?>)SensorHub.getInstance().getModuleRegistry().loadModule(streamStorageConfig);
+        IRecordStorageModule<?> storage = (IRecordStorageModule<?>)SensorHub.getInstance().getModuleRegistry().loadModuleAsync(streamStorageConfig, null);
+        if (start)
+            storage.waitForState(ModuleState.STARTED, TIMEOUT);
+        else
+            storage.waitForState(ModuleState.STARTING, TIMEOUT);
                 
         // configure storage for sensor
         sosProviderConfig.storageID = storage.getLocalID();
@@ -283,7 +286,7 @@ public class TestSOSService
         streamStorageConfig.dataSourceID = sosProviderConfig.sensorID;
         
         // start storage module
-        IRecordStorageModule<?> storage = (IRecordStorageModule<?>)SensorHub.getInstance().getModuleRegistry().loadModule(streamStorageConfig);
+        IRecordStorageModule<?> storage = (IRecordStorageModule<?>)SensorHub.getInstance().getModuleRegistry().loadModule(streamStorageConfig, TIMEOUT);
                 
         // configure storage for sensor
         sosProviderConfig.storageID = storage.getLocalID();
@@ -297,7 +300,7 @@ public class TestSOSService
         final ReentrantLock lock = new ReentrantLock();
         final Condition firstRecord = lock.newCondition();
         
-        FakeSensor sensor = (FakeSensor)SensorHub.getInstance().getModuleRegistry().startModule(sosProviderConfig.sensorID);
+        FakeSensor sensor = (FakeSensor)SensorHub.getInstance().getModuleRegistry().startModule(sosProviderConfig.sensorID, TIMEOUT);
         sensor.getAllOutputs().get(NAME_OUTPUT1).registerListener(new IEventListener() {
             public void handleEvent(Event<?> event)
             { 
