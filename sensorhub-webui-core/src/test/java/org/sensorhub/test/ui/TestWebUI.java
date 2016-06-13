@@ -18,12 +18,12 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.UUID;
+import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.module.ModuleConfig;
 import org.sensorhub.api.persistence.StorageConfig;
 import org.sensorhub.api.processing.ProcessConfig;
 import org.sensorhub.api.sensor.SensorConfig;
 import org.sensorhub.impl.SensorHub;
-import org.sensorhub.impl.module.InMemoryConfigDb;
 import org.sensorhub.impl.module.ModuleRegistry;
 import org.sensorhub.impl.service.HttpServer;
 import org.sensorhub.impl.service.HttpServerConfig;
@@ -39,10 +39,9 @@ public class TestWebUI
         
     static public void setup() throws Exception
     {
-        // instantiate module registry
-        ModuleRegistry registry = new ModuleRegistry(setupConfig());
-        SensorHub.createInstance(null, registry);
-        registry.loadAllModules();
+        // start sensorhub and load modules
+        SensorHub.getInstance();
+        setupConfig();
         
         // connect to servlet and check response
         HttpServerConfig httpConfig = HttpServer.getInstance().getConfiguration();
@@ -54,16 +53,16 @@ public class TestWebUI
     }
     
     
-    static protected InMemoryConfigDb setupConfig()
+    static protected void setupConfig() throws SensorHubException
     {
-        InMemoryConfigDb configDB = new InMemoryConfigDb();
+        ModuleRegistry registry = SensorHub.getInstance().getModuleRegistry();
         
         // HTTP server
         HttpServerConfig httpConfig = new HttpServerConfig();
         httpConfig.autoStart = true;
         httpConfig.moduleClass = HttpServer.class.getCanonicalName();
         httpConfig.id = UUID.randomUUID().toString();
-        configDB.add(httpConfig);
+        registry.loadModule(httpConfig);
         
         // Admin UI
         AdminUIConfig adminConfig = new AdminUIConfig();
@@ -71,7 +70,7 @@ public class TestWebUI
         adminConfig.moduleClass = AdminUIModule.class.getCanonicalName();
         adminConfig.id = UUID.randomUUID().toString();
         adminConfig.customForms.add(new CustomUIConfig(HttpServerConfig.class.getCanonicalName(), HttpServerConfigForm.class.getCanonicalName()));
-        configDB.add(adminConfig);
+        registry.loadModule(adminConfig);
         
         // Dummy modules
         String[] moduleNames = new String[] {"SOS Service", "SPS Service", "Storage1", "Storage2", "Sensor1", "Sensor2"};
@@ -93,10 +92,8 @@ public class TestWebUI
             config.name = name;
             config.autoStart = true;
             config.moduleClass = DummyModule.class.getCanonicalName();
-            configDB.add(config);   
+            registry.loadModule(config);   
         }
-        
-        return configDB;
     }
     
     

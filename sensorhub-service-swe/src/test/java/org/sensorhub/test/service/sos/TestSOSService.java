@@ -45,12 +45,13 @@ import org.junit.Before;
 import org.junit.Test;
 import org.sensorhub.api.common.Event;
 import org.sensorhub.api.common.IEventListener;
+import org.sensorhub.api.module.IModule;
+import org.sensorhub.api.module.ModuleEvent.ModuleState;
 import org.sensorhub.api.persistence.IRecordStorageModule;
 import org.sensorhub.api.persistence.StorageConfig;
 import org.sensorhub.api.sensor.ISensorModule;
 import org.sensorhub.api.sensor.SensorConfig;
 import org.sensorhub.impl.SensorHub;
-import org.sensorhub.impl.SensorHubConfig;
 import org.sensorhub.impl.persistence.InMemoryBasicStorage;
 import org.sensorhub.impl.persistence.StreamStorageConfig;
 import org.sensorhub.impl.persistence.perst.BasicStorageConfig;
@@ -124,24 +125,20 @@ public class TestSOSService
     @Before
     public void setupFramework() throws Exception
     {
-        // setup config and db file
-        configFile = new File("junit-test.json");
-        //configFile = File.createTempFile("junit-config-", ".json");
-        configFile.deleteOnExit();
-        
-        configFile.deleteOnExit();
+        // make sure we start with a new DB file
         File dbFile = new File(DB_PATH);
         if (dbFile.exists())
             dbFile.delete();
         dbFile.deleteOnExit();
         
-        // start sensorhub
-        SensorHub.createInstance(new SensorHubConfig(configFile.getAbsolutePath(), configFile.getParent()));
+        // get instance with in-memory DB
+        SensorHub.getInstance();
         
         // start HTTP server
         HttpServerConfig httpConfig = new HttpServerConfig();
         httpConfig.httpPort = SERVER_PORT;
-        SensorHub.getInstance().getModuleRegistry().loadModule(httpConfig);
+        IModule<?> httpServer = SensorHub.getInstance().getModuleRegistry().loadModule(httpConfig);
+        assertTrue("HTTP server couldn't start", httpServer.waitForState(ModuleState.STARTED, 10000));
     }
     
     
@@ -164,9 +161,12 @@ public class TestSOSService
         srvcMetadata.fees = "NONE";
         srvcMetadata.accessConstraints = "NONE";
         
-        // load module into registry
+        // start module
         SOSService sos = (SOSService)SensorHub.getInstance().getModuleRegistry().loadModule(serviceCfg);
+        
+        // save config
         SensorHub.getInstance().getModuleRegistry().saveModulesConfiguration();
+        
         return sos;
     }
     
@@ -245,7 +245,7 @@ public class TestSOSService
     {
         SensorDataProviderConfig sosProviderConfig = buildSensorProvider1(start);
                        
-        // configure in-memory storage configure
+        // configure in-memory storage
         StreamStorageConfig streamStorageConfig = new StreamStorageConfig();
         streamStorageConfig.name = "Memory Storage";
         streamStorageConfig.autoStart = true;
@@ -253,8 +253,10 @@ public class TestSOSService
         streamStorageConfig.storageConfig.moduleClass = InMemoryBasicStorage.class.getCanonicalName();
         streamStorageConfig.dataSourceID = sosProviderConfig.sensorID;
         
-        // configure storage for sensor
+        // start storage module
         IRecordStorageModule<?> storage = (IRecordStorageModule<?>)SensorHub.getInstance().getModuleRegistry().loadModule(streamStorageConfig);
+                
+        // configure storage for sensor
         sosProviderConfig.storageID = storage.getLocalID();
         
         return sosProviderConfig;
@@ -271,7 +273,7 @@ public class TestSOSService
     {
         SensorDataProviderConfig sosProviderConfig = buildSensorProvider2(start);
                        
-        // configure in-memory storage configure
+        // configure object DB storage
         StreamStorageConfig streamStorageConfig = new StreamStorageConfig();
         streamStorageConfig.name = "Obs Storage";
         streamStorageConfig.autoStart = true;
@@ -280,8 +282,10 @@ public class TestSOSService
         streamStorageConfig.storageConfig.storagePath = DB_PATH;
         streamStorageConfig.dataSourceID = sosProviderConfig.sensorID;
         
-        // configure storage for sensor
+        // start storage module
         IRecordStorageModule<?> storage = (IRecordStorageModule<?>)SensorHub.getInstance().getModuleRegistry().loadModule(streamStorageConfig);
+                
+        // configure storage for sensor
         sosProviderConfig.storageID = storage.getLocalID();
         
         return sosProviderConfig;
