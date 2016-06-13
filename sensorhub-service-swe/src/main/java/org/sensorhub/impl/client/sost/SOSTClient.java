@@ -17,6 +17,8 @@ package org.sensorhub.impl.client.sost;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -30,6 +32,7 @@ import org.sensorhub.api.common.Event;
 import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.data.DataEvent;
+import org.sensorhub.api.module.ModuleEvent.ModuleState;
 import org.sensorhub.api.sensor.ISensorDataInterface;
 import org.sensorhub.api.sensor.ISensorModule;
 import org.sensorhub.api.sensor.SensorDataEvent;
@@ -39,6 +42,7 @@ import org.sensorhub.api.service.ServiceException;
 import org.sensorhub.impl.SensorHub;
 import org.sensorhub.impl.module.AbstractModule;
 import org.sensorhub.utils.MsgUtils;
+import org.sensorhub.utils.NetworkUtils;
 import org.vast.cdm.common.DataStreamWriter;
 import org.vast.ogc.om.IObservation;
 import org.vast.ogc.om.ObservationImpl;
@@ -87,6 +91,39 @@ public class SOSTClient extends AbstractModule<SOSTClientConfig> implements ICli
     public SOSTClient()
     {
         this.dataStreams = new LinkedHashMap<ISensorDataInterface, StreamInfo>();
+    }
+    
+    
+    @Override
+    public void requestStart() throws SensorHubException
+    {
+        if (canStart())
+        {
+            URL endpoint = null;
+            try
+            {
+                endpoint = new URL(config.sosEndpointUrl);                             
+            }
+            catch (MalformedURLException e)
+            {
+                throw new SensorHubException("Invalid SOS endpoint URL", e);
+            }
+            
+            // wait until the SOS endpoint is reachable
+            //NetworkUtils.resolve(endpoint.getHost(), config.connectTimeout);
+            
+            try
+            {
+                start();
+                setState(ModuleState.STARTED);
+            }
+            catch (Exception e)
+            {
+                reportError("Error while starting module", e);
+                setState(ModuleState.STOPPED);
+                throw e;
+            }
+        }
     }
     
     
