@@ -69,7 +69,8 @@ public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> impleme
             this.autoCommit = true;
             
             // check file path is valid
-            if (!FileUtils.isSafeFilePath(config.storagePath))
+            File storageFile = new File(config.storagePath); 
+            if (!storageFile.exists() && !FileUtils.isSafeFilePath(config.storagePath))
                 throw new StorageException("Storage path contains illegal characters: " + config.storagePath);
             
             // acquire file lock on DB file
