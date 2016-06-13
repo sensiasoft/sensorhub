@@ -80,7 +80,8 @@ public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> impleme
                 throw new StorageException("Storage file " + config.storagePath + " is already opened by another SensorHub process");
             
             db = StorageFactory.getInstance().createStorage();    
-            db.setProperty("perst.concurrent.iterator", true);
+            db.setProperty("perst.concurrent.iterator", true); // allow insertions while iterating through indexes
+            db.setProperty("perst.object.cache.init.size", 1); // limit number of pinned objects in LRU object cache
             //db.setProperty("perst.alternative.btree", true);
             db.open(dbFile, config.memoryCacheSize*1024);
             dbRoot = (BasicStorageRoot)db.getRoot();
