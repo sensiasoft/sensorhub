@@ -14,6 +14,9 @@ Copyright (C) 2012-2016 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.test.module;
 
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import org.sensorhub.api.common.Event;
 import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.common.SensorHubException;
@@ -30,6 +33,7 @@ import org.sensorhub.utils.MsgUtils;
 public class AsyncModule extends AbstractModule<AsyncModuleConfig> implements IEventListener
 {
     ModuleRegistry registry = SensorHub.getInstance().getModuleRegistry();
+    ExecutorService exec = Executors.newSingleThreadExecutor();
     
     
     @Override
@@ -37,24 +41,50 @@ public class AsyncModule extends AbstractModule<AsyncModuleConfig> implements IE
     {
         if (canInit())
         {
-            setConfiguration(config);
-            
-            if (config.moduleIDNeededForInit != null)
+            Callable<Void> task = new Callable<Void>()
             {
-                AbstractModule<?> module = (AbstractModule<?>)registry.getModuleById(config.moduleIDNeededForInit);
-                
-                if (!config.useWaitLoopForInit)
+                public Void call() throws Exception
                 {
-                    EventBus.getInstance().registerListener(config.moduleIDNeededForInit, EventBus.MAIN_TOPIC, this);
-                    return;
+                    try
+                    {
+                        if (config.moduleIDNeededForInit != null)
+                        {
+                            AbstractModule<?> module = (AbstractModule<?>)registry.getModuleById(config.moduleIDNeededForInit);
+                            
+                            if (!config.useWaitLoopForInit)
+                            {
+                                EventBus.getInstance().registerListener(config.moduleIDNeededForInit, EventBus.MAIN_TOPIC, AsyncModule.this);
+                                return null;
+                            }
+                            else
+                                module.waitForState(config.moduleStateNeededForInit, 0);                    
+                        }
+                        
+                        try { Thread.sleep(config.initDelay); }
+                        catch(InterruptedException e) {}
+                        init();
+                        
+                        return null;
+                    }
+                    catch (Exception e)
+                    {
+                        reportError("Error during init", e);
+                        throw e;
+                    }
                 }
-                else
-                    module.waitForState(config.moduleStateNeededForInit, 0);                    
-            }
+            };
             
-            try { Thread.sleep(config.initDelay); }
-            catch(InterruptedException e) {}
-            init();
+            try
+            {
+                if (config.useThreadForInit)
+                    exec.submit(task);
+                else
+                    task.call();
+            }
+            catch (Exception e)
+            {
+                throw new SensorHubException(e.getMessage(), e.getCause());
+            }
         }
     }
 
@@ -75,24 +105,50 @@ public class AsyncModule extends AbstractModule<AsyncModuleConfig> implements IE
     {
         if (canStart())
         {
-            setConfiguration(config);
-            
-            if (config.moduleIDNeededForStart != null)
+            Callable<Void> task = new Callable<Void>()
             {
-                AbstractModule<?> module = (AbstractModule<?>)registry.getModuleById(config.moduleIDNeededForStart);
-                
-                if (!config.useWaitLoopForStart)
+                public Void call() throws Exception
                 {
-                    EventBus.getInstance().registerListener(config.moduleIDNeededForStart, EventBus.MAIN_TOPIC, this);
-                    return;
+                    try
+                    {
+                        if (config.moduleIDNeededForStart != null)
+                        {
+                            AbstractModule<?> module = (AbstractModule<?>)registry.getModuleById(config.moduleIDNeededForStart);
+                            
+                            if (!config.useWaitLoopForStart)
+                            {
+                                EventBus.getInstance().registerListener(config.moduleIDNeededForStart, EventBus.MAIN_TOPIC, AsyncModule.this);
+                                return null;
+                            }
+                            else
+                                module.waitForState(config.moduleStateNeededForStart, 0);                    
+                        }
+                        
+                        try { Thread.sleep(config.startDelay); }
+                        catch(InterruptedException e) {}
+                        start();
+                        
+                        return null;
+                    }
+                    catch (Exception e)
+                    {
+                        reportError("Error during start", e);
+                        throw e;
+                    }
                 }
-                else
-                    module.waitForState(config.moduleStateNeededForStart, 0);                    
-            }
+            };
             
-            try { Thread.sleep(config.startDelay); }
-            catch(InterruptedException e) {}
-            start();
+            try
+            {
+                if (config.useThreadForStart)
+                    exec.submit(task);
+                else
+                    task.call();
+            }
+            catch (Exception e)
+            {
+                throw new SensorHubException(e.getMessage(), e.getCause());
+            }     
         }
     }
     
@@ -106,19 +162,56 @@ public class AsyncModule extends AbstractModule<AsyncModuleConfig> implements IE
         
         setState(ModuleState.STARTED);
     }
+    
+    
+    @Override
+    public void requestStop() throws SensorHubException
+    {
+        if (canStop())
+        {
+            Callable<Void> task = new Callable<Void>()
+            {
+                public Void call() throws Exception
+                {
+                    try
+                    {
+                        try { Thread.sleep(config.stopDelay); }
+                        catch(InterruptedException e) {}
+                        stop();
+                        
+                        return null;
+                    }
+                    catch (Exception e)
+                    {
+                        reportError("Error during stop", e);
+                        throw e;
+                    }
+                }
+            };
+            
+            try
+            {
+                if (config.useThreadForStop)
+                    exec.submit(task);
+                else
+                    task.call();
+            }
+            catch (Exception e)
+            {
+                throw new SensorHubException(e.getMessage(), e.getCause());
+            }     
+        }
+    }
+    
 
     @Override
     public void stop() throws SensorHubException
     {
-        // TODO Auto-generated method stub
+        System.out.println("Running stop() of " + MsgUtils.moduleString(this));
+        try { Thread.sleep(config.stopExecTime); }
+        catch(InterruptedException e) {}
         
-    }
-
-    @Override
-    public void cleanup() throws SensorHubException
-    {
-        // TODO Auto-generated method stub
-        
+        setState(ModuleState.STOPPED);        
     }
 
 
@@ -166,4 +259,9 @@ public class AsyncModule extends AbstractModule<AsyncModuleConfig> implements IE
         }        
     }
 
+    
+    @Override
+    public void cleanup() throws SensorHubException
+    {        
+    }
 }

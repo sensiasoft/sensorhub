@@ -86,7 +86,7 @@ public interface IModule<ConfigType extends ModuleConfig> extends IEventProducer
      * This method will return immediately if the state has already been reached.
      * @param state state to wait for
      * @param timeout maximum time to wait in milliseconds or <= 0 to wait forever
-     * @return true if module state has been reached before timeout, false otherwise
+     * @return true if module state has been reached, false in case of timeout or error
      */
     public boolean waitForState(ModuleState state, long timeout);
     
@@ -106,8 +106,10 @@ public interface IModule<ConfigType extends ModuleConfig> extends IEventProducer
     /**
      * Requests to initialize the module with the current configuration.<br/>
      * Implementations of this method block until the module is initialized or
-     * return immediately while they wait for the proper init conditions.
-     * @throws SensorHubException
+     * return immediately while they wait for the proper init conditions.<br/>
+     * When this method returns without error the module state is guaranteed to be
+     * {@link ModuleState#INITIALIZING}
+     * @throws SensorHubException if module could not enter initialization phase
      */
     public void requestInit() throws SensorHubException;
     
@@ -149,8 +151,10 @@ public interface IModule<ConfigType extends ModuleConfig> extends IEventProducer
     /**
      * Requests the module to start.<br/>
      * Implementations of this method may block until the module is started or
-     * return immediately while they wait for the proper start conditions.
-     * @throws SensorHubException
+     * return immediately while they wait for the proper start conditions.<br/>
+     * When this method returns without error the module state is guaranteed to be
+     * {@link ModuleState#STARTING}
+     * @throws SensorHubException if startup could not be initiated
      */
     public void requestStart() throws SensorHubException;
     
@@ -169,8 +173,10 @@ public interface IModule<ConfigType extends ModuleConfig> extends IEventProducer
     /**
      * Requests the module to stop.<br/>
      * Implementations of this method may block until the module is stopped or
-     * return immediately while they wait for the proper stop conditions.
-     * @throws SensorHubException
+     * return immediately while they wait for the proper stop conditions.<br/>
+     * When this method returns without error the module state is guaranteed to be
+     * {@link ModuleState#STOPPING}
+     * @throws SensorHubException if shutdown could not be initiated
      */
     public void requestStop() throws SensorHubException;
     

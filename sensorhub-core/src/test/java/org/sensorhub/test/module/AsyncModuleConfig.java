@@ -23,14 +23,20 @@ public class AsyncModuleConfig extends ModuleConfig
     public String moduleIDNeededForInit;
     public ModuleState moduleStateNeededForInit;
     public boolean useWaitLoopForInit;
+    public boolean useThreadForInit;
     public long initDelay;
     public long initExecTime;
     
     public String moduleIDNeededForStart;
     public ModuleState moduleStateNeededForStart;
     public boolean useWaitLoopForStart;
+    public boolean useThreadForStart;
     public long startDelay;
-    public long startExecTime; 
+    public long startExecTime;
+    
+    public boolean useThreadForStop;
+    public long stopDelay;
+    public long stopExecTime; 
     
     // not part of config, but used in tests
     boolean initEventReceived;

@@ -129,7 +129,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
      * This method is synchronous so it will block until the module is actually loaded,
      * and it will also wait for it to be started if 'autostart' was requested.
      * @param config Configuration class to use to instantiate the module
-     * @param timeOut Maximum time to wait for load and startup to complete
+     * @param timeOut Maximum time to wait for load and startup to complete (or <= 0 to wait forever)
      * @return loaded module instance
      * @throws SensorHubException 
      */
@@ -138,7 +138,10 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
         IModule<?> module = loadModuleAsync(config, null);
         
         if (config.autoStart)
-            module.waitForState(ModuleState.STARTED, timeOut);
+        {
+            if (!module.waitForState(ModuleState.STARTED, timeOut))
+                throw new SensorHubException("Could not start module " + MsgUtils.moduleString(module) + " in the requested time frame");
+        }
         
         return module;
     }
@@ -260,14 +263,15 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
      * This method is synchronous so it will block until the module is actually initialized,
      * the timeout occurs or an exception is thrown
      * @param moduleID Local ID of module to initialize
-     * @param timeOut Maximum time to wait for init to complete
+     * @param timeOut Maximum time to wait for init to complete (or <= 0 to wait forever)
      * @return module Loaded module with the given moduleID
      * @throws SensorHubException if an error occurs during init
      */
     public IModule<?> initModule(String moduleID, long timeOut) throws SensorHubException
     {
         IModule<?> module = initModuleAsync(moduleID, null);
-        module.waitForState(ModuleState.INITIALIZED, timeOut);
+        if (!module.waitForState(ModuleState.INITIALIZED, timeOut))
+            throw new SensorHubException("Could not initialize module " + MsgUtils.moduleString(module) + " in the requested time frame");
         return module;
     }
     
@@ -329,14 +333,15 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
      * This method is synchronous so it will block until the module is actually started,
      * the timeout occurs or an exception is thrown
      * @param moduleID Local ID of module to start
-     * @param timeOut Maximum time to wait for startup to complete
+     * @param timeOut Maximum time to wait for startup to complete (or <= 0 to wait forever)
      * @return module Loaded module with the given moduleID
      * @throws SensorHubException if an error occurs during startup
      */
     public IModule<?> startModule(String moduleID, long timeOut) throws SensorHubException
     {
         IModule<?> module = startModuleAsync(moduleID, null);
-        module.waitForState(ModuleState.STARTED, timeOut);
+        if (!module.waitForState(ModuleState.STARTED, timeOut))
+            throw new SensorHubException("Could not start module " + MsgUtils.moduleString(module) + " in the requested time frame");
         return module;
     }
     
@@ -411,14 +416,15 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
      * This method is synchronous so it will block until the module is actually stopped,
      * the timeout occurs or an exception is thrown
      * @param moduleID Local ID of module to enable
-     * @param timeOut Maximum time to wait for startup to complete
+     * @param timeOut Maximum time to wait for shutdown to complete (or <= 0 to wait forever)
      * @return module Loaded module with the given moduleID
      * @throws SensorHubException if an error occurs during shutdown
      */
     public IModule<?> stopModule(String moduleID, long timeOut) throws SensorHubException
     {
         IModule<?> module = stopModuleAsync(moduleID, null);
-        module.waitForState(ModuleState.STOPPED, timeOut);
+        if (!module.waitForState(ModuleState.STOPPED, timeOut))
+            throw new SensorHubException("Could not stop module " + MsgUtils.moduleString(module) + " in the requested time frame");
         return module;
     }
     

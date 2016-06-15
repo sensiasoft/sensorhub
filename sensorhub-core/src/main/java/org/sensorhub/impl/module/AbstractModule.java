@@ -168,6 +168,10 @@ public abstract class AbstractModule<ConfigType extends ModuleConfig> implements
                     
                 while (this.state.ordinal() < state.ordinal() || (waitForRestart && this.state != state) )
                 {
+                    Throwable error = getCurrentError();
+                    if (error != null)
+                        return false;
+                    
                     if (timeout > 0)
                     {
                         long waitTime = stopWait - System.currentTimeMillis();
@@ -203,22 +207,27 @@ public abstract class AbstractModule<ConfigType extends ModuleConfig> implements
      */
     public void reportError(String msg, Throwable error)
     {
-        if (error != this.lastError)
+        synchronized (stateLock)
         {
-            if (msg != null)
-                this.lastError = new Exception(msg, error);
-            else
-                this.lastError = error;
-            
-            if (error != null)
+            if (error != this.lastError)
             {
-                if (eventHandler != null)
-                {
-                    ModuleEvent event = new ModuleEvent(this, this.lastError);               
-                    eventHandler.publishEvent(event);
-                }
+                if (msg != null)
+                    this.lastError = new Exception(msg, error);
+                else
+                    this.lastError = error;
                 
-                getLogger().error(msg, error);
+                if (error != null)
+                {
+                    stateLock.notifyAll();
+                    
+                    if (eventHandler != null)
+                    {
+                        ModuleEvent event = new ModuleEvent(this, this.lastError);               
+                        eventHandler.publishEvent(event);
+                    }
+                    
+                    getLogger().error(msg, error);
+                }
             }
         }
     }
@@ -226,7 +235,10 @@ public abstract class AbstractModule<ConfigType extends ModuleConfig> implements
     
     public void clearError()
     {
-        this.lastError = null;
+        synchronized (stateLock)
+        {
+            this.lastError = null;
+        }
     }
     
     
@@ -400,16 +412,12 @@ public abstract class AbstractModule<ConfigType extends ModuleConfig> implements
             {
                 // default implementation just calls stop()
                 stop();
+                setState(ModuleState.STOPPED);
             }
             catch (SensorHubException e)
             {
                 reportError("Error while stopping module", e);
                 throw e;
-            }
-            finally
-            {
-                // force the stopped state
-                setState(ModuleState.STOPPED);
             }
         }
     }
