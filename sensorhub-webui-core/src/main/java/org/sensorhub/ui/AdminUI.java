@@ -103,7 +103,7 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener
     private static final Action STOP_MODULE_ACTION = new Action("Stop", new ThemeResource("icons/disable.gif"));
     private static final Action RESTART_MODULE_ACTION = new Action("Restart", new ThemeResource("icons/refresh.gif"));    
     private static final Resource LOGO_ICON = new ClassResource("/sensorhub_logo_128.png");
-    private static final Resource ACC_TAB_ICON = new ThemeResource("icons/enable.png");    
+    private static final Resource ACC_TAB_ICON = new ThemeResource("icons/enable.png");
     private static final String STYLE_LOGO = "logo";
     private static final String PROP_STATE = "started";
     private static final String PROP_MODULE_OBJECT = "module";
@@ -233,6 +233,7 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener
         // build left pane
         VerticalLayout leftPane = new VerticalLayout();
         leftPane.setSizeFull();
+        leftPane.setSpacing(true);
         
         // header image and title
         Component header = buildHeader();
@@ -243,9 +244,6 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener
         Component toolbar = buildToolbar();
         leftPane.addComponent(toolbar);
         leftPane.setExpandRatio(toolbar, 0);
-        
-        // spacer
-        leftPane.addComponent(new Label(""));
         
         // accordion with several sections
         moduleTables.clear();
@@ -302,7 +300,7 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener
     {
         HorizontalLayout header = new HorizontalLayout();
         header.setMargin(false);
-        header.setHeight(100.0f, Unit.PIXELS);
+        header.setHeight(77.0f, Unit.PIXELS);
         header.setWidth(100.0f, Unit.PERCENTAGE);
         Image img = new Image(null, LOGO_ICON);
         img.setHeight(90, Unit.PIXELS);
@@ -321,11 +319,13 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener
     }
     
     
+    @SuppressWarnings("serial")
     protected Component buildToolbar()
     {
         HorizontalLayout toolbar = new HorizontalLayout();
         toolbar.setWidth(100.0f, Unit.PERCENTAGE);
-        
+        toolbar.setSpacing(true);
+                
         // shutdown button
         Button shutdownButton = new Button("Shutdown");
         shutdownButton.setDescription("Shutdown SensorHub");
@@ -333,26 +333,37 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener
         shutdownButton.addStyleName(UIConstants.STYLE_SMALL);
         shutdownButton.setWidth(100.0f, Unit.PERCENTAGE);
         shutdownButton.addClickListener(new Button.ClickListener() {
-            private static final long serialVersionUID = 1L;
             public void buttonClick(ClickEvent event)
             {
-                SensorHub.getInstance().getModuleRegistry().unregisterListener(AdminUI.this);
-                
-                Notification notif = new Notification(
-                        FontAwesome.WARNING.getHtml() + "&nbsp; Shutdown Initiated...",
-                        "UI will stop responding",
-                        Notification.Type.ERROR_MESSAGE);
-                notif.setHtmlContentAllowed(true);
-                notif.show(AdminUI.getInstance().getPage());
-                
-                // shutdown in separate thread
-                new Timer().schedule(new TimerTask() {
-                    public void run()
+                final ConfirmDialog popup = new ConfirmDialog("Are you sure you want to shutdown the sensor hub?");
+                popup.addCloseListener(new CloseListener() {
+                    @Override
+                    public void windowClose(CloseEvent e)
                     {
-                        SensorHub.getInstance().stop(false, true);
-                        System.exit(0);
-                    }
-                }, 1000);
+                        if (popup.isConfirmed())
+                        {                    
+                            SensorHub.getInstance().getModuleRegistry().unregisterListener(AdminUI.this);
+                            
+                            Notification notif = new Notification(
+                                    FontAwesome.WARNING.getHtml() + "&nbsp; Shutdown Initiated...",
+                                    "UI will stop responding",
+                                    Notification.Type.ERROR_MESSAGE);
+                            notif.setHtmlContentAllowed(true);
+                            notif.show(AdminUI.getInstance().getPage());
+                            
+                            // shutdown in separate thread
+                            new Timer().schedule(new TimerTask() {
+                                public void run()
+                                {
+                                    SensorHub.getInstance().stop(false, true);
+                                    System.exit(0);
+                                }
+                            }, 1000);
+                        }
+                    }                        
+                });
+                
+                addWindow(popup);
             }
         });
         toolbar.addComponent(shutdownButton);
@@ -364,49 +375,71 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener
         restartButton.addStyleName(UIConstants.STYLE_SMALL);
         restartButton.setWidth(100.0f, Unit.PERCENTAGE);
         restartButton.addClickListener(new Button.ClickListener() {
-            private static final long serialVersionUID = 1L;
             public void buttonClick(ClickEvent event)
             {
-                SensorHub.getInstance().getModuleRegistry().unregisterListener(AdminUI.this);
-                
-                Notification notif = new Notification(
-                        FontAwesome.WARNING.getHtml() + "&nbsp; Restart Initiated...",
-                        "UI will stop responding",
-                        Notification.Type.ERROR_MESSAGE);
-                notif.setHtmlContentAllowed(true);
-                notif.show(AdminUI.getInstance().getPage());
-                
-                // shutdown in separate thread
-                new Timer().schedule(new TimerTask() {
-                    public void run()
+                final ConfirmDialog popup = new ConfirmDialog("Are you sure you want to restart the sensor hub?");
+                popup.addCloseListener(new CloseListener() {
+                    @Override
+                    public void windowClose(CloseEvent e)
                     {
-                        SensorHub.getInstance().stop(false, true);
-                        System.exit(10); // return code 10 means restart
-                    }
-                }, 1000);
+                        if (popup.isConfirmed())
+                        {                    
+                            SensorHub.getInstance().getModuleRegistry().unregisterListener(AdminUI.this);
+                            
+                            Notification notif = new Notification(
+                                    FontAwesome.WARNING.getHtml() + "&nbsp; Restart Initiated...",
+                                    "UI will stop responding",
+                                    Notification.Type.ERROR_MESSAGE);
+                            notif.setHtmlContentAllowed(true);
+                            notif.show(AdminUI.getInstance().getPage());
+                            
+                            // shutdown in separate thread
+                            new Timer().schedule(new TimerTask() {
+                                public void run()
+                                {
+                                    SensorHub.getInstance().stop(false, true);
+                                    System.exit(10); // return code 10 means restart
+                                }
+                            }, 1000);
+                        }
+                    }                        
+                });
+                
+                addWindow(popup);
             }
         });
         toolbar.addComponent(restartButton);
         
         // apply changes button
-        Button saveButton = new Button("Save Config");
-        saveButton.setDescription("Save Config");
+        Button saveButton = new Button("Save");
+        saveButton.setDescription("Save SensorHub Configuration");
         saveButton.setIcon(UIConstants.APPLY_ICON);
         saveButton.addStyleName(UIConstants.STYLE_SMALL);
         saveButton.setWidth(100.0f, Unit.PERCENTAGE);
         saveButton.addClickListener(new Button.ClickListener() {
-            private static final long serialVersionUID = 1L;
             public void buttonClick(ClickEvent event)
             {
-                try
-                {
-                    SensorHub.getInstance().getModuleRegistry().saveModulesConfiguration();
-                    DisplayUtils.showOperationSuccessful("SensorHub Configuration Saved");
-                }
-                catch (Exception e)
-                {
-                    Notification.show("Error", e.getMessage(), Notification.Type.ERROR_MESSAGE);
-                }
+                final ConfirmDialog popup = new ConfirmDialog("Are you sure you want to save the configuration (and override the previous one)?");
+                popup.addCloseListener(new CloseListener() {
+                    @Override
+                    public void windowClose(CloseEvent e)
+                    {
+                        if (popup.isConfirmed())
+                        {                    
+                            try
+                            {
+                                SensorHub.getInstance().getModuleRegistry().saveModulesConfiguration();
+                                DisplayUtils.showOperationSuccessful("SensorHub Configuration Saved");
+                            }
+                            catch (Exception ex)
+                            {
+                                Notification.show("Error", ex.getMessage(), Notification.Type.ERROR_MESSAGE);
+                            }
+                        }
+                    }                        
+                });
+                
+                addWindow(popup);
             }
         });
         toolbar.addComponent(saveButton);
@@ -698,7 +731,6 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener
                         });                    
                         
                         addWindow(popup);
-                                           
                     }
                     else if (action == START_MODULE_ACTION)
                     {
