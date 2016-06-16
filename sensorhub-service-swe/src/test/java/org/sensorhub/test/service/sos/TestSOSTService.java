@@ -15,7 +15,6 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 package org.sensorhub.test.service.sos;
 
 import static org.junit.Assert.*;
-import java.io.File;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
@@ -32,8 +31,8 @@ import org.junit.Test;
 import org.sensorhub.api.module.IModule;
 import org.sensorhub.api.sensor.SensorConfig;
 import org.sensorhub.impl.SensorHub;
-import org.sensorhub.impl.SensorHubConfig;
 import org.sensorhub.impl.module.ModuleRegistry;
+import org.sensorhub.impl.service.HttpServer;
 import org.sensorhub.impl.service.HttpServerConfig;
 import org.sensorhub.impl.service.ogc.OGCServiceConfig.CapabilitiesInfo;
 import org.sensorhub.impl.service.sos.SOSProviderConfig;
@@ -72,27 +71,23 @@ public class TestSOSTService
     static final int SERVER_PORT = 8888;
     private static String SERVICE_ENDPOINT = "/sos";
     private static String SENSOR_UID = "urn:mycompany:mysensor:0001";
-    File configFile;
+    ModuleRegistry registry;
     
     
     protected void setupFramework() throws Exception
     {
-        // init sensorhub
-        configFile = new File("junit-test.json");
-        configFile.deleteOnExit();
-        SensorHub.createInstance(new SensorHubConfig(configFile.getAbsolutePath(), configFile.getParent()));
+        // get instance with in-memory DB
+        registry = SensorHub.getInstance().getModuleRegistry();
         
         // start HTTP server
         HttpServerConfig httpConfig = new HttpServerConfig();
         httpConfig.httpPort = SERVER_PORT;
-        SensorHub.getInstance().getModuleRegistry().loadModule(httpConfig);
+        registry.loadModule(httpConfig);
     }
     
     
     protected SOSService deployService(SOSProviderConfig... providerConfigs) throws Exception
     {   
-        ModuleRegistry registry = SensorHub.getInstance().getModuleRegistry();
-                
         // create service config
         SOSServiceConfig serviceCfg = new SOSServiceConfig();
         serviceCfg.moduleClass = SOSService.class.getCanonicalName();
@@ -113,7 +108,7 @@ public class TestSOSTService
         
         // load module into registry
         SOSService sos = (SOSService)registry.loadModule(serviceCfg);
-        SensorHub.getInstance().getModuleRegistry().saveModulesConfiguration();
+        registry.saveModulesConfiguration();
         return sos;
     }
     
@@ -376,18 +371,10 @@ public class TestSOSTService
     {
         try
         {           
-            // also make sure we cleanup all modules to remove all generated files
-            ModuleRegistry registry = SensorHub.getInstance().getModuleRegistry();
-            for (IModule<?> module: registry.getLoadedModules()) 
-            {
-                module.stop();
-                module.cleanup();
-            }
-            registry.shutdown(false, false);
+            if (registry != null)
+                registry.shutdown(false, false);
+            HttpServer.getInstance().cleanup();
             SensorHub.clearInstance();
-            
-            if (configFile != null)
-                configFile.delete();
         }
         catch (Exception e)
         {

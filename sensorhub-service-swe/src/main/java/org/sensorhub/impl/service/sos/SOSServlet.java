@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -153,6 +154,7 @@ public class SOSServlet extends org.vast.ows.sos.SOSServlet
     SOSServiceConfig config;
     Logger log;
     String endpointUrl;
+    ReentrantReadWriteLock capabilitiesLock = new ReentrantReadWriteLock();
     SOSServiceCapabilities capabilities;
     Map<String, SOSOfferingCapabilities> offeringCaps;
     Map<String, String> procedureToOfferingMap;
@@ -285,7 +287,11 @@ public class SOSServlet extends org.vast.ows.sos.SOSServlet
                     // instantiate provider factories and map them to offering URIs
                     ISOSDataProviderFactory provider = providerConf.getFactory(this);
                     dataProviders.put(providerConf.uri, provider);
-                    if (provider.isEnabled())
+                    
+                    // create offering only if not already done when registering
+                    // the provider factory listener (if data source was in STARTED
+                    // state it can automatically trigger a call to showProviderCaps).
+                    if (!offeringCaps.containsKey(providerConf.uri) && provider.isEnabled())
                         showProviderCaps(provider);
                 }
                 catch (Exception e)
@@ -318,9 +324,10 @@ public class SOSServlet extends org.vast.ows.sos.SOSServlet
     protected void showProviderCaps(ISOSDataProviderFactory provider)
     {
         SOSProviderConfig config = provider.getConfig();
-        
+                
         try
         {
+            capabilitiesLock.writeLock().lock();
             // add offering metadata to capabilities
             SOSOfferingCapabilities offCaps = provider.generateCapabilities();
             String procedureID = offCaps.getMainProcedure();
@@ -352,6 +359,10 @@ public class SOSServlet extends org.vast.ows.sos.SOSServlet
         {
             log.error("Error while generating offering " + config.uri, e);
         }
+        finally
+        {
+            capabilitiesLock.writeLock().unlock();
+        }
     }
     
     
@@ -359,20 +370,29 @@ public class SOSServlet extends org.vast.ows.sos.SOSServlet
     {
         SOSProviderConfig config = provider.getConfig();
         
-        // stop here if provider is not advertised
-        if (!offeringCaps.containsKey(config.uri))
-            return;
-        
-        // remove offering from capabilities
-        SOSOfferingCapabilities offCaps = offeringCaps.remove(config.uri);
-        capabilities.getLayers().remove(offCaps);
-        
-        // remove from procedure map
-        String procedureID = offCaps.getMainProcedure();
-        procedureToOfferingMap.remove(procedureID);
-        
-        if (log.isDebugEnabled())
-            log.debug("Offering " + "\"" + offCaps.getIdentifier() + "\" removed for procedure " + procedureID);
+        try
+        {
+            capabilitiesLock.writeLock().lock();
+            
+            // stop here if provider is not advertised
+            if (!offeringCaps.containsKey(config.uri))
+                return;
+            
+            // remove offering from capabilities
+            SOSOfferingCapabilities offCaps = offeringCaps.remove(config.uri);
+            capabilities.getLayers().remove(offCaps);
+            
+            // remove from procedure map
+            String procedureID = offCaps.getMainProcedure();
+            procedureToOfferingMap.remove(procedureID);
+            
+            if (log.isDebugEnabled())
+                log.debug("Offering " + "\"" + offCaps.getIdentifier() + "\" removed for procedure " + procedureID);
+        }
+        finally
+        {
+            capabilitiesLock.writeLock().unlock();
+        }
     }
     
     
@@ -469,24 +489,34 @@ public class SOSServlet extends org.vast.ows.sos.SOSServlet
         // set selected version
         request.setVersion(DEFAULT_VERSION);
         
-        // update operation URLs
-        if (endpointUrl == null)
+        // make sure capabilities are up to date
+        try
         {
-            endpointUrl = request.getHttpRequest().getRequestURL().toString();
-            for (Entry<String, String> op: capabilities.getGetServers().entrySet())
-                capabilities.getGetServers().put(op.getKey(), endpointUrl);
-            for (Entry<String, String> op: capabilities.getPostServers().entrySet())
-                capabilities.getPostServers().put(op.getKey(), endpointUrl);
+            capabilitiesLock.writeLock().lock();
+            
+            // update operation URLs
+            if (endpointUrl == null)
+            {
+                endpointUrl = request.getHttpRequest().getRequestURL().toString();
+                for (Entry<String, String> op: capabilities.getGetServers().entrySet())
+                    capabilities.getGetServers().put(op.getKey(), endpointUrl);
+                for (Entry<String, String> op: capabilities.getPostServers().entrySet())
+                    capabilities.getPostServers().put(op.getKey(), endpointUrl);
+            }
+            
+            // ask providers to refresh their capabilities if needed.
+            // we do that here so capabilities doc contains the most up-to-date info.
+            // we don't always do it when changes occur because high frequency changes 
+            // would trigger too many updates (e.g. new measurements changing time periods)
+            for (ISOSDataProviderFactory provider: dataProviders.values())
+            {
+                if (provider.isEnabled())
+                    ((ISOSDataProviderFactory)provider).updateCapabilities();
+            }
         }
-        
-        // ask providers to refresh their capabilities if needed.
-        // we do that here so capabilities doc contains the most up-to-date info.
-        // we don't always do it when changes occur because high frequency changes 
-        // would trigger too many updates (e.g. new measurements changing time periods)
-        for (ISOSDataProviderFactory provider: dataProviders.values())
+        finally
         {
-            if (provider.isEnabled())
-                ((ISOSDataProviderFactory)provider).updateCapabilities();
+            capabilitiesLock.writeLock().unlock();
         }
         
         sendResponse(request, capabilities);
@@ -1004,14 +1034,14 @@ public class SOSServlet extends org.vast.ows.sos.SOSServlet
                 throw new SOSException(SOSException.missing_param_code, "identifier", null, "Missing unique identifier in SensorML description");
                         
             // add new offering, provider and virtual sensor if sensor is not already registered
-            String offering = procedureToOfferingMap.get(sensorUID);
-            if (offering == null)
+            String offeringID = procedureToOfferingMap.get(sensorUID);
+            if (offeringID == null)
             {
                 ModuleRegistry moduleReg = SensorHub.getInstance().getModuleRegistry();
                 ArrayList<ModuleConfig> configSaveList = new ArrayList<ModuleConfig>(3);
                 configSaveList.add(this.config); 
                 
-                offering = sensorUID + "-sos";
+                offeringID = sensorUID + "-sos";
                 String sensorName = request.getProcedureDescription().getName();
                 if (sensorName == null)
                     sensorName = request.getProcedureDescription().getId();
@@ -1036,12 +1066,12 @@ public class SOSServlet extends org.vast.ows.sos.SOSServlet
                 SensorDataProviderConfig providerConfig = new SensorDataProviderConfig();
                 providerConfig.enabled = true;
                 providerConfig.sensorID = sensorUID;
-                providerConfig.uri = offering;
+                providerConfig.uri = offeringID;
                 config.dataProviders.add(providerConfig);
                 
                 SensorConsumerConfig consumerConfig = new SensorConsumerConfig();
                 consumerConfig.enabled = true;
-                consumerConfig.offering = offering;
+                consumerConfig.offering = offeringID;
                 consumerConfig.sensorID = sensorUID;
                 config.dataConsumers.add(consumerConfig);
                 
@@ -1080,19 +1110,19 @@ public class SOSServlet extends org.vast.ows.sos.SOSServlet
                     moduleReg.saveConfiguration(configSaveList.toArray(new ModuleConfig[0]));
                 }
                 
-                // instantiate provider and consumer instances
+                // instantiate and register provider
                 ISOSDataProviderFactory provider = providerConfig.getFactory(this);
+                dataProviders.put(offeringID, provider);
+                
+                // instantiate and register consumer
                 ISOSDataConsumer consumer = consumerConfig.getConsumerInstance();
+                dataConsumers.put(offeringID, consumer);
                 
-                // register provider and consumer
-                dataProviders.put(offering, provider);
-                dataConsumers.put(offering, consumer);
-                
-                // create new offering
-                SOSOfferingCapabilities offCaps = provider.generateCapabilities();
-                capabilities.getLayers().add(offCaps);
-                offeringCaps.put(offCaps.getIdentifier(), offCaps);
-                procedureToOfferingMap.put(sensorUID, offering);
+                // create offering only if not already done when registering
+                // the provider factory listener (if data source was in STARTED
+                // state it can automatically trigger a call to showProviderCaps).
+                if (!offeringCaps.containsKey(offeringID))
+                    showProviderCaps(provider);
             }
             else
             {
@@ -1103,7 +1133,7 @@ public class SOSServlet extends org.vast.ows.sos.SOSServlet
             
             // build and send response
             InsertSensorResponse resp = new InsertSensorResponse();
-            resp.setAssignedOffering(offering);
+            resp.setAssignedOffering(offeringID);
             resp.setAssignedProcedureId(sensorUID);
             sendResponse(request, resp);
         }
@@ -1418,10 +1448,19 @@ public class SOSServlet extends org.vast.ows.sos.SOSServlet
 
     protected void checkQueryOfferings(List<String> offerings, OWSExceptionReport report) throws SOSException
     {
-        for (String offering: offerings)
+        try
         {
-            if (!offeringCaps.containsKey(offering))
-                report.add(new SOSException(SOSException.invalid_param_code, "offering", offering, "Offering " + offering + " is not available on this server"));
+            capabilitiesLock.readLock().lock();
+            
+            for (String offering: offerings)
+            {
+                if (!offeringCaps.containsKey(offering))
+                    report.add(new SOSException(SOSException.invalid_param_code, "offering", offering, "Offering " + offering + " is not available on this server"));
+            }
+        }
+        finally
+        {
+            capabilitiesLock.readLock().unlock();
         }   
     }
     
@@ -1563,17 +1602,6 @@ public class SOSServlet extends org.vast.ows.sos.SOSServlet
     }
     
     
-    protected SOSOfferingCapabilities checkAndGetOffering(String offeringID) throws SOSException
-    {
-        SOSOfferingCapabilities offCaps = offeringCaps.get(offeringID);
-        
-        if (offCaps == null)
-            throw new SOSException(SOSException.invalid_param_code, "offering", offeringID, null);
-        
-        return offCaps;
-    }
-    
-    
     protected void checkSensorML(AbstractProcess smlProcess, OWSExceptionReport report) throws Exception
     {
         String sensorUID = smlProcess.getUniqueIdentifier();
@@ -1589,64 +1617,134 @@ public class SOSServlet extends org.vast.ows.sos.SOSServlet
     }
     
     
+    protected SOSOfferingCapabilities checkAndGetOffering(String offeringID) throws SOSException
+    {
+        try
+        {
+            capabilitiesLock.readLock().lock();
+            SOSOfferingCapabilities offCaps = offeringCaps.get(offeringID);
+            
+            if (offCaps == null)
+                throw new SOSException(SOSException.invalid_param_code, "offering", offeringID, null);
+            
+            return offCaps;
+        }
+        finally
+        {
+            capabilitiesLock.readLock().unlock();
+        }
+    }
+    
+    
     protected ISOSDataProvider getDataProvider(String offering, SOSDataFilter filter) throws Exception
     {
-        checkAndGetOffering(offering);
-        ISOSDataProviderFactory factory = dataProviders.get(offering);
-        if (factory == null)
-            throw new IllegalStateException("No valid data provider factory found for offering " + offering);
-        return factory.getNewDataProvider(filter);
+        try
+        {
+            capabilitiesLock.readLock().lock();
+            
+            checkAndGetOffering(offering);
+            ISOSDataProviderFactory factory = dataProviders.get(offering);
+            if (factory == null)
+                throw new IllegalStateException("No valid data provider factory found for offering " + offering);
+            return factory.getNewDataProvider(filter);
+        }
+        finally
+        {
+            capabilitiesLock.readLock().unlock();
+        }
     }
     
     
     protected ISOSDataProviderFactory getDataProviderFactoryByOfferingID(String offering) throws Exception
     {
-        ISOSDataProviderFactory factory = dataProviders.get(offering);
-        if (factory == null)
-            throw new IllegalStateException("No valid data provider factory found for offering " + offering);
-        return (ISOSDataProviderFactory)factory;
+        try
+        {
+            capabilitiesLock.readLock().lock();
+            
+            ISOSDataProviderFactory factory = dataProviders.get(offering);
+            if (factory == null)
+                throw new IllegalStateException("No valid data provider factory found for offering " + offering);
+            return (ISOSDataProviderFactory)factory;
+        }
+        finally
+        {
+            capabilitiesLock.readLock().unlock();
+        }
     }
     
     
     protected ISOSDataProviderFactory getDataProviderFactoryBySensorID(String sensorID) throws Exception
     {
-        String offering = procedureToOfferingMap.get(sensorID);
-        return getDataProviderFactoryByOfferingID(offering);
+        try
+        {
+            capabilitiesLock.readLock().lock();            
+            String offering = procedureToOfferingMap.get(sensorID);
+            return getDataProviderFactoryByOfferingID(offering);
+        }
+        finally
+        {
+            capabilitiesLock.readLock().unlock();
+        }
     }
     
     
     protected ISOSDataConsumer getDataConsumerByOfferingID(String offering) throws Exception
     {
-        checkAndGetOffering(offering);
-        ISOSDataConsumer consumer = dataConsumers.get(offering);
-        
-        if (consumer == null)
-            throw new SOSException(SOSException.invalid_param_code, "offering", offering, "Transactional operations are not supported for offering " + offering);
+        try
+        {
+            capabilitiesLock.readLock().lock();
             
-        return consumer;
+            checkAndGetOffering(offering);
+            ISOSDataConsumer consumer = dataConsumers.get(offering);
+            
+            if (consumer == null)
+                throw new SOSException(SOSException.invalid_param_code, "offering", offering, "Transactional operations are not supported for offering " + offering);
+                
+            return consumer;
+        }
+        finally
+        {
+            capabilitiesLock.readLock().unlock();
+        }
     }
     
     
     protected ISOSDataConsumer getDataConsumerBySensorID(String sensorID) throws Exception
     {
-        String offering = procedureToOfferingMap.get(sensorID);
-        
-        if (offering == null)
-            throw new SOSException(SOSException.invalid_param_code, "procedure", sensorID, "Transactional operations are not supported for sensor " + sensorID);
-        
-        return getDataConsumerByOfferingID(offering);
+        try
+        {
+            capabilitiesLock.readLock().lock();
+            
+            String offering = procedureToOfferingMap.get(sensorID);
+            if (offering == null)
+                throw new SOSException(SOSException.invalid_param_code, "procedure", sensorID, "Transactional operations are not supported for sensor " + sensorID);
+            
+            return getDataConsumerByOfferingID(offering);
+        }
+        finally
+        {
+            capabilitiesLock.readLock().unlock();
+        }
     }
     
     
     protected ISOSDataConsumer getDataConsumerByTemplateID(String templateID) throws Exception
     {
-        String offering = templateToOfferingMap.get(templateID);
-        ISOSDataConsumer consumer = dataConsumers.get(offering);
-        
-        if (consumer == null)
-            throw new SOSException(SOSException.invalid_param_code, "template", templateID, "Invalid template ID");
-        
-        return consumer;
+        try
+        {
+            capabilitiesLock.readLock().lock();
+            
+            String offering = templateToOfferingMap.get(templateID);
+            ISOSDataConsumer consumer = dataConsumers.get(offering);
+            if (consumer == null)
+                throw new SOSException(SOSException.invalid_param_code, "template", templateID, "Invalid template ID");
+            
+            return consumer;
+        }
+        finally
+        {
+            capabilitiesLock.readLock().unlock();
+        }
     }
     
     
