@@ -41,15 +41,14 @@ import org.sensorhub.utils.FileUtils;
  */
 public class DefaultModuleStateManager implements IModuleStateManager
 {
-    private static final String mainFolder = "modules";
     private static final String stateFileName = "state.txt";
     File folder;
     Properties stateProps;
     
     
-    public DefaultModuleStateManager(String localID)
+    public DefaultModuleStateManager(String moduleDataPath, String localID)
     {
-        folder = new File(mainFolder, FileUtils.safeFileName(localID));
+        folder = new File(moduleDataPath, FileUtils.safeFileName(localID));
         
         try
         {

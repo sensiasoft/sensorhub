@@ -127,7 +127,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
     /**
      * Instantiates and loads a module using the given configuration<br/>
      * This method is synchronous so it will block until the module is actually loaded,
-     * and it will also wait for it to be started if 'autostart' was requested.
+     * (and started if 'autostart' was true), the timeout occurs or an exception is thrown
      * @param config Configuration class to use to instantiate the module
      * @param timeOut Maximum time to wait for load and startup to complete (or <= 0 to wait forever)
      * @return loaded module instance
@@ -656,7 +656,9 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
                 {
                     try
                     {                   
-                        module.saveState(getStateManager(module.getLocalID()));
+                        IModuleStateManager stateManager = getStateManager(module.getLocalID());
+                        if (stateManager != null)
+                            module.saveState(stateManager);
                     }
                     catch (Exception ex)
                     {
@@ -745,9 +747,18 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
     }
     
     
+    /**
+     * Returns the default state manager for the given module
+     * @param moduleID
+     * @return the state manager or null if no module data folder is specified in config
+     */
     public IModuleStateManager getStateManager(String moduleID)
     {
-        return new DefaultModuleStateManager(moduleID);
+        String moduleDataPath = SensorHub.getInstance().getConfig().getModuleDataPath();
+        if (moduleDataPath != null)
+            return new DefaultModuleStateManager(moduleDataPath, moduleID);
+        else
+            return null;
     }
     
     
@@ -798,24 +809,16 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
                     switch (((ModuleEvent) e).getNewState())
                     {
                         case INITIALIZING:
-                            log.trace("Initializing module " + moduleString);
+                            log.debug("Initializing module " + moduleString);
                             break;
                             
                         case INITIALIZED:
-                            log.trace("Module " + moduleString + " initialized");
-                            try
-                            {
-                                if (!shutdownCalled && module.getConfiguration().autoStart)
-                                    startModuleAsync(module);
-                            }
-                            catch (SensorHubException ex)
-                            {
-                                log.error("Cannot auto-start module " + moduleString, ex);
-                            }
+                            log.info("Module " + moduleString + " initialized");
+                            postInit(module);
                             break;
                             
                         case STARTING:
-                            log.trace("Starting module " + moduleString);
+                            log.debug("Starting module " + moduleString);
                             break;
                             
                         case STARTED:
@@ -823,7 +826,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
                             break;
                             
                         case STOPPING:
-                            log.trace("Stopping module " + moduleString);
+                            log.debug("Stopping module " + moduleString);
                             break;
                             
                         case STOPPED:
@@ -846,6 +849,36 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
             // forward all lifecycle events from modules loaded by this registry
             eventHandler.publishEvent(e);
         }
+    }
+    
+    
+    protected void postInit(IModule<?> module)
+    {
+        String moduleString = MsgUtils.moduleString(module);
+        
+        // load module state
+        try
+        {
+            IModuleStateManager stateManager = getStateManager(module.getLocalID());
+            if (stateManager != null)
+                module.loadState(stateManager);
+        }
+        catch (SensorHubException e)
+        {
+            log.error("Cannot load state of module " + moduleString, e);
+        }
+        
+        // also initiate startup if auto start was true
+        try
+        {
+            if (!shutdownCalled && module.getConfiguration().autoStart)
+                startModuleAsync(module);
+        }
+        catch (SensorHubException e)
+        {
+            log.error("Cannot auto-start module " + moduleString, e);
+        }
+        
     }
 
 }

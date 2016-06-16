@@ -225,13 +225,15 @@ public class SensorSystem extends AbstractSensorModule<SensorSystemConfig>
         for (ISensorModule<?> sensor: sensors.values())
         {
             loader = reg.getStateManager(sensor.getLocalID());
-            sensor.loadState(loader);
+            if (loader != null)
+                sensor.loadState(loader);
         }
         
         for (IProcessModule<?> process: processes.values())
         {
             loader = reg.getStateManager(process.getLocalID());
-            process.loadState(loader);
+            if (loader != null)
+                process.loadState(loader);
         }
     }
 
