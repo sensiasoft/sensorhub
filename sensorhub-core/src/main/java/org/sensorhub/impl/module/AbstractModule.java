@@ -201,7 +201,7 @@ public abstract class AbstractModule<ConfigType extends ModuleConfig> implements
     
     
     /**
-     * Sets the module error state
+     * Sets the module error state and sends corresponding event
      * @param msg
      * @param error 
      */
@@ -216,23 +216,26 @@ public abstract class AbstractModule<ConfigType extends ModuleConfig> implements
                 else
                     this.lastError = error;
                 
-                if (error != null)
+                stateLock.notifyAll();
+                
+                if (eventHandler != null)
                 {
-                    stateLock.notifyAll();
-                    
-                    if (eventHandler != null)
-                    {
-                        ModuleEvent event = new ModuleEvent(this, this.lastError);               
-                        eventHandler.publishEvent(event);
-                    }
-                    
-                    getLogger().error(msg, error);
+                    ModuleEvent event = new ModuleEvent(this, this.lastError);               
+                    eventHandler.publishEvent(event);
                 }
+                
+                if (msg != null)
+                    getLogger().error(msg, error);
+                else
+                    getLogger().error("Error", error);
             }
         }
     }
     
     
+    /**
+     * Clears last error
+     */
     public void clearError()
     {
         synchronized (stateLock)
@@ -250,16 +253,26 @@ public abstract class AbstractModule<ConfigType extends ModuleConfig> implements
     
     
     /**
-     * Sets the module status message
+     * Sets the module status message and sends corresponding event
      * @param msg
      */
     public void reportStatus(String msg)
     {
         this.statusMsg = msg;
+        
+        if (eventHandler != null)
+        {
+            ModuleEvent event = new ModuleEvent(this, this.statusMsg);               
+            eventHandler.publishEvent(event);
+        }
+        
         getLogger().info(msg);
     }
     
     
+    /**
+     * Clears the current status message
+     */
     public void clearStatus()
     {
         this.statusMsg = null;

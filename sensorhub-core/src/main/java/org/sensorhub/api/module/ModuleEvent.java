@@ -55,6 +55,11 @@ public class ModuleEvent extends Event<Type>
         DELETED,
         
         /**
+         * when a new status message is published
+         */
+        STATUS,
+        
+        /**
          * when an error occurs during asynchronous module execution
          */
         ERROR
@@ -69,7 +74,7 @@ public class ModuleEvent extends Event<Type>
         LOADED,
         
         /**
-         * when asynchronous processing goes on during init
+         * when module asynchronous init has been requested
          */
         INITIALIZING,
         
@@ -79,7 +84,7 @@ public class ModuleEvent extends Event<Type>
         INITIALIZED,
         
         /**
-         * when module start is requested
+         * when module asynchronous start has been requested
          */
         STARTING,
         
@@ -89,26 +94,20 @@ public class ModuleEvent extends Event<Type>
         STARTED,
         
         /**
-         * when module stop is requested asynchronously
+         * when module asynchronous stop has been requested
          */
         STOPPING,
         
         /**
-         * after module was stopped
+         * after module was successfully stopped
          */
         STOPPED;
-        
-        private Throwable error;
-        
-        public Throwable getError() 
-        {
-            return error;
-        }
     }
     
     
     protected ModuleState newState;
     protected Throwable error;
+    protected String msg;
     
     
     public ModuleEvent(IModule<?> module, Type type)
@@ -135,6 +134,13 @@ public class ModuleEvent extends Event<Type>
     {
         this(module, Type.ERROR);
         this.error = error;
+    }
+    
+    
+    public ModuleEvent(IModule<?> module, String msg)
+    {
+        this(module, Type.STATUS);
+        this.msg = msg;
     }
     
     
