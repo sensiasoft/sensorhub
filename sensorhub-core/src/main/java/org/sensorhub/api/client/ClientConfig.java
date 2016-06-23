@@ -12,7 +12,7 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
  
 ******************************* END LICENSE BLOCK ***************************/
 
-package org.sensorhub.api.service;
+package org.sensorhub.api.client;
 
 import org.sensorhub.api.config.DisplayInfo;
 import org.sensorhub.api.module.ModuleConfig;
@@ -30,14 +30,13 @@ public class ClientConfig extends ModuleConfig
 {
 
     @DisplayInfo(label="Connection Timeout", desc="For each reconnection attempt, client will wait for the remote service to respond until this timeout expires (in ms)")
-    public int connectTimeout = 1000;
+    public int connectTimeout = 3000;
     
     
     @DisplayInfo(label="Reconnection Period", desc="Period at which client will attempt to reconnect when the connection is not available or lost (in ms)")
     public int reconnectPeriod = 2000;
     
     
-    @DisplayInfo(label="Reconnection Timeout", desc="In case the connection is not available or lost, client will attempt to reconnect until this timeout expires (in s)."
-                     + "If set to 0, the client will never attempt to reconnect")
-    public int reconnectTimeout = 0;
+    @DisplayInfo(label="Reconnection Attempts", desc="Maximum number of times the client will attempt to reconnect when the connection is not available or lost")
+    public int reconnectAttempts = 1;
 }

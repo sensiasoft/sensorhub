@@ -17,8 +17,6 @@ package org.sensorhub.test.service.sos;
 import static org.junit.Assert.*;
 import java.io.InputStream;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
 import net.opengis.sensorml.v20.PhysicalSystem;
 import net.opengis.swe.v20.DataRecord;
 import net.opengis.swe.v20.DataStream;
@@ -27,20 +25,12 @@ import net.opengis.swe.v20.Time;
 import net.opengis.swe.v20.Vector;
 import org.apache.commons.io.IOUtils;
 import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
-import org.sensorhub.api.module.IModule;
-import org.sensorhub.api.sensor.SensorConfig;
-import org.sensorhub.impl.SensorHub;
 import org.sensorhub.impl.module.ModuleRegistry;
-import org.sensorhub.impl.service.HttpServer;
-import org.sensorhub.impl.service.HttpServerConfig;
-import org.sensorhub.impl.service.ogc.OGCServiceConfig.CapabilitiesInfo;
 import org.sensorhub.impl.service.sos.SOSProviderConfig;
 import org.sensorhub.impl.service.sos.SOSService;
-import org.sensorhub.impl.service.sos.SOSServiceConfig;
 import org.sensorhub.impl.service.sos.SensorDataProviderConfig;
-import org.sensorhub.test.sensor.FakeSensor;
-import org.sensorhub.test.sensor.FakeSensorData;
 import org.vast.data.DataList;
 import org.vast.data.DataRecordImpl;
 import org.vast.data.QuantityImpl;
@@ -68,77 +58,34 @@ import org.vast.util.TimeExtent;
 
 public class TestSOSTService
 {
-    static final int SERVER_PORT = 8888;
-    private static String SERVICE_ENDPOINT = "/sos";
-    private static String SENSOR_UID = "urn:mycompany:mysensor:0001";
+    private static String SENSOR_UID = "urn:test:newsensor:0001";    
+    TestSOSService sosTest;
     ModuleRegistry registry;
     
     
-    protected void setupFramework() throws Exception
+    @Before
+    public void setup() throws Exception
     {
-        // get instance with in-memory DB
-        registry = SensorHub.getInstance().getModuleRegistry();
-        
-        // start HTTP server
-        HttpServerConfig httpConfig = new HttpServerConfig();
-        httpConfig.httpPort = SERVER_PORT;
-        registry.loadModule(httpConfig);
+        sosTest = new TestSOSService();
+        sosTest.setup();
     }
     
     
     protected SOSService deployService(SOSProviderConfig... providerConfigs) throws Exception
     {   
-        // create service config
-        SOSServiceConfig serviceCfg = new SOSServiceConfig();
-        serviceCfg.moduleClass = SOSService.class.getCanonicalName();
-        serviceCfg.endPoint = SERVICE_ENDPOINT;
-        serviceCfg.autoStart = true;
-        serviceCfg.name = "SOS";
-        serviceCfg.enableTransactional = true;
-        CapabilitiesInfo srvcMetadata = serviceCfg.ogcCapabilitiesInfo;
-        srvcMetadata.title = "My SOS Service";
-        srvcMetadata.description = "An SOS service automatically deployed by SensorHub";
-        srvcMetadata.serviceProvider.setOrganizationName("Test Provider, Inc.");
-        srvcMetadata.serviceProvider.setDeliveryPoint("15 MyStreet");
-        srvcMetadata.serviceProvider.setCity("MyCity");
-        srvcMetadata.serviceProvider.setCountry("MyCountry");
-        serviceCfg.dataProviders = new ArrayList<SOSProviderConfig>(Arrays.asList(providerConfigs));
-        srvcMetadata.fees = "NONE";
-        srvcMetadata.accessConstraints = "NONE";
-        
-        // load module into registry
-        SOSService sos = (SOSService)registry.loadModule(serviceCfg);
-        registry.saveModulesConfiguration();
-        return sos;
+        return sosTest.deployService(true, providerConfigs);
     }
     
     
     protected SensorDataProviderConfig buildSensorProvider1() throws Exception
     {
-        // create test sensor
-        SensorConfig sensorCfg = new SensorConfig();
-        sensorCfg.autoStart = true;
-        sensorCfg.moduleClass = FakeSensor.class.getCanonicalName();
-        sensorCfg.name = "Sensor1";
-        IModule<?> sensor = SensorHub.getInstance().getModuleRegistry().loadModule(sensorCfg);
-        String outputName = "out1";
-        ((FakeSensor)sensor).setDataInterfaces(new FakeSensorData((FakeSensor)sensor, outputName));
-        
-        // create SOS data provider config
-        SensorDataProviderConfig provCfg = new SensorDataProviderConfig();
-        provCfg.enabled = true;
-        provCfg.name = "SOS Sensor Provider #1";
-        provCfg.uri = "urn:mysos:sensor1";
-        provCfg.sensorID = sensor.getLocalID();
-        //provCfg.hiddenOutputs;
-        
-        return provCfg;
+        return sosTest.buildSensorProvider1();
     }
     
     
     protected String getSosEndpointUrl()
     {
-        return "http://localhost:" + SERVER_PORT + "/sensorhub" + SERVICE_ENDPOINT;
+        return TestSOSService.HTTP_ENDPOINT;
     }
     
     
@@ -220,11 +167,27 @@ public class TestSOSTService
     }
     
     
+    protected SOSOfferingCapabilities getCapabilities(int offeringIndex) throws Exception
+    {
+        OWSUtils utils = new OWSUtils();
+        
+        // check capabilities has one more offering
+        GetCapabilitiesRequest getCap = new GetCapabilitiesRequest();
+        getCap.setService(SOSUtils.SOS);
+        getCap.setVersion("2.0");
+        getCap.setGetServer(getSosEndpointUrl());
+        SOSServiceCapabilities caps = (SOSServiceCapabilities)utils.sendRequest(getCap, false);
+        //utils.writeXMLResponse(System.out, caps);
+        assertEquals("No offering added", offeringIndex+1, caps.getLayers().size());
+        
+        return (SOSOfferingCapabilities)caps.getLayers().get(offeringIndex);
+    }
+    
+    
     
     @Test
     public void testSetupService() throws Exception
     {
-        setupFramework();
         deployService(buildSensorProvider1());
     }
     
@@ -232,7 +195,6 @@ public class TestSOSTService
     @Test
     public void testInsertSensor() throws Exception
     {
-        setupFramework();
         deployService(buildSensorProvider1());
         OWSUtils utils = new OWSUtils();
         InsertSensorRequest req = buildInsertSensor();
@@ -249,25 +211,16 @@ public class TestSOSTService
             throw e;
         }
         
-        // check capabilities has one more offering
-        GetCapabilitiesRequest getCap = new GetCapabilitiesRequest();
-        getCap.setService(SOSUtils.SOS);
-        getCap.setVersion("2.0");
-        getCap.setGetServer(getSosEndpointUrl());
-        SOSServiceCapabilities caps = (SOSServiceCapabilities)utils.sendRequest(getCap, false);
-        utils.writeXMLResponse(System.out, caps);
-        assertEquals(2, caps.getLayers().size());
-        
-        // check offering has correct properties
-        SOSOfferingCapabilities newOffering = (SOSOfferingCapabilities)caps.getLayers().get(1);
-        assertEquals(req.getProcedureDescription().getUniqueIdentifier(), newOffering.getProcedures().iterator().next());
+        // check new offering has correct properties
+        SOSOfferingCapabilities newOffering = getCapabilities(1);
+        String procUID = req.getProcedureDescription().getUniqueIdentifier();
+        assertEquals(procUID, newOffering.getProcedures().iterator().next());
     }
 
     
     @Test
     public void testInsertObservation() throws Exception
     {
-        setupFramework();
         deployService(buildSensorProvider1());
         OWSUtils utils = new OWSUtils();
         
@@ -313,7 +266,6 @@ public class TestSOSTService
     @Test
     public void testInsertResultTemplate() throws Exception
     {
-        setupFramework();
         deployService(buildSensorProvider1());
         OWSUtils utils = new OWSUtils();
         
@@ -327,17 +279,10 @@ public class TestSOSTService
         output = (DataStream)req.getProcedureDescription().getOutputList().get(1);
         utils.sendRequest(buildInsertResultTemplate(output, resp), false);
         
-        // get capabilities
-        GetCapabilitiesRequest getCap = new GetCapabilitiesRequest();
-        getCap.setService(SOSUtils.SOS);
-        getCap.setVersion("2.0");
-        getCap.setGetServer(getSosEndpointUrl());
-        SOSServiceCapabilities caps = (SOSServiceCapabilities)utils.sendRequest(getCap, false);
-        utils.writeXMLResponse(System.out, caps);
-        assertEquals(2, caps.getLayers().size());
-        
-        // check offering now has new observed properties
-        SOSOfferingCapabilities newOffering = (SOSOfferingCapabilities)caps.getLayers().get(1);
+        // check new offering has correct properties
+        SOSOfferingCapabilities newOffering = getCapabilities(1);
+        String procUID = req.getProcedureDescription().getUniqueIdentifier();
+        assertEquals(procUID, newOffering.getMainProcedure());
         assertTrue("Observation types missing", newOffering.getObservationTypes().containsAll(req.getObservationTypes()));
         assertTrue("Observed properties missing", newOffering.getObservableProperties().containsAll(req.getObservableProperties()));
         assertTrue("Procedure format missing", newOffering.getProcedureFormats().contains(req.getProcedureDescriptionFormat()));
@@ -369,15 +314,6 @@ public class TestSOSTService
     @After
     public void cleanup()
     {
-        try
-        {           
-            if (registry != null)
-                registry.shutdown(false, false);
-            HttpServer.getInstance().cleanup();
-            SensorHub.clearInstance();
-        }
-        catch (Exception e)
-        {
-        }
+        sosTest.cleanup();
     }
 }

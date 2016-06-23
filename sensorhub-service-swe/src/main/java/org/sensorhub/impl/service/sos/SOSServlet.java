@@ -90,6 +90,7 @@ import org.vast.ogc.gml.GMLStaxBindings;
 import org.vast.ogc.gml.GenericFeature;
 import org.vast.ogc.om.IObservation;
 import org.vast.ogc.om.OMUtils;
+import org.vast.ogc.om.SamplingPoint;
 import org.vast.ows.GetCapabilitiesRequest;
 import org.vast.ows.OWSExceptionReport;
 import org.vast.ows.OWSLayerCapabilities;
@@ -110,6 +111,7 @@ import org.vast.ows.sos.InsertResultTemplateResponse;
 import org.vast.ows.sos.InsertSensorRequest;
 import org.vast.ows.sos.InsertSensorResponse;
 import org.vast.ows.sos.SOSException;
+import org.vast.ows.sos.SOSInsertionCapabilities;
 import org.vast.ows.sos.SOSOfferingCapabilities;
 import org.vast.ows.sos.SOSServiceCapabilities;
 import org.vast.ows.sos.SOSUtils;
@@ -233,8 +235,20 @@ public class SOSServlet extends org.vast.ows.sos.SOSServlet
             capabilities.getPostServers().put("InsertSensor", config.endPoint);
             capabilities.getPostServers().put("DeleteSensor", config.endPoint);
             capabilities.getPostServers().put("InsertObservation", config.endPoint);
+            capabilities.getPostServers().put("InsertResultTemplate", config.endPoint);
             capabilities.getPostServers().put("InsertResult", config.endPoint);
             capabilities.getGetServers().put("InsertResult", config.endPoint);
+            
+            // insertion capabilities
+            SOSInsertionCapabilities insertCaps = new SOSInsertionCapabilities();
+            insertCaps.getProcedureFormats().add(SWESOfferingCapabilities.FORMAT_SML2);
+            insertCaps.getFoiTypes().add(SamplingPoint.TYPE);
+            insertCaps.getObservationTypes().add(IObservation.OBS_TYPE_SCALAR);
+            insertCaps.getObservationTypes().add(IObservation.OBS_TYPE_RECORD);
+            insertCaps.getObservationTypes().add(IObservation.OBS_TYPE_ARRAY);
+            insertCaps.getSupportedEncodings().add(SOSServiceCapabilities.SWE_ENCODING_TEXT);
+            insertCaps.getSupportedEncodings().add(SOSServiceCapabilities.SWE_ENCODING_BINARY);
+            capabilities.setInsertionCapabilities(insertCaps);
         }
         
         // filter capabilities

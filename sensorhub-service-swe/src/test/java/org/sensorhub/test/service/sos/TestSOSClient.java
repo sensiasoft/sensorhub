@@ -27,15 +27,15 @@ import org.vast.util.TimeExtent;
 
 public class TestSOSClient implements SOSRecordListener
 {
-    TestSOSService sos;
+    TestSOSService sosTest;
     int recordCounter = 0;
     
     
     @Before
     public void setup() throws Exception
     {
-        sos = new TestSOSService();
-        sos.setupFramework();
+        sosTest = new TestSOSService();
+        sosTest.setup();
     }
     
     
@@ -53,7 +53,7 @@ public class TestSOSClient implements SOSRecordListener
         SOSClient client = new SOSClient(req, false);
         
         // start service and client
-        sos.testSetupService();
+        sosTest.testSetupService();
         client.retrieveStreamDescription();
         client.startStream(this);
         
@@ -77,7 +77,7 @@ public class TestSOSClient implements SOSRecordListener
         SOSClient client = new SOSClient(req, true);
         
         // start service and client
-        sos.testSetupService();
+        sosTest.testSetupService();
         client.retrieveStreamDescription();
         client.startStream(this);
 
@@ -98,6 +98,6 @@ public class TestSOSClient implements SOSRecordListener
     @After
     public void cleanup()
     {
-        sos.cleanup();
+        sosTest.cleanup();
     }
 }

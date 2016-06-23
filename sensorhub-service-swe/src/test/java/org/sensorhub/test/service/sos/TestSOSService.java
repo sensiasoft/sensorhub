@@ -51,6 +51,7 @@ import org.sensorhub.api.persistence.StorageConfig;
 import org.sensorhub.api.sensor.ISensorModule;
 import org.sensorhub.api.sensor.SensorConfig;
 import org.sensorhub.impl.SensorHub;
+import org.sensorhub.impl.module.ModuleRegistry;
 import org.sensorhub.impl.persistence.InMemoryBasicStorage;
 import org.sensorhub.impl.persistence.StreamStorageConfig;
 import org.sensorhub.impl.persistence.perst.BasicStorageConfig;
@@ -92,18 +93,18 @@ import org.w3c.dom.NodeList;
 public class TestSOSService
 {
     static final long TIMEOUT = 10000;
-    static String NAME_OUTPUT1 = "weatherOut";
-    static String NAME_OUTPUT2 = "imageOut";
-    static String UID_SENSOR1 = "urn:sensors:mysensor:001";
-    static String UID_SENSOR2 = "urn:sensors:mysensor:002";
-    static String URI_OFFERING1 = "urn:mysos:sensor1";
-    static String URI_OFFERING2 = "urn:mysos:sensor2";
-    static String URI_PROP1 = "urn:blabla:weatherData";
-    static String URI_PROP1_FIELD1 = "urn:blabla:temperature";
-    static String URI_PROP1_FIELD2 = "urn:blabla:pressure";
-    static String URI_PROP2 = "urn:blabla:image";
-    static String NAME_OFFERING1 = "SOS Sensor Provider #1";
-    static String NAME_OFFERING2 = "SOS Sensor Provider #2";
+    static final String NAME_OUTPUT1 = "weatherOut";
+    static final String NAME_OUTPUT2 = "imageOut";
+    static final String UID_SENSOR1 = "urn:sensors:mysensor:001";
+    static final String UID_SENSOR2 = "urn:sensors:mysensor:002";
+    static final String URI_OFFERING1 = "urn:mysos:sensor1";
+    static final String URI_OFFERING2 = "urn:mysos:sensor2";
+    static final String URI_PROP1 = "urn:blabla:weatherData";
+    static final String URI_PROP1_FIELD1 = "urn:blabla:temperature";
+    static final String URI_PROP1_FIELD2 = "urn:blabla:pressure";
+    static final String URI_PROP2 = "urn:blabla:image";
+    static final String NAME_OFFERING1 = "SOS Sensor Provider #1";
+    static final String NAME_OFFERING2 = "SOS Sensor Provider #2";
     static final double SAMPLING_PERIOD = 0.1;
     static final int NUM_GEN_SAMPLES = 5;
     static final int NUM_GEN_FEATURES = 3;
@@ -119,11 +120,11 @@ public class TestSOSService
     
     
     Map<Integer, Integer> obsFoiMap = new HashMap<Integer, Integer>();
-    File configFile;
+    ModuleRegistry registry;
     
     
     @Before
-    public void setupFramework() throws Exception
+    public void setup() throws Exception
     {
         // make sure we start with a new DB file
         File dbFile = new File(DB_PATH);
@@ -132,23 +133,30 @@ public class TestSOSService
         dbFile.deleteOnExit();
         
         // get instance with in-memory DB
-        SensorHub.getInstance();
+        registry = SensorHub.getInstance().getModuleRegistry();
         
         // start HTTP server
         HttpServerConfig httpConfig = new HttpServerConfig();
         httpConfig.httpPort = SERVER_PORT;
-        SensorHub.getInstance().getModuleRegistry().loadModule(httpConfig, TIMEOUT);
+        registry.loadModule(httpConfig, TIMEOUT);
     }
     
     
     protected SOSService deployService(SOSProviderConfig... providerConfigs) throws Exception
-    {   
+    {
+        return deployService(false, providerConfigs);
+    }
+    
+    
+    protected SOSService deployService(boolean enableSOST, SOSProviderConfig... providerConfigs) throws Exception
+    {
         // create service config
         SOSServiceConfig serviceCfg = new SOSServiceConfig();
         serviceCfg.moduleClass = SOSService.class.getCanonicalName();
         serviceCfg.endPoint = SERVICE_PATH;
         serviceCfg.autoStart = true;
         serviceCfg.name = "SOS";
+        serviceCfg.enableTransactional = enableSOST;
         CapabilitiesInfo srvcMetadata = serviceCfg.ogcCapabilitiesInfo;
         srvcMetadata.title = "My SOS Service";
         srvcMetadata.description = "An SOS service automatically deployed by SensorHub";
@@ -156,15 +164,15 @@ public class TestSOSService
         srvcMetadata.serviceProvider.setDeliveryPoint("15 MyStreet");
         srvcMetadata.serviceProvider.setCity("MyCity");
         srvcMetadata.serviceProvider.setCountry("MyCountry");
-        serviceCfg.dataProviders = Arrays.asList(providerConfigs);
+        serviceCfg.dataProviders.addAll(Arrays.asList(providerConfigs));
         srvcMetadata.fees = "NONE";
         srvcMetadata.accessConstraints = "NONE";
         
         // start module
-        SOSService sos = (SOSService)SensorHub.getInstance().getModuleRegistry().loadModule(serviceCfg, TIMEOUT);
+        SOSService sos = (SOSService)registry.loadModule(serviceCfg, TIMEOUT);
         
         // save config
-        SensorHub.getInstance().getModuleRegistry().saveModulesConfiguration();
+        registry.saveModulesConfiguration();
         
         return sos;
     }
@@ -1308,11 +1316,10 @@ public class TestSOSService
     {
         try
         {
-            SensorHub.getInstance().getModuleRegistry().shutdown(false, false);
+            if (registry != null)
+                registry.shutdown(false, false);
             HttpServer.getInstance().cleanup();
             SensorHub.clearInstance();
-            if (configFile != null)
-                configFile.delete();
             File dbFile = new File(DB_PATH);
             if (dbFile.exists())
                 dbFile.delete();

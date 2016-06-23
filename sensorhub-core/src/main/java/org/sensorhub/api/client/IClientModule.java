@@ -12,7 +12,7 @@ Copyright (C) 2012-2016 Sensia Software LLC. All Rights Reserved.
  
 ******************************* END LICENSE BLOCK ***************************/
 
-package org.sensorhub.api.service;
+package org.sensorhub.api.client;
 
 import org.sensorhub.api.module.IModule;
 
