@@ -203,9 +203,23 @@ public abstract class AbstractModule<ConfigType extends ModuleConfig> implements
     /**
      * Sets the module error state and sends corresponding event
      * @param msg
-     * @param error 
+     * @param error
+     * false to log only at debug level
      */
     public void reportError(String msg, Throwable error)
+    {
+        reportError(msg, error, false);
+    }
+    
+    
+    /**
+     * Sets the module error state and sends corresponding event
+     * @param msg
+     * @param error 
+     * @param logAsDebug set to true to log the exception only at debug level,
+     * false to log at error level
+     */
+    public void reportError(String msg, Throwable error, boolean logAsDebug)
     {
         synchronized (stateLock)
         {
@@ -224,10 +238,17 @@ public abstract class AbstractModule<ConfigType extends ModuleConfig> implements
                     eventHandler.publishEvent(event);
                 }
                 
-                if (msg != null)
-                    getLogger().error(msg, error);
-                else
-                    getLogger().error("Error", error);
+                if (!logAsDebug || getLogger().isDebugEnabled())
+                {
+                    if (msg != null)
+                        getLogger().error(msg, error);
+                    else
+                        getLogger().error("Error", error);
+                }
+                else if (msg != null)
+                {
+                    getLogger().error(msg);
+                }
             }
         }
     }
