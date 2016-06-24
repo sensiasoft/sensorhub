@@ -168,9 +168,9 @@ public abstract class AbstractModule<ConfigType extends ModuleConfig> implements
                     
                 while (this.state.ordinal() < state.ordinal() || (waitForRestart && this.state != state) )
                 {
-                    Throwable error = getCurrentError();
-                    if (error != null)
-                        return false;
+                    //Throwable error = getCurrentError();
+                    //if (error != null)
+                    //    return false;
                     
                     if (timeout > 0)
                     {
@@ -226,7 +226,7 @@ public abstract class AbstractModule<ConfigType extends ModuleConfig> implements
             if (error != this.lastError)
             {
                 if (msg != null)
-                    this.lastError = new Exception(msg, error);
+                    this.lastError = new SensorHubException(msg, error);
                 else
                     this.lastError = error;
                 
