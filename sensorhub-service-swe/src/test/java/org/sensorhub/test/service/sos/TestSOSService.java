@@ -116,20 +116,18 @@ public class TestSOSService
     static final String OFFERING_NODES = "contents/Contents/offering/*";
     static final String TIMERANGE_FUTURE = "now/2080-01-01";
     static final String TIMERANGE_NOW = "now";
-    static final String DB_PATH = "db.dat";
     
     
     Map<Integer, Integer> obsFoiMap = new HashMap<Integer, Integer>();
     ModuleRegistry registry;
+    File dbFile;
     
     
     @Before
     public void setup() throws Exception
     {
-        // make sure we start with a new DB file
-        File dbFile = new File(DB_PATH);
-        if (dbFile.exists())
-            dbFile.delete();
+        // use temp DB file
+        dbFile = File.createTempFile("osh-db-", ".dat");//new File(DB_PATH);
         dbFile.deleteOnExit();
         
         // get instance with in-memory DB
@@ -290,7 +288,7 @@ public class TestSOSService
         streamStorageConfig.autoStart = true;
         streamStorageConfig.storageConfig = new BasicStorageConfig();
         streamStorageConfig.storageConfig.moduleClass = ObsStorageImpl.class.getCanonicalName();
-        streamStorageConfig.storageConfig.storagePath = DB_PATH;
+        streamStorageConfig.storageConfig.storagePath = dbFile.getAbsolutePath();
         streamStorageConfig.dataSourceID = sosProviderConfig.sensorID;
         
         // start storage module
@@ -1320,13 +1318,15 @@ public class TestSOSService
                 registry.shutdown(false, false);
             HttpServer.getInstance().cleanup();
             SensorHub.clearInstance();
-            File dbFile = new File(DB_PATH);
-            if (dbFile.exists())
-                dbFile.delete();
         }
         catch (Exception e)
         {
             e.printStackTrace();
+        }
+        finally
+        {
+            if (dbFile != null)
+                dbFile.delete();
         }
     }
 }
