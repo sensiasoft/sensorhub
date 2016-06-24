@@ -105,7 +105,7 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener
     private static final Resource LOGO_ICON = new ClassResource("/sensorhub_logo_128.png");
     private static final Resource ACC_TAB_ICON = new ThemeResource("icons/enable.png");
     private static final String STYLE_LOGO = "logo";
-    private static final String PROP_STATE = "started";
+    private static final String PROP_STATE = "state";
     private static final String PROP_MODULE_OBJECT = "module";
     
     protected static final Logger log = LoggerFactory.getLogger(AdminUI.class);
@@ -199,7 +199,7 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener
             log.error("Error while instantiating panel builder for config class " + configClass, e);
         }
         
-        // register new field converter for interger numbers
+        // register new field converter for integer numbers
         @SuppressWarnings("serial")
         ConverterFactory converterFactory = new DefaultConverterFactory() {
             @Override
@@ -290,9 +290,6 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener
         configArea = new VerticalLayout();
         configArea.setMargin(true);
         splitPanel.addComponent(configArea);
-        
-        // register to module registry events
-        EventBus.getInstance().registerListener(ModuleRegistry.ID, EventBus.MAIN_TOPIC, this);
     }
     
     
@@ -495,8 +492,8 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener
         table.setNullSelectionAllowed(false);
         table.setImmediate(true);
         table.setColumnReorderingAllowed(false);
-        table.addContainerProperty(UIConstants.PROP_NAME, String.class, false);
-        table.addContainerProperty(PROP_STATE, ModuleState.class, false);
+        table.addContainerProperty(UIConstants.PROP_NAME, String.class, UIConstants.PROP_NAME);
+        table.addContainerProperty(PROP_STATE, ModuleState.class, ModuleState.LOADED);
         table.addContainerProperty(PROP_MODULE_OBJECT, IModule.class, null);
         table.setColumnWidth(PROP_STATE, 100);
         table.setColumnHeaderMode(ColumnHeaderMode.HIDDEN);
@@ -530,13 +527,13 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener
         // value converter for state field -> display as text and icon
         table.setConverter(PROP_STATE, new Converter<String, ModuleState>() {
             @Override
-            public ModuleState convertToModel(String value, Class<? extends ModuleState> targetType, Locale locale) throws com.vaadin.data.util.converter.Converter.ConversionException
+            public ModuleState convertToModel(String value, Class<? extends ModuleState> targetType, Locale locale)
             {
                 return ModuleState.valueOf(value);
             }
 
             @Override
-            public String convertToPresentation(ModuleState value, Class<? extends String> targetType, Locale locale) throws com.vaadin.data.util.converter.Converter.ConversionException
+            public String convertToPresentation(ModuleState value, Class<? extends String> targetType, Locale locale)
             {
                 return value.toString();
             }
@@ -660,6 +657,7 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener
                 
                 return actions.toArray(new Action[0]);
             }
+            
             @Override
             public void handleAction(Action action, Object sender, Object target)
             {
@@ -680,16 +678,17 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener
                             }
                             catch (Throwable e)
                             {
-                                String msg = "The module could not be initialized";
+                                String msg = "The module could not be loaded";
                                 Notification.show("Error", msg + '\n' + e.getMessage(), Notification.Type.ERROR_MESSAGE);
                                 return;
                             }
                             
-                            table.addItem(new Object[] {config.name, module.isStarted()}, config.id);
-                            
-                            // for some reason, setting the module in the addItem call prevents it to show up in the tree
-                            // so we need to add it afterwards
-                            table.getItem(config.id).getItemProperty(PROP_MODULE_OBJECT).setValue(module);
+                            // add new table row
+                            Item newItem = table.addItem(config.id);
+                            newItem.getItemProperty(UIConstants.PROP_NAME).setValue(config.name);
+                            newItem.getItemProperty(PROP_STATE).setValue(module.getCurrentState());
+                            newItem.getItemProperty(PROP_MODULE_OBJECT).setValue(module);
+                            table.setChildrenAllowed(config.id, false);
                             
                             MyBeanItem<ModuleConfig> newBeanItem = new MyBeanItem<ModuleConfig>(config);
                             openModuleInfo(newBeanItem, module);
@@ -920,6 +919,26 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener
                 });
             }
         }     
+    }
+
+
+    @Override
+    public void attach()
+    {
+        super.attach();
+        
+        // register to module registry events
+        EventBus.getInstance().registerListener(ModuleRegistry.ID, EventBus.MAIN_TOPIC, this);
+    }
+    
+    
+    @Override
+    public void detach()
+    {
+        // unregister from module registry events
+        EventBus.getInstance().unregisterListener(ModuleRegistry.ID, EventBus.MAIN_TOPIC, this);
+        
+        super.detach();
     }
 
 }
