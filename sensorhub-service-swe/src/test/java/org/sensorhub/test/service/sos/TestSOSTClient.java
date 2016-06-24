@@ -15,38 +15,38 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 package org.sensorhub.test.service.sos;
 
 import static org.junit.Assert.*;
-import net.opengis.swe.v20.DataBlock;
+import java.util.concurrent.Future;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.sensorhub.api.client.ClientException;
 import org.sensorhub.api.common.SensorHubException;
+import org.sensorhub.api.module.ModuleEvent.ModuleState;
 import org.sensorhub.api.sensor.ISensorModule;
 import org.sensorhub.api.sensor.SensorConfig;
-import org.sensorhub.impl.client.sos.SOSClient.SOSRecordListener;
 import org.sensorhub.impl.client.sost.SOSTClient;
 import org.sensorhub.impl.client.sost.SOSTClientConfig;
+import org.sensorhub.impl.service.HttpServer;
 import org.sensorhub.impl.service.sos.SOSProviderConfig;
+import org.sensorhub.impl.service.sos.SOSService;
+import org.sensorhub.impl.service.sos.SensorDataProviderConfig;
 import org.sensorhub.test.sensor.FakeSensor;
 import org.sensorhub.test.sensor.FakeSensorData;
 import org.vast.ows.GetCapabilitiesRequest;
 import org.vast.ows.OWSUtils;
-import org.vast.ows.sos.GetResultRequest;
 import org.vast.ows.sos.SOSOfferingCapabilities;
 import org.vast.ows.sos.SOSServiceCapabilities;
 import org.vast.ows.sos.SOSUtils;
-import org.vast.util.TimeExtent;
 
 
-public class TestSOSTClient implements SOSRecordListener
+public class TestSOSTClient
 {
     static final int TIMEOUT = 10000;
     static final String SENSOR_UID = "urn:test:newsensor:0002";
-    static final String NAME_OUTPUT1 = "weatherData";
     static final double SAMPLING_PERIOD = 0.2;
     static final int NUM_GEN_SAMPLES = 4;
     TestSOSService sosTest;
-    Exception connectError;
+    Exception asyncError;
     int recordCounter = 0;
     
     
@@ -58,7 +58,7 @@ public class TestSOSTClient implements SOSRecordListener
     }
     
     
-    protected ISensorModule<?> buildSensor1(boolean start) throws Exception
+    protected ISensorModule<?> buildSensor1() throws Exception
     {
         // create test sensor
         SensorConfig sensorCfg = new SensorConfig();
@@ -67,20 +67,20 @@ public class TestSOSTClient implements SOSRecordListener
         sensorCfg.name = "Sensor1";
         FakeSensor sensor = (FakeSensor)sosTest.registry.loadModule(sensorCfg);
         sensor.setSensorUID(SENSOR_UID);
-        sensor.setDataInterfaces(new FakeSensorData(sensor, NAME_OUTPUT1, 10, SAMPLING_PERIOD, NUM_GEN_SAMPLES));
-        if (start)
-            sensor.start();        
+        sensor.setDataInterfaces(new FakeSensorData(sensor, TestSOSService.NAME_OUTPUT1, 10, SAMPLING_PERIOD, NUM_GEN_SAMPLES));
+        sensor.requestInit();
+        sensor.setStartedState(); // fake started state but don't send data yet
         return sensor;
     }
     
     
     protected void startClient(String sensorID, boolean async) throws Exception
     {
-        startClient(sensorID, async, 10);
+        startClient(sensorID, async, false, 10);
     }
     
     
-    protected void startClient(String sensorID, boolean async, int maxAttempts) throws Exception
+    protected SOSTClient startClient(String sensorID, boolean async, boolean persistent, int maxAttempts) throws Exception
     {
         SOSTClientConfig config = new SOSTClientConfig();
         config.id = "SOST";
@@ -90,9 +90,12 @@ public class TestSOSTClient implements SOSRecordListener
         config.reconnectAttempts = maxAttempts;
         config.sensorID = sensorID;
         config.sosEndpointUrl = TestSOSService.HTTP_ENDPOINT;
+        config.usePersistentConnection = persistent;
+        config.maxConnectErrors = 2;
         
         final SOSTClient client = new SOSTClient();
-        client.init(config);
+        client.setConfiguration(config);
+        client.requestInit();
         
         if (async)
         {
@@ -101,17 +104,19 @@ public class TestSOSTClient implements SOSRecordListener
                 {
                     try
                     {
-                        client.start();
+                        client.requestStart();
                     }
                     catch (SensorHubException e)
                     {
-                        connectError = e;
+                        asyncError = e;
                     }
                 }
             }.start();
         }
         else
             client.start();
+        
+        return client;
     }
     
     
@@ -152,7 +157,7 @@ public class TestSOSTClient implements SOSRecordListener
         sosTest.deployService(true, new SOSProviderConfig[0]);
      
         // start client
-        ISensorModule<?> sensor = buildSensor1(false);
+        ISensorModule<?> sensor = buildSensor1();
         startClient(sensor.getLocalID(), false);
         
         // check capabilities content
@@ -168,7 +173,7 @@ public class TestSOSTClient implements SOSRecordListener
         sosTest.deployService(false, new SOSProviderConfig[0]);
         
         // start client
-        ISensorModule<?> sensor = buildSensor1(false);
+        ISensorModule<?> sensor = buildSensor1();
         startClient(sensor.getLocalID(), false);
     }
     
@@ -177,7 +182,7 @@ public class TestSOSTClient implements SOSRecordListener
     public void testRegisterAsyncReconnect() throws Exception
     {
         // start client
-        ISensorModule<?> sensor = buildSensor1(false);
+        ISensorModule<?> sensor = buildSensor1();
         startClient(sensor.getLocalID(), true);
         Thread.sleep(100);
         
@@ -190,47 +195,103 @@ public class TestSOSTClient implements SOSRecordListener
     }
     
     
-    @Test(expected = ClientException.class)
+    @Test
     public void testRegisterAsyncReconnectNoServer() throws Exception
     {
         // start client
-        ISensorModule<?> sensor = buildSensor1(false);
-        startClient(sensor.getLocalID(), true, 3);
+        ISensorModule<?> sensor = buildSensor1();
+        SOSTClient client = startClient(sensor.getLocalID(), true, false, 3);
         
         // wait for exception
         long maxWait = System.currentTimeMillis() + TIMEOUT;
-        while (connectError == null)
+        while (client.getCurrentError() == null)
         {
             Thread.sleep(500);
             if (System.currentTimeMillis() > maxWait)
                 fail("No connection error reported");
         }
-        
-        throw connectError;
     }
     
     
     @Test
-    public void testInsertResult() throws Exception
+    public void testInsertResultPost() throws Exception
     {
-        GetResultRequest req = new GetResultRequest();
-        req.setGetServer(TestSOSService.HTTP_ENDPOINT);
-        req.setVersion("2.0");
-        req.setOffering(SENSOR_UID + "-sos");
-        req.getObservables().add(TestSOSService.URI_PROP1);
-        req.setTime(TimeExtent.getPeriodStartingNow((System.currentTimeMillis()+60000) / 1000.));
-        req.setXmlWrapper(false);
+        // start service with SOS-T support
+        SOSService sos = sosTest.deployService(true, new SOSProviderConfig[0]);
         
+        // start client
+        ISensorModule<?> sensor = buildSensor1();
+        startClient(sensor.getLocalID(), false, false, 1);
         
+        // reduce liveDataTimeout of new provider
+        SensorDataProviderConfig provider = (SensorDataProviderConfig)sos.getConfiguration().dataProviders.get(0);
+        provider.liveDataTimeout = 1.0;
+        
+        // send getResult request
+        Future<String[]> f = sosTest.sendGetResultAsync(SENSOR_UID + "-sos", 
+                TestSOSService.URI_PROP1, TestSOSService.TIMERANGE_FUTURE, false);
+        
+        // start sensor
+        sensor.start();
+        
+        sosTest.checkGetResultResponse(f.get(), NUM_GEN_SAMPLES, 4);
     }
     
     
-    @Override
-    public void newRecord(DataBlock data)
+    @Test
+    public void testInsertResultPersistent() throws Exception
     {
-        System.out.println("Record received: " + data);
-        recordCounter++;
-    }    
+        // start service with SOS-T support
+        SOSService sos = sosTest.deployService(true, new SOSProviderConfig[0]);
+        
+        // start client
+        ISensorModule<?> sensor = buildSensor1();
+        startClient(sensor.getLocalID(), false, true, 1);
+        
+        // reduce liveDataTimeout of new provider
+        SensorDataProviderConfig provider = (SensorDataProviderConfig)sos.getConfiguration().dataProviders.get(0);
+        provider.liveDataTimeout = 1.0;
+        
+        // send getResult request
+        Future<String[]> f = sosTest.sendGetResultAsync(SENSOR_UID + "-sos", 
+                TestSOSService.URI_PROP1, TestSOSService.TIMERANGE_FUTURE, false);
+        
+        // start sensor
+        sensor.start();
+        
+        sosTest.checkGetResultResponse(f.get(), NUM_GEN_SAMPLES, 4);
+        
+        //client.stop();
+    }
+    
+    
+    @Test
+    public void testInsertResultReconnect() throws Exception
+    {
+        // start service with SOS-T support
+        sosTest.deployService(true, new SOSProviderConfig[0]);
+        
+        // start client
+        ISensorModule<?> sensor = buildSensor1();
+        SOSTClient client = startClient(sensor.getLocalID(), false, true, 3);
+        
+        // start sensor
+        sensor.start();
+        
+        // stop server
+        HttpServer.getInstance().stop();
+        
+        if (!client.waitForState(ModuleState.STOPPING, TIMEOUT))
+            fail("SOS-T client was not stopped");
+        
+        if (!client.waitForState(ModuleState.STARTING, TIMEOUT))
+            fail("SOS-T client was not restarted");
+        
+        if (!client.waitForState(ModuleState.STOPPED, TIMEOUT))
+            fail("SOS-T client was not stopped after 3 tries");
+        
+        assertTrue("Client should have an error", client.getCurrentError() != null);
+    }
     
    
     @After

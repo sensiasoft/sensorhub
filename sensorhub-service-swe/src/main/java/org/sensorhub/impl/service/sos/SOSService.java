@@ -90,7 +90,7 @@ public class SOSService extends AbstractModule<SOSServiceConfig> implements ISer
         
         // deploy ourself to HTTP server
         httpServer.deployServlet(servlet, config.endPoint);
-        httpServer.addServletSecurity(config.endPoint, "sos");
+        httpServer.addServletSecurity(config.endPoint, "admin", "sos");
     }
     
     

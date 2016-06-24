@@ -45,7 +45,7 @@ public class SOSTClientConfig extends ClientConfig
     public int maxQueueSize = 10;
 
     
-    @DisplayInfo(desc="Maximum number of connection errors before we stop sending data to remote server")
+    @DisplayInfo(desc="Maximum number of stream errors before we try to reconnect to remote server")
     public int maxConnectErrors = 10;
     
     

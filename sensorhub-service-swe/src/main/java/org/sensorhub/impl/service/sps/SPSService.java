@@ -91,7 +91,7 @@ public class SPSService extends AbstractModule<SPSServiceConfig> implements ISer
         
         // deploy ourself to HTTP server
         httpServer.deployServlet(servlet, config.endPoint);
-        httpServer.addServletSecurity(config.endPoint, "sps");
+        httpServer.addServletSecurity(config.endPoint, "admin", "sps");
     }
     
     

@@ -14,12 +14,10 @@ Copyright (C) 2012-2016 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.impl.client;
 
-import java.io.IOException;
 import org.sensorhub.api.client.ClientConfig;
 import org.sensorhub.api.client.ClientException;
 import org.sensorhub.api.client.IClientModule;
 import org.sensorhub.api.common.SensorHubException;
-import org.sensorhub.api.module.ModuleEvent.ModuleState;
 import org.sensorhub.impl.module.AbstractModule;
 
 
@@ -42,8 +40,10 @@ public abstract class AbstractClient<ConfigType extends ClientConfig> extends Ab
      * Implements the connection process.<br/>
      * This is called for each connection attempt
      * @return true if successfully connected, false otherwise
+     * @throws SensorHubException on fatal error that require aborting the connection process 
+     * (no more connection attempts will be made)
      */
-    protected abstract boolean connect() throws SensorHubException, IOException;
+    protected abstract boolean connect() throws SensorHubException;
     
     
     /**
@@ -74,18 +74,13 @@ public abstract class AbstractClient<ConfigType extends ClientConfig> extends Ab
                     }
                     catch (Exception e)
                     {
-                        // if state was set back, this is a fatal error so abort
-                        if (state == ModuleState.STOPPED || state == ModuleState.LOADED)
-                            throw new ClientException("Cannot connect to remote service", e);
-                        
-                        // report error and continue
-                        reportError("Failed connection attempt", e, true);
-                        
-                        // abort if too many attempts
-                        numAttempts++;
-                        if (numAttempts > config.reconnectAttempts)
-                            throw new ClientException("Maximum number of connection attempts", e);
+                        throw new ClientException("Cannot connect to remote service", e);
                     }
+                    
+                    // abort if too many attempts
+                    numAttempts++;
+                    if (!isConnected() && numAttempts > config.reconnectAttempts)
+                        throw new ClientException("Maximum number of connection attempts reached");
                     
                     // wait before trying again
                     while (!isConnected() && System.currentTimeMillis() < nextAttemptTime)
@@ -115,6 +110,8 @@ public abstract class AbstractClient<ConfigType extends ClientConfig> extends Ab
      */
     public void restartOnDisconnect()
     {
+        connected = false;
+        
         // restart in separate thread
         new Thread(new Runnable()
         {
@@ -122,7 +119,7 @@ public abstract class AbstractClient<ConfigType extends ClientConfig> extends Ab
             {
                 try
                 {
-                    stop();
+                    requestStop();
                     requestStart();
                 }
                 catch (SensorHubException e)

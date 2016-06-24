@@ -90,6 +90,7 @@ public class SOSTClient extends AbstractClient<SOSTClientConfig> implements ICli
         private ThreadPoolExecutor threadPool;
         private DataStreamWriter persistentWriter;
         private volatile boolean connecting = false;
+        private volatile boolean stopping = false;
     }
     
     
@@ -123,8 +124,6 @@ public class SOSTClient extends AbstractClient<SOSTClientConfig> implements ICli
     @Override
     public void start() throws SensorHubException
     {
-        setState(ModuleState.STARTING);
-        
         waitForConnection();
         reportStatus("Connected to " + config.sosEndpointUrl);
         
@@ -138,8 +137,6 @@ public class SOSTClient extends AbstractClient<SOSTClientConfig> implements ICli
             for (ISensorDataInterface o: sensor.getAllOutputs().values())
                 registerDataStream(o);
             getLogger().info("Result templates registered with SOS");
-            
-            setState(ModuleState.STARTED);
         }
         catch (Exception e)
         {
@@ -149,7 +146,7 @@ public class SOSTClient extends AbstractClient<SOSTClientConfig> implements ICli
     
     
     @Override
-    protected boolean connect() throws SensorHubException, IOException
+    protected boolean connect() throws SensorHubException
     {
         URL endpoint = null;
         try
@@ -158,18 +155,18 @@ public class SOSTClient extends AbstractClient<SOSTClientConfig> implements ICli
         }
         catch (MalformedURLException e)
         {
-            setState(ModuleState.STOPPED);
             throw new SensorHubException("Invalid SOS endpoint URL", e);
         }
         
         try
         {
             // check host name is resolvable
-            NetworkUtils.resolve(endpoint.getHost(), 1000);//config.connectTimeout);
+            NetworkUtils.resolve(endpoint.getHost(), config.connectTimeout);
         }
         catch (UnknownHostException e)
         {
-            throw e;
+            reportError("Cannot reach SOS server", e, true);
+            return false;
         }
         
         // check connection to SOS by fetching capabilities
@@ -184,39 +181,30 @@ public class SOSTClient extends AbstractClient<SOSTClientConfig> implements ICli
         }
         catch (OWSException e)
         {
-            throw new SensorHubException("Cannot fetch SOS capabilities", e);
+            reportError("Cannot fetch SOS capabilities", e, true);
+            return false;
         }
         
-        try
+        // check insert operations are supported
+        if (!caps.getPostServers().isEmpty())
         {
-            // check insert operations are supported
-            if (!caps.getPostServers().isEmpty())
+            String[] neededOps = new String[] {"InsertSensor", "InsertResultTemplate", "InsertResult"};
+            for (String opName: neededOps)
             {
-                String[] neededOps = new String[] {"InsertSensor", "InsertResultTemplate", "InsertResult"};
-                for (String opName: neededOps)
-                {
-                    if (!caps.getPostServers().containsKey(opName))
-                        throw new SensorHubException(opName + " operation not supported by this SOS endpoint");
-                }
-            }
-            
-            // check SML2 is supported
-            SOSInsertionCapabilities insertCaps = caps.getInsertionCapabilities();
-            if (insertCaps != null)
-            {
-                if (!insertCaps.getProcedureFormats().contains(InsertSensorRequest.DEFAULT_PROCEDURE_FORMAT))
-                    throw new SensorHubException("SensorML v2.0 format not supported by this SOS endpoint");
-                
-                if (!insertCaps.getObservationTypes().contains(IObservation.OBS_TYPE_RECORD))
-                    throw new SensorHubException("DataRecord observation type not supported by this SOS endpoint");
+                if (!caps.getPostServers().containsKey(opName))
+                    throw new SensorHubException(opName + " operation not supported by this SOS endpoint");
             }
         }
-        catch (SensorHubException e)
+        
+        // check SML2 is supported
+        SOSInsertionCapabilities insertCaps = caps.getInsertionCapabilities();
+        if (insertCaps != null)
         {
-            // force the STOPPED state.
-            // This marks the error as fatal so we don't try to connect again
-            setState(ModuleState.STOPPED);
-            throw e;
+            if (!insertCaps.getProcedureFormats().contains(InsertSensorRequest.DEFAULT_PROCEDURE_FORMAT))
+                throw new SensorHubException("SensorML v2.0 format not supported by this SOS endpoint");
+            
+            if (!insertCaps.getObservationTypes().contains(IObservation.OBS_TYPE_RECORD))
+                throw new SensorHubException("DataRecord observation type not supported by this SOS endpoint");
         }
         
         return true;
@@ -230,7 +218,7 @@ public class SOSTClient extends AbstractClient<SOSTClientConfig> implements ICli
         if (sensor != null)
             sensor.unregisterListener(this);
         
-        // cleanup all streams
+        // stop all streams
         for (Entry<ISensorDataInterface, StreamInfo> entry: dataStreams.entrySet())
             stopStream(entry.getKey(), entry.getValue());
     }
@@ -244,23 +232,27 @@ public class SOSTClient extends AbstractClient<SOSTClientConfig> implements ICli
         // unregister listeners
         output.unregisterListener(this);
         
-        // stop thread pool
-        try
-        {
-            streamInfo.threadPool.shutdownNow();
-            streamInfo.threadPool.awaitTermination(3, TimeUnit.SECONDS);
-        }
-        catch (InterruptedException e)
-        {
-        }
-        
         // close open HTTP streams
         try
         {
+            streamInfo.stopping = true;
             if (streamInfo.persistentWriter != null)
                 streamInfo.persistentWriter.close();
         }
         catch (IOException e)
+        {
+        }
+        
+        // stop thread pool
+        try
+        {
+            if (streamInfo.threadPool != null && !streamInfo.threadPool.isShutdown())
+            {
+                streamInfo.threadPool.shutdownNow();
+                streamInfo.threadPool.awaitTermination(3, TimeUnit.SECONDS);
+            }
+        }
+        catch (InterruptedException e)
         {
         }
     }
@@ -284,9 +276,6 @@ public class SOSTClient extends AbstractClient<SOSTClientConfig> implements ICli
         // send request and get assigned ID
         InsertSensorResponse resp = (InsertSensorResponse)sosUtils.sendRequest(req, false);
         this.offering = resp.getAssignedOffering();
-        
-        // register to sensor change event
-        sensor.registerListener(this);
     }
     
     
@@ -368,6 +357,7 @@ public class SOSTClient extends AbstractClient<SOSTClientConfig> implements ICli
                 catch (SensorHubException ex)
                 {
                     reportError("SOS-T client could not start", ex);
+                    setState(ModuleState.STOPPED);
                 }
             }
         }
@@ -400,8 +390,9 @@ public class SOSTClient extends AbstractClient<SOSTClientConfig> implements ICli
             if (streamInfo.errorCount >= config.maxConnectErrors)
             {
                 String outputName = ((SensorDataEvent)e).getSource().getName();
-                getLogger().error("Too many errors sending '" + outputName + "' data to SOS-T from " + MsgUtils.moduleString(sensor) + ". Stopping Stream.");
+                reportError("Too many errors sending '" + outputName + "' data to SOS-T. Stopping Stream.", null);
                 stopStream((ISensorDataInterface)e.getSource(), streamInfo);
+                checkDisconnected();                
                 return;
             }
             
@@ -409,8 +400,9 @@ public class SOSTClient extends AbstractClient<SOSTClientConfig> implements ICli
             if (streamInfo.threadPool.getQueue().remainingCapacity() == 0)
             {
                 String outputName = ((SensorDataEvent)e).getSource().getName();
-                if (getLogger().isDebugEnabled())
-                    getLogger().debug("Too many records sending '" + outputName + "' data to SOS-T from " + MsgUtils.moduleString(sensor) + ". Bandwidth cannot keep up.");
+                reportError("Too many '" + outputName + "' records to send to SOS-T. Bandwidth cannot keep up.", null);
+                getLogger().info("Skipping records by purging record queue");
+                streamInfo.threadPool.getQueue().clear();
                 return;
             }
             
@@ -422,6 +414,27 @@ public class SOSTClient extends AbstractClient<SOSTClientConfig> implements ICli
                 sendInPersistentRequest((SensorDataEvent)e, streamInfo);
             else
                 sendAsNewRequest((SensorDataEvent)e, streamInfo);
+        }
+    }
+    
+    
+    private void checkDisconnected()
+    {
+        // if all streams have been stopped, initiate reconnection
+        boolean allStopped = true;
+        for (StreamInfo streamInfo: dataStreams.values())
+        {
+            if (!streamInfo.stopping)
+            {
+                allStopped = false;
+                break;
+            }
+        }
+        
+        if (allStopped)
+        {
+            reportStatus("All streams stopped on error. Trying to reconnect...");
+            restartOnDisconnect();
         }
     }
     
@@ -459,6 +472,7 @@ public class SOSTClient extends AbstractClient<SOSTClientConfig> implements ICli
                             String outputName = e.getSource().getName();
                             int numRecords = req.getResultData().getComponentCount();
                             getLogger().trace("Sending " + numRecords + " '" + outputName + "' record(s) to SOS-T");
+                            getLogger().trace("Queue size is " + streamInfo.threadPool.getQueue().size());
                         }
                         
                         //sosUtils.writeXMLQuery(System.out, req);
@@ -467,7 +481,7 @@ public class SOSTClient extends AbstractClient<SOSTClientConfig> implements ICli
                     catch (Exception ex)
                     {
                         String outputName = e.getSource().getName();
-                        getLogger().error("Error when sending '" + outputName + "' data to SOS-T from " + MsgUtils.moduleString(sensor), ex);
+                        reportError("Error when sending '" + outputName + "' data to SOS-T", ex, true);
                         streamInfo.errorCount++;
                     }
                 }           
@@ -501,7 +515,7 @@ public class SOSTClient extends AbstractClient<SOSTClientConfig> implements ICli
                     {                        
                         streamInfo.connecting = true;
                         if (getLogger().isDebugEnabled())
-                            getLogger().debug("Connecting to " + config.sosEndpointUrl + "...");
+                            getLogger().debug("Initiating streaming request");
                         
                         final InsertResultRequest req = new InsertResultRequest();
                         req.setPostServer(config.sosEndpointUrl);
@@ -523,20 +537,24 @@ public class SOSTClient extends AbstractClient<SOSTClientConfig> implements ICli
                     if (getLogger().isTraceEnabled())
                     {
                         String outputName = e.getSource().getName();
-                        getLogger().trace("Sending '" + outputName + "' record(s) to SOS-T");
+                        int numRecords = e.getRecords().length;
+                        getLogger().trace("Sending " + numRecords + " '" + outputName + "' record(s) to SOS-T");
                         getLogger().trace("Queue size is " + streamInfo.threadPool.getQueue().size());
                     }
                     
                     // write records to output stream
                     for (DataBlock record: e.getRecords())
                         streamInfo.persistentWriter.write(record);
-                    
                     streamInfo.persistentWriter.flush();
                 }
                 catch (Exception ex)
                 {
+                    // ignore exception if stream was purposely stopped
+                    if (streamInfo.stopping)
+                        return;
+                    
                     String outputName = e.getSource().getName();
-                    getLogger().error("Error when sending '" + outputName + "' data to SOS-T from " + MsgUtils.moduleString(sensor), ex);
+                    reportError("Error when sending '" + outputName + "' data to SOS-T", ex, true);
                     streamInfo.errorCount++;
                     
                     try
@@ -548,12 +566,9 @@ public class SOSTClient extends AbstractClient<SOSTClientConfig> implements ICli
                     {
                     }
                     
+                    // clean writer so we reconnect
                     streamInfo.persistentWriter = null;
-                    
-                    // wait a little before trying to reconnect
-                    getLogger().info("Waiting to reconnect...");
-                    try { Thread.sleep(3000L); }
-                    catch (InterruptedException e1) { }
+                    streamInfo.connecting = false;
                 }
             }           
         };
