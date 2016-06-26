@@ -19,7 +19,7 @@ import java.util.Map;
 import org.sensorhub.api.data.IDataProducerModule;
 import org.sensorhub.impl.persistence.MaxAgeAutoPurgeConfig;
 import org.sensorhub.ui.api.IModuleConfigForm;
-import com.vaadin.data.Property;
+import org.sensorhub.ui.data.BaseProperty;
 import com.vaadin.data.validator.StringLengthValidator;
 import com.vaadin.ui.Field;
 
@@ -33,7 +33,7 @@ public class GenericStorageConfigForm extends GenericConfigForm implements IModu
     public static final String PROP_DATASRC_ID = "dataSourceID";
     
     
-    protected Field<?> buildAndBindField(String label, String propId, Property<?> prop)
+    protected Field<?> buildAndBindField(String label, String propId, BaseProperty<?> prop)
     {
         Field<Object> field = (Field<Object>)super.buildAndBindField(label, propId, prop);
         

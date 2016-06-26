@@ -15,7 +15,7 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 package org.sensorhub.impl.comm;
 
 import org.sensorhub.api.config.DisplayInfo;
-import org.sensorhub.api.config.DisplayInfo.Range;
+import org.sensorhub.api.config.DisplayInfo.ValueRange;
 
 
 /**
@@ -29,11 +29,11 @@ import org.sensorhub.api.config.DisplayInfo.Range;
 public class UDPConfig extends IPConfig
 {
     @DisplayInfo(desc="Port number to connect to on remote host")
-    @Range(min=0, max=65535)
+    @ValueRange(min=0, max=65535)
     public int localPort;
 	
     @DisplayInfo(desc="Local port number to use on the local host")
-    @Range(min=0, max=65535)
+    @ValueRange(min=0, max=65535)
     public int remotePort;
 	
 

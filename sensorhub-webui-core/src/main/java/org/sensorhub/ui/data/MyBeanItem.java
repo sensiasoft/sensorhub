@@ -78,7 +78,7 @@ public class MyBeanItem<BeanType> implements Item
         else
         {
             addFieldProperties(prefix, bean);
-            addMethodProperties(prefix, bean);
+            //addMethodProperties(prefix, bean);
         }
     }
     

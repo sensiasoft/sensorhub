@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import org.sensorhub.api.config.DisplayInfo.FieldType.Type;
 import org.sensorhub.api.module.IModule;
 import org.sensorhub.api.module.ModuleConfig;
 import org.sensorhub.impl.sensor.SensorSystemConfig.ProcessMember;
@@ -28,17 +29,18 @@ import org.sensorhub.ui.ObjectTypeSelectionPopup.ObjectTypeSelectionCallback;
 import org.sensorhub.ui.ValueEntryPopup.ValueCallback;
 import org.sensorhub.ui.api.IModuleConfigForm;
 import org.sensorhub.ui.api.UIConstants;
+import org.sensorhub.ui.data.BaseProperty;
 import org.sensorhub.ui.data.ComplexProperty;
 import org.sensorhub.ui.data.ContainerProperty;
 import org.sensorhub.ui.data.FieldProperty;
 import org.sensorhub.ui.data.MyBeanItem;
 import org.sensorhub.ui.data.MyBeanItemContainer;
-import com.vaadin.data.Property;
 import com.vaadin.data.Validator.InvalidValueException;
 import com.vaadin.data.fieldgroup.FieldGroup;
 import com.vaadin.data.fieldgroup.FieldGroup.CommitEvent;
 import com.vaadin.data.fieldgroup.FieldGroup.CommitException;
 import com.vaadin.data.fieldgroup.FieldGroup.CommitHandler;
+import com.vaadin.data.validator.StringLengthValidator;
 import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.AbstractComponent;
 import com.vaadin.ui.AbstractField;
@@ -130,7 +132,7 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
             fieldGroup = new FieldGroup(beanItem);
             for (Object propId: fieldGroup.getUnboundPropertyIds())
             {
-                Property<?> prop = fieldGroup.getItemDataSource().getItemProperty(propId);
+                BaseProperty<?> prop = (BaseProperty<?>)fieldGroup.getItemDataSource().getItemProperty(propId);
                 
                 // sub objects with multiplicity > 1
                 if (prop instanceof ContainerProperty)
@@ -237,7 +239,7 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
      * @param prop
      * @return the generated Field object
      */
-    protected Field<?> buildAndBindField(String label, String propId, Property<?> prop)
+    protected Field<?> buildAndBindField(String label, String propId, BaseProperty<?> prop)
     {
         Field<?> field = fieldGroup.buildAndBind(label, propId);
         Class<?> propType = prop.getType();
@@ -269,6 +271,25 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
         if (field instanceof TextField) {
             ((TextField)field).setNullSettingAllowed(true);
             ((TextField)field).setNullRepresentation("");
+        }
+        
+        // special fields
+        Type fieldType = prop.getFieldType();
+        if (fieldType != null)
+        {
+            switch (fieldType)
+            {
+                case MODULE_ID:
+                    @SuppressWarnings("rawtypes")
+                    Class<? extends IModule> moduleClass = prop.getModuleType();
+                    if (moduleClass == null)
+                        moduleClass = IModule.class;
+                    field = makeModuleSelectField((Field<Object>)field, moduleClass);
+                    field.addValidator(new StringLengthValidator(MSG_REQUIRED_FIELD, 1, 256, false));
+                    break;
+                    
+                default:
+            }
         }
         
         return field;

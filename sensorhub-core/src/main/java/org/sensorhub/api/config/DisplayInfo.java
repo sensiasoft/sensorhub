@@ -29,54 +29,11 @@ import org.sensorhub.api.module.IModule;
 public @interface DisplayInfo
 {
     public String label() default "";
-    public String desc() default "";
-    public StringType type() default StringType.LABEL;
+    public String desc() default "";    
     
     
-    public enum StringType
-    {
-        /**
-         * Single line text.<br/>
-         * You can restrict the possible values using {@link TextInfo}
-         */
-        LABEL,
-        
-        /**
-         * Multi-line text.<br/>
-         * You can restrict the possible values using {@link TextInfo}
-         */
-        TEXT,
-        
-        /**
-         * Password (usually masked on UI)
-         */
-        PASSWORD,
-        
-        /**
-         * Reference to another module using its local ID.<br/>
-         * You can restrict the type of module using {@link ModuleType}
-         */
-        MODULE_ID,
-        
-        /**
-         * Local address (e.g. address of local network interface).<br/>
-         * You can restrict the address type using {@link AddressType}
-         */
-        LOCAL_ADDRESS,
-        
-        /**
-         * Remote address or host name.<br/> 
-         * You can restrict the address type using {@link AddressType}
-         */
-        REMOTE_ADDRESS,
-        
-        /**
-         * Path on the local file system
-         */
-        FILESYSTEM_PATH
-    }
-    
-    
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.FIELD)
     public @interface TextInfo
     {
         public int minSize() default 1;
@@ -86,13 +43,68 @@ public @interface DisplayInfo
     }
     
     
-    public @interface Range
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.FIELD)
+    public @interface ValueRange
     {
         public int min() default Integer.MIN_VALUE;
         public int max() default Integer.MAX_VALUE;
     }
     
     
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.FIELD)
+    public @interface FieldType
+    {
+        public Type value() default Type.LABEL;
+        
+        public enum Type
+        {
+            /**
+             * Single line text.<br/>
+             * You can restrict the possible values using {@link TextInfo}
+             */
+            LABEL,
+            
+            /**
+             * Multi-line text.<br/>
+             * You can restrict the possible values using {@link TextInfo}
+             */
+            TEXT,
+            
+            /**
+             * Password (usually masked on UI)
+             */
+            PASSWORD,
+            
+            /**
+             * Reference to another module using its local ID.<br/>
+             * You can restrict the type of module using {@link ModuleType}
+             */
+            MODULE_ID,
+            
+            /**
+             * Local address (e.g. address of local network interface).<br/>
+             * You can restrict the address type using {@link AddressType}
+             */
+            LOCAL_ADDRESS,
+            
+            /**
+             * Remote address or host name.<br/> 
+             * You can restrict the address type using {@link AddressType}
+             */
+            REMOTE_ADDRESS,
+            
+            /**
+             * Path on the local file system
+             */
+            FILESYSTEM_PATH
+        }
+    }
+    
+    
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.FIELD)
     public @interface ModuleType
     {
         @SuppressWarnings("rawtypes")
@@ -100,6 +112,8 @@ public @interface DisplayInfo
     }
     
     
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.FIELD)
     public @interface AddressType
     {
         public NetworkType value() default NetworkType.IP;

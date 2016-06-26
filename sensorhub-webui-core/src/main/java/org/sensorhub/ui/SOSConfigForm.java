@@ -16,8 +16,7 @@ package org.sensorhub.ui;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
-import org.sensorhub.api.persistence.IStorageModule;
-import org.sensorhub.api.sensor.ISensorModule;
+import org.sensorhub.ui.data.BaseProperty;
 import org.sensorhub.ui.data.MyBeanItem;
 import com.vaadin.data.Property;
 import com.vaadin.data.validator.StringLengthValidator;
@@ -59,7 +58,7 @@ public class SOSConfigForm extends GenericConfigForm
     }
     
     
-    protected Field<?> buildAndBindField(String label, String propId, Property<?> prop)
+    protected Field<?> buildAndBindField(String label, String propId, BaseProperty<?> prop)
     {
         Field<Object> field = (Field<Object>)super.buildAndBindField(label, propId, prop);
         
@@ -73,15 +72,6 @@ public class SOSConfigForm extends GenericConfigForm
         }
         else if (propId.endsWith(PROP_URI))
         {
-            field.addValidator(new StringLengthValidator(MSG_REQUIRED_FIELD, 1, 256, false));
-        }
-        else if (propId.endsWith(PROP_STORAGEID))
-        {
-            field = makeModuleSelectField(field, IStorageModule.class);
-        }
-        else if (propId.endsWith(PROP_SENSORID))
-        {
-            field = makeModuleSelectField(field, ISensorModule.class);
             field.addValidator(new StringLengthValidator(MSG_REQUIRED_FIELD, 1, 256, false));
         }
         else if (propId.endsWith(PROP_DATAPROVIDERS + PROP_SEP + PROP_NAME))

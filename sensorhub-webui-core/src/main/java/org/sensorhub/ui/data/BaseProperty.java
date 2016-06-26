@@ -15,7 +15,15 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 package org.sensorhub.ui.data;
 
 import java.lang.reflect.Field;
+import org.sensorhub.api.comm.ICommNetwork.NetworkType;
 import org.sensorhub.api.config.DisplayInfo;
+import org.sensorhub.api.config.DisplayInfo.AddressType;
+import org.sensorhub.api.config.DisplayInfo.FieldType;
+import org.sensorhub.api.config.DisplayInfo.FieldType.Type;
+import org.sensorhub.api.config.DisplayInfo.ModuleType;
+import org.sensorhub.api.config.DisplayInfo.TextInfo;
+import org.sensorhub.api.config.DisplayInfo.ValueRange;
+import org.sensorhub.api.module.IModule;
 import com.vaadin.data.util.AbstractProperty;
 
 
@@ -49,5 +57,44 @@ public abstract class BaseProperty<T> extends AbstractProperty<T>
         else
             return null;
     }
-
+    
+    
+    public ValueRange getValueRange()
+    {
+        return f.getAnnotation(ValueRange.class);
+    }
+    
+    
+    public TextInfo getTextInfo()
+    {
+        return f.getAnnotation(TextInfo.class);
+    }
+    
+    
+    public Type getFieldType()
+    {
+        FieldType ann = f.getAnnotation(FieldType.class);
+        if (ann != null)
+            return ann.value();
+        return null;
+    }
+    
+    
+    @SuppressWarnings("rawtypes")
+    public Class<? extends IModule> getModuleType()
+    {
+        ModuleType ann = f.getAnnotation(ModuleType.class);
+        if (ann != null)
+            return ann.value();
+        return null;
+    }
+    
+    
+    public NetworkType getAddressType()
+    {
+        AddressType ann = f.getAnnotation(AddressType.class);
+        if (ann != null)
+            return ann.value();
+        return null;
+    }
 }

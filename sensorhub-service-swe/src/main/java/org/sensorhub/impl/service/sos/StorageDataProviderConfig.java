@@ -18,6 +18,10 @@ import java.util.ArrayList;
 import java.util.List;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.config.DisplayInfo;
+import org.sensorhub.api.config.DisplayInfo.FieldType;
+import org.sensorhub.api.config.DisplayInfo.ModuleType;
+import org.sensorhub.api.config.DisplayInfo.FieldType.Type;
+import org.sensorhub.api.persistence.IStorageModule;
 
 
 /**
@@ -34,6 +38,8 @@ public class StorageDataProviderConfig extends SOSProviderConfig
 {
     
     @DisplayInfo(desc="Local ID of storage to use as data source")
+    @FieldType(Type.MODULE_ID)
+    @ModuleType(IStorageModule.class)
     public String storageID;  
     
     

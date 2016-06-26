@@ -12,7 +12,7 @@
    <name>SensorHub Vaadin WidgetSet</name>
 
    <properties>
-      <vaadin.version>7.4.0</vaadin.version>
+      <vaadin.version>7.4.8</vaadin.version>
       <vaadin.plugin.version>${vaadin.version}</vaadin.plugin.version>
       <jetty.plugin.version>9.2.3.v20140905</jetty.plugin.version>
       <project.source.version>1.7</project.source.version>

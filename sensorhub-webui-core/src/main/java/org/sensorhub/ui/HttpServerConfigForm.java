@@ -14,7 +14,7 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.ui;
 
-import com.vaadin.data.Property;
+import org.sensorhub.ui.data.BaseProperty;
 import com.vaadin.data.Validator;
 import com.vaadin.data.validator.StringLengthValidator;
 import com.vaadin.ui.Field;
@@ -28,7 +28,7 @@ public class HttpServerConfigForm extends GenericConfigForm
     
     
     @Override
-    protected Field<?> buildAndBindField(String label, String propId, Property<?> prop)
+    protected Field<?> buildAndBindField(String label, String propId, BaseProperty<?> prop)
     {
         Field<?> field = super.buildAndBindField(label, propId, prop);
         
