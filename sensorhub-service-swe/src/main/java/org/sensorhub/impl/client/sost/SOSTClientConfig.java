@@ -16,6 +16,11 @@ package org.sensorhub.impl.client.sost;
 
 import org.sensorhub.api.client.ClientConfig;
 import org.sensorhub.api.config.DisplayInfo;
+import org.sensorhub.api.config.DisplayInfo.FieldType;
+import org.sensorhub.api.config.DisplayInfo.ModuleType;
+import org.sensorhub.api.config.DisplayInfo.FieldType.Type;
+import org.sensorhub.api.sensor.ISensorModule;
+import org.sensorhub.impl.comm.RobustIPConnectionConfig;
 
 
 /**
@@ -29,24 +34,33 @@ import org.sensorhub.api.config.DisplayInfo;
 public class SOSTClientConfig extends ClientConfig
 {
         
+    public static class SOSConnectionConfig extends RobustIPConnectionConfig
+    {
+        @DisplayInfo(desc="Enable to use a persistent HTTP connection for InsertResult")
+        public boolean usePersistentConnection;
+        
+        
+        @DisplayInfo(desc="Maximum number of records in upload queue (used to compensate for variable bandwidth)")
+        public int maxQueueSize = 10;
+
+        
+        @DisplayInfo(desc="Maximum number of stream errors before we try to reconnect to remote server")
+        public int maxConnectErrors = 10;
+    }
+    
+    
     @DisplayInfo(desc="SOS endpoint URL where the requests are sent")
     public String sosEndpointUrl;
 
     
     @DisplayInfo(desc="Local ID of sensor to register with SOS")
+    @FieldType(Type.MODULE_ID)
+    @ModuleType(ISensorModule.class)
     public String sensorID;
-
-    
-    @DisplayInfo(desc="Set to true to use a persistent Insertresult connection")
-    public boolean usePersistentConnection;
     
     
-    @DisplayInfo(desc="Maximum number of records in upload queue (used to compensate for variable bandwidth)")
-    public int maxQueueSize = 10;
-
-    
-    @DisplayInfo(desc="Maximum number of stream errors before we try to reconnect to remote server")
-    public int maxConnectErrors = 10;
+    @DisplayInfo(label="Connection Options")
+    public SOSConnectionConfig connection = new SOSConnectionConfig();
     
     
     public SOSTClientConfig()

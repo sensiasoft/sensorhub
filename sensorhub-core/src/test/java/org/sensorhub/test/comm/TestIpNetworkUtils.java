@@ -12,24 +12,24 @@ Copyright (C) 2012-2016 Sensia Software LLC. All Rights Reserved.
  
 ******************************* END LICENSE BLOCK ***************************/
 
-package org.sensorhub.test.utils;
+package org.sensorhub.test.comm;
 
 import static org.junit.Assert.*;
 import java.net.UnknownHostException;
 import org.junit.Test;
-import org.sensorhub.utils.NetworkUtils;
+import org.sensorhub.impl.comm.IPNetworkUtils;
 
 
-public class TestNetworkUtils
+public class TestIpNetworkUtils
 {
     
     @Test
-    public void testValidHost() throws Exception
+    public void testResolveValidHost() throws Exception
     {
-        long timeOut = 10000;
+        int timeOut = 10000;
         
         long t0 = System.currentTimeMillis();
-        NetworkUtils.resolve("www.google.com", timeOut);
+        IPNetworkUtils.resolveHost("www.google.com", timeOut);
         long t1 = System.currentTimeMillis();
         
         assertTrue("DNS resolution timeout expired", t1-t0 < timeOut);
@@ -37,14 +37,14 @@ public class TestNetworkUtils
     
     
     @Test
-    public void testInvalidHost() throws Exception
+    public void testResolveInvalidHost() throws Exception
     {
-        long timeOut = 1000;
+        int timeOut = 1000;
         
         try
         {
             long t0 = System.currentTimeMillis();
-            NetworkUtils.resolve("www.fdazdaztger.com", timeOut);
+            IPNetworkUtils.resolveHost("fdazdaztger", timeOut);
             long t1 = System.currentTimeMillis();
             
             assertTrue("DNS resolution timeout should have expired", t1-t0 >= timeOut);
@@ -57,6 +57,31 @@ public class TestNetworkUtils
         {
             fail("Unexpected Exception: " + e.getMessage());
         }
+        
+        fail("Host should not be reachable");
+    }
+    
+    
+    @Test
+    public void testPingLocalHost() throws Exception
+    {
+        int timeOut = 10000;
+        
+        long t0 = System.currentTimeMillis();
+        boolean reachable = IPNetworkUtils.isHostReachable("localhost", timeOut);
+        long t1 = System.currentTimeMillis();
+        
+        assertTrue("Timeout expired", t1-t0 < timeOut);
+        assertTrue("Localhost is not reachable", reachable);
+    } 
+    
+    
+    @Test
+    public void testPingInvalidHost() throws Exception
+    {
+        int timeOut = 100;
+        boolean reachable = IPNetworkUtils.isHostReachable("172.1.1.1", timeOut);
+        assertFalse("Invalid host should not be reachable", reachable);
     }
 
 }

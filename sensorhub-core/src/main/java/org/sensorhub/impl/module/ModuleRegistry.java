@@ -839,7 +839,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
                     break;
                     
                 case ERROR:
-                    log.error("Error in module " + moduleString, e);
+                    //log.error("Error in module " + moduleString, e);
                     break;
                     
                 default:

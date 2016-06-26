@@ -570,52 +570,6 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
     
     
     /**
-     * Helper method to wait until the sensor is connected or timeout occurs.<br/>
-     * If connection is detected by another thread, this method can also be notified
-     * by calling stateLock.notify()
-     * @param retryPeriod retry period in milliseconds
-     * @param timeOut timeout period in milliseconds
-     * @return true if sensor was connected, false if timeout was reached
-     */
-    protected boolean waitForConnection(long retryPeriod, long timeOut) throws SensorException
-    {
-        long beginTime = System.currentTimeMillis();
-        long lastCheckTime = beginTime;
-        
-        synchronized (stateLock)
-        {
-            try
-            {
-                while (!isConnected())
-                {
-                    long now = System.currentTimeMillis();
-                    if (now - beginTime > timeOut)
-                        throw new SensorException("Sensor connection timeout");
-                    
-                    long sleepPeriod = retryPeriod - (now - lastCheckTime);
-                    if (sleepPeriod > 0)
-                    {
-                        getLogger().debug("Cannot connect to sensor. Retrying in {} ms", sleepPeriod);
-                        stateLock.wait(sleepPeriod);
-                    }
-                    else
-                        getLogger().debug("Cannot connect to sensor. Retrying now");
-                    
-                    lastCheckTime = System.currentTimeMillis();
-                }
-
-                notifyConnectionStatus(true);
-            }
-            catch (InterruptedException e)
-            {
-            }
-        }
-        
-        return true;
-    }
-    
-    
-    /**
      * Helper method to send and log connection/disconnection events
      * @param connected
      */
@@ -639,31 +593,5 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
             
             wasConnected = connected;
         }
-    }
-    
-    
-    /**
-     * Helper method to restart the driver after a disconnection
-     */
-    protected void restartOnDisconnect()
-    {
-        notifyConnectionStatus(false);
-        
-        // restart in separate thread
-        new Thread(new Runnable()
-        {
-            public void run()
-            {
-                try
-                {
-                    stop();
-                    start();
-                }
-                catch (SensorHubException e)
-                {
-                    getLogger().error("Error while reconnecting to sensor");
-                }
-            }
-        }).start();
     }
 }

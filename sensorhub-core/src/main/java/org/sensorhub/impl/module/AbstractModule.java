@@ -223,32 +223,29 @@ public abstract class AbstractModule<ConfigType extends ModuleConfig> implements
     {
         synchronized (stateLock)
         {
-            if (error != this.lastError)
+            if (msg != null)
+                this.lastError = new SensorHubException(msg, error);
+            else
+                this.lastError = error;
+            
+            //stateLock.notifyAll();
+            
+            if (!logAsDebug || getLogger().isDebugEnabled())
             {
                 if (msg != null)
-                    this.lastError = new SensorHubException(msg, error);
+                    getLogger().error(msg, error);
                 else
-                    this.lastError = error;
-                
-                stateLock.notifyAll();
-                
-                if (eventHandler != null)
-                {
-                    ModuleEvent event = new ModuleEvent(this, this.lastError);               
-                    eventHandler.publishEvent(event);
-                }
-                
-                if (!logAsDebug || getLogger().isDebugEnabled())
-                {
-                    if (msg != null)
-                        getLogger().error(msg, error);
-                    else
-                        getLogger().error("Error", error);
-                }
-                else if (msg != null)
-                {
-                    getLogger().error(msg);
-                }
+                    getLogger().error("Error", error);
+            }
+            else if (msg != null)
+            {
+                getLogger().error(msg);
+            }
+            
+            if (eventHandler != null)
+            {
+                ModuleEvent event = new ModuleEvent(this, this.lastError);               
+                eventHandler.publishEvent(event);
             }
         }
     }
@@ -280,14 +277,13 @@ public abstract class AbstractModule<ConfigType extends ModuleConfig> implements
     public void reportStatus(String msg)
     {
         this.statusMsg = msg;
+        getLogger().info(msg);
         
         if (eventHandler != null)
         {
             ModuleEvent event = new ModuleEvent(this, this.statusMsg);               
             eventHandler.publishEvent(event);
         }
-        
-        getLogger().info(msg);
     }
     
     
@@ -377,23 +373,25 @@ public abstract class AbstractModule<ConfigType extends ModuleConfig> implements
         synchronized (stateLock)
         {
             // error if we were never initialized
-            if (this.state == ModuleState.LOADED)
+            if (state == ModuleState.LOADED)
                 throw new SensorHubException("Module must be initialized");
             
             // do nothing if we're already started or starting
-            if (this.state == ModuleState.STARTED ||
-                this.state == ModuleState.STARTING)
+            if (state == ModuleState.STARTED || state == ModuleState.STARTING)
+            {
+                getLogger().warn("Module was already started");
                 return false;
+            }
             
             // set to start later if we're still initializing or stopping
-            if (this.state == ModuleState.INITIALIZING ||
-                this.state == ModuleState.STOPPING)
+            if (state == ModuleState.INITIALIZING || state == ModuleState.STOPPING)
             {
-                this.startRequested = true;
+                startRequested = true;
                 return false;
             }
             
             // actually start if we're either initialized or stopped
+            clearError();
             setState(ModuleState.STARTING);
             return true;
         }
@@ -426,9 +424,9 @@ public abstract class AbstractModule<ConfigType extends ModuleConfig> implements
         synchronized (stateLock)
         {
             // do nothing if we're already stopping
-            if (this.state == ModuleState.STOPPING)
+            if (state == ModuleState.STOPPING)
                 return false;
-            
+                        
             // otherwise we allow stop at any time
             // modules have to handle that properly
             setState(ModuleState.STOPPING);

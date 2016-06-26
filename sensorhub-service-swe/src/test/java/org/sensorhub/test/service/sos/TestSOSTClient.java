@@ -76,7 +76,7 @@ public class TestSOSTClient
     
     protected void startClient(String sensorID, boolean async) throws Exception
     {
-        startClient(sensorID, async, false, 10);
+        startClient(sensorID, async, false, 4);
     }
     
     
@@ -85,13 +85,14 @@ public class TestSOSTClient
         SOSTClientConfig config = new SOSTClientConfig();
         config.id = "SOST";
         config.name = "SOS-T Client";
-        config.connectTimeout = 1000;
-        config.reconnectPeriod = 500;
-        config.reconnectAttempts = maxAttempts;
         config.sensorID = sensorID;
         config.sosEndpointUrl = TestSOSService.HTTP_ENDPOINT;
-        config.usePersistentConnection = persistent;
-        config.maxConnectErrors = 2;
+        config.connection.connectTimeout = 1000;
+        config.connection.reconnectPeriod = 500;
+        config.connection.reconnectAttempts = maxAttempts;
+        config.connection.testPing = false;
+        config.connection.usePersistentConnection = persistent;
+        config.connection.maxConnectErrors = 2;
         
         final SOSTClient client = new SOSTClient();
         client.setConfiguration(config);
@@ -273,7 +274,7 @@ public class TestSOSTClient
         
         // start client
         ISensorModule<?> sensor = buildSensor1();
-        SOSTClient client = startClient(sensor.getLocalID(), false, true, 3);
+        SOSTClient client = startClient(sensor.getLocalID(), false, true, 2);
         
         // start sensor
         sensor.start();

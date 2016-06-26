@@ -19,7 +19,6 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.UnknownHostException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -42,9 +41,10 @@ import org.sensorhub.api.sensor.ISensorModule;
 import org.sensorhub.api.sensor.SensorDataEvent;
 import org.sensorhub.api.sensor.SensorEvent;
 import org.sensorhub.impl.SensorHub;
-import org.sensorhub.impl.client.AbstractClient;
+import org.sensorhub.impl.comm.RobustIPConnection;
+import org.sensorhub.impl.module.AbstractModule;
+import org.sensorhub.impl.module.RobustConnection;
 import org.sensorhub.utils.MsgUtils;
-import org.sensorhub.utils.NetworkUtils;
 import org.vast.cdm.common.DataStreamWriter;
 import org.vast.ogc.om.IObservation;
 import org.vast.ogc.om.ObservationImpl;
@@ -54,6 +54,7 @@ import org.vast.ows.sos.InsertResultRequest;
 import org.vast.ows.sos.InsertResultTemplateRequest;
 import org.vast.ows.sos.InsertResultTemplateResponse;
 import org.vast.ows.sos.InsertSensorRequest;
+import org.vast.ows.sos.SOSException;
 import org.vast.ows.sos.SOSInsertionCapabilities;
 import org.vast.ows.sos.SOSServiceCapabilities;
 import org.vast.ows.sos.SOSUtils;
@@ -72,8 +73,9 @@ import org.vast.swe.SWEData;
  * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @since Feb 6, 2015
  */
-public class SOSTClient extends AbstractClient<SOSTClientConfig> implements IClientModule<SOSTClientConfig>, IEventListener
+public class SOSTClient extends AbstractModule<SOSTClientConfig> implements IClientModule<SOSTClientConfig>, IEventListener
 {
+    RobustConnection connection;
     ISensorModule<?> sensor;
     SOSUtils sosUtils = new SOSUtils();    
     String offering;
@@ -104,7 +106,74 @@ public class SOSTClient extends AbstractClient<SOSTClientConfig> implements ICli
     public void init() throws SensorHubException
     {
         // get handle to sensor data source
-        sensor = SensorHub.getInstance().getSensorManager().getModuleById(config.sensorID);
+        try
+        {
+            sensor = SensorHub.getInstance().getSensorManager().getModuleById(config.sensorID);
+        }
+        catch (Exception e)
+        {
+            throw new ClientException("Cannot find sensor with local ID " + config.sensorID);
+        }
+        
+        // create connection handler
+        this.connection = new RobustIPConnection(this, config.connection, "SOS server")
+        {
+            public boolean tryConnect() throws Exception
+            {
+                URL endpointUrl = null;
+                try
+                {
+                    endpointUrl = new URL(config.sosEndpointUrl);
+                }
+                catch (MalformedURLException e)
+                {
+                    throw new SOSException("Invalid SOS endpoint URL", e);
+                }
+                
+                if (!tryConnect(endpointUrl.getHost()))
+                    return false;
+                
+                // check connection to SOS by fetching capabilities
+                SOSServiceCapabilities caps = null;
+                try
+                {
+                    GetCapabilitiesRequest request = new GetCapabilitiesRequest();
+                    request.setConnectTimeOut(connectConfig.connectTimeout);
+                    request.setService(SOSUtils.SOS);
+                    request.setGetServer(config.sosEndpointUrl);
+                    caps = (SOSServiceCapabilities)sosUtils.sendRequest(request, false);
+                }
+                catch (OWSException e)
+                {
+                    reportError("Cannot fetch SOS capabilities", e, true);
+                    return false;
+                }
+                
+                // check insert operations are supported
+                if (!caps.getPostServers().isEmpty())
+                {
+                    String[] neededOps = new String[] {"InsertSensor", "InsertResultTemplate", "InsertResult"};
+                    for (String opName: neededOps)
+                    {
+                        if (!caps.getPostServers().containsKey(opName))
+                            throw new SOSException(opName + " operation not supported by this SOS endpoint");
+                    }
+                }
+                
+                // check SML2 is supported
+                SOSInsertionCapabilities insertCaps = caps.getInsertionCapabilities();
+                if (insertCaps != null)
+                {
+                    if (!insertCaps.getProcedureFormats().contains(InsertSensorRequest.DEFAULT_PROCEDURE_FORMAT))
+                        throw new SOSException("SensorML v2.0 format not supported by this SOS endpoint");
+                    
+                    if (!insertCaps.getObservationTypes().contains(IObservation.OBS_TYPE_RECORD))
+                        throw new SOSException("DataRecord observation type not supported by this SOS endpoint");
+                }
+                
+                return true;
+            }
+        };
     }
     
     
@@ -124,7 +193,8 @@ public class SOSTClient extends AbstractClient<SOSTClientConfig> implements ICli
     @Override
     public void start() throws SensorHubException
     {
-        waitForConnection();
+        connection.updateConfig(config.connection);
+        connection.waitForConnection();
         reportStatus("Connected to " + config.sosEndpointUrl);
         
         try
@@ -142,72 +212,6 @@ public class SOSTClient extends AbstractClient<SOSTClientConfig> implements ICli
         {
             throw new ClientException("Error while registering sensor with remote SOS", e);
         }
-    }
-    
-    
-    @Override
-    protected boolean connect() throws SensorHubException
-    {
-        URL endpoint = null;
-        try
-        {
-            endpoint = new URL(config.sosEndpointUrl);
-        }
-        catch (MalformedURLException e)
-        {
-            throw new SensorHubException("Invalid SOS endpoint URL", e);
-        }
-        
-        try
-        {
-            // check host name is resolvable
-            NetworkUtils.resolve(endpoint.getHost(), config.connectTimeout);
-        }
-        catch (UnknownHostException e)
-        {
-            reportError("Cannot reach SOS server", e, true);
-            return false;
-        }
-        
-        // check connection to SOS by fetching capabilities
-        SOSServiceCapabilities caps = null;
-        try
-        {
-            GetCapabilitiesRequest request = new GetCapabilitiesRequest();
-            request.setConnectTimeOut(config.connectTimeout);
-            request.setService(SOSUtils.SOS);
-            request.setGetServer(config.sosEndpointUrl);
-            caps = (SOSServiceCapabilities)sosUtils.sendRequest(request, false);
-        }
-        catch (OWSException e)
-        {
-            reportError("Cannot fetch SOS capabilities", e, true);
-            return false;
-        }
-        
-        // check insert operations are supported
-        if (!caps.getPostServers().isEmpty())
-        {
-            String[] neededOps = new String[] {"InsertSensor", "InsertResultTemplate", "InsertResult"};
-            for (String opName: neededOps)
-            {
-                if (!caps.getPostServers().containsKey(opName))
-                    throw new SensorHubException(opName + " operation not supported by this SOS endpoint");
-            }
-        }
-        
-        // check SML2 is supported
-        SOSInsertionCapabilities insertCaps = caps.getInsertionCapabilities();
-        if (insertCaps != null)
-        {
-            if (!insertCaps.getProcedureFormats().contains(InsertSensorRequest.DEFAULT_PROCEDURE_FORMAT))
-                throw new SensorHubException("SensorML v2.0 format not supported by this SOS endpoint");
-            
-            if (!insertCaps.getObservationTypes().contains(IObservation.OBS_TYPE_RECORD))
-                throw new SensorHubException("DataRecord observation type not supported by this SOS endpoint");
-        }
-        
-        return true;
     }
     
     
@@ -265,7 +269,7 @@ public class SOSTClient extends AbstractClient<SOSTClientConfig> implements ICli
     {
         // build insert sensor request
         InsertSensorRequest req = new InsertSensorRequest();
-        req.setConnectTimeOut(config.connectTimeout);
+        req.setConnectTimeOut(config.connection.connectTimeout);
         req.setPostServer(config.sosEndpointUrl);
         req.setVersion("2.0");
         req.setProcedureDescription(sensor.getCurrentDescription());
@@ -286,7 +290,7 @@ public class SOSTClient extends AbstractClient<SOSTClientConfig> implements ICli
     {
         // build update sensor request
         UpdateSensorRequest req = new UpdateSensorRequest(SOSUtils.SOS);
-        req.setConnectTimeOut(config.connectTimeout);
+        req.setConnectTimeOut(config.connection.connectTimeout);
         req.setPostServer(config.sosEndpointUrl);
         req.setVersion("2.0");
         req.setProcedureId(sensor.getUniqueIdentifier());
@@ -305,7 +309,7 @@ public class SOSTClient extends AbstractClient<SOSTClientConfig> implements ICli
     {
         // generate insert result template
         InsertResultTemplateRequest req = new InsertResultTemplateRequest();
-        req.setConnectTimeOut(config.connectTimeout);
+        req.setConnectTimeOut(config.connection.connectTimeout);
         req.setPostServer(config.sosEndpointUrl);
         req.setVersion("2.0");
         req.setOffering(offering);
@@ -331,7 +335,7 @@ public class SOSTClient extends AbstractClient<SOSTClientConfig> implements ICli
         dataStreams.put(sensorOutput, streamInfo);
         
         // start thread pool
-        BlockingQueue<Runnable> workQueue = new ArrayBlockingQueue<Runnable>(config.maxQueueSize);
+        BlockingQueue<Runnable> workQueue = new ArrayBlockingQueue<Runnable>(config.connection.maxQueueSize);
         streamInfo.threadPool = new ThreadPoolExecutor(1, 1, 10, TimeUnit.SECONDS, workQueue);
         
         // register to data events
@@ -387,7 +391,7 @@ public class SOSTClient extends AbstractClient<SOSTClientConfig> implements ICli
                 return;
             
             // we stop here if we had too many errors
-            if (streamInfo.errorCount >= config.maxConnectErrors)
+            if (streamInfo.errorCount >= config.connection.maxConnectErrors)
             {
                 String outputName = ((SensorDataEvent)e).getSource().getName();
                 reportError("Too many errors sending '" + outputName + "' data to SOS-T. Stopping Stream.", null);
@@ -410,7 +414,7 @@ public class SOSTClient extends AbstractClient<SOSTClientConfig> implements ICli
             streamInfo.lastEventTime = e.getTimeStamp();
             
             // send record using one of 2 methods
-            if (config.usePersistentConnection)
+            if (config.connection.usePersistentConnection)
                 sendInPersistentRequest((SensorDataEvent)e, streamInfo);
             else
                 sendAsNewRequest((SensorDataEvent)e, streamInfo);
@@ -434,7 +438,7 @@ public class SOSTClient extends AbstractClient<SOSTClientConfig> implements ICli
         if (allStopped)
         {
             reportStatus("All streams stopped on error. Trying to reconnect...");
-            restartOnDisconnect();
+            connection.reconnect();
         }
     }
     
@@ -575,6 +579,13 @@ public class SOSTClient extends AbstractClient<SOSTClientConfig> implements ICli
         
         // run task in async thread pool
         streamInfo.threadPool.execute(sendTask);
+    }
+
+
+    @Override
+    public boolean isConnected()
+    {
+        return connection.isConnected();
     }
     
     

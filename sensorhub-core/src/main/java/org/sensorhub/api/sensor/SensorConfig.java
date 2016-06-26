@@ -36,10 +36,6 @@ public class SensorConfig extends ModuleConfig
     public String sensorML;
     
     
-    @DisplayInfo(label="Auto-Detect Timeout", desc="Maximum time to wait for sensor to be connected (or re-connected)")
-    public int connectTimeout = 0;
-    
-    
     @DisplayInfo(desc="List of hidden sensor interfaces")    
     public String[] hiddenIO;
     
