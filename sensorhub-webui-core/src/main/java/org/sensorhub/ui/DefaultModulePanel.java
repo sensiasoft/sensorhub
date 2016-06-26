@@ -14,22 +14,22 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.ui;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
+import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.module.IModule;
 import org.sensorhub.api.module.ModuleConfig;
-import org.sensorhub.ui.api.IModuleConfigForm;
+import org.sensorhub.api.module.ModuleEvent;
 import org.sensorhub.ui.api.IModuleAdminPanel;
+import org.sensorhub.ui.api.IModuleConfigForm;
 import org.sensorhub.ui.api.UIConstants;
 import org.sensorhub.ui.data.MyBeanItem;
 import com.vaadin.server.Page;
 import com.vaadin.shared.ui.label.ContentMode;
 import com.vaadin.ui.Button;
+import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.VerticalLayout;
-import com.vaadin.ui.Button.ClickEvent;
 
 
 /**
@@ -42,21 +42,26 @@ import com.vaadin.ui.Button.ClickEvent;
  * @param <ModuleType> Type of module supported by this panel builder
  * @since 0.5
  */
-public class DefaultModulePanel<ModuleType extends IModule<? extends ModuleConfig>> extends VerticalLayout implements IModuleAdminPanel<ModuleType>, UIConstants
+public class DefaultModulePanel<ModuleType extends IModule<? extends ModuleConfig>> extends VerticalLayout implements IModuleAdminPanel<ModuleType>, UIConstants, IEventListener
 {
     private static final long serialVersionUID = -3391035886386668911L;
+    ModuleType module;
+    Button statusBtn;
+    Button errorBtn;
     
     
     @Override
     @SuppressWarnings("serial")
     public void build(final MyBeanItem<ModuleConfig> beanItem, final ModuleType module)
     {
+        this.module = module;
+        
         setSizeUndefined();
         setWidth(100.0f, Unit.PERCENTAGE);
         setMargin(false);
         setSpacing(true);
         
-        // label with module name
+        // module name
         String moduleName = beanItem.getBean().name;
         String className = beanItem.getBean().getClass().getSimpleName();
         Label title = new Label(moduleName);
@@ -65,42 +70,11 @@ public class DefaultModulePanel<ModuleType extends IModule<? extends ModuleConfi
         addComponent(title);
         addComponent(new Label("<hr/>", ContentMode.HTML));
         
-        // label with status message
-        String statusMsg = module.getStatusMessage();
-        if (statusMsg != null)
-        {
-            Button status = new Button();
-            status.setIcon(INFO_ICON);
-            status.setCaption(statusMsg);
-            addComponent(status);
-        }
+        // status message
+        refreshStatusMessage();
         
-        // label and popup box for error
-        final Throwable errorObj = module.getCurrentError();
-        if (errorObj != null)
-        {
-            Button error = new Button();
-            error.setIcon(ERROR_ICON);
-            String errorMsg = errorObj.getMessage().trim();
-            if (!errorMsg.endsWith("."))
-                errorMsg += ". ";
-            if (errorObj.getCause() != null && errorObj.getCause().getMessage() != null)
-                errorMsg += errorObj.getCause().getMessage();
-            error.setCaption(errorMsg);
-            
-            error.addClickListener(new ClickListener() {
-                public void buttonClick(ClickEvent event)
-                {
-                    StringWriter writer = new StringWriter();
-                    errorObj.printStackTrace(new PrintWriter(writer));
-                    String stackTrace = writer.toString();
-                    stackTrace.replace("Caused By:", "\nCaused By:");
-                    Notification.show("Error\n", writer.toString(), Notification.Type.ERROR_MESSAGE);
-                }
-            });
-            
-            addComponent(error);
-        }
+        // error box
+        refreshErrorMessage();
         
         // apply changes button
         Button applyButton = new Button("Apply Changes");
@@ -140,11 +114,161 @@ public class DefaultModulePanel<ModuleType extends IModule<? extends ModuleConfi
     }
     
     
+    protected void refreshStatusMessage()
+    {
+        String statusMsg = module.getStatusMessage();
+        if (statusMsg != null)
+        {
+            Button oldBtn = statusBtn;
+            
+            statusBtn = new Button();
+            statusBtn.setStyleName(STYLE_LINK);
+            statusBtn.setIcon(INFO_ICON);
+            statusBtn.setCaption(statusMsg);
+            
+            if (oldBtn == null)
+                addComponent(statusBtn, 2);
+            else
+                replaceComponent(oldBtn, statusBtn);
+        }
+        else
+        {
+            if (statusBtn != null)
+            {
+                removeComponent(statusBtn);
+                statusBtn = null;
+            }
+        }
+    }
+    
+    
+    @SuppressWarnings("serial")
+    protected void refreshErrorMessage()
+    {
+        final Throwable errorObj = module.getCurrentError();
+        if (errorObj != null)
+        {
+            Button oldBtn = errorBtn;
+            
+            errorBtn = new Button();
+            errorBtn.setStyleName(STYLE_LINK);
+            errorBtn.setIcon(ERROR_ICON);
+            String errorMsg = errorObj.getMessage().trim();
+            if (!errorMsg.endsWith("."))
+                errorMsg += ". ";
+            if (errorObj.getCause() != null && errorObj.getCause().getMessage() != null)
+                errorMsg += errorObj.getCause().getMessage();
+            errorBtn.setCaption(errorMsg);
+            
+            errorBtn.addClickListener(new ClickListener() {
+                public void buttonClick(ClickEvent event)
+                {
+                    /*StringWriter writer = new StringWriter();
+                    errorObj.printStackTrace(new PrintWriter(writer));
+                    String stackTrace = writer.toString();
+                    stackTrace.replace("Caused By:", "\nCaused By:");
+                    Notification.show("Error\n", writer.toString(), Notification.Type.ERROR_MESSAGE);*/
+                    StringBuilder buf = new StringBuilder();
+                    Throwable ex = errorObj;
+                    do {
+                        String msg = ex.getMessage();
+                        if (msg != null)
+                        {
+                            msg = msg.trim();
+                            buf.append(msg);
+                            if (!msg.endsWith("."))
+                                buf.append('.');
+                            buf.append('\n');
+                        }
+                        ex = ex.getCause();
+                    }
+                    while (ex != null);
+                    Notification.show("Error\n\n", buf.toString(), Notification.Type.ERROR_MESSAGE);
+                }
+            });
+            
+            if (oldBtn == null)
+                addComponent(errorBtn, (statusBtn == null) ? 2 : 3);
+            else
+                replaceComponent(oldBtn, errorBtn);
+        }
+        else
+        {
+            if (errorBtn != null)
+            {
+                removeComponent(errorBtn);
+                errorBtn = null;
+            }
+        }
+    }
+    
+    
     protected IModuleConfigForm getConfigForm(MyBeanItem<ModuleConfig> beanItem, ModuleType module)
     {
         IModuleConfigForm form = AdminUI.getInstance().generateForm(beanItem.getBean().getClass());//module.getClass());
         form.build("Main Settings", null, beanItem);
         return form;
+    }
+    
+    
+    @Override
+    public void attach()
+    {
+        super.attach();
+        module.registerListener(this);
+    }
+    
+    
+    @Override
+    public void detach()
+    {
+        module.unregisterListener(this);
+        super.detach();
+    }
+
+
+    @Override
+    public void handleEvent(org.sensorhub.api.common.Event<?> e)
+    {
+        if (e instanceof ModuleEvent)
+        {
+            switch (((ModuleEvent)e).getType())
+            {
+                case STATUS:
+                    getUI().access(new Runnable() {
+                        public void run()
+                        {
+                            refreshStatusMessage();
+                            getUI().push();
+                        }
+                    });                    
+                    break;
+                    
+                case ERROR:
+                    getUI().access(new Runnable() {
+                        public void run()
+                        {
+                            refreshErrorMessage();
+                            getUI().push();
+                        }
+                    });                    
+                    break;
+                    
+                case STATE_CHANGED:
+                    getUI().access(new Runnable() {
+                        public void run()
+                        {
+                            refreshStatusMessage();
+                            refreshErrorMessage();
+                            getUI().push();
+                        }
+                    });  
+                    break;
+                    
+                default:
+                    return;
+            }
+        }        
     }
 
 }
