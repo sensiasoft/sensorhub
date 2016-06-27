@@ -30,10 +30,10 @@ public class UDPConfig extends IPConfig
 {
     @DisplayInfo(desc="Port number to connect to on remote host")
     @ValueRange(min=0, max=65535)
-    public int localPort;
-	
+    public int remotePort;
+    
+
     @DisplayInfo(desc="Local port number to use on the local host")
     @ValueRange(min=0, max=65535)
-    public int remotePort;
-
+    public int localPort;
 }
