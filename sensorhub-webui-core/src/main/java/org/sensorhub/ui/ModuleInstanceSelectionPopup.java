@@ -35,7 +35,7 @@ public class ModuleInstanceSelectionPopup extends Window
     @SuppressWarnings("rawtypes")
     protected interface ModuleInstanceSelectionCallback
     {
-        public void moduleSelected(IModule module);
+        public void onSelected(IModule module);
     }
     
     
@@ -44,6 +44,7 @@ public class ModuleInstanceSelectionPopup extends Window
     {
         super("Select Module");
         VerticalLayout layout = new VerticalLayout();
+        layout.setSpacing(true);
         
         // generate table with module list
         final Table table = new Table();
@@ -84,7 +85,7 @@ public class ModuleInstanceSelectionPopup extends Window
                 {
                     IModule<?> module = moduleMap.get(selectedItemId);
                     if (module != null)
-                        callback.moduleSelected(module);
+                        callback.onSelected(module);
                 }
                 
                 close();

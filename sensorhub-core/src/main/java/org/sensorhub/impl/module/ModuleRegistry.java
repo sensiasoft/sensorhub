@@ -305,7 +305,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
                 catch (Exception e)
                 {
                     String msg = "Cannot initialize module " + MsgUtils.moduleString(module);
-                    log.error(msg, e);
+                    log.error(msg);
                 }
             }            
         });
@@ -385,7 +385,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
                     catch (Exception e)
                     {
                         String msg = "Cannot start module " + MsgUtils.moduleString(module);
-                        log.error(msg, e);
+                        log.error(msg);
                     }
                 }            
             });
@@ -466,7 +466,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
                     catch (Exception e)
                     {
                         String msg = "Cannot stop module " + MsgUtils.moduleString(module);
-                        log.error(msg, e);
+                        log.error(msg);
                     }
                 }            
             });

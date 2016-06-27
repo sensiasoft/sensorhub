@@ -15,16 +15,22 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 package org.sensorhub.ui;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import org.sensorhub.api.comm.ICommNetwork;
+import org.sensorhub.api.comm.ICommNetwork.NetworkType;
 import org.sensorhub.api.config.DisplayInfo.FieldType.Type;
+import org.sensorhub.api.config.DisplayInfo.ValueRange;
 import org.sensorhub.api.module.IModule;
 import org.sensorhub.api.module.ModuleConfig;
+import org.sensorhub.impl.SensorHub;
 import org.sensorhub.impl.sensor.SensorSystemConfig.ProcessMember;
 import org.sensorhub.impl.sensor.SensorSystemConfig.SensorMember;
 import org.sensorhub.ui.ModuleInstanceSelectionPopup.ModuleInstanceSelectionCallback;
 import org.sensorhub.ui.ModuleTypeSelectionPopup.ModuleTypeSelectionCallback;
+import org.sensorhub.ui.NetworkAddressSelectionPopup.AddressSelectionCallback;
 import org.sensorhub.ui.ObjectTypeSelectionPopup.ObjectTypeSelectionCallback;
 import org.sensorhub.ui.ValueEntryPopup.ValueCallback;
 import org.sensorhub.ui.api.IModuleConfigForm;
@@ -35,12 +41,17 @@ import org.sensorhub.ui.data.ContainerProperty;
 import org.sensorhub.ui.data.FieldProperty;
 import org.sensorhub.ui.data.MyBeanItem;
 import org.sensorhub.ui.data.MyBeanItemContainer;
+import com.vaadin.data.Buffered.SourceException;
+import com.vaadin.data.Property;
 import com.vaadin.data.Validator.InvalidValueException;
 import com.vaadin.data.fieldgroup.FieldGroup;
 import com.vaadin.data.fieldgroup.FieldGroup.CommitEvent;
 import com.vaadin.data.fieldgroup.FieldGroup.CommitException;
 import com.vaadin.data.fieldgroup.FieldGroup.CommitHandler;
+import com.vaadin.data.validator.IntegerRangeValidator;
 import com.vaadin.data.validator.StringLengthValidator;
+import com.vaadin.server.FontAwesome;
+import com.vaadin.server.Page;
 import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.AbstractComponent;
 import com.vaadin.ui.AbstractField;
@@ -132,7 +143,7 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
             fieldGroup = new FieldGroup(beanItem);
             for (Object propId: fieldGroup.getUnboundPropertyIds())
             {
-                BaseProperty<?> prop = (BaseProperty<?>)fieldGroup.getItemDataSource().getItemProperty(propId);
+                Property<?> prop = fieldGroup.getItemDataSource().getItemProperty(propId);
                 
                 // sub objects with multiplicity > 1
                 if (prop instanceof ContainerProperty)
@@ -187,7 +198,7 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
                     }
                     catch (Exception e)
                     {
-                        System.err.println("No UI generator for field " + propId);
+                        AdminUI.log.error("Error while generating UI field for property " + propId, (e instanceof SourceException) ? null : e);
                         continue;
                     }
                     
@@ -239,7 +250,7 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
      * @param prop
      * @return the generated Field object
      */
-    protected Field<?> buildAndBindField(String label, String propId, BaseProperty<?> prop)
+    protected Field<?> buildAndBindField(String label, String propId, Property<?> prop)
     {
         Field<?> field = fieldGroup.buildAndBind(label, propId);
         Class<?> propType = prop.getType();
@@ -274,26 +285,156 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
         }
         
         // special fields
-        Type fieldType = prop.getFieldType();
-        if (fieldType != null)
+        if (prop instanceof BaseProperty)
         {
-            switch (fieldType)
+            BaseProperty<?> advProp = (BaseProperty<?>)prop;
+            Type fieldType = advProp.getFieldType();
+            if (fieldType != null)
             {
-                case MODULE_ID:
-                    @SuppressWarnings("rawtypes")
-                    Class<? extends IModule> moduleClass = prop.getModuleType();
-                    if (moduleClass == null)
-                        moduleClass = IModule.class;
-                    field = makeModuleSelectField((Field<Object>)field, moduleClass);
-                    field.addValidator(new StringLengthValidator(MSG_REQUIRED_FIELD, 1, 256, false));
-                    break;
-                    
-                default:
+                switch (fieldType)
+                {
+                    case MODULE_ID:
+                        @SuppressWarnings("rawtypes")
+                        Class<? extends IModule> moduleClass = advProp.getModuleType();
+                        if (moduleClass == null)
+                            moduleClass = IModule.class;
+                        field = makeModuleSelectField((Field<Object>)field, moduleClass);
+                        field.addValidator(new StringLengthValidator(MSG_REQUIRED_FIELD, 1, 256, false));
+                        break;
+                        
+                    case REMOTE_ADDRESS:
+                        NetworkType addressType = advProp.getAddressType();
+                        if (addressType == null)
+                            addressType = NetworkType.IP;
+                        field = makeAddressSelectField((Field<Object>)field, addressType);
+                        field.addValidator(new StringLengthValidator(MSG_REQUIRED_FIELD, 1, 256, false));
+                        break;
+                        
+                    default:
+                }
+            }
+        
+            // field constraints
+            ValueRange range = advProp.getValueRange();
+            if (range != null)
+            {
+                String msg = String.format("Value should be within [%d - %d] range", range.min(), range.max());
+                field.addValidator(new IntegerRangeValidator(msg, range.min(), range.max()));
             }
         }
         
         return field;
-    } 
+    }
+    
+    
+    @SuppressWarnings("rawtypes")
+    protected Field<Object> makeModuleSelectField(Field<Object> field, final Class<? extends IModule> moduleType)
+    {
+        field = new FieldWrapper<Object>(field) {
+            private static final long serialVersionUID = -992750405944982226L;
+            protected Component initContent()
+            {
+                HorizontalLayout layout = new HorizontalLayout();
+                layout.setSpacing(true);
+                
+                // inner field
+                innerField.setReadOnly(true);
+                layout.addComponent(innerField);
+                layout.setComponentAlignment(innerField, Alignment.MIDDLE_LEFT);
+                final Field<Object> wrapper = this;
+                
+                // select module button
+                Button selectBtn = new Button(FontAwesome.SEARCH);
+                selectBtn.addStyleName(STYLE_QUIET);
+                layout.addComponent(selectBtn);
+                layout.setComponentAlignment(selectBtn, Alignment.MIDDLE_LEFT);
+                selectBtn.addClickListener(new ClickListener() {
+                    private static final long serialVersionUID = 1L;
+                    public void buttonClick(ClickEvent event)
+                    {
+                        // show popup to select among available module types
+                        ModuleInstanceSelectionPopup popup = new ModuleInstanceSelectionPopup(moduleType, new ModuleInstanceSelectionCallback() {
+                            public void onSelected(IModule module)
+                            {
+                                innerField.setReadOnly(false);
+                                wrapper.setValue(module.getLocalID());
+                                innerField.setReadOnly(true);
+                            }
+                        });
+                        popup.setModal(true);
+                        AdminUI.getInstance().addWindow(popup);
+                    }
+                });
+                                
+                return layout;
+            }             
+        };
+        
+        return field;
+    }
+    
+    
+    protected Field<Object> makeAddressSelectField(Field<Object> field, final NetworkType addressType)
+    {
+        field = new FieldWrapper<Object>(field) {
+            private static final long serialVersionUID = 52555234915457459L;
+            protected Component initContent()
+            {
+                HorizontalLayout layout = new HorizontalLayout();
+                layout.setSpacing(true);
+                
+                // inner field
+                layout.addComponent(innerField);
+                layout.setComponentAlignment(innerField, Alignment.MIDDLE_LEFT);
+                final Field<Object> wrapper = this;
+                
+                // select module button
+                Button selectBtn = new Button(FontAwesome.SEARCH);
+                selectBtn.addStyleName(STYLE_QUIET);
+                layout.addComponent(selectBtn);
+                layout.setComponentAlignment(selectBtn, Alignment.MIDDLE_LEFT);
+                selectBtn.addClickListener(new ClickListener() {
+                    private static final long serialVersionUID = 1L;
+                    public void buttonClick(ClickEvent event)
+                    {
+                        // error if no networks are available
+                        boolean netAvailable = false;
+                        Collection<ICommNetwork<?>> networks = SensorHub.getInstance().getNetworkManager().getLoadedModules(addressType);
+                        for (ICommNetwork<?> network: networks)
+                        {
+                            if (network.isStarted())
+                            {
+                                netAvailable = true;
+                                break;
+                            }
+                        }
+                        if (!netAvailable)
+                        {
+                            Page page = AdminUI.getInstance().getPage();
+                            new Notification("Error", "No network scanner available for " + addressType + " address lookup", Notification.Type.ERROR_MESSAGE).show(page);
+                            return;
+                        }
+                        
+                        // show popup to select among available module types
+                        NetworkAddressSelectionPopup popup = new NetworkAddressSelectionPopup(addressType, new AddressSelectionCallback() {
+                            public void onSelected(String address)
+                            {
+                                innerField.setReadOnly(false);
+                                wrapper.setValue(address);
+                                innerField.setReadOnly(true);                                
+                            }
+                        });
+                        popup.setModal(true);
+                        AdminUI.getInstance().addWindow(popup);
+                    }
+                });
+                                
+                return layout;
+            }             
+        };
+        
+        return field;
+    }
     
     
     protected ComponentContainer buildSubForm(final String propId, final ComplexProperty prop)
@@ -342,7 +483,7 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
             {
                 // show popup to select among available module types
                 ModuleTypeSelectionPopup popup = new ModuleTypeSelectionPopup(objectType, new ModuleTypeSelectionCallback() {
-                    public void configSelected(Class<?> moduleType, ModuleConfig config)
+                    public void onSelected(Class<?> moduleType, ModuleConfig config)
                     {
                         // regenerate form
                         config.id = null;
@@ -384,7 +525,7 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
             {
                 // show popup to select among available module types
                 ObjectTypeSelectionPopup popup = new ObjectTypeSelectionPopup("Select Type", typeList, new ObjectTypeSelectionCallback() {
-                    public void typeSelected(Class<?> objectType)
+                    public void onSelected(Class<?> objectType)
                     {
                         try
                         {
@@ -617,8 +758,10 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
                         // show popup to select among available module types
                         String title = "Please select the desired option";
                         Map<String, Class<?>> typeList = GenericConfigForm.this.getPossibleTypes(propId);
-                        ObjectTypeSelectionPopup popup = new ObjectTypeSelectionPopup(title, typeList, new ObjectTypeSelectionCallback() {
-                            public void typeSelected(Class<?> objectType)
+                        
+                        // create callback to add table item
+                        ObjectTypeSelectionCallback callback = new ObjectTypeSelectionCallback() {
+                            public void onSelected(Class<?> objectType)
                             {
                                 try
                                 {
@@ -641,9 +784,18 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
                                     Notification.show("Error", e.getMessage(), Notification.Type.ERROR_MESSAGE);
                                 }
                             }
-                        });
-                        popup.setModal(true);
-                        AdminUI.getInstance().addWindow(popup);                        
+                        };
+                        
+                        if (typeList == null || typeList.isEmpty())
+                        {
+                            callback.onSelected(container.getBeanType());
+                        }
+                        else
+                        {
+                            ObjectTypeSelectionPopup popup = new ObjectTypeSelectionPopup(title, typeList, callback);
+                            popup.setModal(true);
+                            AdminUI.getInstance().addWindow(popup);
+                        }
                     }
                     catch (Exception e)
                     {
@@ -677,53 +829,12 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
     }
     
     
-    @SuppressWarnings("rawtypes")
-    protected Field<Object> makeModuleSelectField(Field<Object> field, final Class<? extends IModule> moduleType)
+    protected void addTableItem()
     {
-        field = new FieldWrapper<Object>(field) {
-            private static final long serialVersionUID = -992750405944982226L;
-            protected Component initContent()
-            {
-                HorizontalLayout layout = new HorizontalLayout();
-                layout.setSpacing(true);
-                
-                // inner field
-                innerField.setReadOnly(true);
-                layout.addComponent(innerField);
-                layout.setComponentAlignment(innerField, Alignment.MIDDLE_LEFT);
-                final Field<Object> wrapper = this;
-                
-                // select module button
-                Button selectBtn = new Button(LINK_ICON);
-                selectBtn.addStyleName(STYLE_QUIET);
-                layout.addComponent(selectBtn);
-                layout.setComponentAlignment(selectBtn, Alignment.MIDDLE_LEFT);
-                selectBtn.addClickListener(new ClickListener() {
-                    private static final long serialVersionUID = 1L;
-                    public void buttonClick(ClickEvent event)
-                    {
-                        // show popup to select among available module types
-                        ModuleInstanceSelectionPopup popup = new ModuleInstanceSelectionPopup(moduleType, new ModuleInstanceSelectionCallback() {
-                            public void moduleSelected(IModule module)
-                            {
-                                innerField.setReadOnly(false);
-                                wrapper.setValue(module.getLocalID());
-                                innerField.setReadOnly(true);
-                            }
-                        });
-                        popup.setModal(true);
-                        AdminUI.getInstance().addWindow(popup);
-                    }
-                });
-                                
-                return layout;
-            }             
-        };
         
-        return field;
     }
-
-
+    
+    
     @Override
     public void commit() throws CommitException
     {

@@ -17,6 +17,7 @@ package org.sensorhub.impl.comm;
 import java.util.ArrayList;
 import java.util.Collection;
 import org.sensorhub.api.comm.ICommNetwork;
+import org.sensorhub.api.comm.ICommNetwork.NetworkType;
 import org.sensorhub.api.comm.INetworkManager;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.module.IModule;
@@ -47,16 +48,34 @@ public class NetworkManagerImpl implements INetworkManager
     @Override
     public Collection<ICommNetwork<?>> getLoadedModules()
     {
-        ArrayList<ICommNetwork<?>> enabledSensors = new ArrayList<ICommNetwork<?>>();
+        ArrayList<ICommNetwork<?>> netModules = new ArrayList<ICommNetwork<?>>();
         
         // retrieve all modules implementing ISensorInterface
         for (IModule<?> module: moduleRegistry.getLoadedModules())
         {
             if (module instanceof ICommNetwork)
-                enabledSensors.add((ICommNetwork<?>)module);
+                netModules.add((ICommNetwork<?>)module);
         }
         
-        return enabledSensors;
+        return netModules;
+    }
+    
+    
+    public Collection<ICommNetwork<?>> getLoadedModules(NetworkType netType)
+    {
+        ArrayList<ICommNetwork<?>> netModules = new ArrayList<ICommNetwork<?>>();
+        
+        // retrieve all modules implementing ISensorInterface
+        for (IModule<?> module: moduleRegistry.getLoadedModules())
+        {
+            if (module instanceof ICommNetwork)
+            {
+                if (((ICommNetwork<?>)module).isOfType(netType))
+                    netModules.add((ICommNetwork<?>)module);
+            }
+        }
+        
+        return netModules;
     }
     
     

@@ -38,7 +38,7 @@ public class ModuleTypeSelectionPopup extends Window
     
     protected interface ModuleTypeSelectionCallback
     {
-        public void configSelected(Class<?> moduleType, ModuleConfig config);
+        public void onSelected(Class<?> moduleType, ModuleConfig config);
     }
     
     
@@ -46,6 +46,7 @@ public class ModuleTypeSelectionPopup extends Window
     {
         super("Select Module Type");
         VerticalLayout layout = new VerticalLayout();
+        layout.setSpacing(true);
         
         // generate table with module list
         final Table table = new Table();
@@ -103,7 +104,7 @@ public class ModuleTypeSelectionPopup extends Window
                         config.autoStart = false;
                         
                         // send back new config object
-                        callback.configSelected(moduleType, config); 
+                        callback.onSelected(moduleType, config); 
                     }
                 }
                 catch (Exception e)

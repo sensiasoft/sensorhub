@@ -34,7 +34,7 @@ public class ObjectTypeSelectionPopup extends Window
 
     protected interface ObjectTypeSelectionCallback
     {
-        public void typeSelected(Class<?> objectType);
+        public void onSelected(Class<?> objectType);
     }
     
     
@@ -42,6 +42,7 @@ public class ObjectTypeSelectionPopup extends Window
     {
         super(title);
         VerticalLayout layout = new VerticalLayout();
+        layout.setSpacing(true);
         
         // generate table with type list
         final Table table = new Table();
@@ -75,7 +76,7 @@ public class ObjectTypeSelectionPopup extends Window
                 {
                     Class<?> clazz = idTypeMap.get(selectedItemId);
                     if (clazz != null)
-                        callback.typeSelected(clazz);
+                        callback.onSelected(clazz);
                 }
                 
                 close();

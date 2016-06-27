@@ -14,10 +14,13 @@ Copyright (C) 2012-2016 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.api.comm;
 
+import java.util.Collection;
+import org.sensorhub.api.comm.ICommNetwork.NetworkType;
 import org.sensorhub.api.module.IModuleManager;
 
 
 public interface INetworkManager extends IModuleManager<ICommNetwork<?>>
 {
 
+    public Collection<ICommNetwork<?>> getLoadedModules(NetworkType netType);
 }

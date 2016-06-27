@@ -23,13 +23,14 @@ import org.sensorhub.api.comm.INetworkInfo;
 import org.sensorhub.api.module.ModuleConfig;
 import org.sensorhub.ui.api.IModuleAdminPanel;
 import org.sensorhub.ui.data.MyBeanItem;
-import com.vaadin.server.Page;
+import com.vaadin.data.Item;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.GridLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Table;
 import com.vaadin.ui.Button.ClickEvent;
+import com.vaadin.ui.UI;
 
 
 /**
@@ -44,9 +45,230 @@ import com.vaadin.ui.Button.ClickEvent;
 public class NetworkAdminPanel extends DefaultModulePanel<ICommNetwork<?>> implements IModuleAdminPanel<ICommNetwork<?>>
 {
     private static final long serialVersionUID = -183320020448726954L;
+    private static final String PROP_NAME = "Name";
+    private static final String PROP_TYPE = "Type";
+    private static final String PROP_ADDRESS = "Address";
+    private static final String PROP_SIG_LEVEL = "Signal Level";
+    private static final String DEV_INFO_OBJ = "DEV_OBJ";
+    
+    
+    public static class NetworkScanPanel extends GridLayout
+    {
+        private static final long serialVersionUID = -1587883711970632124L;
+        ICommNetwork<?> module;
+        Button scanButton;
+        Table deviceTable;
+        Timer stopTimer =  new Timer();
+        TimerTask timerTask;
+        
+        
+        public NetworkScanPanel(final ICommNetwork<?> module)
+        {
+            this.module = module;
+            
+            setWidth(100.0f, Unit.PERCENTAGE);
+            setSpacing(true);
+            this.setColumns(1);
+            
+            addAvailableNetworks();
+            addScannedDevicesTable();
+        }
+        
+        
+        protected void addAvailableNetworks()
+        {
+            // section title
+            Label sectionLabel = new Label("Available Networks");
+            sectionLabel.addStyleName(STYLE_H3);
+            sectionLabel.addStyleName(STYLE_COLORED);
+            addComponent(sectionLabel);
+            
+            // network table
+            final Table table = new Table();
+            table.setWidth(100.0f, Unit.PERCENTAGE);
+            table.setPageLength(3);
+            table.setSelectable(true);
+            table.setImmediate(true);
+            table.setColumnReorderingAllowed(false);
+            table.addContainerProperty("Network Type", String.class, null);
+            table.addContainerProperty("Interface Name", String.class, null);
+            table.addContainerProperty("Hardware Address", String.class, null);
+            table.addContainerProperty("Logical Address", String.class, null);
 
-    boolean scanning;
-    Button scanButton;
+            int i = 0;
+            for (INetworkInfo netInfo: module.getAvailableNetworks())
+            {
+                table.addItem(new Object[] {
+                        netInfo.getNetworkType().toString(),
+                        netInfo.getInterfaceName(),
+                        netInfo.getHardwareAddress(),
+                        netInfo.getLogicalAddress()}, i);
+                i++;
+            }
+            
+            addComponent(table);
+        }
+        
+        
+        @SuppressWarnings("serial")
+        protected void addScannedDevicesTable()
+        {
+            // section title
+            Label sectionLabel = new Label("Detected Devices");
+            sectionLabel.addStyleName(STYLE_H3);
+            sectionLabel.addStyleName(STYLE_COLORED);
+            addComponent(sectionLabel);
+            
+            // scan button
+            scanButton = new Button("Start Scan");
+            scanButton.setIcon(REFRESH_ICON);
+            scanButton.addStyleName("scan-button");
+            scanButton.setEnabled(module.isStarted());
+            addComponent(scanButton);
+            
+            // device table
+            deviceTable = new Table();
+            deviceTable.setWidth(100.0f, Unit.PERCENTAGE);
+            deviceTable.setPageLength(10);
+            deviceTable.setSelectable(true);
+            deviceTable.setImmediate(true);
+            deviceTable.setColumnReorderingAllowed(false);
+            deviceTable.addContainerProperty(PROP_NAME, String.class, null);
+            deviceTable.addContainerProperty(PROP_TYPE, String.class, null);
+            deviceTable.addContainerProperty(PROP_ADDRESS, String.class, null);
+            deviceTable.addContainerProperty(PROP_SIG_LEVEL, String.class, null);
+            deviceTable.addContainerProperty(DEV_INFO_OBJ, IDeviceInfo.class, null);
+            deviceTable.setVisibleColumns(PROP_NAME, PROP_TYPE, PROP_ADDRESS, PROP_SIG_LEVEL);
+            
+            // scan button handler
+            scanButton.addClickListener(new Button.ClickListener() {
+                @Override
+                public void buttonClick(ClickEvent event)
+                {
+                    if (!module.getDeviceScanner().isScanning())
+                    {
+                        scanButton.setCaption("Stop Scan");
+                        deviceTable.removeAllItems();
+                        
+                        new Thread() {
+                            public void run()
+                            {
+                                module.getDeviceScanner().startScan(new IDeviceScanCallback(){
+                                    @Override
+                                    public void onDeviceFound(final IDeviceInfo info)
+                                    {
+                                        final UI ui = NetworkScanPanel.this.getUI();
+                                        if (ui != null)
+                                        {
+                                            ui.access(new Runnable() {
+                                                public void run() {
+                                                    String itemId = info.getAddress() + '/' + info.getType();
+                                                    Item item;
+                                                    
+                                                    // create or refresh device info
+                                                    if (!deviceTable.containsId(itemId))
+                                                    {
+                                                        item = deviceTable.addItem(itemId);
+                                                        item.getItemProperty(DEV_INFO_OBJ).setValue(info); 
+                                                    }
+                                                    else
+                                                        item = deviceTable.getItem(itemId);
+                                                                                            
+                                                    item.getItemProperty(PROP_NAME).setValue(info.getName());
+                                                    item.getItemProperty(PROP_TYPE).setValue(info.getType());
+                                                    item.getItemProperty(PROP_ADDRESS).setValue(info.getAddress());
+                                                    item.getItemProperty(PROP_SIG_LEVEL).setValue(info.getSignalLevel());                                        
+                                                    
+                                                    ui.push();
+                                                }
+                                            });
+                                        }
+                                    }
+            
+                                    @Override
+                                    public void onScanError(final Throwable e)
+                                    {
+                                        final String msg = "Error during device scan";
+                                        
+                                        final UI ui = NetworkScanPanel.this.getUI();
+                                        if (ui != null)
+                                        {
+                                            ui.access(new Runnable() {
+                                                public void run() {
+                                                    
+                                                    new Notification("Error", msg + '\n' + e.getMessage(), Notification.Type.ERROR_MESSAGE).show(ui.getPage());
+                                                }
+                                            });
+                                        }
+                                        
+                                        AdminUI.log.error(msg, e);               
+                                    }                        
+                                });
+                            }
+                        }.start();                            
+                        
+                        // automatically stop scan after 30s
+                        timerTask = new TimerTask() {
+                            @Override
+                            public void run()
+                            {
+                                stopScan();
+                            }                        
+                        };
+                        stopTimer.schedule(timerTask, 30000);
+                    }
+                    else
+                    {
+                        stopScan();
+                    }
+                }
+            });        
+            
+            addComponent(deviceTable);
+        }
+        
+        
+        public void stopScan()
+        {
+            if (timerTask != null)
+                timerTask.cancel();
+            
+            module.getDeviceScanner().stopScan();
+            
+            final UI ui = NetworkScanPanel.this.getUI();
+            if (ui != null)
+            {
+                ui.access(new Runnable() {
+                    @Override
+                    public void run() {
+                        scanButton.setCaption("Start Scan");
+                        ui.push();
+                    }
+                });
+            }
+        }
+        
+        
+        public IDeviceInfo getSelectedDevice()
+        {
+            Object selectedItemId = deviceTable.getValue();
+            if (selectedItemId != null)
+            {
+                final Item item = deviceTable.getItem(selectedItemId);
+                return (IDeviceInfo)item.getItemProperty(DEV_INFO_OBJ).getValue();
+            }
+            
+            return null;
+        }
+        
+        
+        @Override
+        public void detach()
+        {
+            stopScan();
+        }
+    }
+    
     
     
     @Override
@@ -54,176 +276,9 @@ public class NetworkAdminPanel extends DefaultModulePanel<ICommNetwork<?>> imple
     {
         super.build(beanItem, module);       
         
-        // add sub form
-        final GridLayout form = new GridLayout();
-        form.setWidth(100.0f, Unit.PERCENTAGE);
-        form.setMargin(false);
-        form.setSpacing(true);
-        
-        // add sections
-        addAvailableNetworks(form, module);
-        addScannedDevices(form, module);
-        
-        addComponent(form);
-    }
-    
-    
-    protected void addAvailableNetworks(final GridLayout form, final ICommNetwork<?> module)
-    {
-        // section title
-        Label sectionLabel = new Label("Available Networks");
-        sectionLabel.addStyleName(STYLE_H3);
-        sectionLabel.addStyleName(STYLE_COLORED);
-        form.addComponent(sectionLabel);
-        
-        // network table
-        final Table table = new Table();
-        table.setWidth(100.0f, Unit.PERCENTAGE);
-        table.setPageLength(3);
-        table.setSelectable(true);
-        table.setImmediate(true);
-        table.setColumnReorderingAllowed(false);
-        table.addContainerProperty("Network Type", String.class, null);
-        table.addContainerProperty("Interface Name", String.class, null);
-        table.addContainerProperty("Hardware Address", String.class, null);
-        table.addContainerProperty("Logical Address", String.class, null);
-
-        int i = 0;
-        for (INetworkInfo netInfo: module.getAvailableNetworks())
-        {
-            table.addItem(new Object[] {
-                    netInfo.getNetworkType().toString(),
-                    netInfo.getInterfaceName(),
-                    netInfo.getHardwareAddress(),
-                    netInfo.getLogicalAddress()}, i);
-            i++;
-        }
-        
-        form.addComponent(table);
-    }
-    
-    
-    @SuppressWarnings("serial")
-    protected void addScannedDevices(final GridLayout form, final ICommNetwork<?> module)
-    {
-        // section title
-        Label sectionLabel = new Label("Detected Devices");
-        sectionLabel.addStyleName(STYLE_H3);
-        sectionLabel.addStyleName(STYLE_COLORED);
-        form.addComponent(sectionLabel);
-        
-        // scan button
-        scanButton = new Button("Start Scan");
-        scanButton.setIcon(REFRESH_ICON);
-        scanButton.addStyleName("scan-button");
-        scanButton.setEnabled(module.isStarted());
-        form.addComponent(scanButton);
-        
-        // device table
-        final Table table = new Table();
-        table.setWidth(100.0f, Unit.PERCENTAGE);
-        table.setPageLength(10);
-        table.setSelectable(true);
-        table.setImmediate(true);
-        table.setColumnReorderingAllowed(false);
-        table.addContainerProperty("Name", String.class, null);
-        table.addContainerProperty("Type", String.class, null);
-        table.addContainerProperty("Address", String.class, null);
-        table.addContainerProperty("Signal Level", String.class, null);
-
-        // scan button handler
-        scanButton.addClickListener(new Button.ClickListener() {
-            @Override
-            public void buttonClick(ClickEvent event)
-            {
-                try
-                {
-                    if (!scanning)
-                    {
-                        scanning = true;
-                        scanButton.setCaption("Stop Scan");
-                        table.clear();
-                        
-                        module.getDeviceScanner().startScan(new IDeviceScanCallback(){
-                            @Override
-                            public void onDeviceFound(final IDeviceInfo info)
-                            {
-                                AdminUI.getInstance().access(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        String itemId = info.getAddress() + '/' + info.getType();
-                                        // if address was already detected, refresh info
-                                        if (table.containsId(itemId))
-                                        {
-                                            table.getContainerProperty(itemId, "Name").setValue(info.getName());
-                                            table.getContainerProperty(itemId, "Type").setValue(info.getType());
-                                            table.getContainerProperty(itemId, "Signal Level").setValue(info.getSignalLevel());
-                                        }
-                                        else
-                                        {
-                                            table.addItem(new Object[] {
-                                                    info.getName(),
-                                                    info.getType(),
-                                                    info.getAddress(),
-                                                    info.getSignalLevel()
-                                                }, itemId);
-                                        }
-                                        AdminUI.getInstance().push();
-                                    }
-                                });                                         
-                            }
-    
-                            @Override
-                            public void onScanError(Throwable e)
-                            {
-                                String msg = "Error during device scan";
-                                Page page = AdminUI.getInstance().getPage();
-                                new Notification("Error", msg + '\n' + e.getMessage(), Notification.Type.ERROR_MESSAGE).show(page);
-                                AdminUI.log.error(msg, e);               
-                            }                        
-                        });
-                        
-                        // automatically stop scan after 30s
-                        new Timer().schedule(new TimerTask() {
-                            @Override
-                            public void run()
-                            {
-                                stopScan(module);
-                            }                        
-                        }, 30000);
-                    }
-                    else
-                    {
-                        stopScan(module);
-                    }
-                }
-                catch (Exception e)
-                {
-                    String msg = "Error scanning for devices";
-                    Page page = AdminUI.getInstance().getPage();
-                    new Notification("Error", msg + '\n' + e.getMessage(), Notification.Type.ERROR_MESSAGE).show(page);
-                    //Notification.show("Error", msg + '\n' + e.getMessage(), Notification.Type.ERROR_MESSAGE);
-                    AdminUI.log.error(msg, e);
-                }
-            }
-        });        
-        
-        form.addComponent(table);
-    }
-    
-    
-    protected void stopScan(ICommNetwork<?> module)
-    {
-        module.getDeviceScanner().stopScan();
-        scanning = false;
-        
-        AdminUI.getInstance().access(new Runnable() {
-            @Override
-            public void run() {
-                scanButton.setCaption("Start Scan");
-                AdminUI.getInstance().push();
-            }
-        });
-        
+        // add scan panel
+        NetworkScanPanel scanPanel = new NetworkScanPanel(module);
+        scanPanel.setMargin(false);
+        addComponent(scanPanel);
     }
 }

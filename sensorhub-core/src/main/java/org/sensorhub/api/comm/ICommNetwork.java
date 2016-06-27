@@ -38,6 +38,7 @@ public interface ICommNetwork<ConfigType extends ModuleConfig> extends IModule<C
         WIFI,
         CELLULAR,
         BLUETOOTH,
+        BLUETOOTH_LE,
         ZIGBEE,
         VPN,
         UNKNOWN
@@ -54,6 +55,14 @@ public interface ICommNetwork<ConfigType extends ModuleConfig> extends IModule<C
      * @return Type of network (Ethernet, WiFi, etc.)
      */
     public NetworkType getNetworkType();
+    
+    
+    /**
+     * Checks if this network is compatible with given type.
+     * @param type
+     * @return true if this network supports the given type
+     */
+    public boolean isOfType(NetworkType type);
     
     
     /**

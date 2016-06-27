@@ -16,7 +16,6 @@ package org.sensorhub.ui;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
-import org.sensorhub.ui.data.BaseProperty;
 import org.sensorhub.ui.data.MyBeanItem;
 import com.vaadin.data.Property;
 import com.vaadin.data.validator.StringLengthValidator;
@@ -58,7 +57,8 @@ public class SOSConfigForm extends GenericConfigForm
     }
     
     
-    protected Field<?> buildAndBindField(String label, String propId, BaseProperty<?> prop)
+    @Override
+    protected Field<?> buildAndBindField(String label, String propId, Property<?> prop)
     {
         Field<Object> field = (Field<Object>)super.buildAndBindField(label, propId, prop);
         

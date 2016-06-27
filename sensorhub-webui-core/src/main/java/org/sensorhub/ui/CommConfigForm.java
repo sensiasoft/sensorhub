@@ -16,7 +16,7 @@ package org.sensorhub.ui;
 
 import org.sensorhub.api.comm.ICommProvider;
 import org.sensorhub.ui.api.UIConstants;
-import org.sensorhub.ui.data.BaseProperty;
+import com.vaadin.data.Property;
 import com.vaadin.ui.Field;
 
 
@@ -33,7 +33,7 @@ public class CommConfigForm extends GenericConfigForm
     
     
     @Override
-    protected Field<?> buildAndBindField(String label, String propId, BaseProperty<?> prop)
+    protected Field<?> buildAndBindField(String label, String propId, Property<?> prop)
     {
         Field<?> field = super.buildAndBindField(label, propId, prop);
         
