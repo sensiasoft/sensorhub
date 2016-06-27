@@ -14,6 +14,8 @@ Copyright (C) 2012-2016 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.impl.comm;
 
+import org.sensorhub.api.config.DisplayInfo;
+
 
 /**
  * <p>
@@ -26,6 +28,10 @@ package org.sensorhub.impl.comm;
 public class HTTPConfig extends TCPConfig
 {    
         
+    @DisplayInfo(desc="Path or resource or service relative to server root")
+    public String resourcePath;
+    
+    
     public HTTPConfig()
     {
         this.remotePort = 80;

@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
  * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @since July 2, 2015
  */
-public class TCPCommProvider extends AbstractModule<TCPConfig> implements ICommProvider<TCPConfig>
+public class TCPCommProvider extends AbstractModule<TCPCommProviderConfig> implements ICommProvider<TCPCommProviderConfig>
 {
     static final Logger log = LoggerFactory.getLogger(TCPCommProvider.class.getSimpleName());
     
@@ -67,6 +67,8 @@ public class TCPCommProvider extends AbstractModule<TCPConfig> implements ICommP
     @Override
     public void start() throws SensorHubException
     {        
+        TCPConfig config = this.config.protocol;
+        
         try
         {
             InetAddress addr = InetAddress.getByName(config.remoteHost);

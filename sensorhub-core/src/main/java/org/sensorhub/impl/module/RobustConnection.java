@@ -57,8 +57,8 @@ public abstract class RobustConnection
      * Implements the connection process.<br/>
      * This is called for each connection attempt
      * @return true if successfully connected, false otherwise
-     * @throws Exception on fatal error that require aborting the connection process 
-     * (no more connection attempts will be made)
+     * @throws Exception sent on error that requires aborting the connection process 
+     * (no more connection attempts will be made after such exception is thrown)
      */
     public abstract boolean tryConnect() throws Exception;
     

@@ -25,5 +25,5 @@ public interface IDeviceInfo
     
     public String getSignalLevel();
     
-    public CommConfig getCommConfig();
+    public ICommConfig getCommConfig();
 }

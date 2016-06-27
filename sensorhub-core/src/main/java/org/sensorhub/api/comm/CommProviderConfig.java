@@ -14,12 +14,16 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.api.comm;
 
+import org.sensorhub.api.config.DisplayInfo;
 import org.sensorhub.api.module.ModuleConfig;
 
 
-public abstract class CommConfig extends ModuleConfig
+public abstract class CommProviderConfig<ConfigType> extends ModuleConfig
 {
-       
+    @DisplayInfo(label="Protocol Options")
+    public ConfigType protocol;
+    
+    
     @SuppressWarnings("rawtypes")
     public ICommProvider getProvider()
     {

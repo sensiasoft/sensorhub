@@ -16,19 +16,33 @@ package org.sensorhub.ui;
 
 import org.sensorhub.api.comm.ICommProvider;
 import org.sensorhub.ui.api.UIConstants;
+import org.sensorhub.ui.data.ComplexProperty;
+import org.sensorhub.ui.data.MyBeanItem;
 import com.vaadin.data.Property;
 import com.vaadin.ui.Field;
 
 
-public class CommConfigForm extends GenericConfigForm
+public class CommProviderConfigForm extends GenericConfigForm
 {
     private static final long serialVersionUID = -5570947777524310604L;
 
 
     @Override
-    public Class<?> getPolymorphicBeanParentType()
+    public void build(String propId, ComplexProperty prop)
     {
-        return ICommProvider.class;
+        String title = prop.getLabel();
+        if (title == null)
+            title = DisplayUtils.getPrettyName(propId);
+        
+        if (prop.getValue() != null)
+        {
+            @SuppressWarnings("rawtypes")
+            MyBeanItem beanItem = (MyBeanItem)prop.getValue().getItemProperty(propId+".protocol").getValue();
+            Class<?> beanType = beanItem.getBean().getClass();
+            title += " (" + beanType.getSimpleName().replace("Config", "") + ")";
+        }
+        
+        build(title, prop.getDescription(), prop.getValue());
     }
     
     
@@ -43,7 +57,16 @@ public class CommConfigForm extends GenericConfigForm
             field.setVisible(false);
         else if (propId.endsWith(UIConstants.PROP_AUTOSTART))
             field.setVisible(false);
+        else if (propId.endsWith(UIConstants.PROP_MODULECLASS))
+            field.setCaption("Provider Class");
         
         return field;
+    }
+    
+    
+    @Override
+    public Class<?> getPolymorphicBeanParentType()
+    {
+        return ICommProvider.class;
     }
 }

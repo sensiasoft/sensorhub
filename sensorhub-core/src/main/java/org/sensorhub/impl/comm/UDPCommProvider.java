@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
  * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @since Dec 12, 2015
  */
-public class UDPCommProvider extends AbstractModule<UDPConfig> implements ICommProvider<UDPConfig>
+public class UDPCommProvider extends AbstractModule<UDPCommProviderConfig> implements ICommProvider<UDPCommProviderConfig>
 {
     static final Logger log = LoggerFactory.getLogger(UDPCommProvider.class.getSimpleName());
     
@@ -67,6 +67,8 @@ public class UDPCommProvider extends AbstractModule<UDPConfig> implements ICommP
     @Override
     public void start() throws SensorHubException
     {        
+        UDPConfig config = this.config.protocol;
+        
         try
         {
             SocketAddress localAddr = new InetSocketAddress(config.localPort);

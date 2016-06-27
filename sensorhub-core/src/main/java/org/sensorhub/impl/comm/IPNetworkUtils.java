@@ -16,7 +16,9 @@ package org.sensorhub.impl.comm;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.NetworkInterface;
+import java.net.Socket;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.Collections;
@@ -86,6 +88,9 @@ public class IPNetworkUtils
      */
     public static InetAddress[] resolveAll(final String host, final int timeOut) throws UnknownHostException
     {
+        if (host == null || host.trim().isEmpty())
+            throw new IllegalArgumentException("Host cannot be null");
+        
         // launch hostname resolution in separate thread
         ExecutorService executor = Executors.newSingleThreadExecutor();
         Future<InetAddress[]> result = executor.submit(new Callable<InetAddress[]>()
@@ -145,6 +150,34 @@ public class IPNetworkUtils
         int ellapsed = (int)(System.currentTimeMillis() - t0); 
                 
         return ip.isReachable(Math.max(0, timeOut - ellapsed));
+    }
+    
+    
+    /**
+     * Resolves hostname and check if accessible on specified port
+     * @param host Host name to resolve and test for reachability
+     * @param port TCP port to connect to
+     * @param timeOut Timeout duration in milliseconds
+     * @return true if host is reachable on this port
+     * @throws UnknownHostException
+     * @throws IOException
+     */
+    public static boolean isHostReachable(final String host, final int port, final int timeOut) throws UnknownHostException, IOException
+    {
+        long t0 = System.currentTimeMillis();
+        InetAddress ip = resolveHost(host, timeOut);
+        int ellapsed = (int)(System.currentTimeMillis() - t0); 
+                
+        try (Socket soc = new Socket())
+        {
+            soc.connect(new InetSocketAddress(ip, port), timeOut - ellapsed);
+        }
+        catch (IOException ex)
+        {
+            return false;
+        }
+        
+        return true;
     }
 
 }

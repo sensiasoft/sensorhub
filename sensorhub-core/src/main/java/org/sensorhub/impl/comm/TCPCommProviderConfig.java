@@ -14,13 +14,20 @@ Copyright (C) 2012-2016 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.impl.comm;
 
+import org.sensorhub.api.comm.CommProviderConfig;
 import org.sensorhub.api.config.DisplayInfo;
-import org.sensorhub.impl.module.RobustConnectionConfig;
 
 
-public class RobustIPConnectionConfig extends RobustConnectionConfig
+public class TCPCommProviderConfig extends CommProviderConfig<TCPConfig>
 {
 
-    @DisplayInfo(desc="Enable to check if remote host is reachable before attempting further operations")
-    public boolean checkReachability = true;
+    @DisplayInfo(label="Connection Options")
+    public RobustIPConnectionConfig connection = new RobustIPConnectionConfig();
+    
+    
+    public TCPCommProviderConfig()
+    {
+        this.moduleClass = TCPCommProvider.class.getCanonicalName();
+        this.protocol = new TCPConfig();
+    }
 }

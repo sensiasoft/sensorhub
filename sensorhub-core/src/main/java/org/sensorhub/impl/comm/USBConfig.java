@@ -14,7 +14,7 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.impl.comm;
 
-import org.sensorhub.api.comm.CommConfig;
+import org.sensorhub.api.comm.ICommConfig;
 
 
 /**
@@ -25,7 +25,7 @@ import org.sensorhub.api.comm.CommConfig;
  * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @since Nov 5, 2010
  */
-public class USBConfig extends CommConfig
+public class USBConfig implements ICommConfig
 {
 	
     public int deviceID;

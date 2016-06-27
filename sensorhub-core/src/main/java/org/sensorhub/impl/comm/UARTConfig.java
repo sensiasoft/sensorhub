@@ -14,7 +14,7 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.impl.comm;
 
-import org.sensorhub.api.comm.CommConfig;
+import org.sensorhub.api.comm.ICommConfig;
 import org.sensorhub.api.config.DisplayInfo;
 
 
@@ -26,7 +26,7 @@ import org.sensorhub.api.config.DisplayInfo;
  * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @since Nov 5, 2010
  */
-public class RS232Config extends CommConfig
+public class UARTConfig implements ICommConfig
 {
 	public enum Parity { PARITY_EVEN, PARITY_MARK, PARITY_NONE, PARITY_ODD, PARITY_SPACE };
 	

@@ -14,13 +14,15 @@ Copyright (C) 2012-2016 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.impl.comm;
 
-import org.sensorhub.api.config.DisplayInfo;
-import org.sensorhub.impl.module.RobustConnectionConfig;
+import org.sensorhub.api.comm.CommProviderConfig;
 
 
-public class RobustIPConnectionConfig extends RobustConnectionConfig
+public class UDPCommProviderConfig extends CommProviderConfig<UDPConfig>
 {
 
-    @DisplayInfo(desc="Enable to check if remote host is reachable before attempting further operations")
-    public boolean checkReachability = true;
+    public UDPCommProviderConfig()
+    {
+        this.moduleClass = UDPCommProvider.class.getCanonicalName();
+        this.protocol = new UDPConfig();
+    }
 }

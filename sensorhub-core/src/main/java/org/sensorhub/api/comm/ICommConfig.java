@@ -12,15 +12,18 @@ Copyright (C) 2012-2016 Sensia Software LLC. All Rights Reserved.
  
 ******************************* END LICENSE BLOCK ***************************/
 
-package org.sensorhub.impl.comm;
-
-import org.sensorhub.api.config.DisplayInfo;
-import org.sensorhub.impl.module.RobustConnectionConfig;
+package org.sensorhub.api.comm;
 
 
-public class RobustIPConnectionConfig extends RobustConnectionConfig
+/**
+ * <p>
+ * Tagging interface for communication configuration options
+ * </p>
+ *
+ * @author Alex Robin
+ * @since Jun 27, 2016
+ */
+public interface ICommConfig
 {
 
-    @DisplayInfo(desc="Enable to check if remote host is reachable before attempting further operations")
-    public boolean checkReachability = true;
 }

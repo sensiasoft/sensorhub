@@ -55,6 +55,6 @@ public class TCPCommModuleDescriptor implements IModuleProvider
     @Override
     public Class<? extends ModuleConfig> getModuleConfigClass()
     {
-        return TCPConfig.class;
+        return TCPCommProviderConfig.class;
     }
 }

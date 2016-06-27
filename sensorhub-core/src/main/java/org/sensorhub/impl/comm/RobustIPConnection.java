@@ -29,29 +29,47 @@ import org.sensorhub.impl.module.RobustConnection;
  */
 public abstract class RobustIPConnection extends RobustConnection
 {
-    protected boolean usePing;
+    protected boolean checkReachability;
     
     
     public RobustIPConnection(AbstractModule<?> module, RobustIPConnectionConfig config, String remoteServiceName)
     {
         super(module, config, remoteServiceName);
-        this.usePing = config.testPing;
+        this.checkReachability = config.checkReachability;
     }
     
 
     public boolean tryConnect(String host) throws Exception
     {
+        return tryConnect(host, -1);
+    }
+    
+    
+    public boolean tryConnect(String host, int port) throws Exception
+    {
         try
         {
             // if ping enabled, check that host is reachable
-            if (usePing)
+            if (checkReachability)
             {
-                boolean reachable = IPNetworkUtils.isHostReachable(host, connectConfig.connectTimeout);
-                if (!reachable)
+                if (port < 0)
                 {
-                    module.reportError("Cannot ping host " + host, null);
-                    return false;
+                    boolean reachable = IPNetworkUtils.isHostReachable(host, connectConfig.connectTimeout);
+                    if (!reachable)
+                    {
+                        module.reportError("Cannot ping host " + host, null);
+                        return false;
+                    }
                 }
+                else
+                {
+                    boolean reachable = IPNetworkUtils.isHostReachable(host, port, connectConfig.connectTimeout);
+                    if (!reachable)
+                    {
+                        module.reportError("Cannot reach host " + host + " on port " + port, null);
+                        return false;
+                    }
+                }                
             }
             
             // else just check that host name is resolvable

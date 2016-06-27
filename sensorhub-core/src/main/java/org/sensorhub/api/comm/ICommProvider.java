@@ -30,7 +30,7 @@ import org.sensorhub.api.module.IModule;
  * @param <ConfigType> Comm module config type
  * @since Jun 19, 2015
  */
-public interface ICommProvider<ConfigType extends CommConfig> extends IModule<ConfigType>
+public interface ICommProvider<ConfigType extends CommProviderConfig<?>> extends IModule<ConfigType>
 {
     
     public InputStream getInputStream() throws IOException;

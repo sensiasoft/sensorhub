@@ -40,10 +40,5 @@ public class TCPConfig extends IPConfig
     @DisplayInfo(label="Password", desc="Remote password")
     @FieldType(Type.PASSWORD)
     public String password;
-		
-
-	public TCPConfig()
-	{
-	    this.moduleClass = TCPCommProvider.class.getCanonicalName();
-	}
+    
 }

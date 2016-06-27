@@ -35,10 +35,5 @@ public class UDPConfig extends IPConfig
     @DisplayInfo(desc="Local port number to use on the local host")
     @ValueRange(min=0, max=65535)
     public int remotePort;
-	
 
-	public UDPConfig()
-	{
-	    this.moduleClass = UDPCommProvider.class.getCanonicalName();
-	}
 }

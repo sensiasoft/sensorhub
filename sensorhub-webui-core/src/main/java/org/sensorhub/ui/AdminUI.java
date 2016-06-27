@@ -24,7 +24,7 @@ import java.util.Properties;
 import java.util.Timer;
 import java.util.TimerTask;
 import org.sensorhub.api.client.ClientConfig;
-import org.sensorhub.api.comm.CommConfig;
+import org.sensorhub.api.comm.CommProviderConfig;
 import org.sensorhub.api.comm.NetworkConfig;
 import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.common.SensorHubException;
@@ -157,7 +157,7 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener
             // default form builders
             customForms.put(HttpServerConfig.class.getCanonicalName(), HttpServerConfigForm.class);
             customForms.put(StreamStorageConfig.class.getCanonicalName(), GenericStorageConfigForm.class);
-            customForms.put(CommConfig.class.getCanonicalName(), CommConfigForm.class);
+            customForms.put(CommProviderConfig.class.getCanonicalName(), CommProviderConfigForm.class);
             customForms.put(SOSConfigForm.SOS_PACKAGE + "SOSServiceConfig", SOSConfigForm.class);
             customForms.put(SOSConfigForm.SOS_PACKAGE + "SOSProviderConfig", SOSConfigForm.class);
             

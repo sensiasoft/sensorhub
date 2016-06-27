@@ -14,7 +14,7 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.impl.comm;
 
-import org.sensorhub.api.comm.CommConfig;
+import org.sensorhub.api.comm.ICommConfig;
 import org.sensorhub.api.comm.ICommNetwork.NetworkType;
 import org.sensorhub.api.config.DisplayInfo;
 import org.sensorhub.api.config.DisplayInfo.AddressType;
@@ -30,7 +30,7 @@ import org.sensorhub.api.config.DisplayInfo.FieldType.Type;
  * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @since Feb 5, 2016
  */
-public abstract class IPConfig extends CommConfig
+public abstract class IPConfig implements ICommConfig
 {	
     public final static String AUTO_NETIF = "AUTO";
     
