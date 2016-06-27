@@ -74,6 +74,7 @@ import com.vaadin.ui.TabSheet.CloseHandler;
 import com.vaadin.ui.TabSheet.SelectedTabChangeEvent;
 import com.vaadin.ui.TabSheet.SelectedTabChangeListener;
 import com.vaadin.ui.TabSheet.Tab;
+import com.vaadin.ui.Window;
 import com.vaadin.ui.Window.CloseEvent;
 import com.vaadin.ui.Window.CloseListener;
 import com.vaadin.ui.TextField;
@@ -153,9 +154,9 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
                         continue;
                     
                     // use simple table for string lists
-                    if (eltType == String.class)
+                    if (eltType == String.class || Enum.class.isAssignableFrom(eltType))
                     {
-                        Component list = buildSimpleTable((String)propId, (ContainerProperty)prop);
+                        Component list = buildSimpleTable((String)propId, (ContainerProperty)prop, eltType);
                         fieldGroup.bind((Field<?>)list, propId);
                         listBoxes.add((Field<?>)list);
                     }
@@ -557,7 +558,7 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
     }
     
     
-    protected Component buildSimpleTable(final String propId, final ContainerProperty prop)
+    protected Component buildSimpleTable(final String propId, final ContainerProperty prop, final Class<?> eltType)
     {
         String label = prop.getLabel();
         if (label == null)
@@ -566,13 +567,12 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
         final MyBeanItemContainer<Object> container = prop.getValue();
         final ListSelect listBox = new ListSelect(label, container);
         listBox.setValue(container);
-        listBox.setItemCaptionMode(ItemCaptionMode.PROPERTY);
-        listBox.setItemCaptionPropertyId(MyBeanItem.PROP_VALUE);
+        listBox.setItemCaptionMode(ItemCaptionMode.ITEM);
         listBox.setImmediate(true);
         listBox.setBuffered(true);
         listBox.setNullSelectionAllowed(false);
         listBox.setDescription(prop.getDescription());
-        listBox.setWidth(500, Unit.PIXELS);
+        listBox.setWidth(250, Unit.PIXELS);
         listBox.setRows(Math.max(2, Math.min(5, container.size())));
         
         FieldWrapper<Object> field = new FieldWrapper<Object>(listBox) {
@@ -598,15 +598,22 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
                     private static final long serialVersionUID = 1L;
                     public void buttonClick(ClickEvent event)
                     {
-                        ValueEntryPopup popup = new ValueEntryPopup(500, new ValueCallback() {
+                        ValueCallback callback = new ValueCallback() {
                             @Override
-                            public void newValue(String value)
+                            public void newValue(Object value)
                             {
                                 container.addBean(value);
                                 // grow list size with max at 5
                                 listBox.setRows(Math.max(2, Math.min(5, container.size())));
                             }
-                        });
+                        };
+                
+                        Window popup;
+                        if (Enum.class.isAssignableFrom(eltType))
+                            popup = new ValueEnumPopup(500, callback, ((Class<Enum<?>>)eltType).getEnumConstants());
+                        else
+                            popup = new ValueEntryPopup(500, callback);
+                                    
                         popup.setModal(true);
                         AdminUI.getInstance().addWindow(popup);
                     }

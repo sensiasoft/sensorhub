@@ -32,7 +32,11 @@ public class CommProviderConfigForm extends GenericConfigForm
     {
         String title = prop.getLabel();
         if (title == null)
-            title = DisplayUtils.getPrettyName(propId);
+            title = "Communication Provider";
+        
+        String desc = prop.getDescription();
+        if (desc == null)
+            desc = "Settings for selected communication provider";
         
         if (prop.getValue() != null)
         {
@@ -42,7 +46,7 @@ public class CommProviderConfigForm extends GenericConfigForm
             title += " (" + beanType.getSimpleName().replace("Config", "") + ")";
         }
         
-        build(title, prop.getDescription(), prop.getValue());
+        build(title, desc, prop.getValue());
     }
     
     

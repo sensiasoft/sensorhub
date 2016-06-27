@@ -29,7 +29,6 @@ import java.util.Map;
 import com.vaadin.data.Item;
 import com.vaadin.data.Property;
 import com.vaadin.data.util.MethodProperty;
-import com.vaadin.data.util.ObjectProperty;
 
 
 /**
@@ -47,7 +46,6 @@ public class MyBeanItem<BeanType> implements Item
 {
     public static final String NO_PREFIX = "";
     public static final char PROP_SEPARATOR = '.';
-    public static final String PROP_VALUE = "val";
     
     
     BeanType bean;
@@ -71,11 +69,7 @@ public class MyBeanItem<BeanType> implements Item
     protected void addProperties(String prefix, Object bean)
     {
         // special case for String
-        if (bean instanceof String)
-        {
-            properties.put(PROP_VALUE, new ObjectProperty<Object>(bean));
-        }
-        else
+        if (!isSimpleType(bean.getClass()))
         {
             addFieldProperties(prefix, bean);
             addMethodProperties(prefix, bean);
@@ -179,17 +173,22 @@ public class MyBeanItem<BeanType> implements Item
     protected boolean isSimpleType(Field f)
     {
         Class<?> fType = f.getType();
-        
-        if (fType.isPrimitive())
+        return isSimpleType(fType);
+    }
+    
+    
+    protected boolean isSimpleType(Class<?> type)
+    {
+         if (type.isPrimitive())
             return true;
         
-        if (fType == String.class)
+        if (type == String.class)
             return true;
         
-        if (Number.class.isAssignableFrom(fType))
+        if (Number.class.isAssignableFrom(type))
             return true;
         
-        if (Enum.class.isAssignableFrom(fType))
+        if (Enum.class.isAssignableFrom(type))
             return true;
         
         return false;
@@ -266,4 +265,12 @@ public class MyBeanItem<BeanType> implements Item
         return (properties.remove(id) != null);
     }
 
+    
+    @Override
+    public String toString()
+    {
+        if (bean == null)
+            return null;
+        return bean.toString();
+    }
 }

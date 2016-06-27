@@ -14,41 +14,39 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.ui;
 
+import java.util.Arrays;
+import org.sensorhub.ui.ValueEntryPopup.ValueCallback;
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
-import com.vaadin.ui.TextField;
+import com.vaadin.ui.ListSelect;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
 
 
-public class ValueEntryPopup extends Window
+public class ValueEnumPopup extends Window
 {
-    private static final long serialVersionUID = 9099071384769283253L;
+    private static final long serialVersionUID = 3541095366722509161L;
 
-
-    protected interface ValueCallback
-    {
-        public void newValue(Object value);
-    }
     
-    
-    @SuppressWarnings("serial")
-    public ValueEntryPopup(int width, final ValueCallback callback)
+    @SuppressWarnings({ "serial", "rawtypes" })
+    public ValueEnumPopup(int width, final ValueCallback callback, final Enum[] allowedValues)
     {
         super("New Value");
         VerticalLayout layout = new VerticalLayout();
         
-        TextField text = new TextField();
-        text.setWidth(width, Unit.PIXELS);
-        layout.addComponent(text);
-        text.focus();
+        final ListSelect listBox = new ListSelect();
+        listBox.setNullSelectionAllowed(false);
+        listBox.setWidth(width, Unit.PIXELS);
+        listBox.setRows(10);
+        listBox.addItems(Arrays.asList(allowedValues));
+        layout.addComponent(listBox);
         
-        text.addValueChangeListener(new ValueChangeListener() {
+        listBox.addValueChangeListener(new ValueChangeListener() {
             @Override
             public void valueChange(ValueChangeEvent event)
             {
-                ValueEntryPopup.this.close();
-                callback.newValue((String)event.getProperty().getValue());
+                ValueEnumPopup.this.close();
+                callback.newValue(event.getProperty().getValue());
             }
         });
         
