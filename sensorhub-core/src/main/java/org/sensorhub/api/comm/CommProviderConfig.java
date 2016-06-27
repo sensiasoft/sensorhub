@@ -18,7 +18,7 @@ import org.sensorhub.api.config.DisplayInfo;
 import org.sensorhub.api.module.ModuleConfig;
 
 
-public abstract class CommProviderConfig<ConfigType> extends ModuleConfig
+public class CommProviderConfig<ConfigType> extends ModuleConfig
 {
     @DisplayInfo(label="Protocol Options")
     public ConfigType protocol;
