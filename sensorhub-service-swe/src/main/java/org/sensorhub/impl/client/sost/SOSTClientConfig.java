@@ -20,6 +20,7 @@ import org.sensorhub.api.config.DisplayInfo.FieldType;
 import org.sensorhub.api.config.DisplayInfo.ModuleType;
 import org.sensorhub.api.config.DisplayInfo.FieldType.Type;
 import org.sensorhub.api.sensor.ISensorModule;
+import org.sensorhub.impl.comm.HTTPConfig;
 import org.sensorhub.impl.comm.RobustIPConnectionConfig;
 
 
@@ -33,7 +34,20 @@ import org.sensorhub.impl.comm.RobustIPConnectionConfig;
  */
 public class SOSTClientConfig extends ClientConfig
 {
-        
+    @DisplayInfo(desc="Local ID of sensor to register with SOS")
+    @FieldType(Type.MODULE_ID)
+    @ModuleType(ISensorModule.class)
+    public String sensorID;
+    
+    
+    @DisplayInfo(label="SOS Endpoint", desc="SOS endpoint where the requests are sent")
+    public HTTPConfig sos = new HTTPConfig();
+    
+    
+    @DisplayInfo(label="Connection Options")
+    public SOSConnectionConfig connection = new SOSConnectionConfig();
+    
+    
     public static class SOSConnectionConfig extends RobustIPConnectionConfig
     {
         @DisplayInfo(desc="Enable to use a persistent HTTP connection for InsertResult")
@@ -49,22 +63,9 @@ public class SOSTClientConfig extends ClientConfig
     }
     
     
-    @DisplayInfo(desc="SOS endpoint URL where the requests are sent")
-    public String sosEndpointUrl;
-
-    
-    @DisplayInfo(desc="Local ID of sensor to register with SOS")
-    @FieldType(Type.MODULE_ID)
-    @ModuleType(ISensorModule.class)
-    public String sensorID;
-    
-    
-    @DisplayInfo(label="Connection Options")
-    public SOSConnectionConfig connection = new SOSConnectionConfig();
-    
-    
     public SOSTClientConfig()
     {
         this.moduleClass = SOSTClient.class.getCanonicalName();
+        this.sos.resourcePath = "/sensorhub/sos";
     }
 }

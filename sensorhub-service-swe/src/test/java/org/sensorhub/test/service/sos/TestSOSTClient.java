@@ -15,6 +15,7 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 package org.sensorhub.test.service.sos;
 
 import static org.junit.Assert.*;
+import java.net.URL;
 import java.util.concurrent.Future;
 import org.junit.After;
 import org.junit.Before;
@@ -26,6 +27,7 @@ import org.sensorhub.api.sensor.ISensorModule;
 import org.sensorhub.api.sensor.SensorConfig;
 import org.sensorhub.impl.client.sost.SOSTClient;
 import org.sensorhub.impl.client.sost.SOSTClientConfig;
+import org.sensorhub.impl.security.ClientAuth;
 import org.sensorhub.impl.service.HttpServer;
 import org.sensorhub.impl.service.sos.SOSProviderConfig;
 import org.sensorhub.impl.service.sos.SOSService;
@@ -55,6 +57,7 @@ public class TestSOSTClient
     {
         sosTest = new TestSOSService();
         sosTest.setup();
+        ClientAuth.createInstance(null);
     }
     
     
@@ -82,15 +85,19 @@ public class TestSOSTClient
     
     protected SOSTClient startClient(String sensorID, boolean async, boolean persistent, int maxAttempts) throws Exception
     {
+        URL sosUrl = new URL(TestSOSService.HTTP_ENDPOINT);
+        
         SOSTClientConfig config = new SOSTClientConfig();
         config.id = "SOST";
         config.name = "SOS-T Client";
         config.sensorID = sensorID;
-        config.sosEndpointUrl = TestSOSService.HTTP_ENDPOINT;
+        config.sos.remoteHost = sosUrl.getHost();
+        config.sos.remotePort = (sosUrl.getPort() > 0) ? sosUrl.getPort() : 80;
+        config.sos.resourcePath = sosUrl.getPath();
         config.connection.connectTimeout = 1000;
         config.connection.reconnectPeriod = 500;
         config.connection.reconnectAttempts = maxAttempts;
-        config.connection.testPing = false;
+        config.connection.checkReachability = false;
         config.connection.usePersistentConnection = persistent;
         config.connection.maxConnectErrors = 2;
         

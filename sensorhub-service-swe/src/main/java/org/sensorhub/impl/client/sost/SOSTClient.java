@@ -17,8 +17,6 @@ package org.sensorhub.impl.client.sost;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -44,6 +42,7 @@ import org.sensorhub.impl.SensorHub;
 import org.sensorhub.impl.comm.RobustIPConnection;
 import org.sensorhub.impl.module.AbstractModule;
 import org.sensorhub.impl.module.RobustConnection;
+import org.sensorhub.impl.security.ClientAuth;
 import org.sensorhub.utils.MsgUtils;
 import org.vast.cdm.common.DataStreamWriter;
 import org.vast.ogc.om.IObservation;
@@ -77,7 +76,8 @@ public class SOSTClient extends AbstractModule<SOSTClientConfig> implements ICli
 {
     RobustConnection connection;
     ISensorModule<?> sensor;
-    SOSUtils sosUtils = new SOSUtils();    
+    SOSUtils sosUtils = new SOSUtils();  
+    String sosEndpointUrl;
     String offering;
     Map<ISensorDataInterface, StreamInfo> dataStreams;
     
@@ -102,6 +102,37 @@ public class SOSTClient extends AbstractModule<SOSTClientConfig> implements ICli
     }
     
     
+    private void setAuth()
+    {
+        ClientAuth.getInstance().setUser(config.sos.user);
+        if (config.sos.password != null)
+            ClientAuth.getInstance().setPassword(config.sos.password.toCharArray());
+    }
+
+
+    protected String getSosEndpointUrl()
+    {
+        setAuth();
+        return sosEndpointUrl;
+    }
+    
+    
+    @Override
+    public void setConfiguration(SOSTClientConfig config)
+    {
+        super.setConfiguration(config);
+         
+        // compute full host URL
+        sosEndpointUrl = "http://" + config.sos.remoteHost + ":" + config.sos.remotePort;
+        if (config.sos.resourcePath != null)
+        {
+            if (config.sos.resourcePath.charAt(0) != '/')
+                sosEndpointUrl += '/';
+            sosEndpointUrl += config.sos.resourcePath;
+        }
+    };
+    
+    
     @Override
     public void init() throws SensorHubException
     {
@@ -120,17 +151,8 @@ public class SOSTClient extends AbstractModule<SOSTClientConfig> implements ICli
         {
             public boolean tryConnect() throws Exception
             {
-                URL endpointUrl = null;
-                try
-                {
-                    endpointUrl = new URL(config.sosEndpointUrl);
-                }
-                catch (MalformedURLException e)
-                {
-                    throw new SOSException("Invalid SOS endpoint URL", e);
-                }
-                
-                if (!tryConnect(endpointUrl.getHost()))
+                // first check if we can reach remote host on specified port
+                if (!tryConnect(config.sos.remoteHost, config.sos.remotePort))
                     return false;
                 
                 // check connection to SOS by fetching capabilities
@@ -140,7 +162,7 @@ public class SOSTClient extends AbstractModule<SOSTClientConfig> implements ICli
                     GetCapabilitiesRequest request = new GetCapabilitiesRequest();
                     request.setConnectTimeOut(connectConfig.connectTimeout);
                     request.setService(SOSUtils.SOS);
-                    request.setGetServer(config.sosEndpointUrl);
+                    request.setGetServer(getSosEndpointUrl());
                     caps = (SOSServiceCapabilities)sosUtils.sendRequest(request, false);
                 }
                 catch (OWSException e)
@@ -195,7 +217,7 @@ public class SOSTClient extends AbstractModule<SOSTClientConfig> implements ICli
     {
         connection.updateConfig(config.connection);
         connection.waitForConnection();
-        reportStatus("Connected to " + config.sosEndpointUrl);
+        reportStatus("Connected to " + getSosEndpointUrl());
         
         try
         {   
@@ -270,7 +292,7 @@ public class SOSTClient extends AbstractModule<SOSTClientConfig> implements ICli
         // build insert sensor request
         InsertSensorRequest req = new InsertSensorRequest();
         req.setConnectTimeOut(config.connection.connectTimeout);
-        req.setPostServer(config.sosEndpointUrl);
+        req.setPostServer(getSosEndpointUrl());
         req.setVersion("2.0");
         req.setProcedureDescription(sensor.getCurrentDescription());
         req.setProcedureDescriptionFormat(InsertSensorRequest.DEFAULT_PROCEDURE_FORMAT);
@@ -291,7 +313,7 @@ public class SOSTClient extends AbstractModule<SOSTClientConfig> implements ICli
         // build update sensor request
         UpdateSensorRequest req = new UpdateSensorRequest(SOSUtils.SOS);
         req.setConnectTimeOut(config.connection.connectTimeout);
-        req.setPostServer(config.sosEndpointUrl);
+        req.setPostServer(getSosEndpointUrl());
         req.setVersion("2.0");
         req.setProcedureId(sensor.getUniqueIdentifier());
         req.setProcedureDescription(sensor.getCurrentDescription());
@@ -310,7 +332,7 @@ public class SOSTClient extends AbstractModule<SOSTClientConfig> implements ICli
         // generate insert result template
         InsertResultTemplateRequest req = new InsertResultTemplateRequest();
         req.setConnectTimeOut(config.connection.connectTimeout);
-        req.setPostServer(config.sosEndpointUrl);
+        req.setPostServer(getSosEndpointUrl());
         req.setVersion("2.0");
         req.setOffering(offering);
         req.setResultStructure(sensorOutput.getRecordDescription());
@@ -456,7 +478,7 @@ public class SOSTClient extends AbstractModule<SOSTClientConfig> implements ICli
         if (streamInfo.resultData.getNumElements() >= streamInfo.minRecordsPerRequest)
         {
             final InsertResultRequest req = new InsertResultRequest();
-            req.setPostServer(config.sosEndpointUrl);
+            req.setPostServer(getSosEndpointUrl());
             req.setVersion("2.0");
             req.setTemplateId(streamInfo.templateID);
             req.setResultData(streamInfo.resultData);
@@ -522,7 +544,7 @@ public class SOSTClient extends AbstractModule<SOSTClientConfig> implements ICli
                             getLogger().debug("Initiating streaming request");
                         
                         final InsertResultRequest req = new InsertResultRequest();
-                        req.setPostServer(config.sosEndpointUrl);
+                        req.setPostServer(getSosEndpointUrl());
                         req.setVersion("2.0");
                         req.setTemplateId(streamInfo.templateID);
                         
