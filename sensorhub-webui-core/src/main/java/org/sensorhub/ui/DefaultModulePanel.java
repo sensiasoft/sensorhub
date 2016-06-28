@@ -104,7 +104,7 @@ public class DefaultModulePanel<ModuleType extends IModule<? extends ModuleConfi
                 catch (Exception e)
                 {
                     String msg = "Error while updating module configuration";
-                    Page page = AdminUI.getInstance().getPage();
+                    Page page = DefaultModulePanel.this.getUI().getPage();
                     new Notification("Error", msg + '\n' + e.getMessage(), Notification.Type.ERROR_MESSAGE).show(page);
                     //Notification.show("Error", msg + '\n' + e.getMessage(), Notification.Type.ERROR_MESSAGE);
                     AdminUI.log.error(msg, e);

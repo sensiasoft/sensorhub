@@ -69,6 +69,7 @@ import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.ListSelect;
 import com.vaadin.ui.Notification;
+import com.vaadin.ui.PasswordField;
 import com.vaadin.ui.TabSheet;
 import com.vaadin.ui.TabSheet.CloseHandler;
 import com.vaadin.ui.TabSheet.SelectedTabChangeEvent;
@@ -254,6 +255,7 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
     protected Field<?> buildAndBindField(String label, String propId, Property<?> prop)
     {
         Field<?> field = fieldGroup.buildAndBind(label, propId);
+        field.setInvalidCommitted(true);
         Class<?> propType = prop.getType();
         
         // disable edit (read only)
@@ -281,6 +283,7 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
             ((ListSelect)field).setRows(3);
         
         if (field instanceof TextField) {
+            ((TextField)field).setImmediate(true);
             ((TextField)field).setNullSettingAllowed(true);
             ((TextField)field).setNullRepresentation("");
         }
@@ -300,15 +303,17 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
                         if (moduleClass == null)
                             moduleClass = IModule.class;
                         field = makeModuleSelectField((Field<Object>)field, moduleClass);
-                        field.addValidator(new StringLengthValidator(MSG_REQUIRED_FIELD, 1, 256, false));
                         break;
                         
                     case REMOTE_ADDRESS:
                         NetworkType addressType = advProp.getAddressType();
                         if (addressType == null)
                             addressType = NetworkType.IP;
-                        field = makeAddressSelectField((Field<Object>)field, addressType);
-                        field.addValidator(new StringLengthValidator(MSG_REQUIRED_FIELD, 1, 256, false));
+                        field = makeAddressSelectField((Field<Object>)field, addressType);                        
+                        break;
+                        
+                    case PASSWORD:
+                        field = makePasswordField((TextField)field);
                         break;
                         
                     default:
@@ -340,12 +345,14 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
                 
                 // inner field
                 innerField.setReadOnly(true);
+                innerField.addValidator(new StringLengthValidator(MSG_REQUIRED_FIELD, 5, 50, false));
                 layout.addComponent(innerField);
                 layout.setComponentAlignment(innerField, Alignment.MIDDLE_LEFT);
                 final Field<Object> wrapper = this;
                 
                 // select module button
                 Button selectBtn = new Button(FontAwesome.SEARCH);
+                selectBtn.setDescription("Lookup Module");
                 selectBtn.addStyleName(STYLE_QUIET);
                 layout.addComponent(selectBtn);
                 layout.setComponentAlignment(selectBtn, Alignment.MIDDLE_LEFT);
@@ -385,12 +392,14 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
                 layout.setSpacing(true);
                 
                 // inner field
+                innerField.addValidator(new StringLengthValidator(MSG_REQUIRED_FIELD, 1, 256, false));
                 layout.addComponent(innerField);
                 layout.setComponentAlignment(innerField, Alignment.MIDDLE_LEFT);
                 final Field<Object> wrapper = this;
                 
                 // select module button
                 Button selectBtn = new Button(FontAwesome.SEARCH);
+                selectBtn.setDescription("Lookup Address");
                 selectBtn.addStyleName(STYLE_QUIET);
                 layout.addComponent(selectBtn);
                 layout.setComponentAlignment(selectBtn, Alignment.MIDDLE_LEFT);
@@ -428,6 +437,63 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
                         popup.setModal(true);
                         AdminUI.getInstance().addWindow(popup);
                     }
+                });
+                                
+                return layout;
+            }             
+        };
+        
+        return field;
+    }
+    
+    
+    protected Field<String> makePasswordField(Field<String> field)
+    {
+        field = new FieldWrapper<String>(field) {
+            private static final long serialVersionUID = -992750458965982226L;
+            private PasswordField passwordField;
+            protected Component initContent()
+            {
+                final HorizontalLayout layout = new HorizontalLayout();
+                layout.setSpacing(true);
+                
+                ((TextField)innerField).setBuffered(false);
+                
+                // create and show password field by default
+                passwordField = new PasswordField();
+                passwordField.setNullRepresentation("");
+                passwordField.setBuffered(false);
+                passwordField.setWidth(innerField.getWidth(), innerField.getWidthUnits());
+                passwordField.setPropertyDataSource(innerField.getPropertyDataSource());
+                layout.addComponent(passwordField);
+                layout.setComponentAlignment(passwordField, Alignment.MIDDLE_LEFT);
+                
+                // show/hide button
+                final Button showBtn = new Button(FontAwesome.EYE);
+                showBtn.addStyleName(STYLE_QUIET);
+                showBtn.setDescription("Show Password");
+                showBtn.setData(false);
+                layout.addComponent(showBtn);
+                layout.setComponentAlignment(showBtn, Alignment.MIDDLE_LEFT);
+                showBtn.addClickListener(new ClickListener() {
+                    private static final long serialVersionUID = 1L;
+                    public void buttonClick(ClickEvent event)
+                    {
+                        boolean checked = !(boolean)showBtn.getData();
+                        showBtn.setData(checked);
+                        
+                        if (checked)
+                        {
+                            layout.replaceComponent(passwordField, innerField);
+                            showBtn.setIcon(FontAwesome.EYE_SLASH);
+                        }
+                        else
+                        {
+                            layout.replaceComponent(innerField, passwordField);
+                            showBtn.setIcon(FontAwesome.EYE);
+                        }
+                    }
+                    
                 });
                                 
                 return layout;
