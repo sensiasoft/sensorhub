@@ -19,21 +19,109 @@ import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.LogManager;
+import org.sensorhub.api.comm.CommProviderConfig;
+import org.sensorhub.api.comm.NetworkConfig;
 import org.sensorhub.api.common.SensorHubException;
+import org.sensorhub.api.module.IModule;
 import org.sensorhub.api.module.ModuleEvent.ModuleState;
+import org.sensorhub.api.persistence.StorageConfig;
+import org.sensorhub.api.sensor.SensorConfig;
 import org.sensorhub.api.service.ServiceException;
 import org.sensorhub.impl.module.AbstractModule;
+import org.sensorhub.impl.persistence.StreamStorageConfig;
 import org.sensorhub.impl.service.HttpServer;
+import org.sensorhub.impl.service.HttpServerConfig;
+import org.sensorhub.ui.api.IModuleAdminPanel;
+import org.sensorhub.ui.api.IModuleConfigForm;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.vaadin.server.VaadinServlet;
 
 
 public class AdminUIModule extends AbstractModule<AdminUIConfig>
 {
+    protected static final Logger log = LoggerFactory.getLogger(AdminUI.class);
     protected final static String SERVLET_PARAM_UI_CLASS = "UI";
     protected final static String SERVLET_PARAM_MODULE_ID = "module_id";
     protected final static String WIDGETSET = "widgetset";
     
+    private static AdminUIModule singleton;
     VaadinServlet vaadinServlet;
+    Map<String, Class<? extends IModuleConfigForm>> customForms = new HashMap<String, Class<? extends IModuleConfigForm>>();
+    Map<String, Class<? extends IModuleAdminPanel<?>>> customPanels = new HashMap<String, Class<? extends IModuleAdminPanel<?>>>();
+    
+    
+    public AdminUIModule()
+    {
+        if (singleton != null)
+            throw new IllegalStateException("Cannot create several AdminUI modules");
+        
+        singleton = this;
+    }
+    
+    
+    public static AdminUIModule getInstance()
+    {
+        return singleton;
+    }
+    
+    
+    @Override
+    public void setConfiguration(AdminUIConfig config)
+    {
+        super.setConfiguration(config);
+        String configClass = null;
+        
+        // load custom forms
+        try
+        {
+            customForms.clear();
+                    
+            // default form builders
+            customForms.put(HttpServerConfig.class.getCanonicalName(), HttpServerConfigForm.class);
+            customForms.put(StreamStorageConfig.class.getCanonicalName(), GenericStorageConfigForm.class);
+            customForms.put(CommProviderConfig.class.getCanonicalName(), CommProviderConfigForm.class);
+            customForms.put(SOSConfigForm.SOS_PACKAGE + "SOSServiceConfig", SOSConfigForm.class);
+            customForms.put(SOSConfigForm.SOS_PACKAGE + "SOSProviderConfig", SOSConfigForm.class);
+            
+            // custom form builders defined in config
+            for (CustomUIConfig customForm: config.customForms)
+            {
+                configClass = customForm.configClass;
+                Class<?> clazz = Class.forName(customForm.uiClass);
+                customForms.put(configClass, (Class<IModuleConfigForm>)clazz);
+                log.debug("Loaded custom form for " + configClass);            
+            }
+        }
+        catch (Exception e)
+        {
+            log.error("Error while instantiating form builder for config class " + configClass, e);
+        }
+        
+        // load custom panels
+        try
+        {
+            customPanels.clear();
+            
+            // load default panel builders
+            customPanels.put(SensorConfig.class.getCanonicalName(), SensorAdminPanel.class);        
+            customPanels.put(StorageConfig.class.getCanonicalName(), StorageAdminPanel.class);
+            customPanels.put(NetworkConfig.class.getCanonicalName(), NetworkAdminPanel.class);
+            
+            // load custom panel builders defined in config
+            for (CustomUIConfig customPanel: config.customPanels)
+            {
+                configClass = customPanel.configClass;
+                Class<?> clazz = Class.forName(customPanel.uiClass);
+                customPanels.put(configClass, (Class<IModuleAdminPanel<?>>)clazz);
+                log.debug("Loaded custom panel for " + configClass);
+            } 
+        }
+        catch (Exception e)
+        {
+            log.error("Error while instantiating panel builder for config class " + configClass, e);
+        }
+    }
     
     
     @Override
@@ -75,6 +163,54 @@ public class AdminUIModule extends AbstractModule<AdminUIConfig>
     {
         if (vaadinServlet != null)
             HttpServer.getInstance().undeployServlet(vaadinServlet);
+    }
+    
+    
+    protected IModuleAdminPanel<IModule<?>> generatePanel(Class<?> clazz)
+    {
+        try
+        {
+            // check if there is a custom panel registered, if not use default
+            Class<IModuleAdminPanel<IModule<?>>> uiClass = null;
+            while (uiClass == null && clazz != null)
+            {
+                uiClass = (Class<IModuleAdminPanel<IModule<?>>>)customPanels.get(clazz.getCanonicalName());
+                clazz = clazz.getSuperclass();
+            }
+            
+            if (uiClass == null)
+                return new DefaultModulePanel<IModule<?>>();
+            
+            return uiClass.newInstance();
+        }
+        catch (Exception e)
+        {
+            throw new RuntimeException("Cannot instantiate UI class", e);
+        }
+    }
+    
+    
+    protected IModuleConfigForm generateForm(Class<?> clazz)
+    {
+        try
+        {
+            // check if there is a custom form registered, if not use default        
+            Class<IModuleConfigForm> uiClass = null;
+            while (uiClass == null && clazz != null)
+            {
+                uiClass = (Class<IModuleConfigForm>)customForms.get(clazz.getCanonicalName());
+                clazz = clazz.getSuperclass();
+            }
+            
+            if (uiClass == null)
+                return new GenericConfigForm();
+            
+            return uiClass.newInstance();
+        }
+        catch (Exception e)
+        {
+            throw new RuntimeException("Cannot instantiate UI class", e);
+        }
     }
     
 

@@ -16,15 +16,12 @@ package org.sensorhub.ui;
 
 import java.text.NumberFormat;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Properties;
 import java.util.Timer;
 import java.util.TimerTask;
 import org.sensorhub.api.client.ClientConfig;
-import org.sensorhub.api.comm.CommProviderConfig;
 import org.sensorhub.api.comm.NetworkConfig;
 import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.common.SensorHubException;
@@ -40,17 +37,12 @@ import org.sensorhub.api.service.ServiceConfig;
 import org.sensorhub.impl.SensorHub;
 import org.sensorhub.impl.common.EventBus;
 import org.sensorhub.impl.module.ModuleRegistry;
-import org.sensorhub.impl.persistence.StreamStorageConfig;
 import org.sensorhub.impl.sensor.SensorSystem;
 import org.sensorhub.impl.service.HttpServer;
-import org.sensorhub.impl.service.HttpServerConfig;
 import org.sensorhub.ui.ModuleTypeSelectionPopup.ModuleTypeSelectionCallback;
-import org.sensorhub.ui.api.IModuleConfigForm;
 import org.sensorhub.ui.api.IModuleAdminPanel;
 import org.sensorhub.ui.api.UIConstants;
 import org.sensorhub.ui.data.MyBeanItem;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import com.vaadin.annotations.Push;
 import com.vaadin.annotations.Theme;
 import com.vaadin.data.Item;
@@ -95,8 +87,7 @@ import com.vaadin.ui.Window.CloseListener;
 @Push(value=PushMode.MANUAL, transport=Transport.STREAMING)
 public class AdminUI extends com.vaadin.ui.UI implements IEventListener
 {
-    private static final long serialVersionUID = 4069325051233125115L;
-    
+    private static final long serialVersionUID = 4069325051233125115L;    
     private static final Action ADD_MODULE_ACTION = new Action("Add Module", new ThemeResource("icons/module_add.png"));
     private static final Action REMOVE_MODULE_ACTION = new Action("Remove Module", new ThemeResource("icons/module_delete.png"));
     private static final Action START_MODULE_ACTION = new Action("Start", new ThemeResource("icons/enable.png"));
@@ -108,35 +99,14 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener
     private static final String PROP_STATE = "state";
     private static final String PROP_MODULE_OBJECT = "module";
     
-    protected static final Logger log = LoggerFactory.getLogger(AdminUI.class);
-    private static AdminUI singleton;
-    
-    
     AdminUIConfig uiConfig;
     VerticalLayout configArea;
     List<Table> moduleTables = new ArrayList<Table>();
-    Map<String, Class<? extends IModuleConfigForm>> customForms = new HashMap<String, Class<? extends IModuleConfigForm>>();
-    Map<String, Class<? extends IModuleAdminPanel<?>>> customPanels = new HashMap<String, Class<? extends IModuleAdminPanel<?>>>();
-    
-    
-    public static AdminUI getInstance()
-    {
-        return singleton;
-    }
-    
-    
-    public AdminUI()
-    {
-        singleton = this;
-    }
     
     
     @Override
     protected void init(VaadinRequest request)
     {
-        String configClass = null;
-        //moduleConfigLists.clear();
-        
         // retrieve module config
         try
         {
@@ -147,56 +117,6 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener
         catch (Exception e)
         {
             throw new RuntimeException("Cannot get UI module configuration", e);
-        }
-        
-        // load custom forms
-        try
-        {
-            customForms.clear();
-                    
-            // default form builders
-            customForms.put(HttpServerConfig.class.getCanonicalName(), HttpServerConfigForm.class);
-            customForms.put(StreamStorageConfig.class.getCanonicalName(), GenericStorageConfigForm.class);
-            customForms.put(CommProviderConfig.class.getCanonicalName(), CommProviderConfigForm.class);
-            customForms.put(SOSConfigForm.SOS_PACKAGE + "SOSServiceConfig", SOSConfigForm.class);
-            customForms.put(SOSConfigForm.SOS_PACKAGE + "SOSProviderConfig", SOSConfigForm.class);
-            
-            // custom form builders defined in config
-            for (CustomUIConfig customForm: uiConfig.customForms)
-            {
-                configClass = customForm.configClass;
-                Class<?> clazz = Class.forName(customForm.uiClass);
-                customForms.put(configClass, (Class<IModuleConfigForm>)clazz);
-                log.debug("Loaded custom form for " + configClass);            
-            }
-        }
-        catch (Exception e)
-        {
-            log.error("Error while instantiating form builder for config class " + configClass, e);
-        }
-        
-        // load custom panels
-        try
-        {
-            customPanels.clear();
-            
-            // load default panel builders
-            customPanels.put(SensorConfig.class.getCanonicalName(), SensorAdminPanel.class);        
-            customPanels.put(StorageConfig.class.getCanonicalName(), StorageAdminPanel.class);
-            customPanels.put(NetworkConfig.class.getCanonicalName(), NetworkAdminPanel.class);
-            
-            // load custom panel builders defined in config
-            for (CustomUIConfig customPanel: uiConfig.customPanels)
-            {
-                configClass = customPanel.configClass;
-                Class<?> clazz = Class.forName(customPanel.uiClass);
-                customPanels.put(configClass, (Class<IModuleAdminPanel<?>>)clazz);
-                log.debug("Loaded custom panel for " + configClass);
-            } 
-        }
-        catch (Exception e)
-        {
-            log.error("Error while instantiating panel builder for config class " + configClass, e);
         }
         
         // register new field converter for integer numbers
@@ -346,7 +266,7 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener
                                     "UI will stop responding",
                                     Notification.Type.ERROR_MESSAGE);
                             notif.setHtmlContentAllowed(true);
-                            notif.show(AdminUI.getInstance().getPage());
+                            notif.show(getPage());
                             
                             // shutdown in separate thread
                             new Timer().schedule(new TimerTask() {
@@ -388,7 +308,7 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener
                                     "UI will stop responding",
                                     Notification.Type.ERROR_MESSAGE);
                             notif.setHtmlContentAllowed(true);
-                            notif.show(AdminUI.getInstance().getPage());
+                            notif.show(getPage());
                             
                             // shutdown in separate thread
                             new Timer().schedule(new TimerTask() {
@@ -723,7 +643,6 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener
                                     {                        
                                         String msg = "The module could not be removed";
                                         Notification.show("Error", msg + '\n' + ex.getMessage(), Notification.Type.ERROR_MESSAGE);
-                                        AdminUI.log.debug(msg, e);
                                     }
                                 }
                             }                        
@@ -819,59 +738,11 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener
         
         // get panel for this config object        
         Class<?> configClass = beanItem.getBean().getClass();
-        IModuleAdminPanel<IModule<?>> panel = generatePanel(configClass);
+        IModuleAdminPanel<IModule<?>> panel = AdminUIModule.getInstance().generatePanel(configClass);
         panel.build(beanItem, module);
         
         // generate module admin panel        
         configArea.addComponent(panel);
-    }
-    
-    
-    protected IModuleAdminPanel<IModule<?>> generatePanel(Class<?> clazz)
-    {
-        try
-        {
-            // check if there is a custom panel registered, if not use default
-            Class<IModuleAdminPanel<IModule<?>>> uiClass = null;
-            while (uiClass == null && clazz != null)
-            {
-                uiClass = (Class<IModuleAdminPanel<IModule<?>>>)customPanels.get(clazz.getCanonicalName());
-                clazz = clazz.getSuperclass();
-            }
-            
-            if (uiClass == null)
-                return new DefaultModulePanel<IModule<?>>();
-            
-            return uiClass.newInstance();
-        }
-        catch (Exception e)
-        {
-            throw new RuntimeException("Cannot instantiate UI class", e);
-        }
-    }
-    
-    
-    protected IModuleConfigForm generateForm(Class<?> clazz)
-    {
-        try
-        {
-            // check if there is a custom form registered, if not use default        
-            Class<IModuleConfigForm> uiClass = null;
-            while (uiClass == null && clazz != null)
-            {
-                uiClass = (Class<IModuleConfigForm>)customForms.get(clazz.getCanonicalName());
-                clazz = clazz.getSuperclass();
-            }
-            
-            if (uiClass == null)
-                return new GenericConfigForm();
-            
-            return uiClass.newInstance();
-        }
-        catch (Exception e)
-        {
-            throw new RuntimeException("Cannot instantiate UI class", e);
-        }
     }
 
 

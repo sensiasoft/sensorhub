@@ -14,11 +14,14 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.ui.api;
 
+import java.util.List;
 import java.util.Map;
 import org.sensorhub.ui.data.ComplexProperty;
 import org.sensorhub.ui.data.MyBeanItem;
 import com.vaadin.data.fieldgroup.FieldGroup.CommitException;
+import com.vaadin.ui.Component;
 import com.vaadin.ui.ComponentContainer;
+import com.vaadin.ui.Layout;
 
 
 /**
@@ -29,15 +32,16 @@ import com.vaadin.ui.ComponentContainer;
  * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @since 0.5
  */
-public interface IModuleConfigForm extends ComponentContainer
+public interface IModuleConfigForm extends ComponentContainer, Layout.MarginHandler
 {
     
     /**
      * Builds the whole form for a complex property (i.e. whose value is an object)
      * @param propertyId
      * @param prop
+     * @param includeSubForms 
      */
-    public void build(String propertyId, ComplexProperty prop);
+    public void build(String propertyId, ComplexProperty prop, boolean includeSubForms);
     
     
     /**
@@ -45,8 +49,12 @@ public interface IModuleConfigForm extends ComponentContainer
      * @param title title of the form
      * @param popupText help popup text shown when hovering on the form title
      * @param beanItem object to render a form for
+     * @param includeSubForms true to include sub forms in the component
      */
-    public void build(String title, String popupText, MyBeanItem<? extends Object> beanItem);
+    public void build(String title, String popupText, MyBeanItem<? extends Object> beanItem, boolean includeSubForms);
+    
+    
+    public List<Component> getSubForms();
     
     
     /**

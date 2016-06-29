@@ -37,9 +37,9 @@ public class SOSConfigForm extends GenericConfigForm
     
     
     @Override
-    public void build(String title, String popupText, MyBeanItem<? extends Object> beanItem)
+    public void build(String title, String popupText, MyBeanItem<? extends Object> beanItem, boolean includeSubForms)
     {
-        super.build(title, popupText, beanItem);
+        super.build(title, popupText, beanItem, includeSubForms);
         
         // add link to capabilities
         Property<?> endPointProp = beanItem.getItemProperty(PROP_ENDPOINT);
@@ -51,7 +51,7 @@ public class SOSConfigForm extends GenericConfigForm
                 baseUrl = baseUrl.substring(1);
                 String href = baseUrl + "?service=SOS&version=2.0&request=GetCapabilities";
                 Link link = new Link("Link to capabilities", new ExternalResource(href), "_blank", 0, 0, null);
-                this.addComponent(link, 0);
+                this.addComponent(link);
             }
         }
     }

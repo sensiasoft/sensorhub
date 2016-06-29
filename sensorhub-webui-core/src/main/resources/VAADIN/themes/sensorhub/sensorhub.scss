@@ -43,20 +43,32 @@ $v-layout-margin-top: 25px;
       z-index: 10000;
    }
    
+   .v-slot {
+      clear: none;
+   }
+   
    .v-slot-section-buttons {
-      position: relative;
-      top: 20px;
-      right: 0px;
+      float: right;
+      margin-top: 20px;
+      min-height: 35px;
    }
    
    .section-buttons {
       position: absolute;
-      right: 0px;
+      right: 2px;
       z-index: 1000;
    }
    
    .v-formlayout-contentcell > .v-label-h3 {
       top: 18px;
+   }
+   
+   .v-formlayout-contentcell > .v-textfield {
+      font-size: 14px;
+   }
+   
+   .v-formlayout-contentcell > .v-checkbox {
+      font-size: 14px;
    }
    
    .v-formlayout-firstrow {

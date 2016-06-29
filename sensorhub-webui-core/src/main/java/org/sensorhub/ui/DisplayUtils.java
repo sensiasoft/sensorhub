@@ -16,6 +16,7 @@ package org.sensorhub.ui;
 
 import com.vaadin.server.FontAwesome;
 import com.vaadin.ui.Notification;
+import com.vaadin.ui.UI;
 
 
 public class DisplayUtils
@@ -51,6 +52,6 @@ public class DisplayUtils
                 "<span style=\"color:green\">" + FontAwesome.CHECK_CIRCLE_O.getHtml() +
                 "</span>&nbsp;&nbsp;" + text, Notification.Type.WARNING_MESSAGE);
         notif.setHtmlContentAllowed(true);
-        notif.show(AdminUI.getInstance().getPage());
+        notif.show(UI.getCurrent().getPage());
     }
 }

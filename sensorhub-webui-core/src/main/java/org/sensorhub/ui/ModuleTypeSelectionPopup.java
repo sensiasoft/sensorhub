@@ -16,10 +16,11 @@ package org.sensorhub.ui;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
+import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.module.IModuleProvider;
 import org.sensorhub.api.module.ModuleConfig;
 import org.sensorhub.impl.SensorHub;
+import org.sensorhub.impl.module.ModuleRegistry;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Notification;
@@ -61,8 +62,9 @@ public class ModuleTypeSelectionPopup extends Window
         table.setPageLength(10);
         table.setMultiSelect(false);
         
+        final ModuleRegistry registry = SensorHub.getInstance().getModuleRegistry();
         final Map<Object, IModuleProvider> providerMap = new HashMap<Object, IModuleProvider>();
-        for (IModuleProvider provider: SensorHub.getInstance().getModuleRegistry().getInstalledModuleTypes())
+        for (IModuleProvider provider: registry.getInstalledModuleTypes())
         {
             Class<?> configClass = provider.getModuleConfigClass();
             Class<?> moduleClass = provider.getModuleClass();
@@ -87,33 +89,22 @@ public class ModuleTypeSelectionPopup extends Window
             public void buttonClick(ClickEvent event)
             {
                 Object selectedItemId = table.getValue();
-                String name = null;
                 
                 try
                 {
                     if (selectedItemId != null)
                     {
-                        name = (String)table.getContainerProperty(selectedItemId, PROP_NAME).getValue();
-                                        
                         IModuleProvider provider = providerMap.get(selectedItemId);
-                        Class<?> configClass = provider.getModuleConfigClass();
-                        ModuleConfig config = (ModuleConfig)configClass.newInstance();
-                        config.id = UUID.randomUUID().toString();
-                        config.moduleClass = provider.getModuleClass().getCanonicalName();
-                        config.name = "New " + name;
-                        config.autoStart = false;
+                        ModuleConfig config = registry.createModuleConfig(provider);
                         
                         // send back new config object
                         callback.onSelected(moduleType, config); 
                     }
                 }
-                catch (Exception e)
+                catch (SensorHubException e)
                 {
                     close();
-                    String version = (String)table.getContainerProperty(selectedItemId, PROP_VERSION).getValue();
-                    String msg = "Cannot instantiate module " + name + " v" + version;
-                    Notification.show(msg, null, Notification.Type.ERROR_MESSAGE);
-                    AdminUI.log.error(msg, e);
+                    Notification.show(e.getMessage(), null, Notification.Type.ERROR_MESSAGE);
                 }
                 finally
                 {

@@ -95,54 +95,49 @@ import com.vaadin.ui.Button.ClickEvent;
 public class GenericConfigForm extends VerticalLayout implements IModuleConfigForm, UIConstants
 {
     private static final long serialVersionUID = 3491784756273165916L;
+    protected static final String MAIN_CONFIG = "General";
     
     protected FieldGroup fieldGroup;
     protected List<IModuleConfigForm> allForms = new ArrayList<IModuleConfigForm>();
+    protected List<Component> subForms = new ArrayList<Component>();
     protected boolean tabJustRemoved;
-    
+        
     
     @Override
-    public void build(String propId, ComplexProperty prop)
+    public void build(String propId, ComplexProperty prop, boolean includeSubForms)
     {
         String title = prop.getLabel();
         if (title == null)
             title = DisplayUtils.getPrettyName(propId);
         
-        build(title, prop.getDescription(), prop.getValue());
+        build(title, prop.getDescription(), prop.getValue(), includeSubForms);
     }
     
     
     @Override
-    public void build(String title, String popupText, MyBeanItem<? extends Object> beanItem)
+    public void build(String title, String popupText, MyBeanItem<? extends Object> beanItem, boolean includeSubForms)
     {
         List<Field<?>> labels = new ArrayList<Field<?>>();
         List<Field<?>> textBoxes = new ArrayList<Field<?>>();
         List<Field<?>> listBoxes = new ArrayList<Field<?>>();
         List<Field<?>> numberBoxes = new ArrayList<Field<?>>();
         List<Field<?>> checkBoxes = new ArrayList<Field<?>>();
-        List<Component> otherWidgets = new ArrayList<Component>();
         
         // prepare header and form layout
-        setSpacing(true);
-        
+        setSpacing(false);
+                                
         // add main form widgets
         FormLayout form = new FormLayout();
         form.setWidth(100.0f, Unit.PERCENTAGE);
-        form.setMargin(false);
-        
-        if (title != null)
-        {
-            Label sectionLabel = new Label(title);
-            sectionLabel.setDescription(popupText);
-            sectionLabel.addStyleName(STYLE_H3);
-            sectionLabel.addStyleName(STYLE_COLORED);
-            form.addComponent(sectionLabel);
-        }
+        setCaption(title);
+        setDescription(popupText);
+        addComponent(form);
         
         // add widget for each visible attribute
         if (beanItem != null)
         {
             fieldGroup = new FieldGroup(beanItem);
+            
             for (Object propId: fieldGroup.getUnboundPropertyIds())
             {
                 Property<?> prop = fieldGroup.getItemDataSource().getItemProperty(propId);
@@ -163,11 +158,10 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
                     }
                     
                     // else use tab sheet
-                    //else if (!((ContainerProperty)prop).getValue().getItemIds().isEmpty())
                     else
                     {
                         Component subform = buildTabs((String)propId, (ContainerProperty)prop, fieldGroup);
-                        otherWidgets.add(subform);
+                        subForms.add(subform);
                     }
                 }
                 
@@ -175,7 +169,7 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
                 else if (prop instanceof ComplexProperty)
                 {
                     Component subform = buildSubForm((String)propId, (ComplexProperty)prop);
-                    otherWidgets.add(subform);
+                    subForms.add(subform);
                 }
                 
                 // scalar field
@@ -200,7 +194,7 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
                     }
                     catch (Exception e)
                     {
-                        AdminUI.log.error("Error while generating UI field for property " + propId, (e instanceof SourceException) ? null : e);
+                        AdminUIModule.log.error("Error while generating UI field for property " + propId, (e instanceof SourceException) ? null : e);
                         continue;
                     }
                     
@@ -220,7 +214,7 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
                     else if (field instanceof CheckBox)
                         checkBoxes.add(field);
                     else
-                        otherWidgets.add(field);
+                        subForms.add(field);
                 }
             }
         }
@@ -236,11 +230,27 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
             form.addComponent(w);
         for (Field<?> w: checkBoxes)
             form.addComponent(w);
-        addComponent(form);
         
-        // sub forms
-        for (Component w: otherWidgets)
-            addComponent(w);
+        // subforms
+        if (includeSubForms)
+        {
+            for (Component subForm: subForms)
+            {
+                Label sectionLabel = new Label(subForm.getCaption());
+                sectionLabel.setDescription(subForm.getDescription());
+                sectionLabel.addStyleName(STYLE_H3);
+                sectionLabel.addStyleName(STYLE_COLORED);
+                addComponent(sectionLabel);
+                subForm.setCaption(null);
+                addComponent(subForm);
+            }
+        }
+    }
+    
+    
+    public List<Component> getSubForms()
+    {
+        return subForms;
     }
     
     
@@ -266,8 +276,6 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
         
         // show these only for top level modules
         else if (propId.endsWith("." + PROP_ID))
-            field.setVisible(false);
-        else if (propId.endsWith("." + PROP_NAME))
             field.setVisible(false);
         else if (propId.endsWith("." + PROP_AUTOSTART))
             field.setVisible(false);
@@ -370,7 +378,7 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
                             }
                         });
                         popup.setModal(true);
-                        AdminUI.getInstance().addWindow(popup);
+                        getUI().addWindow(popup);
                     }
                 });
                                 
@@ -420,7 +428,7 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
                         }
                         if (!netAvailable)
                         {
-                            Page page = AdminUI.getInstance().getPage();
+                            Page page = getUI().getPage();
                             new Notification("Error", "No network scanner available for " + addressType + " address lookup", Notification.Type.ERROR_MESSAGE).show(page);
                             return;
                         }
@@ -435,7 +443,7 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
                             }
                         });
                         popup.setModal(true);
-                        AdminUI.getInstance().addWindow(popup);
+                        getUI().addWindow(popup);
                     }
                 });
                                 
@@ -512,10 +520,10 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
         // generate custom form for this bean type
         IModuleConfigForm subform;
         if (childBeanItem != null)
-            subform = AdminUI.getInstance().generateForm(childBeanItem.getBean().getClass());
+            subform = AdminUIModule.getInstance().generateForm(childBeanItem.getBean().getClass());
         else
-            subform = AdminUI.getInstance().generateForm(beanType);
-        subform.build(propId, prop);
+            subform = AdminUIModule.getInstance().generateForm(beanType);
+        subform.build(propId, prop, true);
         
         // add change button if property is changeable module config
         Class<?> changeableBeanType = subform.getPolymorphicBeanParentType();
@@ -557,19 +565,20 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
                         config.name = null;
                         MyBeanItem<Object> newItem = new MyBeanItem<Object>(config, propId + ".");
                         prop.setValue(newItem);
-                        IModuleConfigForm newForm = AdminUI.getInstance().generateForm(config.getClass());
-                        newForm.build(propId, prop);
+                        IModuleConfigForm newForm = AdminUIModule.getInstance().generateForm(config.getClass());
+                        newForm.build(propId, prop, true);
                         ((VerticalLayout)newForm).addComponent(chgButton, 0);
                                                 
                         // replace old form in UI
                         allForms.add(newForm);
                         allForms.remove((IModuleConfigForm)chgButton.getData());
-                        replaceComponent((Component)chgButton.getData(), newForm);
+                        Component oldForm = (Component)chgButton.getData();
+                        ((ComponentContainer)oldForm.getParent()).replaceComponent(oldForm, newForm);
                         chgButton.setData(newForm);
                     }
                 });
                 popup.setModal(true);
-                AdminUI.getInstance().addWindow(popup);
+                getUI().addWindow(popup);
             }
         });
         
@@ -599,14 +608,15 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
                             // regenerate form
                             MyBeanItem<Object> newItem = new MyBeanItem<Object>(objectType.newInstance(), propId + ".");
                             prop.setValue(newItem);
-                            IModuleConfigForm newForm = AdminUI.getInstance().generateForm(objectType);
-                            newForm.build(propId, prop);
+                            IModuleConfigForm newForm = AdminUIModule.getInstance().generateForm(objectType);
+                            newForm.build(propId, prop, true);
                             ((VerticalLayout)newForm).addComponent(chgButton, 0);
                                                     
                             // replace old form in UI
                             allForms.add(newForm);
                             allForms.remove((IModuleConfigForm)chgButton.getData());
-                            replaceComponent((Component)chgButton.getData(), newForm);
+                            Component oldForm = (Component)chgButton.getData();
+                            ((ComponentContainer)oldForm.getParent()).replaceComponent(oldForm, newForm);
                             chgButton.setData(newForm);
                         }
                         catch (Exception e)
@@ -616,7 +626,7 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
                     }
                 });
                 popup.setModal(true);
-                AdminUI.getInstance().addWindow(popup);
+                getUI().addWindow(popup);
             }
         });
         chgButton.setData(parentForm);
@@ -681,7 +691,7 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
                             popup = new ValueEntryPopup(500, callback);
                                     
                         popup.setModal(true);
-                        AdminUI.getInstance().addWindow(popup);
+                        getUI().addWindow(popup);
                     }
                 });
                 
@@ -720,20 +730,12 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
         GridLayout layout = new GridLayout();
         layout.setWidth(100.0f, Unit.PERCENTAGE);
         
-        // title bar
-        HorizontalLayout titleBar = new HorizontalLayout();
-        titleBar.setMargin(new MarginInfo(true, false, false, false));
-        titleBar.setSpacing(true);
-        String label = prop.getLabel();
-        if (label == null)
-            label = DisplayUtils.getPrettyName((String)propId);
-                
-        Label sectionLabel = new Label(label);
-        sectionLabel.setDescription(prop.getDescription());
-        sectionLabel.addStyleName(STYLE_H3);
-        sectionLabel.addStyleName(STYLE_COLORED);
-        titleBar.addComponent(sectionLabel);
-        layout.addComponent(titleBar);
+        // set title and popup
+        String title = prop.getLabel();
+        if (title == null)
+            title = DisplayUtils.getPrettyName((String)propId);                
+        layout.setCaption(title);
+        layout.setDescription(prop.getDescription());
         
         // create one tab per item in container
         final MyBeanItemContainer<Object> container = prop.getValue();
@@ -743,9 +745,9 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
         for (Object itemId: container.getItemIds())
         {
             MyBeanItem<Object> childBeanItem = (MyBeanItem<Object>)container.getItem(itemId);
-            IModuleConfigForm subform = AdminUI.getInstance().generateForm(childBeanItem.getBean().getClass());
-            subform.build(null, null, childBeanItem);
-            ((MarginHandler)subform).setMargin(new MarginInfo(true, false, true, false));
+            IModuleConfigForm subform = AdminUIModule.getInstance().generateForm(childBeanItem.getBean().getClass());
+            subform.build(null, null, childBeanItem, true);
+            ((MarginHandler)subform).setMargin(new MarginInfo(false, false, true, false));
             allForms.add(subform);
             Tab tab = tabs.addTab(subform, "Item #" + (i++));
             tab.setClosable(true);
@@ -804,7 +806,7 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
                 });
                 
                 popup.setModal(true);
-                AdminUI.getInstance().addWindow(popup);
+                getUI().addWindow(popup);
             }
         });
         
@@ -842,9 +844,9 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
                                     MyBeanItem<Object> childBeanItem = container.addBean(objectType.newInstance(), ((String)propId) + PROP_SEP);
                                                                         
                                     // generate form for new item
-                                    IModuleConfigForm subform = AdminUI.getInstance().generateForm(childBeanItem.getBean().getClass());
-                                    subform.build(null, null, childBeanItem);
-                                    ((MarginHandler)subform).setMargin(new MarginInfo(true, false, true, false));
+                                    IModuleConfigForm subform = AdminUIModule.getInstance().generateForm(childBeanItem.getBean().getClass());
+                                    subform.build(null, null, childBeanItem, true);
+                                    ((MarginHandler)subform).setMargin(new MarginInfo(false, false, true, false));
                                     allForms.add(subform);
                                     
                                     // add new tab and select it
@@ -867,7 +869,7 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
                         {
                             ObjectTypeSelectionPopup popup = new ObjectTypeSelectionPopup(title, typeList, callback);
                             popup.setModal(true);
-                            AdminUI.getInstance().addWindow(popup);
+                            getUI().addWindow(popup);
                         }
                     }
                     catch (Exception e)

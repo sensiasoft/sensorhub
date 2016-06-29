@@ -199,9 +199,7 @@ public class NetworkAdminPanel extends DefaultModulePanel<ICommNetwork<?>> imple
                                                     new Notification("Error", msg + '\n' + e.getMessage(), Notification.Type.ERROR_MESSAGE).show(ui.getPage());
                                                 }
                                             });
-                                        }
-                                        
-                                        AdminUI.log.error(msg, e);               
+                                        }              
                                     }                        
                                 });
                             }

@@ -83,9 +83,9 @@ public class DefaultModulePanel<ModuleType extends IModule<? extends ModuleConfi
         applyButton.addStyleName("apply-button");
         addComponent(applyButton);
         
-        // config form
+        // config forms
         final IModuleConfigForm form = getConfigForm(beanItem, module);
-        addComponent(form);
+        addComponent(new TabbedConfigForms(form));
         
         // apply button action
         applyButton.addClickListener(new Button.ClickListener() {
@@ -106,8 +106,6 @@ public class DefaultModulePanel<ModuleType extends IModule<? extends ModuleConfi
                     String msg = "Error while updating module configuration";
                     Page page = DefaultModulePanel.this.getUI().getPage();
                     new Notification("Error", msg + '\n' + e.getMessage(), Notification.Type.ERROR_MESSAGE).show(page);
-                    //Notification.show("Error", msg + '\n' + e.getMessage(), Notification.Type.ERROR_MESSAGE);
-                    AdminUI.log.error(msg, e);
                 }
             }
         });
@@ -205,8 +203,9 @@ public class DefaultModulePanel<ModuleType extends IModule<? extends ModuleConfi
     
     protected IModuleConfigForm getConfigForm(MyBeanItem<ModuleConfig> beanItem, ModuleType module)
     {
-        IModuleConfigForm form = AdminUI.getInstance().generateForm(beanItem.getBean().getClass());//module.getClass());
-        form.build("Main Settings", null, beanItem);
+        IModuleConfigForm form = AdminUIModule.getInstance().generateForm(beanItem.getBean().getClass());//module.getClass());
+        //form.build("Main Settings", null, beanItem);
+        form.build(GenericConfigForm.MAIN_CONFIG, "General module configuration", beanItem, false);
         return form;
     }
     

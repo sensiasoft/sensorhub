@@ -220,6 +220,34 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
     }
     
     
+    /**
+     * Creates a new module config class using information from a module provider
+     * @param provider
+     * @return the new configuration class
+     * @throws SensorHubException
+     */
+    public ModuleConfig createModuleConfig(IModuleProvider provider) throws SensorHubException
+    {
+        Class<?> configClass = provider.getModuleConfigClass();
+        
+        try
+        {
+            ModuleConfig config = (ModuleConfig)configClass.newInstance();
+            config.id = UUID.randomUUID().toString();
+            config.moduleClass = provider.getModuleClass().getCanonicalName();
+            config.name = "New " + provider.getModuleName();
+            config.autoStart = false;
+            return config;
+        }
+        catch (Exception e)
+        {
+            String msg = "Cannot create configuration class for module " + provider.getModuleName();
+            log.error(msg, e);
+            throw new SensorHubException(msg, e);
+        }
+    }
+    
+    
     @Override
     public boolean isModuleLoaded(String moduleID)
     {
@@ -486,22 +514,33 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
      */
     public void destroyModule(String moduleID) throws SensorHubException
     {
-        checkID(moduleID);
+        // we check both in live table and in config repository
+        if (!loadedModules.containsKey(moduleID) && !configRepos.contains(moduleID))
+            throw new SensorHubException("Unknown module " + moduleID);
         
-        IModule<?> module = loadedModules.remove(moduleID);
-        if (module != null)
+        try
         {
-            module.stop();
-            module.cleanup();
-            getStateManager(moduleID).cleanup();
+            // stop it and call cleanup if it was loaded
+            IModule<?> module = loadedModules.remove(moduleID);
+            if (module != null)
+            {
+                module.stop();
+                module.cleanup();
+                getStateManager(moduleID).cleanup();
+            }
+            
+            // remove conf from repo if it was saved 
+            if (configRepos.contains(moduleID))
+                configRepos.remove(moduleID);
+            
+            eventHandler.publishEvent(new ModuleEvent(module, Type.DELETED));
+            log.debug("Module " + MsgUtils.moduleString(module) +  " removed");
         }
-        
-        // remove conf from repo if it was saved 
-        if (configRepos.contains(moduleID))
-            configRepos.remove(moduleID);
-        
-        eventHandler.publishEvent(new ModuleEvent(module, Type.DELETED));
-        log.debug("Module " + MsgUtils.moduleString(module) +  " removed");
+        catch (Exception e)
+        {
+            String msg = "Cannot destroy module " + moduleID;
+            log.error(msg);
+        }
     }
     
     
@@ -736,17 +775,6 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
     }
     
     
-    /*
-     * Checks if module id exists in registry
-     */
-    private void checkID(String moduleID) throws SensorHubException
-    {
-        // moduleID can exist either in live table, in config repository or both
-        if (!loadedModules.containsKey(moduleID) && !configRepos.contains(moduleID))
-            throw new SensorHubException("Module with ID " + moduleID + " is not available");
-    }
-    
-    
     /**
      * Returns the default state manager for the given module
      * @param moduleID
@@ -880,5 +908,4 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
         }
         
     }
-
 }

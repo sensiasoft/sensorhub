@@ -23,7 +23,6 @@ import org.sensorhub.ui.NetworkAdminPanel.NetworkScanPanel;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.HorizontalLayout;
-import com.vaadin.ui.Notification;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
 import com.vaadin.ui.Button.ClickEvent;
@@ -92,23 +91,14 @@ public class NetworkAddressSelectionPopup extends Window
     {
         IDeviceInfo selectedDevice = scanPanel.getSelectedDevice();
         
-        try
+        if (selectedDevice != null)
         {
-            if (selectedDevice != null)
-            {
-                if (useName)
-                    callback.onSelected(selectedDevice.getName());
-                else
-                    callback.onSelected(selectedDevice.getAddress());
-            }
-            close();
+            if (useName)
+                callback.onSelected(selectedDevice.getName());
+            else
+                callback.onSelected(selectedDevice.getAddress());
         }
-        catch (Exception e)
-        {
-            close();
-            String msg = "Cannot retrieve network host info";
-            Notification.show(msg, null, Notification.Type.ERROR_MESSAGE);
-            AdminUI.log.error(msg, e);
-        }
+        
+        close();
     }
 }

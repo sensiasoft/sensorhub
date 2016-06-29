@@ -93,6 +93,7 @@ public class StorageAdminPanel extends DefaultModulePanel<IRecordStorageModule<?
             Button refreshButton = new Button("Refresh");
             refreshButton.setDescription("Reload data from storage");
             refreshButton.setIcon(REFRESH_ICON);
+            refreshButton.addStyleName(STYLE_SMALL);
             refreshButton.addStyleName(STYLE_QUIET);
             titleBar.addComponent(refreshButton);
             titleBar.setComponentAlignment(refreshButton, Alignment.MIDDLE_LEFT);

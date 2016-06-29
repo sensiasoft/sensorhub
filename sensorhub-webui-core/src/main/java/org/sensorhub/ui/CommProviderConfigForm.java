@@ -28,7 +28,7 @@ public class CommProviderConfigForm extends GenericConfigForm
 
 
     @Override
-    public void build(String propId, ComplexProperty prop)
+    public void build(String propId, ComplexProperty prop, boolean includeSubForms)
     {
         String title = prop.getLabel();
         if (title == null)
@@ -46,7 +46,7 @@ public class CommProviderConfigForm extends GenericConfigForm
             title += " (" + beanType.getSimpleName().replace("Config", "") + ")";
         }
         
-        build(title, desc, prop.getValue());
+        build(title, desc, prop.getValue(), includeSubForms);
     }
     
     
