@@ -550,7 +550,7 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
         //chgButton.addStyleName(STYLE_QUIET);
         chgButton.addStyleName(STYLE_SMALL);
         chgButton.addStyleName(STYLE_SECTION_BUTTONS);
-        chgButton.setIcon(REFRESH_ICON);
+        chgButton.setIcon(EDIT_ICON);
         
         chgButton.addClickListener(new ClickListener() {
             private static final long serialVersionUID = 1L;
@@ -593,7 +593,7 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
         //chgButton.addStyleName(STYLE_QUIET);
         chgButton.addStyleName(STYLE_SMALL);
         chgButton.addStyleName(STYLE_SECTION_BUTTONS);
-        chgButton.setIcon(REFRESH_ICON);
+        chgButton.setIcon(EDIT_ICON);
         
         chgButton.addClickListener(new ClickListener() {
             private static final long serialVersionUID = 1L;

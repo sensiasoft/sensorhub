@@ -31,6 +31,7 @@ import org.sensorhub.api.module.ModuleEvent;
 import org.sensorhub.api.module.ModuleEvent.ModuleState;
 import org.sensorhub.api.persistence.StorageConfig;
 import org.sensorhub.api.processing.ProcessConfig;
+import org.sensorhub.api.security.SecurityConfig;
 import org.sensorhub.api.sensor.ISensorModule;
 import org.sensorhub.api.sensor.SensorConfig;
 import org.sensorhub.api.service.ServiceConfig;
@@ -85,7 +86,7 @@ import com.vaadin.ui.Window.CloseListener;
 
 @Theme("sensorhub")
 @Push(value=PushMode.MANUAL, transport=Transport.STREAMING)
-public class AdminUI extends com.vaadin.ui.UI implements IEventListener
+public class AdminUI extends com.vaadin.ui.UI implements IEventListener, UIConstants
 {
     private static final long serialVersionUID = 4069325051233125115L;    
     private static final Action ADD_MODULE_ACTION = new Action("Add Module", new ThemeResource("icons/module_add.png"));
@@ -94,7 +95,6 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener
     private static final Action STOP_MODULE_ACTION = new Action("Stop", new ThemeResource("icons/disable.gif"));
     private static final Action RESTART_MODULE_ACTION = new Action("Restart", new ThemeResource("icons/refresh.gif"));    
     private static final Resource LOGO_ICON = new ClassResource("/sensorhub_logo_128.png");
-    private static final Resource ACC_TAB_ICON = new ThemeResource("icons/enable.png");
     private static final String STYLE_LOGO = "logo";
     private static final String PROP_STATE = "state";
     private static final String PROP_MODULE_OBJECT = "module";
@@ -174,33 +174,50 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener
                 
         layout = new VerticalLayout();
         tab = stack.addTab(layout, "Sensors");
-        tab.setIcon(ACC_TAB_ICON);
+        //tab.setIcon(ACC_TAB_ICON);
+        //tab.setIcon(FontAwesome.VIDEO_CAMERA);
+        //tab.setIcon(FontAwesome.STETHOSCOPE);
+        tab.setIcon(FontAwesome.RSS);
         buildModuleList(layout, SensorConfig.class);
         
         layout = new VerticalLayout();
         tab = stack.addTab(layout, "Storage");
-        tab.setIcon(ACC_TAB_ICON);
+        //tab.setIcon(ACC_TAB_ICON);
+        tab.setIcon(FontAwesome.DATABASE);
         buildModuleList(layout, StorageConfig.class);
         
         layout = new VerticalLayout();
         tab = stack.addTab(layout, "Processing");
-        tab.setIcon(ACC_TAB_ICON);
+        //tab.setIcon(ACC_TAB_ICON);
+        tab.setIcon(FontAwesome.GEARS);
         buildModuleList(layout, ProcessConfig.class);
         
         layout = new VerticalLayout();
         tab = stack.addTab(layout, "Services");
-        tab.setIcon(ACC_TAB_ICON);
+        //tab.setIcon(ACC_TAB_ICON);
+        //tab.setIcon(FontAwesome.CLOUD_DOWNLOAD);
+        //tab.setIcon(FontAwesome.CUBES);
+        tab.setIcon(FontAwesome.TASKS);
         buildModuleList(layout, ServiceConfig.class);
         
         layout = new VerticalLayout();
         tab = stack.addTab(layout, "Clients");
-        tab.setIcon(ACC_TAB_ICON);
+        //tab.setIcon(ACC_TAB_ICON);
+        tab.setIcon(FontAwesome.CLOUD_UPLOAD);
         buildModuleList(layout, ClientConfig.class);
         
         layout = new VerticalLayout();
         tab = stack.addTab(layout, "Network");
-        tab.setIcon(ACC_TAB_ICON);
+        //tab.setIcon(ACC_TAB_ICON);
+        //tab.setIcon(FontAwesome.SIGNAL);
+        tab.setIcon(FontAwesome.SITEMAP);
         buildNetworkModuleList(layout);
+        
+        layout = new VerticalLayout();
+        tab = stack.addTab(layout, "Security");
+        //tab.setIcon(ACC_TAB_ICON);
+        tab.setIcon(FontAwesome.LOCK);
+        buildModuleList(layout, SecurityConfig.class);
         
         leftPane.addComponent(stack);        
         leftPane.setExpandRatio(stack, 1);
@@ -224,7 +241,7 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener
         img.setStyleName(STYLE_LOGO);
         header.addComponent(img);
         Label title = new Label("SensorHub");
-        title.addStyleName(UIConstants.STYLE_H1);
+        title.addStyleName(STYLE_H1);
         title.addStyleName(STYLE_LOGO);
         title.setWidth(null);
         header.addComponent(title);
@@ -246,8 +263,9 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener
         // shutdown button
         Button shutdownButton = new Button("Shutdown");
         shutdownButton.setDescription("Shutdown SensorHub");
-        shutdownButton.setIcon(UIConstants.DEL_ICON);
-        shutdownButton.addStyleName(UIConstants.STYLE_SMALL);
+        //shutdownButton.setIcon(DEL_ICON);
+        shutdownButton.setIcon(FontAwesome.SIGN_OUT);
+        shutdownButton.addStyleName(STYLE_SMALL);
         shutdownButton.setWidth(100.0f, Unit.PERCENTAGE);
         shutdownButton.addClickListener(new Button.ClickListener() {
             public void buttonClick(ClickEvent event)
@@ -288,8 +306,8 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener
         // restart button
         Button restartButton = new Button("Restart");
         restartButton.setDescription("Restart SensorHub");
-        restartButton.setIcon(UIConstants.REFRESH_ICON);
-        restartButton.addStyleName(UIConstants.STYLE_SMALL);
+        restartButton.setIcon(REFRESH_ICON);
+        restartButton.addStyleName(STYLE_SMALL);
         restartButton.setWidth(100.0f, Unit.PERCENTAGE);
         restartButton.addClickListener(new Button.ClickListener() {
             public void buttonClick(ClickEvent event)
@@ -330,8 +348,8 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener
         // apply changes button
         Button saveButton = new Button("Save");
         saveButton.setDescription("Save SensorHub Configuration");
-        saveButton.setIcon(UIConstants.APPLY_ICON);
-        saveButton.addStyleName(UIConstants.STYLE_SMALL);
+        saveButton.setIcon(APPLY_ICON);
+        saveButton.addStyleName(STYLE_SMALL);
         saveButton.setWidth(100.0f, Unit.PERCENTAGE);
         saveButton.addClickListener(new Button.ClickListener() {
             public void buttonClick(ClickEvent event)
@@ -412,7 +430,7 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener
         table.setNullSelectionAllowed(false);
         table.setImmediate(true);
         table.setColumnReorderingAllowed(false);
-        table.addContainerProperty(UIConstants.PROP_NAME, String.class, UIConstants.PROP_NAME);
+        table.addContainerProperty(PROP_NAME, String.class, PROP_NAME);
         table.addContainerProperty(PROP_STATE, ModuleState.class, ModuleState.LOADED);
         table.addContainerProperty(PROP_MODULE_OBJECT, IModule.class, null);
         table.setColumnWidth(PROP_STATE, 100);
@@ -442,7 +460,7 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener
         }
         
         // hide module object column!
-        table.setVisibleColumns(UIConstants.PROP_NAME, PROP_STATE);
+        table.setVisibleColumns(PROP_NAME, PROP_STATE);
         
         // value converter for state field -> display as text and icon
         table.setConverter(PROP_STATE, new Converter<String, ModuleState>() {
@@ -559,14 +577,12 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener
                 if (target != null)
                 {                    
                     ModuleState state = (ModuleState)table.getItem(target).getItemProperty(PROP_STATE).getValue();
-                    if (state == ModuleState.STARTED || state == ModuleState.STARTING)
-                    {
-                        actions.add(STOP_MODULE_ACTION);
+                    if (state == ModuleState.STARTED)
                         actions.add(RESTART_MODULE_ACTION);
-                    }
                     else
                         actions.add(START_MODULE_ACTION);
                     
+                    actions.add(STOP_MODULE_ACTION);
                     actions.add(REMOVE_MODULE_ACTION);
                 }
                 else
@@ -605,7 +621,7 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener
                             
                             // add new table row
                             Item newItem = table.addItem(config.id);
-                            newItem.getItemProperty(UIConstants.PROP_NAME).setValue(config.name);
+                            newItem.getItemProperty(PROP_NAME).setValue(config.name);
                             newItem.getItemProperty(PROP_STATE).setValue(module.getCurrentState());
                             newItem.getItemProperty(PROP_MODULE_OBJECT).setValue(module);
                             table.setChildrenAllowed(config.id, false);
@@ -623,7 +639,7 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener
                     // possible actions when a module is selected
                     final Item item = table.getItem(selectedId);
                     final String moduleId = (String)selectedId;
-                    final String moduleName = (String)item.getItemProperty(UIConstants.PROP_NAME).getValue();
+                    final String moduleName = (String)item.getItemProperty(PROP_NAME).getValue();
                     
                     if (action == REMOVE_MODULE_ACTION)
                     {
@@ -773,7 +789,7 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener
                         {
                             case CONFIG_CHANGED:
                                 ModuleConfig config = ((IModule<?>)e.getSource()).getConfiguration();
-                                foundItem.getItemProperty(UIConstants.PROP_NAME).setValue(config.name);
+                                foundItem.getItemProperty(PROP_NAME).setValue(config.name);
                                 push();
                                 break;
                                 

@@ -12730,7 +12730,7 @@ div.v-layout.v-horizontal.v-widget {
 .sensorhub .v-slot-section-buttons {
 	float: right;
 	margin-top: 20px;
-	min-height: 40px;
+	min-height: 35px;
 }
 
 .sensorhub .section-buttons {
@@ -12757,6 +12757,14 @@ div.v-layout.v-horizontal.v-widget {
 
 .sensorhub .v-accordion-item-caption > .v-caption {
 	font-size: 16px;
+}
+
+.sensorhub .v-accordion-item-caption > .v-caption > .v-icon {
+	width: 18px;
+}
+
+.sensorhub .v-accordion-item-caption > .v-caption > .v-captiontext {
+	margin-left: 14px;
 }
 
 .sensorhub .v-verticallayout > .v-slot:first-child .v-gridlayout-slot > .v-label-h3 {

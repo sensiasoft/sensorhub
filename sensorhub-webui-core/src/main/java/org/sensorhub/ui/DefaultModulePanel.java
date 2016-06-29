@@ -106,6 +106,7 @@ public class DefaultModulePanel<ModuleType extends IModule<? extends ModuleConfi
                     String msg = "Error while updating module configuration";
                     Page page = DefaultModulePanel.this.getUI().getPage();
                     new Notification("Error", msg + '\n' + e.getMessage(), Notification.Type.ERROR_MESSAGE).show(page);
+                    AdminUIModule.log.error(msg, e);
                 }
             }
         });

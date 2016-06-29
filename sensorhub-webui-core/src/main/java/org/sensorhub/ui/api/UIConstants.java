@@ -14,6 +14,7 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.ui.api;
 
+import com.vaadin.server.FontAwesome;
 import com.vaadin.server.Resource;
 import com.vaadin.server.ThemeResource;
 
@@ -28,16 +29,18 @@ public interface UIConstants
     public final static String STYLE_SMALL = "small";
     public final static String STYLE_QUIET = "quiet";
     public final static String STYLE_LINK = "link";
+    public final static String STYLE_PRESSED = "v-pressed";
     public final static String STYLE_SECTION_BUTTONS = "section-buttons";
     
     // constants for icon resources
     public static final Resource ADD_ICON = new ThemeResource("icons/add.gif");
     public static final Resource DEL_ICON = new ThemeResource("icons/remove.gif");
-    public static final Resource LINK_ICON = new ThemeResource("icons/link.png");
-    public static final Resource APPLY_ICON = new ThemeResource("icons/save.png");
-    public static final Resource REFRESH_ICON = new ThemeResource("icons/refresh.gif");
-    public static final Resource ERROR_ICON = new ThemeResource("icons/errorwarning.gif");
-    public static final Resource INFO_ICON = new ThemeResource("icons/info.gif");
+    public static final Resource LINK_ICON = FontAwesome.LINK;//new ThemeResource("icons/link.png");
+    public static final Resource APPLY_ICON = FontAwesome.SAVE;//new ThemeResource("icons/save.png");
+    public static final Resource REFRESH_ICON = FontAwesome.REFRESH;//new ThemeResource("icons/refresh.gif");
+    public static final Resource EDIT_ICON = FontAwesome.EDIT;//new ThemeResource("icons/refresh.gif");
+    public static final Resource ERROR_ICON = FontAwesome.WARNING;//new ThemeResource("icons/errorwarning.gif");
+    public static final Resource INFO_ICON = FontAwesome.INFO_CIRCLE;//new ThemeResource("icons/info.gif");
     public static final Resource HELP_ICON = new ThemeResource("icons/help.gif");
     
     // constants for messages

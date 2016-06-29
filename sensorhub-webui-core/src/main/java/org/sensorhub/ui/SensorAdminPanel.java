@@ -14,6 +14,8 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.ui;
 
+import java.util.Timer;
+import java.util.TimerTask;
 import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataComponent;
 import org.sensorhub.api.module.ModuleConfig;
@@ -22,6 +24,7 @@ import org.sensorhub.api.sensor.ISensorDataInterface;
 import org.sensorhub.api.sensor.ISensorModule;
 import org.sensorhub.ui.api.IModuleAdminPanel;
 import org.sensorhub.ui.data.MyBeanItem;
+import com.vaadin.server.FontAwesome;
 import com.vaadin.shared.ui.label.ContentMode;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
@@ -33,6 +36,7 @@ import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Layout;
 import com.vaadin.ui.Panel;
+import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 
 
@@ -74,19 +78,54 @@ public class SensorAdminPanel extends DefaultModulePanel<ISensorModule<?>> imple
         titleBar.setComponentAlignment(sectionLabel, Alignment.MIDDLE_LEFT);
         
         // refresh button to show latest record
-        Button refreshButton = new Button("Refresh");
-        refreshButton.setDescription("Load latest data from sensor");
+        final Timer timer = new Timer();
+        final Button refreshButton = new Button("Refresh");
+        refreshButton.setDescription("Toggle auto-refresh data once per second");
         refreshButton.setIcon(REFRESH_ICON);
         refreshButton.addStyleName(STYLE_SMALL);
         refreshButton.addStyleName(STYLE_QUIET);
+        refreshButton.setData(false);
         titleBar.addComponent(refreshButton);
         titleBar.setComponentAlignment(refreshButton, Alignment.MIDDLE_LEFT);
         refreshButton.addClickListener(new ClickListener() {
             private static final long serialVersionUID = 1L;
-            @Override
+            TimerTask autoRefreshTask;
             public void buttonClick(ClickEvent event)
             {
-                rebuildSwePanels(form, module);
+                // toggle button state
+                boolean state = !(boolean)refreshButton.getData();
+                refreshButton.setData(state);
+                
+                if (state)
+                {
+                    autoRefreshTask = new TimerTask()
+                    {
+                        public void run()
+                        {
+                            final UI ui = SensorAdminPanel.this.getUI();
+                            
+                            if (ui != null)
+                            {
+                                ui.access(new Runnable() {
+                                    public void run()
+                                    {
+                                        rebuildSwePanels(form, module);
+                                        ui.push();
+                                    }
+                                });
+                            }
+                            else
+                                cancel(); // if panel was detached
+                        }
+                    };
+                    timer.schedule(autoRefreshTask, 0L, 1000L);                    
+                    refreshButton.setIcon(FontAwesome.TIMES);
+                }
+                else
+                {
+                    autoRefreshTask.cancel();
+                    refreshButton.setIcon(REFRESH_ICON);
+                }
             }
         });
                 
