@@ -68,6 +68,7 @@ import org.slf4j.LoggerFactory;
 public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProducer, IEventListener
 {
     private static final Logger log = LoggerFactory.getLogger(ModuleRegistry.class);
+    private static final String REGISTRY_SHUTDOWN_MSG = "Registry was shut down";
     public static final String ID = "MODULE_REGISTRY";
     public static final long SHUTDOWN_TIMEOUT_MS = 10000L;
     
@@ -320,23 +321,30 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
         if (listener != null)
             module.registerListener(listener);
         
-        // init module in separate thread
-        asyncExec.submit(new Runnable()
+        try
         {
-            @Override
-            public void run()
+            // init module in separate thread
+            asyncExec.submit(new Runnable()
             {
-                try
+                @Override
+                public void run()
                 {
-                    module.requestInit();
-                }
-                catch (Exception e)
-                {
-                    String msg = "Cannot initialize module " + MsgUtils.moduleString(module);
-                    log.error(msg);
-                }
-            }            
-        });
+                    try
+                    {
+                        module.requestInit();
+                    }
+                    catch (Exception e)
+                    {
+                        String msg = "Cannot initialize module " + MsgUtils.moduleString(module);
+                        log.error(msg);
+                    }
+                }            
+            });
+        }
+        catch (RejectedExecutionException e)
+        {
+            throw new SensorHubException(REGISTRY_SHUTDOWN_MSG, e);
+        }
         
         return module;
     }
@@ -420,7 +428,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
         }
         catch (RejectedExecutionException e)
         {
-            throw new SensorHubException("Registry was shut down", e);
+            throw new SensorHubException(REGISTRY_SHUTDOWN_MSG, e);
         }
     }
     
@@ -494,6 +502,38 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
                     catch (Exception e)
                     {
                         String msg = "Cannot stop module " + MsgUtils.moduleString(module);
+                        log.error(msg);
+                    }
+                }            
+            });
+        }
+        catch (Exception e)
+        {
+            throw new SensorHubException(REGISTRY_SHUTDOWN_MSG, e);
+        }
+    }
+    
+    
+    public void updateModuleConfigAsync(final ModuleConfig config) throws SensorHubException
+    {
+        @SuppressWarnings("rawtypes")
+        final IModule module = getModuleById(config.id);
+        
+        try
+        {
+            // stop module in separate thread
+            asyncExec.submit(new Runnable()
+            {
+                @Override
+                public void run()
+                {
+                    try
+                    {
+                        module.updateConfig(config);
+                    }
+                    catch (Exception e)
+                    {
+                        String msg = "Cannot update configuration of module " + MsgUtils.moduleString(module);
                         log.error(msg);
                     }
                 }            

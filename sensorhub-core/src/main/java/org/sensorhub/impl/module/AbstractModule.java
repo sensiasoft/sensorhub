@@ -64,24 +64,6 @@ public abstract class AbstractModule<ConfigType extends ModuleConfig> implements
     
     
     @Override
-    public void setConfiguration(ConfigType config)
-    {
-        if (this.config != config)
-        {
-            this.config = config;
-            this.eventHandler = EventBus.getInstance().registerProducer(config.id, EventBus.MAIN_TOPIC);
-        }
-    }
-    
-    
-    @Override
-    public ConfigType getConfiguration()
-    {
-        return config;
-    }
-
-
-    @Override
     public String getName()
     {
         return config.name;
@@ -92,6 +74,51 @@ public abstract class AbstractModule<ConfigType extends ModuleConfig> implements
     public String getLocalID()
     {
         return config.id;
+    }
+    
+    
+    @Override
+    public ConfigType getConfiguration()
+    {
+        return config;
+    }
+    
+    
+    @Override
+    public void setConfiguration(ConfigType config)
+    {
+        if (this.config != config)
+        {
+            this.config = config;
+            this.eventHandler = EventBus.getInstance().registerProducer(config.id, EventBus.MAIN_TOPIC);
+        }
+    }
+    
+    
+    /*
+     * Default implementation is to restart the module when config was changed
+     */
+    @Override
+    public synchronized void updateConfig(ConfigType config) throws SensorHubException
+    {
+        boolean wasStarted = isStarted();
+        
+        if (wasStarted)
+            requestStop();
+        
+        try
+        {
+            setConfiguration(config);
+            eventHandler.publishEvent(new ModuleEvent(this, ModuleEvent.Type.CONFIG_CHANGED));
+        }
+        catch (Exception e)
+        {
+            reportError("Error while updating module configuration", e);
+            throw e;
+        }
+        
+        if (wasStarted)
+            requestStart();
     }
     
     
@@ -351,23 +378,6 @@ public abstract class AbstractModule<ConfigType extends ModuleConfig> implements
     }
 
 
-    @Override
-    public synchronized void updateConfig(ConfigType config) throws SensorHubException
-    {
-        boolean wasStarted = isStarted();
-        
-        // by default we restart the module when config was changed
-        if (wasStarted)
-            stop();
-        
-        setConfiguration(config);
-        eventHandler.publishEvent(new ModuleEvent(this, ModuleEvent.Type.CONFIG_CHANGED));
-        
-        if (wasStarted)
-            start();
-    }
-    
-    
     protected boolean canStart() throws SensorHubException
     {
         synchronized (stateLock)
@@ -412,7 +422,7 @@ public abstract class AbstractModule<ConfigType extends ModuleConfig> implements
             catch (Exception e)
             {
                 reportError("Error while starting module", e);
-                setState(ModuleState.STOPPED);
+                requestStop();
                 throw e;
             }
         }

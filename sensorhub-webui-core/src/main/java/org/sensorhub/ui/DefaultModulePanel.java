@@ -18,6 +18,7 @@ import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.module.IModule;
 import org.sensorhub.api.module.ModuleConfig;
 import org.sensorhub.api.module.ModuleEvent;
+import org.sensorhub.impl.SensorHub;
 import org.sensorhub.ui.api.IModuleAdminPanel;
 import org.sensorhub.ui.api.IModuleConfigForm;
 import org.sensorhub.ui.api.UIConstants;
@@ -97,7 +98,7 @@ public class DefaultModulePanel<ModuleType extends IModule<? extends ModuleConfi
                     form.commit();
                     if (module != null)
                     {
-                        ((IModule<ModuleConfig>)module).updateConfig(beanItem.getBean());
+                        SensorHub.getInstance().getModuleRegistry().updateModuleConfigAsync(beanItem.getBean());
                         DisplayUtils.showOperationSuccessful("Module Configuration Updated");
                     }
                 }
@@ -260,6 +261,17 @@ public class DefaultModulePanel<ModuleType extends IModule<? extends ModuleConfi
                         {
                             refreshStatusMessage();
                             refreshErrorMessage();
+                            getUI().push();
+                        }
+                    });  
+                    break;
+                    
+                case CONFIG_CHANGED:
+                    getUI().access(new Runnable() {
+                        public void run()
+                        {
+                            DefaultModulePanel.this.removeAllComponents();
+                            DefaultModulePanel.this.build(new MyBeanItem<ModuleConfig>(module.getConfiguration()), module);
                             getUI().push();
                         }
                     });  

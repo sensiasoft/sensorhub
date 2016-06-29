@@ -120,11 +120,13 @@ public class SensorAdminPanel extends DefaultModulePanel<ISensorModule<?>> imple
                     };
                     timer.schedule(autoRefreshTask, 0L, 1000L);                    
                     refreshButton.setIcon(FontAwesome.TIMES);
+                    refreshButton.setCaption("Stop");
                 }
                 else
                 {
                     autoRefreshTask.cancel();
                     refreshButton.setIcon(REFRESH_ICON);
+                    refreshButton.setCaption("Refresh");
                 }
             }
         });
