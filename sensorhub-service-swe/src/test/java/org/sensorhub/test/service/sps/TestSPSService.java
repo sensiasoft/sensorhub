@@ -15,7 +15,6 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 package org.sensorhub.test.service.sps;
 
 import static org.junit.Assert.*;
-import java.io.File;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.Arrays;
@@ -26,7 +25,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.sensorhub.api.sensor.SensorConfig;
 import org.sensorhub.impl.SensorHub;
-import org.sensorhub.impl.SensorHubConfig;
+import org.sensorhub.impl.module.ModuleRegistry;
 import org.sensorhub.impl.service.HttpServer;
 import org.sensorhub.impl.service.HttpServerConfig;
 import org.sensorhub.impl.service.ogc.OGCServiceConfig.CapabilitiesInfo;
@@ -70,22 +69,19 @@ public class TestSPSService
     static String SENSOR_UID_1 = "urn:mysensors:SENSOR001";
     static String SENSOR_UID_2 = "urn:mysensors:SENSOR002";
     
-    File configFile;
+    ModuleRegistry registry;
     
     
     @Before
     public void setupFramework() throws Exception
     {
-        // init sensorhub
-        configFile = new File("junit-test.json");
-        //configFile = File.createTempFile("junit-config-", ".json");
-        configFile.deleteOnExit();
-        SensorHub.createInstance(new SensorHubConfig(configFile.getAbsolutePath(), configFile.getParent()));
+        // get instance with in-memory DB
+        registry = SensorHub.getInstance().getModuleRegistry();
         
         // start HTTP server
         HttpServerConfig httpConfig = new HttpServerConfig();
         httpConfig.httpPort = SERVER_PORT;
-        SensorHub.getInstance().getModuleRegistry().loadModule(httpConfig);
+        registry.loadModule(httpConfig);
     }
     
     
@@ -111,8 +107,8 @@ public class TestSPSService
         serviceCfg.connectors = Arrays.asList(connectorConfigs);
         
         // load module into registry
-        SPSService sps = (SPSService)SensorHub.getInstance().getModuleRegistry().loadModule(serviceCfg);
-        SensorHub.getInstance().getModuleRegistry().saveModulesConfiguration();
+        SPSService sps = (SPSService)registry.loadModule(serviceCfg);
+        registry.saveModulesConfiguration();
         return sps;
     }
     
@@ -124,7 +120,7 @@ public class TestSPSService
         sensorCfg.autoStart = true;
         sensorCfg.moduleClass = FakeSensor.class.getCanonicalName();
         sensorCfg.name = "Sensor1";
-        FakeSensor sensor = (FakeSensor)SensorHub.getInstance().getModuleRegistry().loadModule(sensorCfg);
+        FakeSensor sensor = (FakeSensor)registry.loadModule(sensorCfg);
         sensor.setSensorUID(SENSOR_UID_1);
         
         // add custom interfaces
@@ -150,7 +146,7 @@ public class TestSPSService
         sensorCfg.autoStart = true;
         sensorCfg.moduleClass = FakeSensor.class.getCanonicalName();
         sensorCfg.name = "Sensor2";
-        FakeSensor sensor = (FakeSensor)SensorHub.getInstance().getModuleRegistry().loadModule(sensorCfg);
+        FakeSensor sensor = (FakeSensor)registry.loadModule(sensorCfg);
         sensor.setSensorUID(SENSOR_UID_2);
         
         // add custom interfaces
@@ -367,8 +363,6 @@ public class TestSPSService
             SensorHub.getInstance().getModuleRegistry().shutdown(false, false);            
             HttpServer.getInstance().cleanup();
             SensorHub.clearInstance();
-            if (configFile != null)
-                configFile.delete();
         }
         catch (Exception e)
         {

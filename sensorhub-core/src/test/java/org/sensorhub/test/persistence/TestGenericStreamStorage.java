@@ -24,7 +24,6 @@ import org.sensorhub.api.persistence.StorageConfig;
 import org.sensorhub.api.sensor.ISensorModule;
 import org.sensorhub.api.sensor.SensorConfig;
 import org.sensorhub.impl.SensorHub;
-import org.sensorhub.impl.SensorHubConfig;
 import org.sensorhub.impl.module.ModuleRegistry;
 import org.sensorhub.impl.persistence.GenericStreamStorage;
 import org.sensorhub.impl.persistence.InMemoryBasicStorage;
@@ -45,10 +44,8 @@ public class TestGenericStreamStorage
     @Before
     public void setup() throws Exception
     {
-        configFile = new File("test-config.json");
-        configFile.deleteOnExit();
-        SensorHub hub = SensorHub.createInstance(new SensorHubConfig(configFile.getAbsolutePath(), configFile.getParent()));
-        registry = hub.getModuleRegistry();
+        // get instance with in-memory DB
+        registry = SensorHub.getInstance().getModuleRegistry();
         
         // create test sensor
         SensorConfig sensorCfg = new SensorConfig();
@@ -89,8 +86,8 @@ public class TestGenericStreamStorage
     {
         try
         {
-            SensorHub.getInstance().getModuleRegistry().shutdown(false, false);
-            configFile.delete();
+            registry.shutdown(false, false);
+            SensorHub.clearInstance();
         }
         catch (SensorHubException e)
         {
