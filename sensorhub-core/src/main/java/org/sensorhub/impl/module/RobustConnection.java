@@ -36,6 +36,7 @@ public abstract class RobustConnection
     protected AbstractModule<?> module;
     protected RobustConnectionConfig connectConfig;
     protected String remoteServiceName;
+    protected Thread waitThread;
     protected volatile boolean connected;
     
     
@@ -64,15 +65,18 @@ public abstract class RobustConnection
     
     
     /**
-     * Waits until the client is connected or timeout occurs.<br/>
+     * Waits until the client is connected<br/>
      * If connection is detected by another thread, this method can also be notified
      * by calling stateLock.notify()
-     * @throws SensorHubException
+     * @throws SensorHubException on error preventing further attempts or max number of attempts reached
      */
     public void waitForConnection() throws SensorHubException
     {
         synchronized (module.stateLock)
         {
+            connected = false;
+            waitThread = Thread.currentThread();
+            
             try
             {
                 int numAttempts = 0;
@@ -120,8 +124,18 @@ public abstract class RobustConnection
             }
             catch (InterruptedException e)
             {
+                module.reportStatus("Automatic connection attempts interrupted");
             }
+            
+            waitThread = null;
         }
+    }
+    
+    
+    public void cancel()
+    {
+        if (waitThread != null)
+            waitThread.interrupt();
     }
     
     

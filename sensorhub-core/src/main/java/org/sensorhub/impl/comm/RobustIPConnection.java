@@ -14,6 +14,7 @@ Copyright (C) 2012-2016 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.impl.comm;
 
+import java.io.IOException;
 import java.net.UnknownHostException;
 import org.sensorhub.impl.module.AbstractModule;
 import org.sensorhub.impl.module.RobustConnection;
@@ -39,13 +40,26 @@ public abstract class RobustIPConnection extends RobustConnection
     }
     
 
-    public boolean tryConnect(String host) throws Exception
+    /**
+     * Try to ping host with ICMP packets (must be root)
+     * @param host host name or address to connect to
+     * @return True if connection was successful; False if unsuccessful but can be retried
+     * @throws IOException if connection was unsuccessful and shouldn't be retried
+     */
+    public boolean tryConnect(String host) throws IOException
     {
-        return tryConnect(host, -1);
+        return tryConnectTCP(host, -1);
     }
     
     
-    public boolean tryConnect(String host, int port) throws Exception
+    /**
+     * Try to connect to host on given TCP port
+     * @param host host name or address to connect to
+     * @param port TCP port to connect to
+     * @return True if connection was successful; False if unsuccessful but can be retried
+     * @throws IOException if connection was unsuccessful and shouldn't be retried
+     */
+    public boolean tryConnectTCP(String host, int port) throws IOException
     {
         try
         {

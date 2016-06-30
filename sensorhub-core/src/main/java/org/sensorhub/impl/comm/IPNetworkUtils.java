@@ -108,7 +108,10 @@ public class IPNetworkUtils
         }
         catch (ExecutionException e)
         {
-            throw (UnknownHostException)e.getCause();
+            if (e.getCause() instanceof UnknownHostException)
+                throw (UnknownHostException)e.getCause();
+            else
+                throw new RuntimeException(e);
         }
         catch (InterruptedException e)
         {
@@ -117,7 +120,7 @@ public class IPNetworkUtils
         }
         catch (TimeoutException e)
         {
-            throw new UnknownHostException("DNS timeout while resolving network address of host " + host);
+            throw new UnknownHostException("DNS timeout while resolving hostname " + host);
         }
     }
     
