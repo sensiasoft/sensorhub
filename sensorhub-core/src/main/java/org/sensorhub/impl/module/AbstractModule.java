@@ -440,6 +440,7 @@ public abstract class AbstractModule<ConfigType extends ModuleConfig> implements
             // otherwise we allow stop at any time
             // modules have to handle that properly
             setState(ModuleState.STOPPING);
+            startRequested = false;
             return true;
         }
     }
@@ -454,6 +455,7 @@ public abstract class AbstractModule<ConfigType extends ModuleConfig> implements
             {
                 // default implementation just calls stop()
                 stop();
+                clearStatus();
                 setState(ModuleState.STOPPED);
             }
             catch (SensorHubException e)
