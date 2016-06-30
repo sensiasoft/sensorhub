@@ -14,7 +14,7 @@ Copyright (C) 2012-2016 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.api.security;
 
-import org.sensorhub.api.module.ModuleConfig;
+import org.sensorhub.api.config.DisplayInfo;
 
 
 /**
@@ -25,7 +25,19 @@ import org.sensorhub.api.module.ModuleConfig;
  * @author Alex Robin
  * @since Apr 2, 2016
  */
-public class SecurityConfig extends ModuleConfig
+public class ModuleSecurityConfig
 {
+    
+    @DisplayInfo(label="Instance ID", desc="Module instance ID (i.e. used in permission strings)")
+    public String instanceID;
+    
+    
+    public String authenticatorClass;
+    
+    
+    public boolean enableAccessControl;
+    
+    
+    public boolean enableEncryption; // e.g. SSL
     
 }
