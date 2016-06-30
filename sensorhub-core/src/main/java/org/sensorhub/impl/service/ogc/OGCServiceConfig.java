@@ -40,29 +40,18 @@ public abstract class OGCServiceConfig extends ServiceConfig
     }
 
     
-    /**
-     * Information to include in the service capabilities document
-     */
+    @DisplayInfo(label="Capabilities Info", desc="Information included in the service capabilities document")
     public CapabilitiesInfo ogcCapabilitiesInfo = new CapabilitiesInfo();
     
     
-    /**
-     * Enables/disables HTTP GET bindings on operations that support it
-     */
-    @DisplayInfo(label="Enable HTTP GET")
+    @DisplayInfo(label="Enable HTTP GET", desc="Enables/disables HTTP GET bindings on operations that support it")
     public boolean enableHttpGET = true;
     
     
-    /**
-     * Enables/disables HTTP POST bindings on operations that support it
-     */
-    @DisplayInfo(label="Enable HTTP POST")
+    @DisplayInfo(label="Enable HTTP POST", desc="Enables/disables HTTP POST bindings on operations that support it")
     public boolean enableHttpPOST = true;
     
     
-    /**
-     * Enables/disables HTTP SOAP bindings on operations that support it
-     */
-    @DisplayInfo(label="Enable HTTP SOAP")
+    @DisplayInfo(label="Enable HTTP SOAP", desc="Enables/disables HTTP SOAP bindings on operations that support it")
     public boolean enableSOAP = true;
 }
