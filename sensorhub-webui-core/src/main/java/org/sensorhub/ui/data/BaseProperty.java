@@ -21,6 +21,7 @@ import org.sensorhub.api.config.DisplayInfo.AddressType;
 import org.sensorhub.api.config.DisplayInfo.FieldType;
 import org.sensorhub.api.config.DisplayInfo.FieldType.Type;
 import org.sensorhub.api.config.DisplayInfo.ModuleType;
+import org.sensorhub.api.config.DisplayInfo.Required;
 import org.sensorhub.api.config.DisplayInfo.TextInfo;
 import org.sensorhub.api.config.DisplayInfo.ValueRange;
 import org.sensorhub.api.module.IModule;
@@ -56,6 +57,12 @@ public abstract class BaseProperty<T> extends AbstractProperty<T>
             return ann.desc();
         else
             return null;
+    }
+    
+    
+    public boolean isRequired()
+    {
+        return (f.getAnnotation(Required.class) != null);
     }
     
     

@@ -329,6 +329,9 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
             }
         
             // field constraints
+            if (advProp.isRequired())
+                field.addValidator(new StringLengthValidator(MSG_REQUIRED_FIELD, 5, 50, false));                
+            
             ValueRange range = advProp.getValueRange();
             if (range != null)
             {
@@ -353,7 +356,6 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
                 
                 // inner field
                 innerField.setReadOnly(true);
-                innerField.addValidator(new StringLengthValidator(MSG_REQUIRED_FIELD, 5, 50, false));
                 layout.addComponent(innerField);
                 layout.setComponentAlignment(innerField, Alignment.MIDDLE_LEFT);
                 final Field<Object> wrapper = this;
@@ -400,7 +402,6 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
                 layout.setSpacing(true);
                 
                 // inner field
-                innerField.addValidator(new StringLengthValidator(MSG_REQUIRED_FIELD, 1, 256, false));
                 layout.addComponent(innerField);
                 layout.setComponentAlignment(innerField, Alignment.MIDDLE_LEFT);
                 final Field<Object> wrapper = this;

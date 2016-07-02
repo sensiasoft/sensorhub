@@ -29,7 +29,12 @@ import org.sensorhub.api.module.IModule;
 public @interface DisplayInfo
 {
     public String label() default "";
-    public String desc() default "";    
+    public String desc() default "";
+    
+    
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.FIELD)
+    public @interface Required {}
     
     
     @Retention(RetentionPolicy.RUNTIME)
