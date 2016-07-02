@@ -141,6 +141,8 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
             for (Object propId: fieldGroup.getUnboundPropertyIds())
             {
                 Property<?> prop = fieldGroup.getItemDataSource().getItemProperty(propId);
+                if (!isFieldVisible((String)propId))
+                    continue;
                 
                 // sub objects with multiplicity > 1
                 if (prop instanceof ContainerProperty)
@@ -153,6 +155,8 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
                     if (eltType == String.class || Enum.class.isAssignableFrom(eltType))
                     {
                         Component list = buildSimpleTable((String)propId, (ContainerProperty)prop, eltType);
+                        if (list == null)
+                            continue;
                         fieldGroup.bind((Field<?>)list, propId);
                         listBoxes.add((Field<?>)list);
                     }
@@ -161,6 +165,8 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
                     else
                     {
                         Component subform = buildTabs((String)propId, (ContainerProperty)prop, fieldGroup);
+                        if (subform == null)
+                            continue;
                         subForms.add(subform);
                     }
                 }
@@ -169,6 +175,8 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
                 else if (prop instanceof ComplexProperty)
                 {
                     Component subform = buildSubForm((String)propId, (ComplexProperty)prop);
+                    if (subform == null)
+                        continue;
                     subForms.add(subform);
                 }
                 
@@ -190,6 +198,8 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
                             desc = ((FieldProperty)prop).getDescription();
                         
                         field = buildAndBindField(label, (String)propId, prop);
+                        if (field == null)
+                            continue;
                         ((AbstractField<?>)field).setDescription(desc);                    
                     }
                     catch (Exception e)
@@ -248,9 +258,9 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
     }
     
     
-    public List<Component> getSubForms()
+    protected boolean isFieldVisible(String propId)
     {
-        return subForms;
+        return true;
     }
     
     
@@ -330,7 +340,7 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
         
             // field constraints
             if (advProp.isRequired())
-                field.addValidator(new StringLengthValidator(MSG_REQUIRED_FIELD, 5, 50, false));                
+                field.addValidator(new StringLengthValidator(MSG_REQUIRED_FIELD, 1, 50, false));                
             
             ValueRange range = advProp.getValueRange();
             if (range != null)
@@ -864,10 +874,18 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
                         
                         if (typeList == null || typeList.isEmpty())
                         {
+                            // we use the declared type
                             callback.onSelected(container.getBeanType());
+                        }
+                        else if (typeList.size() == 1)
+                        {
+                            // we automatically use the only type in the list
+                            Class<?> firstType = typeList.values().iterator().next();
+                            callback.onSelected(firstType);
                         }
                         else
                         {
+                            // we popup the list so the user can select what he wants
                             ObjectTypeSelectionPopup popup = new ObjectTypeSelectionPopup(title, typeList, callback);
                             popup.setModal(true);
                             getUI().addWindow(popup);
@@ -905,18 +923,18 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
     }
     
     
-    protected void addTableItem()
-    {
-        
-    }
-    
-    
     @Override
     public void commit() throws CommitException
     {
         fieldGroup.commit();        
         for (IModuleConfigForm form: allForms)
             form.commit();
+    }
+    
+    
+    public List<Component> getSubForms()
+    {
+        return subForms;
     }
 
 

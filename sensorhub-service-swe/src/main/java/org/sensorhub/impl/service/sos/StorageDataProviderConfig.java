@@ -20,6 +20,7 @@ import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.config.DisplayInfo;
 import org.sensorhub.api.config.DisplayInfo.FieldType;
 import org.sensorhub.api.config.DisplayInfo.ModuleType;
+import org.sensorhub.api.config.DisplayInfo.Required;
 import org.sensorhub.api.config.DisplayInfo.FieldType.Type;
 import org.sensorhub.api.persistence.IStorageModule;
 
@@ -37,6 +38,7 @@ import org.sensorhub.api.persistence.IStorageModule;
 public class StorageDataProviderConfig extends SOSProviderConfig
 {
     
+    @Required
     @DisplayInfo(desc="Local ID of storage to use as data source")
     @FieldType(Type.MODULE_ID)
     @ModuleType(IStorageModule.class)

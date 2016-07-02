@@ -17,6 +17,12 @@ package org.sensorhub.impl.service.sps;
 import java.util.ArrayList;
 import java.util.List;
 import org.sensorhub.api.common.SensorHubException;
+import org.sensorhub.api.config.DisplayInfo;
+import org.sensorhub.api.config.DisplayInfo.FieldType;
+import org.sensorhub.api.config.DisplayInfo.ModuleType;
+import org.sensorhub.api.config.DisplayInfo.Required;
+import org.sensorhub.api.config.DisplayInfo.FieldType.Type;
+import org.sensorhub.api.sensor.ISensorModule;
 
 
 /**
@@ -30,15 +36,14 @@ import org.sensorhub.api.common.SensorHubException;
 public class SensorConnectorConfig extends SPSConnectorConfig
 {
 
-    /**
-     * Local ID of sensor to send commands to
-     */
+    @Required
+    @DisplayInfo(desc="Local ID of sensor to send commands to")
+    @FieldType(Type.MODULE_ID)
+    @ModuleType(ISensorModule.class)
     public String sensorID;
     
     
-    /**
-     * Names of sensor command interfaces to hide from SPS
-     */
+    @DisplayInfo(desc="Names of sensor command interfaces to hide from SPS")
     public List<String> hiddenCommands = new ArrayList<String>();
 
 

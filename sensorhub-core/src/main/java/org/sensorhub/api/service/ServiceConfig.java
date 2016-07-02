@@ -14,6 +14,8 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.api.service;
 
+import org.sensorhub.api.config.DisplayInfo;
+import org.sensorhub.api.config.DisplayInfo.Required;
 import org.sensorhub.api.module.ModuleConfig;
 
 
@@ -28,9 +30,7 @@ import org.sensorhub.api.module.ModuleConfig;
 public class ServiceConfig extends ModuleConfig
 {
     
-    /**
-     * Name of endpoint.
-     * This is the part appended to the common sensorhub URL such as http://server.net/sensorhub/services/
-     */
+    @Required
+    @DisplayInfo(label="Endpoint", desc="Path of service endpoint relative to the context URL (e.g. http://server.net/sensorhub)")
     public String endPoint;
 }

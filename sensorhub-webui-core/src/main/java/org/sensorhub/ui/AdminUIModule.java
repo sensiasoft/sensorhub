@@ -82,7 +82,7 @@ public class AdminUIModule extends AbstractModule<AdminUIConfig>
             customForms.put(StreamStorageConfig.class.getCanonicalName(), GenericStorageConfigForm.class);
             customForms.put(CommProviderConfig.class.getCanonicalName(), CommProviderConfigForm.class);
             customForms.put(SOSConfigForm.SOS_PACKAGE + "SOSServiceConfig", SOSConfigForm.class);
-            customForms.put(SOSConfigForm.SOS_PACKAGE + "SOSProviderConfig", SOSConfigForm.class);
+            customForms.put(SPSConfigForm.SPS_PACKAGE + "SPSServiceConfig", SPSConfigForm.class);
             
             // custom form builders defined in config
             for (CustomUIConfig customForm: config.customForms)

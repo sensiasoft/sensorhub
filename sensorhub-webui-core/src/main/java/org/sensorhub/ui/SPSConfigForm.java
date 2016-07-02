@@ -16,18 +16,23 @@ package org.sensorhub.ui;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import org.sensorhub.api.common.SensorHubException;
+import org.sensorhub.api.sensor.ISensorModule;
+import org.sensorhub.impl.SensorHub;
+import org.sensorhub.impl.service.sps.SPSConnectorConfig;
+import org.sensorhub.impl.service.sps.SPSServiceConfig;
+import org.sensorhub.impl.service.sps.SensorConnectorConfig;
 import org.sensorhub.ui.data.MyBeanItem;
 import com.vaadin.data.Property;
 import com.vaadin.server.ExternalResource;
 import com.vaadin.ui.Link;
 
 
-public class SOSConfigForm extends GenericConfigForm
+public class SPSConfigForm extends GenericConfigForm
 {
     private static final long serialVersionUID = -5570947777524310604L;
-    protected static final String SOS_PACKAGE = "org.sensorhub.impl.service.sos.";
-    protected static final String PROP_DATAPROVIDERS = "dataProviders";
-    protected static final String PROP_DATACONSUMERS = "dataConsumers";
+    protected static final String SPS_PACKAGE = "org.sensorhub.impl.service.sps.";
+    protected static final String PROP_CONNECTORS = "connectors";
     protected static final String PROP_ENDPOINT = "endPoint";
     
     
@@ -44,35 +49,52 @@ public class SOSConfigForm extends GenericConfigForm
             if (baseUrl != null)
             {
                 baseUrl = baseUrl.substring(1);
-                String href = baseUrl + "?service=SOS&version=2.0&request=GetCapabilities";
+                String href = baseUrl + "?service=SPS&version=2.0&request=GetCapabilities";
                 Link link = new Link("Link to capabilities", new ExternalResource(href), "_blank", 0, 0, null);
                 this.addComponent(link);
+            }
+        }
+        
+        // add links to DescribeTasking
+        SPSServiceConfig spsConf = (SPSServiceConfig)beanItem.getBean();
+        if (spsConf.endPoint != null)
+        {
+            String baseUrl = spsConf.endPoint.substring(1);
+            for (SPSConnectorConfig conf: spsConf.connectors)
+            {
+                if (conf instanceof SensorConnectorConfig)
+                {
+                    String sensorID = ((SensorConnectorConfig) conf).sensorID;
+                    if (sensorID != null)
+                    {
+                        try
+                        {
+                            ISensorModule<?> sensor = SensorHub.getInstance().getSensorManager().getModuleById(sensorID);
+                            String uid = sensor.getUniqueIdentifier();
+                            String name = sensor.getName();
+                            String href = baseUrl + "?service=SPS&version=2.0&request=DescribeTasking&procedure=" + uid;
+                            Link link = new Link("DescribeTasking for " + name, new ExternalResource(href), "_blank", 0, 0, null);
+                            this.addComponent(link);
+                        }
+                        catch (SensorHubException e)
+                        {
+                        }
+                    }
+                }
             }
         }
     }
 
 
     @Override
-    public boolean isFieldVisible(String propId)
-    {
-        if (propId.equals(PROP_DATACONSUMERS))
-            return false;
-        
-        return super.isFieldVisible(propId);
-    }
-
-
-    @Override
     public Map<String, Class<?>> getPossibleTypes(String propId)
     {
-        if (propId.equals(PROP_DATAPROVIDERS))
+        if (propId.equals(PROP_CONNECTORS))
         {
             Map<String, Class<?>> classList = new LinkedHashMap<String, Class<?>>();
             try
             {
-                classList.put("Sensor Data Source", Class.forName(SOS_PACKAGE + "SensorDataProviderConfig"));
-                classList.put("Stream Process Data Source", Class.forName(SOS_PACKAGE + "StreamProcessProviderConfig"));
-                classList.put("Storage Data Source", Class.forName(SOS_PACKAGE + "StorageDataProviderConfig"));                
+                classList.put("Sensor Connector", Class.forName(SPS_PACKAGE + "SensorConnectorConfig"));               
             }
             catch (ClassNotFoundException e)
             {

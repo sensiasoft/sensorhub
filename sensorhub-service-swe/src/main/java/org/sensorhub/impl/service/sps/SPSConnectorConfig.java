@@ -15,35 +15,27 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 package org.sensorhub.impl.service.sps;
 
 import org.sensorhub.api.common.SensorHubException;
+import org.sensorhub.api.config.DisplayInfo;
+import org.sensorhub.api.config.DisplayInfo.Required;
 
 
 public abstract class SPSConnectorConfig
 {
 
-    /**
-     * Flag set if connector is enabled, unset if disabled
-     */
+    @DisplayInfo(desc="Set if connector is enabled, unset if disabled")
     public boolean enabled;
     
     
-    /**
-     * Offering URI
-     * If null, it will be auto-generated from server URL and target metadata
-     */
+    @Required
+    @DisplayInfo(desc="Offering URI as exposed in capabilities")
     public String uri;
     
     
-    /**
-     * Offering name
-     * If null, it will be auto-generated from name of target
-     */
+    @DisplayInfo(desc="Offering name (if null, it will be set to the name of the data source)")
     public String name;
     
     
-    /**
-     * Offering description
-     * It null, it will be auto-generated from name of target
-     */
+    @DisplayInfo(desc="Offering description (if null, it will be auto-generated from the data source name)")
     public String description;
     
     

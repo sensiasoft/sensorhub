@@ -16,15 +16,17 @@ package org.sensorhub.impl.service.sos;
 
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.config.DisplayInfo;
+import org.sensorhub.api.config.DisplayInfo.Required;
 
 
 public abstract class SOSProviderConfig
 {
 
-    @DisplayInfo(desc="Flag set if provider is enabled, unset if disabled")
+    @DisplayInfo(desc="Set if provider is enabled, unset if disabled")
     public boolean enabled;
     
     
+    @Required
     @DisplayInfo(desc="Offering URI as exposed in capabilities")
     public String uri;
     

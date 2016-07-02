@@ -12824,3 +12824,7 @@ div.v-layout.v-horizontal.v-widget {
 .sensorhub .v-tabsheet-tabitemcell-empty-tab .v-tabsheet-tabitem-selected .v-caption.v-caption {
 	border-bottom-color: transparent;
 }
+
+.sensorhub .v-customcomponent-error .v-textfield {
+	border-color: #ed473b !important;
+}

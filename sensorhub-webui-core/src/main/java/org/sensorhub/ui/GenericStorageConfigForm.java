@@ -38,7 +38,9 @@ public class GenericStorageConfigForm extends GenericConfigForm implements IModu
         Field<Object> field = (Field<Object>)super.buildAndBindField(label, propId, prop);
         
         if (propId.equals(PROP_STORAGE_PATH))
-            field.setVisible(false);
+            return null;
+        else if (propId.equals(PROP_STORAGE_CONFIG + PROP_SEP + PROP_NAME))
+            return null;
         
         else if (propId.equals(PROP_DATASRC_ID))
         {
