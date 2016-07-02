@@ -24,7 +24,7 @@ import org.sensorhub.api.common.CommandStatus.StatusCode;
 import org.sensorhub.api.sensor.ISensorControlInterface;
 import org.sensorhub.api.sensor.ISensorModule;
 import org.sensorhub.api.sensor.SensorException;
-import org.sensorhub.impl.common.EventBus;
+import org.sensorhub.impl.SensorHub;
 import org.sensorhub.utils.MsgUtils;
 import org.vast.util.DateTime;
 
@@ -56,7 +56,7 @@ public abstract class AbstractSensorControl<SensorType extends ISensorModule<?>>
         // obtain an event handler for this control input
         String moduleID = parentSensor.getLocalID();
         String topic = getName();
-        this.eventHandler = EventBus.getInstance().registerProducer(moduleID, topic);
+        this.eventHandler = SensorHub.getInstance().getEventBus().registerProducer(moduleID, topic);
     }
     
     

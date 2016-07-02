@@ -45,6 +45,7 @@ import org.sensorhub.api.module.ModuleEvent;
 import org.sensorhub.api.module.ModuleEvent.ModuleState;
 import org.sensorhub.api.module.ModuleEvent.Type;
 import org.sensorhub.impl.SensorHub;
+import org.sensorhub.impl.common.DefaultThreadFactory;
 import org.sensorhub.impl.common.EventBus;
 import org.sensorhub.utils.FileUtils;
 import org.sensorhub.utils.MsgUtils;
@@ -86,7 +87,8 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
         this.eventHandler = eventBus.registerProducer(ID);
         this.asyncExec = new ThreadPoolExecutor(0, Integer.MAX_VALUE,
                                                 10L, TimeUnit.SECONDS,
-                                                new SynchronousQueue<Runnable>());
+                                                new SynchronousQueue<Runnable>(),
+                                                new DefaultThreadFactory("ModuleRegistry"));
     }
     
     

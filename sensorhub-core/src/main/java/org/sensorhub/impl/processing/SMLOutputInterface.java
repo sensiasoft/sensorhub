@@ -23,7 +23,7 @@ import org.sensorhub.api.data.DataEvent;
 import org.sensorhub.api.data.IDataProducerModule;
 import org.sensorhub.api.data.IStreamingDataInterface;
 import org.sensorhub.api.processing.ProcessException;
-import org.sensorhub.impl.common.EventBus;
+import org.sensorhub.impl.SensorHub;
 import org.vast.process.DataQueue;
 import org.vast.swe.SWEHelper;
 
@@ -90,7 +90,7 @@ class SMLOutputInterface implements IStreamingDataInterface
         // obtain an event handler for this output
         String moduleID = parentProcess.getLocalID();
         String topic = getName();
-        this.eventHandler = EventBus.getInstance().registerProducer(moduleID, topic);
+        this.eventHandler = SensorHub.getInstance().getEventBus().registerProducer(moduleID, topic);
     }
     
 

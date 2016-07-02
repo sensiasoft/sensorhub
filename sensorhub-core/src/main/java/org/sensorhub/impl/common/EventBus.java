@@ -16,9 +16,12 @@ package org.sensorhub.impl.common;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import org.sensorhub.api.common.IEventHandler;
 import org.sensorhub.api.common.IEventListener;
-import org.sensorhub.impl.SensorHub;
 
 
 /**
@@ -36,19 +39,20 @@ import org.sensorhub.impl.SensorHub;
 public class EventBus
 {
     public static final String MAIN_TOPIC = "_MAIN"; 
-    
+        
     private Map<String, IEventHandler> eventHandlers;
-    
-    
-    public static EventBus getInstance()
-    {
-        return SensorHub.getInstance().getEventBus();
-    }
+    private ExecutorService threadPool;
     
     
     public EventBus()
     {
         eventHandlers = new HashMap<String, IEventHandler>();
+        
+        // create thread pool that will be used by all asynchronous event handlers
+        threadPool = new ThreadPoolExecutor(0, Integer.MAX_VALUE,
+                                            10L, TimeUnit.SECONDS,
+                                            new SynchronousQueue<Runnable>(),
+                                            new DefaultThreadFactory("EventBus"));
     }
     
     
@@ -114,8 +118,8 @@ public class EventBus
         // register new handleronly if non already exist for this key
         if (handler == null)
         {
-            // TODO change to async dispatcher
-            handler = new BasicEventHandler();
+            //handler = new BasicEventHandler();
+            handler = new AsyncEventHandler(threadPool);
             eventHandlers.put(key, handler);
         }
         
@@ -128,4 +132,10 @@ public class EventBus
         return moduleID + topic;
     }
 
+    
+    public void shutdown()
+    {
+        if (threadPool != null)
+            threadPool.shutdownNow();
+    }
 }

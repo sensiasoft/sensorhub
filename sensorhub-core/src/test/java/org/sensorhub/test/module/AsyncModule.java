@@ -53,7 +53,7 @@ public class AsyncModule extends AbstractModule<AsyncModuleConfig> implements IE
                             
                             if (!config.useWaitLoopForInit)
                             {
-                                EventBus.getInstance().registerListener(config.moduleIDNeededForInit, EventBus.MAIN_TOPIC, AsyncModule.this);
+                                SensorHub.getInstance().getEventBus().registerListener(config.moduleIDNeededForInit, EventBus.MAIN_TOPIC, AsyncModule.this);
                                 return null;
                             }
                             else
@@ -117,7 +117,7 @@ public class AsyncModule extends AbstractModule<AsyncModuleConfig> implements IE
                             
                             if (!config.useWaitLoopForStart)
                             {
-                                EventBus.getInstance().registerListener(config.moduleIDNeededForStart, EventBus.MAIN_TOPIC, AsyncModule.this);
+                                SensorHub.getInstance().getEventBus().registerListener(config.moduleIDNeededForStart, EventBus.MAIN_TOPIC, AsyncModule.this);
                                 return null;
                             }
                             else

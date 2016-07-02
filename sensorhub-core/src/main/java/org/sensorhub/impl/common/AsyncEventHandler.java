@@ -14,15 +14,17 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.impl.common;
 
-import java.lang.ref.WeakReference;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.Collections;
+import java.util.Queue;
+import java.util.Set;
+import java.util.WeakHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutorService;
 import org.sensorhub.api.common.Event;
 import org.sensorhub.api.common.IEventHandler;
 import org.sensorhub.api.common.IEventListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -39,123 +41,103 @@ import org.sensorhub.api.common.IEventListener;
  */
 public class AsyncEventHandler implements IEventHandler
 {
-    private Thread dispatchThread;
-    private BlockingQueue<Event<?>> eventQueue;
-    private List<WeakReference<IEventListener>> listeners;
-    private boolean started;
-    private boolean paused;
+    private static final Logger log = LoggerFactory.getLogger(AsyncEventHandler.class);
+    private ExecutorService threadPool;
+    private Queue<Event<?>> eventQueue;
+    private Set<IEventListener> listeners;
     
     
-    public AsyncEventHandler()
+    public AsyncEventHandler(ExecutorService threadPool)
     {
-        this.eventQueue = new LinkedBlockingQueue<Event<?>>();
-        this.listeners = new ArrayList<WeakReference<IEventListener>>();
-        
-        dispatchThread = new Thread() {            
-            public void run()
-            {                
-                while (started)
-                {
-                    synchronized (this)
-                    {
-                        Event<?> e = eventQueue.poll();
-                        
-                        // call all listeners
-                        for (Iterator<WeakReference<IEventListener>> it = listeners.iterator(); it.hasNext(); )
-                        {
-                            IEventListener listener = it.next().get();
-                            if (listener != null)
-                                listener.handleEvent(e);
-                            else
-                                it.remove(); // purge cleared references
-                        }
-                        
-                        try
-                        {
-                            while (paused)
-                                this.wait();
-                        }
-                        catch (InterruptedException e1)
-                        {
-                        }
-                    }
-                }
-            }
-        };
+        this.threadPool = threadPool;
+        this.eventQueue = new ConcurrentLinkedQueue<Event<?>>();
+        this.listeners = Collections.newSetFromMap(new WeakHashMap<IEventListener, Boolean>());
     }
     
     
     @Override
-    public void publishEvent(Event<?> e)
+    public void publishEvent(final Event<?> e)
     {
-        try
+        synchronized (listeners)
         {
-            eventQueue.put(e);
+            // don't even create a task if we have no listeners
+            if (listeners.isEmpty())
+                return;
         }
-        catch (InterruptedException e1)
+            
+        // add event to queue
+        if (!eventQueue.offer(e))
+            throw new RuntimeException("Max event queue size reached");
+        
+        // relaunch task if not already running
+        if (eventQueue.size() <= 1)
         {
+            // although we use a thread pool, we ensure the order of
+            // event delivery by maintaining our own queue in this class
+            threadPool.execute(new Runnable() {
+                public void run()
+                {
+                    Event<?> e;
+                    while ((e = eventQueue.poll()) != null)
+                    {
+                        synchronized (listeners)
+                        {
+                            // call all listeners
+                            for (IEventListener listener: listeners)
+                            {
+                                try
+                                {
+                                    listener.handleEvent(e);
+                                }
+                                catch (Exception ex)
+                                {
+                                    log.error("Uncaught exception while dispatching event", e);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
         }
-    }
-    
-    
-    public synchronized void start()
-    {
-        this.started = true;
-        this.paused = false;
-        dispatchThread.start();
-    }
-    
-    
-    public synchronized void stop()
-    {
-        this.started = false;
-        this.paused = false;
-        this.notify();
-    }
-    
-    
-    public synchronized void pause()
-    {
-        this.paused = true;
     }
    
 
     @Override
-    public synchronized void registerListener(IEventListener listener)
+    public void registerListener(IEventListener listener)
     {
-        listeners.add(new WeakReference<IEventListener>(listener));
+        synchronized (listeners)
+        {
+            listeners.add(listener);
+        }
     }
 
 
     @Override
-    public synchronized void unregisterListener(IEventListener listener)
+    public void unregisterListener(IEventListener listener)
     {
-        for (Iterator<WeakReference<IEventListener>> it = listeners.iterator(); it.hasNext(); )
+        synchronized (listeners)
         {
-            IEventListener l = it.next().get();
-            if (l == null || l == listener)  // also purge cleared references
-                it.remove();
+            listeners.remove(listener);
         }
     }
     
     
     @Override
-    public synchronized int getNumListeners()
+    public int getNumListeners()
     {
-        int count = 0;
-        for (WeakReference<IEventListener> listener: listeners)
+        synchronized (listeners)
         {
-            if (listener.get() != null)
-                count++;
+            return listeners.size();
         }
-        
-        return count;
     }
     
     
     @Override
-    public synchronized void clearAllListeners()
+    public void clearAllListeners()
     {
-        listeners.clear();
+        synchronized (listeners)
+        {
+            listeners.clear();
+        }
     }
 }

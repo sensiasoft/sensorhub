@@ -22,7 +22,7 @@ import org.sensorhub.api.module.IModuleStateManager;
 import org.sensorhub.api.module.ModuleConfig;
 import org.sensorhub.api.module.ModuleEvent;
 import org.sensorhub.api.module.ModuleEvent.ModuleState;
-import org.sensorhub.impl.common.EventBus;
+import org.sensorhub.impl.SensorHub;
 
 
 public class DummyModule implements IModule<ModuleConfig>
@@ -64,7 +64,7 @@ public class DummyModule implements IModule<ModuleConfig>
     public void setConfiguration(ModuleConfig config)
     {
         this.config = config;
-        this.eventHandler = EventBus.getInstance().registerProducer(config.id);
+        this.eventHandler = SensorHub.getInstance().getEventBus().registerProducer(config.id);
     }
 
 

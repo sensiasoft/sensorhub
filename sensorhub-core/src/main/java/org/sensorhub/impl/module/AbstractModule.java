@@ -90,7 +90,7 @@ public abstract class AbstractModule<ConfigType extends ModuleConfig> implements
         if (this.config != config)
         {
             this.config = config;
-            this.eventHandler = EventBus.getInstance().registerProducer(config.id, EventBus.MAIN_TOPIC);
+            this.eventHandler = SensorHub.getInstance().getEventBus().registerProducer(config.id, EventBus.MAIN_TOPIC);
         }
     }
     

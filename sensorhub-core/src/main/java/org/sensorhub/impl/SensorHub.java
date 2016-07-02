@@ -156,6 +156,7 @@ public class SensorHub
             if (!stopped)
             {
                 registry.shutdown(saveConfig, saveState);
+                eventBus.shutdown();
                 stopped = true;
                 log.info("SensorHub was cleanly stopped");
             }
