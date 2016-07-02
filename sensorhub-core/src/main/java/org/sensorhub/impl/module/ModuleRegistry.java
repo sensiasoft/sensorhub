@@ -335,8 +335,8 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
                     }
                     catch (Exception e)
                     {
-                        String msg = "Cannot initialize module " + MsgUtils.moduleString(module);
-                        log.error(msg);
+                        // just log simple message here; exception is already logged by module
+                        log.error("Cannot initialize module " + MsgUtils.moduleString(module));
                     }
                 }            
             });
@@ -420,8 +420,8 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
                     }
                     catch (Exception e)
                     {
-                        String msg = "Cannot start module " + MsgUtils.moduleString(module);
-                        log.error(msg);
+                        // just log simple message here; exception is already logged by module
+                        log.error("Cannot start module " + MsgUtils.moduleString(module));
                     }
                 }            
             });
@@ -501,8 +501,42 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
                     }
                     catch (Exception e)
                     {
-                        String msg = "Cannot stop module " + MsgUtils.moduleString(module);
-                        log.error(msg);
+                        // just log simple message here; exception is already logged by module
+                        log.error("Cannot stop module " + MsgUtils.moduleString(module));
+                    }
+                }            
+            });
+        }
+        catch (Exception e)
+        {
+            throw new SensorHubException(REGISTRY_SHUTDOWN_MSG, e);
+        }
+    }
+    
+    
+    public void restartModuleAsync(final String moduleID, IEventListener listener) throws SensorHubException
+    {        
+        final IModule<?> module = getModuleById(moduleID);
+        if (listener != null)
+            module.registerListener(listener);
+        
+        try
+        {
+            // restart module in separate thread
+            asyncExec.submit(new Runnable()
+            {
+                @Override
+                public void run()
+                {
+                    try
+                    {
+                        module.requestStop();
+                        module.requestStart();                        
+                    }
+                    catch (Exception e)
+                    {
+                        // just log simple message here; exception is already logged by module
+                        log.error("Cannot restart module " + MsgUtils.moduleString(module));
                     }
                 }            
             });
@@ -533,8 +567,8 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
                     }
                     catch (Exception e)
                     {
-                        String msg = "Cannot update configuration of module " + MsgUtils.moduleString(module);
-                        log.error(msg);
+                        // just log simple message here; exception is already logged by module
+                        log.error("Cannot update configuration of module " + MsgUtils.moduleString(module));
                     }
                 }            
             });
@@ -877,7 +911,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
                     switch (((ModuleEvent) e).getNewState())
                     {
                         case INITIALIZING:
-                            log.debug("Initializing module " + moduleString);
+                            log.info("Initializing module " + moduleString);
                             break;
                             
                         case INITIALIZED:
@@ -886,7 +920,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
                             break;
                             
                         case STARTING:
-                            log.debug("Starting module " + moduleString);
+                            log.info("Starting module " + moduleString);
                             break;
                             
                         case STARTED:
@@ -894,7 +928,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
                             break;
                             
                         case STOPPING:
-                            log.debug("Stopping module " + moduleString);
+                            log.info("Stopping module " + moduleString);
                             break;
                             
                         case STOPPED:
@@ -907,7 +941,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
                     break;
                     
                 case ERROR:
-                    //log.error("Error in module " + moduleString, e);
+                    log.error("Error in module " + moduleString);
                     break;
                     
                 default:
@@ -936,7 +970,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
             log.error("Cannot load state of module " + moduleString, e);
         }
         
-        // also initiate startup if auto start was true
+        // also initiate startup if autostart was true
         try
         {
             if (!shutdownCalled && module.getConfiguration().autoStart)

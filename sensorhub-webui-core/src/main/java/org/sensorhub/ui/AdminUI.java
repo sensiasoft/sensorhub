@@ -726,8 +726,7 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener, UIConst
                                 {                    
                                     try 
                                     {
-                                        registry.stopModuleAsync(moduleId, null);
-                                        registry.startModuleAsync(moduleId, null);
+                                        registry.restartModuleAsync(moduleId, null);
                                     }
                                     catch (SensorHubException ex)
                                     {
