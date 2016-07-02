@@ -124,10 +124,12 @@ public abstract class RobustConnection
             }
             catch (InterruptedException e)
             {
-                module.reportStatus("Automatic connection attempts interrupted");
+                throw new SensorHubException("Automatic reconnection loop interrupted");
             }
-            
-            waitThread = null;
+            finally
+            {
+                waitThread = null;
+            }
         }
     }
     
