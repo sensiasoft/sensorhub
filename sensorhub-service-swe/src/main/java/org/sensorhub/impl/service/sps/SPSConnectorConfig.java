@@ -41,8 +41,9 @@ public abstract class SPSConnectorConfig
     
     /**
      * Retrieves the connector instance describe by this configuration
+     * @param service parent service instance
      * @return
      */
-    protected abstract ISPSConnector getConnector() throws SensorHubException;
+    protected abstract ISPSConnector getConnector(SPSServlet service) throws SensorHubException;
 
 }

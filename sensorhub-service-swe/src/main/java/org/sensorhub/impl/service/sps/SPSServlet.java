@@ -23,6 +23,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import net.opengis.swe.v20.DataBlock;
@@ -64,9 +65,11 @@ public class SPSServlet extends OWSServlet
     SPSServiceConfig config;
     Logger log;
     String endpointUrl;
+    ReentrantReadWriteLock capabilitiesLock = new ReentrantReadWriteLock();
     SPSServiceCapabilities capabilities;
-    Map<String, SPSOfferingCapabilities> procedureToOfferingMap;
     Map<String, ISPSConnector> connectors;
+    Map<String, ISPSConnector> procedureToConnectorMap;
+    Map<String, SPSOfferingCapabilities> procedureToOfferingMap;
     IEventHandler eventHandler;
     
     SMLUtils smlUtils = new SMLUtils(SMLUtils.V2_0);
@@ -87,6 +90,7 @@ public class SPSServlet extends OWSServlet
     protected void start() throws SensorHubException
     {
         this.connectors = new LinkedHashMap<String, ISPSConnector>();
+        this.procedureToConnectorMap = new HashMap<String, ISPSConnector>();
         this.procedureToOfferingMap = new HashMap<String, SPSOfferingCapabilities>();
         this.taskDB = new InMemoryTaskDB();
         
@@ -110,6 +114,7 @@ public class SPSServlet extends OWSServlet
     protected void generateCapabilities()
     {
         connectors.clear();
+        procedureToConnectorMap.clear();
         procedureToOfferingMap.clear();
         capabilities = new SPSServiceCapabilities();
         
@@ -138,32 +143,109 @@ public class SPSServlet extends OWSServlet
         // process each provider config
         if (config.connectors != null)
         {
-            for (SPSConnectorConfig providerConf: config.connectors)
+            for (SPSConnectorConfig connectorConf: config.connectors)
             {
                 try
                 {
                     // instantiate provider factories and map them to offering URIs
-                    ISPSConnector connector = providerConf.getConnector();
-                    if (!connector.isEnabled())
-                        continue;
-                                    
-                    // add offering metadata to capabilities
-                    SPSOfferingCapabilities offCaps = connector.generateCapabilities();
-                    capabilities.getLayers().add(offCaps);
+                    ISPSConnector connector = connectorConf.getConnector(this);
+                    connectors.put(connectorConf.uri, connector);
                     
-                    // add connector and offering caps to maps
-                    String procedureID = offCaps.getMainProcedure();
-                    connectors.put(procedureID, connector);
-                    procedureToOfferingMap.put(procedureID, offCaps);
-                    
-                    if (log.isDebugEnabled())
-                        log.debug("Offering " + "\"" + offCaps.toString() + "\" generated for procedure " + procedureID);
+                    // create offering only if not already done when registering
+                    // the connector listener (if command receiver was in STARTED
+                    // state it can automatically trigger a call to showConnectorCaps).
+                    if (!procedureToConnectorMap.containsValue(connector) && connector.isEnabled())
+                        showConnectorCaps(connector);
                 }
                 catch (Exception e)
                 {
-                    log.error("Error while initializing connector " + providerConf.uri, e);
+                    log.error("Error while initializing connector " + connectorConf.uri, e);
                 }
             }
+        }
+    }
+    
+    
+    protected void showConnectorCaps(ISPSConnector connector)
+    {
+        SPSConnectorConfig config = connector.getConfig();
+        
+        try
+        {
+            capabilitiesLock.writeLock().lock();
+            
+            // generate offering metadata
+            SPSOfferingCapabilities offCaps = connector.generateCapabilities();
+            String procedureID = offCaps.getMainProcedure();
+            
+            // update offering if it was already advertised
+            if (procedureToOfferingMap.containsKey(procedureID))
+            {
+                // replace old offering
+                SPSOfferingCapabilities oldCaps = procedureToOfferingMap.put(procedureID, offCaps);
+                capabilities.getLayers().set(capabilities.getLayers().indexOf(oldCaps), offCaps);
+                
+                if (log.isDebugEnabled())
+                    log.debug("Offering " + "\"" + offCaps.getIdentifier() + "\" updated for procedure " + procedureID);
+            }
+            
+            // otherwise add new offering
+            else
+            {
+                // add to maps and layer list
+                procedureToOfferingMap.put(procedureID, offCaps);
+                procedureToConnectorMap.put(procedureID, connector);
+                capabilities.getLayers().add(offCaps);
+                
+                if (log.isDebugEnabled())
+                    log.debug("Offering " + "\"" + offCaps.getIdentifier() + "\" added for procedure " + procedureID);
+            }            
+        }
+        catch (Exception e)
+        {
+            log.error("Error while generating offering " + config.uri, e);
+        }
+        finally
+        {
+            capabilitiesLock.writeLock().unlock();
+        }
+    }
+    
+    
+    protected void hideConnectorCaps(ISPSConnector connector)
+    {
+        try
+        {
+            capabilitiesLock.writeLock().lock();
+            
+            // get procedure ID
+            String procID = null;
+            for (Entry<String, ISPSConnector> entry: procedureToConnectorMap.entrySet())
+            {
+                if (entry.getValue() == connector)
+                {
+                    procID = entry.getKey();
+                    break;
+                }
+            }
+            
+            // stop here if connector is not advertised
+            if (procID == null)
+                return;
+            
+            // remove offering from capabilities
+            SPSOfferingCapabilities offCaps = procedureToOfferingMap.remove(procID);
+            capabilities.getLayers().remove(offCaps);
+            
+            // remove connector
+            procedureToConnectorMap.remove(procID);
+            
+            if (log.isDebugEnabled())
+                log.debug("Offering " + "\"" + offCaps.getIdentifier() + "\" removed for procedure " + procID);
+        }
+        finally
+        {
+            capabilitiesLock.writeLock().unlock();
         }
     }
 
@@ -266,17 +348,34 @@ public class SPSServlet extends OWSServlet
     
     protected void handleRequest(GetCapabilitiesRequest request) throws Exception
     {
-        // update operation URLs
-        if (endpointUrl == null)
+        try
         {
-            endpointUrl = request.getHttpRequest().getRequestURL().toString();
-            for (Entry<String, String> op: capabilities.getGetServers().entrySet())
-                capabilities.getGetServers().put(op.getKey(), endpointUrl);
-            for (Entry<String, String> op: capabilities.getPostServers().entrySet())
-                capabilities.getPostServers().put(op.getKey(), endpointUrl);
+            // update operation URLs
+            if (endpointUrl == null)
+            {
+                capabilitiesLock.writeLock().lock();
+                
+                endpointUrl = request.getHttpRequest().getRequestURL().toString();
+                for (Entry<String, String> op: capabilities.getGetServers().entrySet())
+                    capabilities.getGetServers().put(op.getKey(), endpointUrl);
+                for (Entry<String, String> op: capabilities.getPostServers().entrySet())
+                    capabilities.getPostServers().put(op.getKey(), endpointUrl);
+            }
+        }
+        finally
+        {            
+            capabilitiesLock.writeLock().unlock();
         }
         
-        sendResponse(request, capabilities);
+        try
+        {
+            capabilitiesLock.readLock().lock();
+            sendResponse(request, capabilities);
+        }
+        finally
+        {            
+            capabilitiesLock.readLock().unlock();
+        }
     }
     
     
@@ -378,8 +477,12 @@ public class SPSServlet extends OWSServlet
         ITask newTask = taskDB.createNewTask(request);
         final String taskID = newTask.getID();
         
+        // retrieve connector instance
+        OWSExceptionReport report = new OWSExceptionReport();
+        ISPSConnector conn = getConnectorByProcedureID(request.getProcedureID(), report);
+        report.process();
+        
         // send command through connector
-        ISPSConnector conn = connectors.get(request.getProcedureID());
         DataBlockList dataBlockList = (DataBlockList)request.getParameters().getData();
         Iterator<DataBlock> it = dataBlockList.blockIterator();
         while (it.hasNext())
@@ -437,12 +540,20 @@ public class SPSServlet extends OWSServlet
     
     protected final ISPSConnector getConnectorByProcedureID(String procedureID, OWSExceptionReport report) throws Exception
     {
-        ISPSConnector connector = connectors.get(procedureID);
-        
-        if (connector == null)
-            report.add(new SPSException(SPSException.invalid_param_code, "procedure", procedureID));
-        
-        return connector;
+        try
+        {
+            capabilitiesLock.readLock().lock();
+            ISPSConnector connector = procedureToConnectorMap.get(procedureID);
+            
+            if (connector == null)
+                report.add(new SPSException(SPSException.invalid_param_code, "procedure", procedureID));
+            
+            return connector;
+        }
+        finally
+        {            
+            capabilitiesLock.readLock().unlock();
+        }
     }
     
     

@@ -32,6 +32,12 @@ public interface ISPSConnector
 {
     
     /**
+     * @return the configuration of this connector 
+     */
+    public SPSConnectorConfig getConfig();
+    
+    
+    /**
      * Allows to check if provider is enabled
      * @return true if enabled, false otherwise
      */

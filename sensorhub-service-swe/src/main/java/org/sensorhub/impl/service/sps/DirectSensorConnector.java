@@ -17,7 +17,11 @@ package org.sensorhub.impl.service.sps;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
+import org.sensorhub.api.common.Event;
+import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.common.SensorHubException;
+import org.sensorhub.api.module.ModuleEvent;
+import org.sensorhub.api.module.ModuleEvent.ModuleState;
 import org.sensorhub.api.sensor.ISensorControlInterface;
 import org.sensorhub.api.sensor.ISensorDataInterface;
 import org.sensorhub.api.sensor.ISensorModule;
@@ -25,8 +29,6 @@ import org.sensorhub.api.sensor.SensorException;
 import org.sensorhub.api.service.ServiceException;
 import org.sensorhub.impl.SensorHub;
 import org.sensorhub.utils.MsgUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.vast.data.DataBlockMixed;
 import org.vast.data.SWEFactory;
 import org.vast.data.ScalarIterator;
@@ -49,22 +51,25 @@ import net.opengis.swe.v20.DataComponent;
  * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @since Dec 13, 2014
  */
-public class DirectSensorConnector implements ISPSConnector
+public class DirectSensorConnector implements ISPSConnector, IEventListener
 {
-    private static final Logger log = LoggerFactory.getLogger(DirectSensorConnector.class);
-    
+    final SPSServlet service;
     final SensorConnectorConfig config;
     final ISensorModule<?> sensor;
     DataChoice commandChoice;
     String uniqueInterfaceName;
     
     
-    public DirectSensorConnector(SensorConnectorConfig config) throws SensorHubException
+    public DirectSensorConnector(SPSServlet service, SensorConnectorConfig config) throws SensorHubException
     {
+        this.service = service;
         this.config = config;
         
         // get handle to sensor instance using sensor manager
         this.sensor = SensorHub.getInstance().getSensorManager().getModuleById(config.sensorID);
+        
+        // listen to sensor lifecycle events
+        sensor.registerListener(this);
     }
     
 
@@ -177,7 +182,6 @@ public class DirectSensorConnector implements ISPSConnector
     @Override
     public void updateCapabilities() throws Exception
     {
-        // TODO Auto-generated method stub
         
     }
     
@@ -218,7 +222,6 @@ public class DirectSensorConnector implements ISPSConnector
         catch (SensorException e)
         {
             String msg = "Error sending command to sensor " + MsgUtils.moduleString(sensor);
-            log.error(msg, e);
             throw new ServiceException(msg, e);
         }
     }
@@ -238,18 +241,43 @@ public class DirectSensorConnector implements ISPSConnector
         if (!sensor.isStarted())
             throw new ServiceException("Sensor " + MsgUtils.moduleString(sensor) + " is disabled");
     }
+
+
+    @Override
+    public void handleEvent(Event<?> e)
+    {
+        // if sensor is enabled/disabled
+        if (e instanceof ModuleEvent && e.getSource() == sensor)
+        {
+            ModuleState state = ((ModuleEvent)e).getNewState();
+            if (state == ModuleState.STARTED || state == ModuleState.STOPPING)
+            {
+                if (isEnabled())
+                    service.showConnectorCaps(this);
+                else
+                    service.hideConnectorCaps(this);
+            }
+        }         
+    }
+    
+    
+    @Override
+    public boolean isEnabled()
+    {
+        return (config.enabled && sensor.isStarted());
+    }
+
+
+    @Override
+    public SPSConnectorConfig getConfig()
+    {
+        return config;
+    }
     
     
     @Override
     public void cleanup()
     {
-        //SensorHub.getInstance().unregisterListener(this);
-    }
-
-
-    @Override
-    public boolean isEnabled()
-    {
-        return (config.enabled && sensor.isStarted());
+        sensor.unregisterListener(this);
     }
 }

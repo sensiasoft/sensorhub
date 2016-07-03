@@ -48,8 +48,8 @@ public class SensorConnectorConfig extends SPSConnectorConfig
 
 
     @Override
-    protected ISPSConnector getConnector() throws SensorHubException
+    protected ISPSConnector getConnector(SPSServlet service) throws SensorHubException
     {
-        return new DirectSensorConnector(this);
+        return new DirectSensorConnector(service, this);
     }
 }

@@ -342,7 +342,8 @@ public class SOSServlet extends org.vast.ows.sos.SOSServlet
         try
         {
             capabilitiesLock.writeLock().lock();
-            // add offering metadata to capabilities
+            
+            // generate offering metadata
             SOSOfferingCapabilities offCaps = provider.generateCapabilities();
             String procedureID = offCaps.getMainProcedure();
             
@@ -533,7 +534,15 @@ public class SOSServlet extends org.vast.ows.sos.SOSServlet
             capabilitiesLock.writeLock().unlock();
         }
         
-        sendResponse(request, capabilities);
+        try
+        {
+            capabilitiesLock.readLock().lock();
+            sendResponse(request, capabilities);
+        }
+        finally
+        {
+            capabilitiesLock.readLock().unlock();
+        }
     }
         
     

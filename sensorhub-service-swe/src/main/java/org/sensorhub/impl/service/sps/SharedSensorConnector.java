@@ -33,9 +33,9 @@ public class SharedSensorConnector extends DirectSensorConnector implements ISPS
 {
     
     
-    public SharedSensorConnector(SensorConnectorConfig config) throws SensorHubException
+    public SharedSensorConnector(SPSServlet service, SensorConnectorConfig config) throws SensorHubException
     {
-        super(config);
+        super(service, config);
     }
     
 
