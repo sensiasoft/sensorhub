@@ -215,7 +215,8 @@ public class DefaultModuleStateManager implements IModuleStateManager
     {
         try
         {
-            FileUtils.deleteRecursively(folder);
+            if (folder.exists())
+                FileUtils.deleteRecursively(folder);
         }
         catch (IOException e)
         {

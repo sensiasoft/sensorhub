@@ -615,7 +615,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
         catch (Exception e)
         {
             String msg = "Cannot destroy module " + moduleID;
-            log.error(msg);
+            log.error(msg, e);
         }
     }
     
