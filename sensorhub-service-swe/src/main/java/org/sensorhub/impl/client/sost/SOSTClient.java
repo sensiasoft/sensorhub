@@ -152,7 +152,7 @@ public class SOSTClient extends AbstractModule<SOSTClientConfig> implements ICli
             public boolean tryConnect() throws Exception
             {
                 // first check if we can reach remote host on specified port
-                if (!tryConnect(config.sos.remoteHost, config.sos.remotePort))
+                if (!tryConnectTCP(config.sos.remoteHost, config.sos.remotePort))
                     return false;
                 
                 // check connection to SOS by fetching capabilities
