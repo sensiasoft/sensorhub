@@ -545,7 +545,7 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
         
         // add change button if property can have multiple types
         Map<String, Class<?>> possibleTypes = getPossibleTypes(propId);
-        if (!(possibleTypes == null || possibleTypes.isEmpty()))
+        if (childBeanItem == null || !(possibleTypes == null || possibleTypes.isEmpty()))
             addChangeObjectButton(subform, propId, prop, possibleTypes);
         
         if (childBeanItem != null)
@@ -578,6 +578,7 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
                         prop.setValue(newItem);
                         IModuleConfigForm newForm = AdminUIModule.getInstance().generateForm(config.getClass());
                         newForm.build(propId, prop, true);
+                        newForm.setCaption(null);
                         ((VerticalLayout)newForm).addComponent(chgButton, 0);
                                                 
                         // replace old form in UI
@@ -611,7 +612,7 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
             public void buttonClick(ClickEvent event)
             {
                 // show popup to select among available module types
-                ObjectTypeSelectionPopup popup = new ObjectTypeSelectionPopup("Select Type", typeList, new ObjectTypeSelectionCallback() {
+                ObjectTypeSelectionCallback callback = new ObjectTypeSelectionCallback() {
                     public void onSelected(Class<?> objectType)
                     {
                         try
@@ -621,6 +622,7 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
                             prop.setValue(newItem);
                             IModuleConfigForm newForm = AdminUIModule.getInstance().generateForm(objectType);
                             newForm.build(propId, prop, true);
+                            newForm.setCaption(null);
                             ((VerticalLayout)newForm).addComponent(chgButton, 0);
                                                     
                             // replace old form in UI
@@ -635,9 +637,27 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
                             Notification.show("Error", e.getMessage(), Notification.Type.ERROR_MESSAGE);
                         }
                     }
-                });
-                popup.setModal(true);
-                getUI().addWindow(popup);
+                };
+        
+                if (typeList == null || typeList.isEmpty())
+                {
+                    // we use the declared type
+                    callback.onSelected(prop.getBeanType());
+                }
+                else if (typeList.size() == 1)
+                {
+                    // we automatically use the only type in the list
+                    Class<?> firstType = typeList.values().iterator().next();
+                    callback.onSelected(firstType);
+                }
+                else
+                {
+                    // we popup the list so the user can select what he wants
+                    String title = "Please select the desired option";
+                    ObjectTypeSelectionPopup popup = new ObjectTypeSelectionPopup(title, typeList, callback);
+                    popup.setModal(true);
+                    getUI().addWindow(popup);
+                }
             }
         });
         chgButton.setData(parentForm);
@@ -841,8 +861,6 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
                     
                     try
                     {
-                        // show popup to select among available module types
-                        String title = "Please select the desired option";
                         Map<String, Class<?>> typeList = GenericConfigForm.this.getPossibleTypes(propId);
                         
                         // create callback to add table item
@@ -886,6 +904,7 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
                         else
                         {
                             // we popup the list so the user can select what he wants
+                            String title = "Please select the desired option";
                             ObjectTypeSelectionPopup popup = new ObjectTypeSelectionPopup(title, typeList, callback);
                             popup.setModal(true);
                             getUI().addWindow(popup);

@@ -814,7 +814,7 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener, UIConst
         super.attach();
         
         // register to module registry events
-        EventBus.getInstance().registerListener(ModuleRegistry.ID, EventBus.MAIN_TOPIC, this);
+        SensorHub.getInstance().getEventBus().registerListener(ModuleRegistry.ID, EventBus.MAIN_TOPIC, this);
     }
     
     
@@ -822,7 +822,7 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener, UIConst
     public void detach()
     {
         // unregister from module registry events
-        EventBus.getInstance().unregisterListener(ModuleRegistry.ID, EventBus.MAIN_TOPIC, this);
+        SensorHub.getInstance().getEventBus().unregisterListener(ModuleRegistry.ID, EventBus.MAIN_TOPIC, this);
         
         super.detach();
     }
