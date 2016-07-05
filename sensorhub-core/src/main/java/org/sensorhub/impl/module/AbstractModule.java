@@ -468,6 +468,8 @@ public abstract class AbstractModule<ConfigType extends ModuleConfig> implements
     @Override
     public void requestStop() throws SensorHubException
     {
+        ModuleState oldState = this.state;
+        
         if (canStop())
         {
             try
@@ -475,7 +477,12 @@ public abstract class AbstractModule<ConfigType extends ModuleConfig> implements
                 // default implementation just calls stop()
                 stop();
                 clearStatus();
-                setState(ModuleState.STOPPED);
+                
+                // make sure we reset to LOADED if we didn't initialize correctly
+                if (oldState == ModuleState.INITIALIZING)
+                    setState(ModuleState.LOADED);
+                else
+                    setState(ModuleState.STOPPED);
             }
             catch (SensorHubException e)
             {
