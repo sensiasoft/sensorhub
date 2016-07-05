@@ -137,8 +137,12 @@ public abstract class RobustConnection
     }
     
     
+    /**
+     * Cancels the automatic reconnection loop if still running
+     */
     public void cancel()
     {
+        connected = false;
         if (waitThread != null)
             waitThread.interrupt();
     }
@@ -177,7 +181,7 @@ public abstract class RobustConnection
     public boolean isConnected()
     {
         // default implementation just returns the value of the connected flag
-        // this is good enough if the connect() method is synchronous
+        // this is good enough if the tryConnect() method is synchronous
         return connected;
     }
 }
