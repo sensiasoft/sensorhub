@@ -40,6 +40,29 @@ public class ModuleEvent extends Event<Type>
          */
         CONFIG_CHANGED,
         
+        /**
+         * Module connected (e.g. to remote device or service).<br/>
+         * Some modules may never generate this event
+         */
+        CONNECTED,
+        
+        /**
+         * Module disconnected (e.g. from remote device or service).<br/>
+         * Some modules may never generate this event
+         */
+        DISCONNECTED,
+
+        
+        /**
+         * when a new status message is published
+         */
+        STATUS,
+        
+        /**
+         * when an error occurs during asynchronous module execution
+         */
+        ERROR,
+        
         
         // the items below cannot be module states because the module object
         // doesn't even exist anymore when these events are generated
@@ -52,17 +75,7 @@ public class ModuleEvent extends Event<Type>
         /**
          * after module is fully deleted (along with its configuration) 
          */
-        DELETED,
-        
-        /**
-         * when a new status message is published
-         */
-        STATUS,
-        
-        /**
-         * when an error occurs during asynchronous module execution
-         */
-        ERROR
+        DELETED
     }
     
     

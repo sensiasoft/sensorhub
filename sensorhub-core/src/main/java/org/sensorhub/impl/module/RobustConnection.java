@@ -74,7 +74,9 @@ public abstract class RobustConnection
     {
         synchronized (module.stateLock)
         {
-            connected = false;
+            if (isConnected())
+                return;
+            
             waitThread = Thread.currentThread();
             
             try
@@ -120,10 +122,11 @@ public abstract class RobustConnection
                 
                 // clear error and set status message on successful connection
                 module.clearError();
-                module.reportStatus("Connected to " + remoteServiceName);
+                module.notifyConnectionStatus(isConnected(), remoteServiceName);
             }
             catch (InterruptedException e)
             {
+                connected = false;
                 throw new SensorHubException("Automatic reconnection loop interrupted");
             }
             finally
@@ -148,6 +151,9 @@ public abstract class RobustConnection
     public void reconnect()
     {
         connected = false;
+        
+        // send disconnection event
+        module.notifyConnectionStatus(false, remoteServiceName);
         
         // restart in separate thread
         new Thread(new Runnable()

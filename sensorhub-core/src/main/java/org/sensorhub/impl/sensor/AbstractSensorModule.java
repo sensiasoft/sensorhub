@@ -95,8 +95,7 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
     private Map<String, ISensorDataInterface> obsOutputs = new LinkedHashMap<String, ISensorDataInterface>();
     private Map<String, ISensorDataInterface> statusOutputs = new LinkedHashMap<String, ISensorDataInterface>();
     private Map<String, ISensorControlInterface> controlInputs = new LinkedHashMap<String, ISensorControlInterface>();
-    private volatile boolean wasConnected = false;
-    
+        
     protected DefaultLocationOutput<?> locationOutput;
     protected AbstractPhysicalProcess sensorDescription = new PhysicalSystemImpl();
     protected long lastUpdatedSensorDescription = Long.MIN_VALUE;
@@ -566,32 +565,5 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
         
         saver.put(STATE_LAST_SML_UPDATE, this.lastUpdatedSensorDescription);
         saver.flush();
-    }
-    
-    
-    /**
-     * Helper method to send and log connection/disconnection events
-     * @param connected
-     */
-    protected void notifyConnectionStatus(boolean connected)
-    {
-        long now = System.currentTimeMillis();
-        
-        // only log and send event if status has actually changed
-        if (connected != wasConnected)
-        {
-            if (connected)
-            {
-                getLogger().info("Sensor is connected");
-                eventHandler.publishEvent(new SensorEvent(now, this, SensorEvent.Type.CONNECTED));
-            }
-            else
-            {
-                getLogger().info("Sensor is disconnected");
-                eventHandler.publishEvent(new SensorEvent(now, this, SensorEvent.Type.DISCONNECTED));
-            }
-            
-            wasConnected = connected;
-        }
     }
 }

@@ -34,16 +34,6 @@ public class SensorEvent extends EntityEvent<Type>
     public static enum Type
 	{
 		/**
-		 * Sensor connected to SensorHub
-		 */
-        CONNECTED,
-        
-        /**
-         * Sensor disconnected from SensorHub
-         */
-		DISCONNECTED,
-		
-		/**
 		 * Sensor added to network
 		 */
 		SENSOR_ADDED,

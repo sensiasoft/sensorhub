@@ -323,6 +323,25 @@ public abstract class AbstractModule<ConfigType extends ModuleConfig> implements
     }
     
     
+    /**
+     * Helper method to send and log connection/disconnection events
+     * @param connected
+     */
+    protected void notifyConnectionStatus(boolean connected, String remoteServiceName)
+    {
+        if (connected)
+        {
+            reportStatus("Connected to " + remoteServiceName);
+            eventHandler.publishEvent(new ModuleEvent(this, ModuleEvent.Type.CONNECTED));
+        }
+        else
+        {
+            reportStatus("Disconnected from " + remoteServiceName);
+            eventHandler.publishEvent(new ModuleEvent(this, ModuleEvent.Type.DISCONNECTED));
+        }
+    }
+    
+    
     protected boolean canInit() throws SensorHubException
     {
         synchronized (stateLock)
