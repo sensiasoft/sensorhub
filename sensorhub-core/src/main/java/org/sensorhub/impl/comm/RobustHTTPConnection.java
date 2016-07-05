@@ -62,9 +62,13 @@ public abstract class RobustHTTPConnection extends RobustIPConnection
         {
             // test DNS and TCP connection to get more precise error message
             int port = urlObj.getPort();
-            tryConnectTCP(urlObj.getHost(), (port < 0) ? 80 : port);
+            boolean tcpOk = tryConnectTCP(urlObj.getHost(), (port < 0) ? 80 : port);
             
-            module.reportError("Cannot connect to HTTP server", e, true);
+            // send HTTP error message only if TCP was ok
+            // otherwise TCP error message has already been sent
+            if (tcpOk)
+                module.reportError("Cannot connect to HTTP server", e, true);
+            
             return null;
         }
         
