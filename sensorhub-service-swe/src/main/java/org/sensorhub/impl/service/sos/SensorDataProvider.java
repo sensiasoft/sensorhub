@@ -14,10 +14,8 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.impl.service.sos;
 
-import org.sensorhub.api.common.Event;
 import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.sensor.ISensorModule;
-import org.sensorhub.api.sensor.SensorEvent;
 import org.sensorhub.api.service.ServiceException;
 
 
@@ -40,18 +38,4 @@ public class SensorDataProvider extends StreamDataProvider implements ISOSDataPr
         super(srcSensor, config, filter);
     }
     
-    
-    @Override
-    public void handleEvent(Event<?> e)
-    {
-        if (e instanceof SensorEvent)
-        {
-            if (((SensorEvent) e).getType() == SensorEvent.Type.DISCONNECTED)
-            {
-                
-            }
-        }
-        else
-            super.handleEvent(e);
-    }
 }

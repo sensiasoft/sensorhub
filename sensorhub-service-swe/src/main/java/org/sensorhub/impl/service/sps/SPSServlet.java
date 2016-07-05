@@ -348,25 +348,25 @@ public class SPSServlet extends OWSServlet
     
     protected void handleRequest(GetCapabilitiesRequest request) throws Exception
     {
-        try
+        // update operation URLs
+        if (endpointUrl == null)
         {
-            // update operation URLs
-            if (endpointUrl == null)
+            try
             {
                 capabilitiesLock.writeLock().lock();
-                
+            
                 endpointUrl = request.getHttpRequest().getRequestURL().toString();
                 for (Entry<String, String> op: capabilities.getGetServers().entrySet())
                     capabilities.getGetServers().put(op.getKey(), endpointUrl);
                 for (Entry<String, String> op: capabilities.getPostServers().entrySet())
                     capabilities.getPostServers().put(op.getKey(), endpointUrl);
             }
+            finally
+            {            
+                capabilitiesLock.writeLock().unlock();
+            }
         }
-        finally
-        {            
-            capabilitiesLock.writeLock().unlock();
-        }
-        
+            
         try
         {
             capabilitiesLock.readLock().lock();
