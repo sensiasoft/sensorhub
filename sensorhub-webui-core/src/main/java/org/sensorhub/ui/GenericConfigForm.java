@@ -204,12 +204,12 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
                     }
                     catch (SourceException e)
                     {
-                        AdminUIModule.log.error("Error while generating UI field for property " + propId, e);
+                        //AdminUIModule.log.error("Error while generating UI field for property " + propId, e);
                         continue;
                     }
                     catch (Exception e)
                     {
-                        //AdminUIModule.log.error("Error while generating UI field for property " + propId);
+                        AdminUIModule.log.error("Error while generating UI field for property " + propId);
                         continue;
                     }
                     
