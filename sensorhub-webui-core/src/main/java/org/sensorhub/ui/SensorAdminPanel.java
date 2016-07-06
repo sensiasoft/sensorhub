@@ -16,6 +16,7 @@ package org.sensorhub.ui;
 
 import java.util.Timer;
 import java.util.TimerTask;
+import net.opengis.gml.v32.AbstractFeature;
 import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataComponent;
 import org.sensorhub.api.module.ModuleConfig;
@@ -66,6 +67,19 @@ public class SensorAdminPanel extends DefaultModulePanel<ISensorModule<?>> imple
         form.setWidth(100.0f, Unit.PERCENTAGE);
         form.setMargin(false);
         form.setSpacing(true);
+        
+        // sensor info panel
+        if (module.isInitialized())
+        {
+            Label sectionLabel = new Label("Sensor Info");
+            sectionLabel.addStyleName(STYLE_H3);
+            sectionLabel.addStyleName(STYLE_COLORED);
+            form.addComponent(sectionLabel);
+            form.addComponent(new Label("<b>Unique ID:</b> " + module.getUniqueIdentifier(), ContentMode.HTML));
+            AbstractFeature foi = module.getCurrentFeatureOfInterest();
+            if (foi != null)
+                form.addComponent(new Label("<b>FOI ID:</b> " + foi.getUniqueIdentifier(), ContentMode.HTML));
+        }
         
         // section title
         form.addComponent(new Label("&nbsp;", ContentMode.HTML));
