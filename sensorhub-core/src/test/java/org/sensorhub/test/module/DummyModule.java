@@ -141,7 +141,7 @@ public class DummyModule implements IModule<ModuleConfig>
     }
 
 
-    public void requestInit() throws SensorHubException
+    public void requestInit(boolean force) throws SensorHubException
     {
         init();
         setState(ModuleState.INITIALIZED);

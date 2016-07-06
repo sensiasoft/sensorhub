@@ -61,6 +61,12 @@ public class FakeSensor extends AbstractSensorModule<SensorConfig>
     public void updateConfig(SensorConfig config) throws SensorHubException
     {
     }
+    
+    
+    @Override
+    public void init() throws SensorHubException
+    {        
+    }
 
 
     @Override

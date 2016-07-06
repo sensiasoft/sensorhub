@@ -96,7 +96,7 @@ public abstract class AbstractModule<ConfigType extends ModuleConfig> implements
     
     
     /*
-     * Default implementation is to restart the module when config was changed
+     * Default implementation is to re-init and restart the module when config was changed
      */
     @Override
     public synchronized void updateConfig(ConfigType config) throws SensorHubException
@@ -117,6 +117,10 @@ public abstract class AbstractModule<ConfigType extends ModuleConfig> implements
             throw e;
         }
         
+        // force re-init
+        requestInit(true);
+        
+        // also restart if it was started
         if (wasStarted)
             requestStart();
     }
@@ -342,7 +346,7 @@ public abstract class AbstractModule<ConfigType extends ModuleConfig> implements
     }
     
     
-    protected boolean canInit() throws SensorHubException
+    protected boolean canInit(boolean force) throws SensorHubException
     {
         synchronized (stateLock)
         {
@@ -351,7 +355,7 @@ public abstract class AbstractModule<ConfigType extends ModuleConfig> implements
                 throw new SensorHubException("Module configuration must be set");
             
             // do nothing if we are already intializing or initialized
-            if (state.ordinal() >= ModuleState.INITIALIZING.ordinal())
+            if (!force && state.ordinal() >= ModuleState.INITIALIZING.ordinal())
                 return false;
             
             // otherwise actually init the module
@@ -362,9 +366,9 @@ public abstract class AbstractModule<ConfigType extends ModuleConfig> implements
     
     
     @Override
-    public void requestInit() throws SensorHubException
+    public void requestInit(boolean force) throws SensorHubException
     {
-        if (canInit())
+        if (canInit(force))
         {
             try
             {

@@ -208,7 +208,7 @@ public class TestModuleRegistry
         IModule<?> module = registry.loadModule(conf);
         
         long t0 = System.currentTimeMillis();
-        registry.initModuleAsync(conf.id, new IEventListener()
+        registry.initModuleAsync(conf.id, false, new IEventListener()
         {
             public void handleEvent(Event<?> e)
             {
@@ -240,7 +240,7 @@ public class TestModuleRegistry
         long timeOut = 100;
         
         IModule<?> module = registry.loadModule(conf);
-        registry.initModuleAsync(conf.id, null);
+        registry.initModuleAsync(conf.id, false, null);
         boolean noTimeOut = module.waitForState(ModuleState.INITIALIZED, timeOut);
         
         assertFalse("Init timeout flag not set", noTimeOut);

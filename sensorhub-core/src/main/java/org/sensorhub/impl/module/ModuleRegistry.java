@@ -197,7 +197,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
         
         // launch init if autostart is set
         if (config.autoStart)
-            initModuleAsync(config.id, null);
+            startModuleAsync(config.id, null);
         
         return module;
     }
@@ -285,7 +285,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
      */
     public IModule<?> initModule(String moduleID) throws SensorHubException
     {
-        return initModule(moduleID, Long.MAX_VALUE);
+        return initModule(moduleID, false, Long.MAX_VALUE);
     }
     
     
@@ -294,13 +294,14 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
      * This method is synchronous so it will block until the module is actually initialized,
      * the timeout occurs or an exception is thrown
      * @param moduleID Local ID of module to initialize
+     * @param force set to true to force a reinit, even if module was already initialized
      * @param timeOut Maximum time to wait for init to complete (or <= 0 to wait forever)
      * @return module Loaded module with the given moduleID
      * @throws SensorHubException if an error occurs during init
      */
-    public IModule<?> initModule(String moduleID, long timeOut) throws SensorHubException
+    public IModule<?> initModule(String moduleID, boolean force, long timeOut) throws SensorHubException
     {
-        IModule<?> module = initModuleAsync(moduleID, null);
+        IModule<?> module = initModuleAsync(moduleID, force, null);
         if (!module.waitForState(ModuleState.INITIALIZED, timeOut))
             throw new SensorHubException("Could not initialize module " + MsgUtils.moduleString(module) + " in the requested time frame");
         return module;
@@ -312,11 +313,12 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
      * This method is asynchronous so it returns immediately and the listener will be notified
      * when the module is actually initialized
      * @param moduleID Local ID of module to initialize
+     * @param force set to true to force a reinit, even if module was already initialized
      * @param listener Listener to register for receiving the module's events
      * @return the module instance (may not yet be initialized when this method returns)
      * @throws SensorHubException if no module with given ID can be found
      */
-    public IModule<?> initModuleAsync(final String moduleID, IEventListener listener) throws SensorHubException
+    public IModule<?> initModuleAsync(final String moduleID, final boolean force, IEventListener listener) throws SensorHubException
     {
         @SuppressWarnings("rawtypes")
         final IModule module = getModuleById(moduleID);
@@ -333,7 +335,19 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
                 {
                     try
                     {
-                        module.requestInit();
+                        // if forced, try to stop first
+                        if (force)
+                            module.requestStop();
+                    }
+                    catch (Exception e)
+                    {
+                        // just log simple message here; exception is already logged by module
+                        log.error("Cannot stop module " + MsgUtils.moduleString(module));
+                    }
+                    
+                    try
+                    {
+                        module.requestInit(force);
                     }
                     catch (Exception e)
                     {
@@ -417,7 +431,16 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
                     try
                     {
                         if (!module.isInitialized())
-                            module.requestInit();
+                            module.requestInit(false);
+                    }
+                    catch (Exception e)
+                    {
+                        // just log simple message here; exception is already logged by module
+                        log.error("Cannot initialize module " + MsgUtils.moduleString(module));
+                    }
+                    
+                    try
+                    {
                         module.requestStart();
                     }
                     catch (Exception e)
@@ -970,18 +993,6 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
         catch (SensorHubException e)
         {
             log.error("Cannot load state of module " + moduleString, e);
-        }
-        
-        // also initiate startup if autostart was true
-        try
-        {
-            if (!shutdownCalled && module.getConfiguration().autoStart)
-                startModuleAsync(module);
-        }
-        catch (SensorHubException e)
-        {
-            log.error("Cannot auto-start module " + moduleString, e);
-        }
-        
+        }        
     }
 }

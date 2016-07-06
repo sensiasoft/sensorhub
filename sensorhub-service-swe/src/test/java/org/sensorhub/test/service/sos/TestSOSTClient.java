@@ -71,7 +71,7 @@ public class TestSOSTClient
         FakeSensor sensor = (FakeSensor)sosTest.registry.loadModule(sensorCfg);
         sensor.setSensorUID(SENSOR_UID);
         sensor.setDataInterfaces(new FakeSensorData(sensor, TestSOSService.NAME_OUTPUT1, 10, SAMPLING_PERIOD, NUM_GEN_SAMPLES));
-        sensor.requestInit();
+        sensor.requestInit(false);
         sensor.setStartedState(); // fake started state but don't send data yet
         return sensor;
     }
@@ -103,7 +103,7 @@ public class TestSOSTClient
         
         final SOSTClient client = new SOSTClient();
         client.setConfiguration(config);
-        client.requestInit();
+        client.requestInit(false);
         
         if (async)
         {

@@ -93,7 +93,8 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener, UIConst
     private static final Action REMOVE_MODULE_ACTION = new Action("Remove Module", new ThemeResource("icons/module_delete.png"));
     private static final Action START_MODULE_ACTION = new Action("Start", new ThemeResource("icons/enable.png"));
     private static final Action STOP_MODULE_ACTION = new Action("Stop", new ThemeResource("icons/disable.gif"));
-    private static final Action RESTART_MODULE_ACTION = new Action("Restart", new ThemeResource("icons/refresh.gif"));    
+    private static final Action RESTART_MODULE_ACTION = new Action("Restart", new ThemeResource("icons/refresh.gif"));
+    private static final Action REINIT_MODULE_ACTION = new Action("Force Init", new ThemeResource("icons/refresh.gif"));
     private static final Resource LOGO_ICON = new ClassResource("/sensorhub_logo_128.png");
     private static final String STYLE_LOGO = "logo";
     private static final String PROP_STATE = "state";
@@ -583,6 +584,7 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener, UIConst
                         actions.add(START_MODULE_ACTION);
                     
                     actions.add(STOP_MODULE_ACTION);
+                    actions.add(REINIT_MODULE_ACTION);
                     actions.add(REMOVE_MODULE_ACTION);
                 }
                 else
@@ -731,6 +733,30 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener, UIConst
                                     catch (SensorHubException ex)
                                     {
                                         String msg = "The module could not be restarted";
+                                        Notification.show("Error", msg + '\n' + ex.getMessage(), Notification.Type.ERROR_MESSAGE);
+                                    }
+                                }
+                            }                        
+                        });                    
+                        
+                        addWindow(popup);
+                    }
+                    else if (action == REINIT_MODULE_ACTION)
+                    {
+                        final ConfirmDialog popup = new ConfirmDialog("Are you sure you want to force re-init module " + moduleName + "?");
+                        popup.addCloseListener(new CloseListener() {
+                            @Override
+                            public void windowClose(CloseEvent e)
+                            {
+                                if (popup.isConfirmed())
+                                {                    
+                                    try 
+                                    {
+                                        registry.initModuleAsync(moduleId, true, null);
+                                    }
+                                    catch (SensorHubException ex)
+                                    {
+                                        String msg = "The module could not be reinitialized";
                                         Notification.show("Error", msg + '\n' + ex.getMessage(), Notification.Type.ERROR_MESSAGE);
                                     }
                                 }

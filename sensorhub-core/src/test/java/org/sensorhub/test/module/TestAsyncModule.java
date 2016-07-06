@@ -73,7 +73,7 @@ public class TestAsyncModule
         long timeOut = 5000;
         
         IModule<?> module = loadModule(conf);
-        module.requestInit();
+        module.requestInit(false);
         
         long t0 = System.currentTimeMillis();
         module.waitForState(ModuleState.INITIALIZED, timeOut);
@@ -104,7 +104,7 @@ public class TestAsyncModule
         long timeOut = 5000;
         
         IModule<?> module = loadModule(conf);        
-        module.requestInit();
+        module.requestInit(false);
         module.requestStart();
         
         long t0 = System.currentTimeMillis();
@@ -216,7 +216,7 @@ public class TestAsyncModule
         long timeOut = 100;
         
         IModule<?> module = loadModule(conf);        
-        module.requestInit();
+        module.requestInit(false);
         boolean noTimeOut = module.waitForState(ModuleState.INITIALIZED, timeOut);
         
         assertFalse("Init should have timeout", noTimeOut);
@@ -239,7 +239,7 @@ public class TestAsyncModule
         
         // init again
         long t0 = System.currentTimeMillis();
-        module.requestInit();
+        module.requestInit(false);
         assertEquals("Module should remain initialized", ModuleState.INITIALIZED, module.getCurrentState());
         long t1 = System.currentTimeMillis();
         
@@ -265,9 +265,9 @@ public class TestAsyncModule
                 
         // request async init twice
         long t0 = System.currentTimeMillis();
-        module.requestInit();
+        module.requestInit(false);
         assertEquals("Module should be initializing", ModuleState.INITIALIZING, module.getCurrentState());
-        module.requestInit();
+        module.requestInit(false);
         assertEquals("Module should remain initializing", ModuleState.INITIALIZING, module.getCurrentState());
         module.waitForState(ModuleState.INITIALIZED, timeOut);
         long t1 = System.currentTimeMillis();
@@ -331,7 +331,7 @@ public class TestAsyncModule
         
         // request async start during init twice
         long t0 = System.currentTimeMillis();
-        module.requestInit();
+        module.requestInit(false);
         assertEquals("Module should be initializing", ModuleState.INITIALIZING, module.getCurrentState());
         module.requestStart();
         assertEquals("Module should remain initializing", ModuleState.INITIALIZING, module.getCurrentState());

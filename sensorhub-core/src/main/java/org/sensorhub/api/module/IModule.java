@@ -109,9 +109,10 @@ public interface IModule<ConfigType extends ModuleConfig> extends IEventProducer
      * return immediately while they wait for the proper init conditions.<br/>
      * When this method returns without error the module state is guaranteed to be
      * {@link ModuleState#INITIALIZING}
+     * @param force set to true to force a reinit, even if module was already initialized
      * @throws SensorHubException if module could not enter initialization phase
      */
-    public void requestInit() throws SensorHubException;
+    public void requestInit(boolean force) throws SensorHubException;
     
     
     /**

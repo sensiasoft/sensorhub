@@ -107,6 +107,20 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
             
     
     @Override
+    public void init() throws SensorHubException
+    {
+        // reset internal state
+        this.uniqueID = null;
+        this.xmlID = null;
+        this.foi = null;
+        this.locationOutput = null;
+        this.sensorDescription = new PhysicalSystemImpl();
+        removeAllOutputs();
+        removeAllControlInputs();        
+    }
+    
+    
+    @Override
     public synchronized void init(ConfigType config) throws SensorHubException
     {
         super.init(config);

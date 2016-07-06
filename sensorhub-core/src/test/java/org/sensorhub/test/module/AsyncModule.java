@@ -37,9 +37,9 @@ public class AsyncModule extends AbstractModule<AsyncModuleConfig> implements IE
     
     
     @Override
-    public void requestInit() throws SensorHubException
+    public void requestInit(boolean force) throws SensorHubException
     {
-        if (canInit())
+        if (canInit(force))
         {
             Callable<Void> task = new Callable<Void>()
             {
