@@ -105,6 +105,18 @@ public class SWECommonForm extends VerticalLayout
             l.setDescription(getTooltip(dataChoice));
             layout.addComponent(l);
             
+            VerticalLayout form = new VerticalLayout();
+            form.setMargin(new MarginInfo(false, false, false, true));
+            form.setSpacing(false);
+            for (int i = 0; i < dataComponent.getComponentCount(); i++)
+            {
+                DataComponent c = dataComponent.getComponent(i);
+                Component w = buildWidget(c, showValues);
+                if (w != null)
+                    form.addComponent(w);
+            }
+            layout.addComponent(form);
+            
             return layout;
         }
         
@@ -161,6 +173,12 @@ public class SWECommonForm extends VerticalLayout
             caption.append(" [");
             caption.append(((DataArray)dataComponent).getComponentCount());
             caption.append(']');
+        }
+        
+        // choice
+        else if (dataComponent instanceof DataChoice)
+        {
+            caption.append(" - choice of");
         }
         
         return caption.toString();
