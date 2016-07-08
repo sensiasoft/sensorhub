@@ -28,9 +28,10 @@ import org.sensorhub.api.config.DisplayInfo.ValueRange;
  */
 public class UDPConfig extends IPConfig
 {
-    @DisplayInfo(desc="Port number to connect to on remote host")
+    
+    @DisplayInfo(desc="Port number to connect to on remote host (0 to automatically select a port)")
     @ValueRange(min=0, max=65535)
-    public int remotePort;
+    public int remotePort = PORT_AUTO;
     
 
     @DisplayInfo(desc="Local port number to use on the local host")

@@ -17,6 +17,8 @@ package org.sensorhub.impl.comm;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.nio.channels.Channels;
@@ -72,9 +74,22 @@ public class UDPCommProvider extends AbstractModule<UDPCommProviderConfig> imple
         try
         {
             SocketAddress localAddr = new InetSocketAddress(config.localPort);
-            SocketAddress remoteAddr = new InetSocketAddress(config.remoteHost, config.remotePort);
-            channel = DatagramChannel.open().bind(localAddr);
+                        
+            // if remote port is set to AUTO, use port the first UDP packet was sent from
+            // to access this info we need to create a plain socket first
+            int remotePort = config.remotePort;
+            if (remotePort <= 0)
+            {
+                try (DatagramSocket socket = new DatagramSocket(config.localPort))
+                {
+                    DatagramPacket udpPacket = new DatagramPacket(new byte[1], 1);
+                    socket.receive(udpPacket);
+                    remotePort = udpPacket.getPort();
+                }                
+            }
             
+            SocketAddress remoteAddr = new InetSocketAddress(config.remoteHost, remotePort);
+            channel = DatagramChannel.open().bind(localAddr);
             channel.connect(remoteAddr);
             is = Channels.newInputStream(channel);
             os = Channels.newOutputStream(channel);
@@ -82,7 +97,7 @@ public class UDPCommProvider extends AbstractModule<UDPCommProviderConfig> imple
         catch (IOException e)
         {
             throw new SensorHubException("Cannot setup UDP socket between local address " + config.localPort +
-                                         " and remote host " + config.remoteHost + ":" + config.remotePort);
+                                         " and remote host " + config.remoteHost + ":" + config.remotePort, e);
         }
     }
 

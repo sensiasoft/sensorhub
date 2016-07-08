@@ -33,6 +33,7 @@ import org.sensorhub.api.config.DisplayInfo.FieldType.Type;
 public abstract class IPConfig implements ICommConfig
 {	
     public final static String AUTO_NETIF = "AUTO";
+    public final static int PORT_AUTO = 0;
     
     
     @DisplayInfo(desc="IP or DNS name of remote host")
