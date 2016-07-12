@@ -225,7 +225,8 @@ public class TestSOSTService
         OWSUtils utils = new OWSUtils();
         
         // first register sensor
-        utils.sendRequest(buildInsertSensor(), false);
+        OWSResponse resp = utils.sendRequest(buildInsertSensor(), false);
+        utils.writeXMLResponse(System.out, resp);
         
         // connect to SOS to listen for new obs
         Thread t = new Thread() {
@@ -258,7 +259,7 @@ public class TestSOSTService
         insObs.getObservations().add(obs);
         
         utils.writeXMLQuery(System.out, insObs);
-        OWSResponse resp = utils.sendRequest(insObs, false);
+        resp = utils.sendRequest(insObs, false);
         utils.writeXMLResponse(System.out, resp);
     }
     

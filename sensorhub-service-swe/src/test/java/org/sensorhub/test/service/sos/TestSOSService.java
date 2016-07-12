@@ -526,7 +526,7 @@ public class TestSOSService
             String isoText = dom.getElementValue(offeringElt, "phenomenonTime/TimePeriod/beginPosition");
             double time = new DateTimeFormat().parseIso(isoText);
             double expectedTime = new DateTimeFormat().parseIso(expectedBeginValue);
-            assertEquals("Wrong begin time " + isoText, expectedTime, time, 30.0);
+            assertEquals("Wrong begin time " + isoText, expectedTime, time, 10.0);
         }
         else
             assertEquals("Wrong begin time", expectedBeginValue, dom.getAttributeValue(offeringElt, "phenomenonTime/TimePeriod/beginPosition/indeterminatePosition"));
@@ -537,7 +537,7 @@ public class TestSOSService
             String isoText = dom.getElementValue(offeringElt, "phenomenonTime/TimePeriod/endPosition");
             double time = new DateTimeFormat().parseIso(isoText);
             double expectedTime = new DateTimeFormat().parseIso(expectedEndValue);
-            assertEquals("Wrong end time " + isoText, expectedTime, time, 30.0);
+            assertEquals("Wrong end time " + isoText, expectedTime, time, 10.0);
         }
         else
             assertEquals("Wrong end time", expectedEndValue, dom.getAttributeValue(offeringElt, "phenomenonTime/TimePeriod/endPosition/indeterminatePosition"));
@@ -613,7 +613,7 @@ public class TestSOSService
         
         // start sensor1 and wait for at least one record to be in storage
         SensorHub.getInstance().getModuleRegistry().startModule(provider1.sensorID);
-        Thread.sleep(((long)(SAMPLING_PERIOD*1000)));
+        Thread.sleep(((long)(3*SAMPLING_PERIOD*1000)));
         
         is = new URL(HTTP_ENDPOINT + GETCAPS_REQUEST).openStream();
         dom = checkOfferings(is, new String[] {UID_SENSOR2, UID_SENSOR1});

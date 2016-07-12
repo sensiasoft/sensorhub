@@ -484,13 +484,6 @@ public class SOSServlet extends org.vast.ows.sos.SOSServlet
 
 
     @Override
-    public void handleRequest(OWSRequest request) throws Exception
-    {
-        super.handleRequest(request);
-    }
-
-
-    @Override
     protected void handleRequest(GetCapabilitiesRequest request) throws Exception
     {
         // check that version 2.0.0 is supported by client
@@ -1082,8 +1075,8 @@ public class SOSServlet extends org.vast.ows.sos.SOSServlet
                     configSaveList.add(sensorConfig);
                 }
                 
-                // make sure module is intialized and started (since we set autostart)
-                moduleReg.initModule(sensorUID);
+                // start new virtual sensor module synchronously
+                moduleReg.startModule(sensorUID, 1000);
                 
                 // generate new provider and consumer config
                 SensorDataProviderConfig providerConfig = new SensorDataProviderConfig();
