@@ -71,7 +71,7 @@ public abstract class RobustIPConnection extends RobustConnection
                     boolean reachable = IPNetworkUtils.isHostReachable(host, connectConfig.connectTimeout);
                     if (!reachable)
                     {
-                        module.reportError("Cannot ping host " + host, null);
+                        module.reportError("Cannot ping host " + host, null, true);
                         return false;
                     }
                 }
@@ -80,7 +80,7 @@ public abstract class RobustIPConnection extends RobustConnection
                     boolean reachable = IPNetworkUtils.isHostReachable(host, port, connectConfig.connectTimeout);
                     if (!reachable)
                     {
-                        module.reportError("Cannot reach host " + host + " on port " + port, null);
+                        module.reportError("Cannot reach host " + host + " on port " + port, null, true);
                         return false;
                     }
                 }                
@@ -92,7 +92,7 @@ public abstract class RobustIPConnection extends RobustConnection
         }
         catch (UnknownHostException e)
         {
-            module.reportError("Cannot resolve hostname " + host, null);
+            module.reportError("Cannot resolve hostname " + host, null, true);
             return false;
         }
         

@@ -204,10 +204,19 @@ public class SOSTClient extends AbstractModule<SOSTClientConfig> implements ICli
     {
         if (canStart())
         {
-            // register to sensor events            
-            sensor.registerListener(this);
-            
-            // we'll actually start when we receive sensor STARTED event
+            try
+            {
+                // register to sensor events            
+                sensor.registerListener(this);
+                
+                // we'll actually start when we receive sensor STARTED event
+            }
+            catch (Exception e)
+            {
+                reportError("Error while starting module", e);
+                requestStop();
+                throw e;
+            }
         }
     }
     
