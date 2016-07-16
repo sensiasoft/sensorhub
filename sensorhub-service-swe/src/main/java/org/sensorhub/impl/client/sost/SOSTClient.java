@@ -229,6 +229,8 @@ public class SOSTClient extends AbstractModule<SOSTClientConfig> implements ICli
             for (ISensorDataInterface o: sensor.getAllOutputs().values())
                 registerDataStream(o);
             getLogger().info("Result templates registered with SOS");
+            
+            setState(ModuleState.STARTED);
         }
         catch (Exception e)
         {

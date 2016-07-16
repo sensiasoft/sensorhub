@@ -1070,8 +1070,9 @@ public class SOSServlet extends org.vast.ows.sos.SOSServlet
                     sensorConfig.id = sensorUID;
                     sensorConfig.name = sensorName;
                     SOSVirtualSensor virtualSensor = (SOSVirtualSensor)moduleReg.loadModule(sensorConfig);
-                    virtualSensor.updateSensorDescription(request.getProcedureDescription(), false);
                     sensorConfig.autoStart = true;
+                    virtualSensor.requestInit(false);
+                    virtualSensor.updateSensorDescription(request.getProcedureDescription(), false);                    
                     configSaveList.add(sensorConfig);
                 }
                 

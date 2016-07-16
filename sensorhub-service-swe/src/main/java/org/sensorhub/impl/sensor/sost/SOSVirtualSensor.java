@@ -306,6 +306,7 @@ public class SOSVirtualSensor extends AbstractSensorModule<SOSVirtualSensorConfi
     public void updateSensorDescription(AbstractProcess systemDesc, boolean recordHistory) throws SensorException
     {
         sensorDescription = (AbstractPhysicalProcess)systemDesc;
+        uniqueID = systemDesc.getUniqueIdentifier();
         
         // generate output hashcodes to compare with insert result templates
         structureToOutputMap.clear();
