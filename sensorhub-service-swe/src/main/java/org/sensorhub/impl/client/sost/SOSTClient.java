@@ -85,7 +85,8 @@ public class SOSTClient extends AbstractModule<SOSTClientConfig> implements ICli
     public class StreamInfo
     {
         String templateID;
-        public long lastEventTime = -1;
+        public long lastEventTime = Long.MIN_VALUE;
+        public int measPeriodMs = 1000;
         public int errorCount = 0;
         private int minRecordsPerRequest = 10;
         private SWEData resultData = new SWEData();
@@ -251,6 +252,10 @@ public class SOSTClient extends AbstractModule<SOSTClientConfig> implements ICli
     @Override
     public void stop() throws SensorHubException
     {
+        // cancel reconnection loop
+        if (connection != null)
+            connection.cancel();
+        
         // unregister from sensor
         if (sensor != null)
             sensor.unregisterListener(this);
@@ -364,6 +369,7 @@ public class SOSTClient extends AbstractModule<SOSTClientConfig> implements ICli
         streamInfo.templateID = resp.getAcceptedTemplateId();
         streamInfo.resultData.setElementType(sensorOutput.getRecordDescription());
         streamInfo.resultData.setEncoding(sensorOutput.getRecommendedEncoding());
+        streamInfo.measPeriodMs = (int)(sensorOutput.getAverageSamplingPeriod()*1000);
         streamInfo.minRecordsPerRequest = 1;//(int)(1.0 / sensorOutput.getAverageSamplingPeriod());
         dataStreams.put(sensorOutput, streamInfo);
         
@@ -437,7 +443,7 @@ public class SOSTClient extends AbstractModule<SOSTClientConfig> implements ICli
             if (streamInfo.threadPool.getQueue().remainingCapacity() == 0)
             {
                 String outputName = ((SensorDataEvent)e).getSource().getName();
-                reportError("Too many '" + outputName + "' records to send to SOS-T. Bandwidth cannot keep up.", null);
+                getLogger().warn("Too many '" + outputName + "' records to send to SOS-T. Bandwidth cannot keep up.");
                 getLogger().info("Skipping records by purging record queue");
                 streamInfo.threadPool.getQueue().clear();
                 return;
