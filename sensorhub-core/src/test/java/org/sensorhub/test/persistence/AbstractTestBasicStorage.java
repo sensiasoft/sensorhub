@@ -698,7 +698,7 @@ public abstract class AbstractTestBasicStorage<StorageType extends IRecordStorag
         
         int numWriteThreads = 10;
         int numReadThreads = 10;
-        int testDurationMs = 2000;
+        int testDurationMs = 3000;
         double timeStep = 0.1;
         refTime = System.currentTimeMillis();
         
@@ -729,7 +729,7 @@ public abstract class AbstractTestBasicStorage<StorageType extends IRecordStorag
         
         int numWriteThreads = 10;
         int numReadThreads = 10;
-        int testDurationMs = 2000;
+        int testDurationMs = 3000;
         double timeStep = 0.1;
         refTime = System.currentTimeMillis();
         
