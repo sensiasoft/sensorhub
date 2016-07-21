@@ -23,6 +23,7 @@ import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataEncoding;
 import org.garret.perst.Index;
 import org.garret.perst.IterableIterator;
+import org.garret.perst.IteratorWrapper;
 import org.garret.perst.Key;
 import org.garret.perst.Persistent;
 import org.garret.perst.Storage;
@@ -134,13 +135,29 @@ class TimeSeriesImpl extends Persistent implements IRecordStoreInfo
     
     int getNumRecords()
     {
-        return recordIndex.size();
+        try
+        {
+            recordIndex.sharedLock();
+            return recordIndex.size();
+        }
+        finally
+        {
+            recordIndex.unlock();
+        }
     }
 
 
     DataBlock getDataBlock(DataKey key)
     {
-        return recordIndex.get(new Key(key.timeStamp));
+        try
+        {
+            recordIndex.sharedLock();
+            return recordIndex.get(new Key(key.timeStamp));
+        }
+        finally
+        {
+            recordIndex.unlock();
+        }
     }
 
 
@@ -216,27 +233,111 @@ class TimeSeriesImpl extends Persistent implements IRecordStoreInfo
         double[] timeRange = filter.getTimeStampRange();
         Key keyFirst = new Key(timeRange == null ? Double.NEGATIVE_INFINITY : timeRange[0]);
         Key keyLast = new Key(timeRange == null ? Double.POSITIVE_INFINITY : timeRange[1]);
-        return recordIndex.entryIterator(keyFirst, keyLast, Index.ASCENT_ORDER);
+        return getEntryIterator(keyFirst, keyLast, Index.ASCENT_ORDER);
+    }
+    
+        
+    /*
+     * Gets an entry iterator over the recordIndex protected by a shared lock
+     */
+    protected IterableIterator<Entry<Object,DataBlock>> getEntryIterator(Key keyFirst, Key keyLast, int order)
+    {
+        try
+        {
+            recordIndex.sharedLock();
+            IterableIterator<Entry<Object,DataBlock>> it = recordIndex.entryIterator(keyFirst, keyLast, order);
+            return new IteratorWrapper<Entry<Object,DataBlock>>(it)
+            {
+                public final boolean hasNext()
+                {
+                    try
+                    {
+                        recordIndex.sharedLock();
+                        return super.hasNext();
+                    }
+                    finally
+                    {
+                        recordIndex.unlock();
+                    }
+                }
+                
+                
+                public final Entry<Object,DataBlock> next()
+                {
+                    try
+                    {
+                        recordIndex.sharedLock();
+                        return super.next();
+                    }
+                    finally
+                    {
+                        recordIndex.unlock();
+                    }
+                }
+                
+                
+                public final void remove()
+                {
+                    try
+                    {
+                        recordIndex.exclusiveLock();
+                        super.remove();
+                    }
+                    finally
+                    {
+                        recordIndex.unlock();
+                    }
+                }
+            };
+        }
+        finally
+        {
+            recordIndex.unlock();
+        }
     }
 
 
     void store(DataKey key, DataBlock data)
     {
-        recordIndex.put(new Key(key.timeStamp), data);
+        try
+        {
+            recordIndex.exclusiveLock();
+            recordIndex.put(new Key(key.timeStamp), data);            
+        }
+        finally
+        {
+            recordIndex.unlock();
+        }
     }
 
 
     void update(DataKey key, DataBlock data)
     {
-        DataBlock oldData = recordIndex.set(new Key(key.timeStamp), data);
-        getStorage().deallocate(oldData);
+        try
+        {
+            recordIndex.exclusiveLock();
+            DataBlock oldData = recordIndex.set(new Key(key.timeStamp), data);
+            getStorage().deallocate(oldData);
+        }
+        finally
+        {
+            recordIndex.unlock();
+        }
     }
 
 
     void remove(DataKey key)
     {
-        DataBlock oldData = recordIndex.remove(new Key(key.timeStamp));
-        getStorage().deallocate(oldData);
+        try
+        {
+            recordIndex.exclusiveLock();
+            DataBlock oldData = recordIndex.remove(new Key(key.timeStamp));
+            getStorage().deallocate(oldData);
+        }
+        finally
+        {
+            recordIndex.unlock();
+        }
     }
 
 
@@ -246,13 +347,13 @@ class TimeSeriesImpl extends Persistent implements IRecordStoreInfo
         
         Key keyFirst = new Key(filter.getTimeStampRange()[0]);
         Key keyLast = new Key(filter.getTimeStampRange()[1]);
-        Iterator<DataBlock> it = recordIndex.iterator(keyFirst, keyLast, Index.ASCENT_ORDER);
+        Iterator<Entry<Object,DataBlock>> it = getEntryIterator(keyFirst, keyLast, Index.ASCENT_ORDER);
             
         while (it.hasNext())
         {
-            DataBlock oldData = it.next();
+            Entry<Object,DataBlock> oldData = it.next();            
+            getStorage().deallocate(oldData.getValue());
             it.remove();
-            getStorage().deallocate(oldData);
         }
 
         return count;
@@ -261,23 +362,32 @@ class TimeSeriesImpl extends Persistent implements IRecordStoreInfo
 
     double[] getDataTimeRange()
     {
-        IterableIterator<Entry<Object, DataBlock>> it;
-        it = recordIndex.entryIterator(KEY_DATA_START_ALL_TIME, KEY_DATA_END_ALL_TIME, Index.ASCENT_ORDER);
-        if (!it.hasNext())
-            return new double[] { Double.NaN, Double.NaN };
-        Entry<Object, DataBlock> first = it.next();
-
-        it = recordIndex.entryIterator(KEY_DATA_START_ALL_TIME, KEY_DATA_END_ALL_TIME, Index.DESCENT_ORDER);
-        Entry<Object, DataBlock> last = it.next();
-
-        return new double[] { (double)first.getKey(), (double)last.getKey() };
+        try
+        {
+            recordIndex.sharedLock();            
+            IterableIterator<Entry<Object, DataBlock>> it;
+            
+            it = recordIndex.entryIterator(KEY_DATA_START_ALL_TIME, KEY_DATA_END_ALL_TIME, Index.ASCENT_ORDER);
+            if (!it.hasNext())
+                return new double[] { Double.NaN, Double.NaN };
+            Entry<Object, DataBlock> first = it.next();
+    
+            it = recordIndex.entryIterator(KEY_DATA_START_ALL_TIME, KEY_DATA_END_ALL_TIME, Index.DESCENT_ORDER);
+            Entry<Object, DataBlock> last = it.next();
+    
+            return new double[] { (double)first.getKey(), (double)last.getKey() };
+        }
+        finally
+        {
+            recordIndex.unlock();
+        }
     }
     
     
     public Iterator<double[]> getRecordsTimeClusters(String recordType)
     {
         final IterableIterator<Entry<Object, DataBlock>> it;
-        it = recordIndex.entryIterator(KEY_DATA_START_ALL_TIME, KEY_DATA_END_ALL_TIME, Index.ASCENT_ORDER);
+        it = getEntryIterator(KEY_DATA_START_ALL_TIME, KEY_DATA_END_ALL_TIME, Index.ASCENT_ORDER);
         
         return new Iterator<double[]>()
         {

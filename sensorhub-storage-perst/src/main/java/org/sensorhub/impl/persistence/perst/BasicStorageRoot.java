@@ -28,7 +28,7 @@ import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataEncoding;
 import org.garret.perst.Index;
 import org.garret.perst.Key;
-import org.garret.perst.Persistent;
+import org.garret.perst.PersistentResource;
 import org.garret.perst.Storage;
 import org.sensorhub.api.persistence.DataKey;
 import org.sensorhub.api.persistence.IBasicStorage;
@@ -45,7 +45,7 @@ import org.sensorhub.api.persistence.IRecordStoreInfo;
  * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @since May 8, 2015
  */
-class BasicStorageRoot extends Persistent implements IBasicStorage
+class BasicStorageRoot extends PersistentResource implements IBasicStorage
 {
     private static Key KEY_SML_START_ALL_TIME = new Key(Double.NEGATIVE_INFINITY);
     private static Key KEY_SML_END_ALL_TIME = new Key(Double.POSITIVE_INFINITY);
@@ -69,34 +69,87 @@ class BasicStorageRoot extends Persistent implements IBasicStorage
     @Override
     public AbstractProcess getLatestDataSourceDescription()
     {
-        Iterator<AbstractProcess> it = descriptionTimeIndex.iterator(KEY_SML_START_ALL_TIME, KEY_SML_END_ALL_TIME, Index.DESCENT_ORDER);
-        if (it.hasNext())
-            return it.next();
-        return null;
-    }
-
-
-    @Override
-    public List<AbstractProcess> getDataSourceDescriptionHistory(double startTime, double endTime)
-    {
-        List<AbstractProcess> processList = descriptionTimeIndex.getList(new Key(startTime), new Key(endTime));
-        return Collections.unmodifiableList(processList);
+        try
+        {
+            descriptionTimeIndex.sharedLock();
+            
+            Iterator<AbstractProcess> it = descriptionTimeIndex.iterator(KEY_SML_START_ALL_TIME, KEY_SML_END_ALL_TIME, Index.DESCENT_ORDER);
+            if (it.hasNext())
+                return it.next();
+            return null;
+        }
+        finally
+        {
+            descriptionTimeIndex.unlock();
+        }
     }
 
 
     @Override
     public AbstractProcess getDataSourceDescriptionAtTime(double time)
     {
-        Iterator<AbstractProcess> it = descriptionTimeIndex.iterator(KEY_SML_START_ALL_TIME, new Key(time), Index.DESCENT_ORDER);
-        if (it.hasNext())
-            return it.next();
-        return null;
+        try
+        {
+            descriptionTimeIndex.sharedLock();
+            
+            Iterator<AbstractProcess> it = descriptionTimeIndex.iterator(KEY_SML_START_ALL_TIME, new Key(time), Index.DESCENT_ORDER);
+            if (it.hasNext())
+                return it.next();
+            return null;
+        }
+        finally
+        {
+            descriptionTimeIndex.unlock();
+        }
     }
-
-
+    
+    
     @Override
-    public void storeDataSourceDescription(AbstractProcess process)
+    public List<AbstractProcess> getDataSourceDescriptionHistory(double startTime, double endTime)
     {
+        try
+        {
+            descriptionTimeIndex.sharedLock();
+            
+            List<AbstractProcess> processList = descriptionTimeIndex.getList(new Key(startTime), new Key(endTime));
+            return Collections.unmodifiableList(processList);
+        }
+        finally
+        {
+            descriptionTimeIndex.unlock();
+        }
+    }
+    
+    
+    protected boolean storeDataSourceDescription(AbstractProcess process, double time, boolean update)
+    {
+        try
+        {
+            descriptionTimeIndex.exclusiveLock();
+            
+            if (update)
+            {
+                AbstractProcess oldProcess = descriptionTimeIndex.set(new Key(time), process);
+                if (oldProcess != null)
+                    getStorage().deallocate(oldProcess);
+                return true;
+            }
+            else
+            {
+                return descriptionTimeIndex.put(new Key(time), process);
+            }
+        }
+        finally
+        {
+            descriptionTimeIndex.unlock();
+        }
+    }
+    
+    
+    protected boolean storeDataSourceDescription(AbstractProcess process, boolean update)
+    {
+        boolean ok = false;
+            
         if (process.getNumValidTimes() > 0)
         {
             // we add the description in index for each validity period/instant
@@ -110,40 +163,51 @@ class BasicStorageRoot extends Persistent implements IBasicStorage
                     time = ((TimePeriod) validTime).getBeginPosition().getDecimalValue();
                 
                 if (!Double.isNaN(time))
-                {
-                    AbstractProcess oldProcess = descriptionTimeIndex.set(new Key(time), process);
-                    if (oldProcess != null)
-                        getStorage().deallocate(oldProcess);
-                }
+                    ok = storeDataSourceDescription(process, time, update);
             }
         }
         else
         {
-            // if no validity period is specified, we just add with current time
             double time = System.currentTimeMillis() / 1000.;
-            descriptionTimeIndex.put(new Key(time), process);
+            ok = storeDataSourceDescription(process, time, update);
         }
+            
+        return ok;
+    }
+
+
+    @Override
+    public void storeDataSourceDescription(AbstractProcess process)
+    {
+        storeDataSourceDescription(process, false);
     }
 
 
     @Override
     public void updateDataSourceDescription(AbstractProcess process)
     {
-        // TODO Auto-generated method stub
-        
-        //db.deallocate(oldObject);
+        storeDataSourceDescription(process, true);
     }
 
 
     @Override
     public void removeDataSourceDescription(double time)
     {
-        Iterator<AbstractProcess> it = descriptionTimeIndex.iterator(KEY_SML_START_ALL_TIME, new Key(time), Index.DESCENT_ORDER);
-        if (it.hasNext())
+        try
         {
-            AbstractProcess sml = it.next();
-            it.remove();
-            getStorage().deallocate(sml);
+            descriptionTimeIndex.exclusiveLock();
+            
+            Iterator<AbstractProcess> it = descriptionTimeIndex.iterator(KEY_SML_START_ALL_TIME, new Key(time), Index.DESCENT_ORDER);
+            if (it.hasNext())
+            {
+                AbstractProcess sml = it.next();
+                it.remove();
+                getStorage().deallocate(sml);
+            }
+        }
+        finally
+        {
+            descriptionTimeIndex.unlock();
         }
     }
 
@@ -153,25 +217,34 @@ class BasicStorageRoot extends Persistent implements IBasicStorage
     {
         Storage db = getStorage();
         
-        Iterator<AbstractProcess> it = descriptionTimeIndex.iterator(new Key(startTime), new Key(endTime), Index.ASCENT_ORDER);
-        while (it.hasNext())
+        try
         {
-            AbstractProcess sml = it.next();
+            descriptionTimeIndex.exclusiveLock();
             
-            // get end of validity of process description
-            double endValidity = Double.NaN; 
-            AbstractTimeGeometricPrimitive validTime = sml.getValidTimeList().get(0);
-            if (validTime instanceof TimePeriod)
-                endValidity = ((TimePeriod) validTime).getEndPosition().getDecimalValue();
-            
-            // check that end of validity is also within time range
-            // if end of validity is now, endValidity will be NaN
-            // if this is the last description returned, don't remove it if end of validity is now
-            if (endValidity <= endTime || (Double.isNaN(endValidity) && it.hasNext()))
+            Iterator<AbstractProcess> it = descriptionTimeIndex.iterator(new Key(startTime), new Key(endTime), Index.ASCENT_ORDER);
+            while (it.hasNext())
             {
-                it.remove();
-                db.deallocate(sml);
+                AbstractProcess sml = it.next();
+                
+                // get end of validity of process description
+                double endValidity = Double.NaN; 
+                AbstractTimeGeometricPrimitive validTime = sml.getValidTimeList().get(0);
+                if (validTime instanceof TimePeriod)
+                    endValidity = ((TimePeriod) validTime).getEndPosition().getDecimalValue();
+                
+                // check that end of validity is also within time range
+                // if end of validity is now, endValidity will be NaN
+                // if this is the last description returned, don't remove it if end of validity is now
+                if (endValidity <= endTime || (Double.isNaN(endValidity) && it.hasNext()))
+                {
+                    it.remove();
+                    db.deallocate(sml);
+                }
             }
+        }
+        finally
+        {
+            descriptionTimeIndex.unlock();
         }
     }
     
@@ -179,29 +252,53 @@ class BasicStorageRoot extends Persistent implements IBasicStorage
     @Override
     public void addRecordStore(String name, DataComponent recordStructure, DataEncoding recommendedEncoding)
     {
-        recordStructure.setName(name);
-        TimeSeriesImpl newTimeSeries = new TimeSeriesImpl(getStorage(), recordStructure, recommendedEncoding);
-        dataStores.put(name, newTimeSeries);
-        modify();
+        try
+        {
+            exclusiveLock();
+            recordStructure.setName(name);
+            TimeSeriesImpl newTimeSeries = new TimeSeriesImpl(getStorage(), recordStructure, recommendedEncoding);
+            dataStores.put(name, newTimeSeries);
+            modify();
+        }
+        finally
+        {
+            unlock();
+        }
     }
     
     
     @Override
     public Map<String, ? extends IRecordStoreInfo> getRecordStores()
     {
-        return Collections.unmodifiableMap(dataStores);
+        try
+        {
+            sharedLock();
+            return Collections.unmodifiableMap(dataStores);
+        }
+        finally
+        {
+            unlock();
+        }
     }
     
     
     protected final TimeSeriesImpl getRecordStore(String recordType)
     {
-        TimeSeriesImpl dataStore = dataStores.get(recordType);
-        if (dataStore == null)
-            throw new IllegalArgumentException("Record type not found in this storage: " + recordType);
-        
-        // make sure parent is set
-        dataStore.parentStore = this;
-        return dataStore;            
+        try
+        {
+            sharedLock();
+            TimeSeriesImpl dataStore = dataStores.get(recordType);
+            if (dataStore == null)
+                throw new IllegalArgumentException("Record type not found in this storage: " + recordType);
+            
+            // make sure parent is set
+            dataStore.parentStore = this;
+            return dataStore;
+        }
+        finally
+        {
+            unlock();
+        }         
     }
 
 

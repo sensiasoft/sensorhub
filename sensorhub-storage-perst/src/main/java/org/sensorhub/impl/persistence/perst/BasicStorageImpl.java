@@ -37,9 +37,7 @@ import org.sensorhub.api.persistence.IDataFilter;
 import org.sensorhub.api.persistence.IDataRecord;
 import org.sensorhub.api.persistence.IRecordStoreInfo;
 import org.sensorhub.api.persistence.IStorageModule;
-import org.sensorhub.api.persistence.StorageEvent;
 import org.sensorhub.api.persistence.StorageException;
-import org.sensorhub.api.persistence.StorageEvent.Type;
 import org.sensorhub.impl.module.AbstractModule;
 import org.sensorhub.utils.FileUtils;
 
@@ -54,11 +52,9 @@ import org.sensorhub.utils.FileUtils;
  */
 public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> implements IRecordStorageModule<BasicStorageConfig>
 {          
-    //private static final Logger log = LoggerFactory.getLogger(BasicStorageImpl.class);    
-    
     protected Storage db;
     protected Persistent dbRoot;
-    protected boolean autoCommit;
+    protected boolean autoCommit = false;
     
         
     @Override
@@ -66,8 +62,6 @@ public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> impleme
     {
         try
         {
-            this.autoCommit = true;
-            
             // check file path is valid
             if (!FileUtils.isSafeFilePath(config.storagePath))
                 throw new StorageException("Storage path contains illegal characters: " + config.storagePath);
@@ -86,7 +80,7 @@ public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> impleme
                 throw new StorageException("Storage file " + config.storagePath + " is already locked by the JVM");
             }
             
-            db = StorageFactory.getInstance().createStorage();    
+            db = StorageFactory.getInstance().createStorage();
             db.setProperty("perst.concurrent.iterator", true);
             //db.setProperty("perst.alternative.btree", true);
             db.open(dbFile, config.memoryCacheSize*1024);
@@ -147,23 +141,9 @@ public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> impleme
 
 
     @Override
-    public void restore(InputStream is) throws IOException
+    public synchronized void restore(InputStream is) throws IOException
     {        
         
-    }
-
-
-    @Override
-    public void setAutoCommit(boolean autoCommit)
-    {
-        this.autoCommit = autoCommit;        
-    }
-
-
-    @Override
-    public boolean isAutoCommit()
-    {
-        return autoCommit;
     }
 
 
@@ -255,7 +235,7 @@ public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> impleme
     
     
     @Override
-    public Map<String, ? extends IRecordStoreInfo> getRecordStores()
+    public synchronized Map<String, ? extends IRecordStoreInfo> getRecordStores()
     {
         return ((BasicStorageRoot)dbRoot).getRecordStores();
     }
@@ -316,8 +296,6 @@ public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> impleme
         ((BasicStorageRoot)dbRoot).storeRecord(key, data);        
         if (autoCommit)
             commit();
-        
-        eventHandler.publishEvent(new StorageEvent(System.currentTimeMillis(), this, key.recordType, Type.STORE));
     }
 
 
@@ -327,8 +305,6 @@ public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> impleme
         ((BasicStorageRoot)dbRoot).updateRecord(key, data);
         if (autoCommit)
             commit();
-        
-        eventHandler.publishEvent(new StorageEvent(System.currentTimeMillis(), this, key.recordType, Type.UPDATE));
     }
 
 
@@ -338,8 +314,6 @@ public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> impleme
         ((BasicStorageRoot)dbRoot).removeRecord(key);
         if (autoCommit)
             commit();
-        
-        eventHandler.publishEvent(new StorageEvent(System.currentTimeMillis(), this, key.recordType, Type.DELETE));
     }
 
 
@@ -349,8 +323,6 @@ public class BasicStorageImpl extends AbstractModule<BasicStorageConfig> impleme
         int count = ((BasicStorageRoot)dbRoot).removeRecords(filter);
         if (autoCommit)
             commit();
-        
-        eventHandler.publishEvent(new StorageEvent(System.currentTimeMillis(), this, filter.getRecordType(), Type.DELETE));
         return count;
     }
 }

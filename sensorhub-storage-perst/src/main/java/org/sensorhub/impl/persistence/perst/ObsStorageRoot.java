@@ -94,8 +94,17 @@ class ObsStorageRoot extends BasicStorageRoot implements IObsStorage
     @Override
     public void addRecordStore(String name, DataComponent recordStructure, DataEncoding recommendedEncoding)
     {
-        ObsSeriesImpl newTimeSeries = new ObsSeriesImpl(this, recordStructure, recommendedEncoding);
-        dataStores.put(name, newTimeSeries);
-        modify();
+        try
+        {
+            exclusiveLock();
+            recordStructure.setName(name);
+            ObsSeriesImpl newTimeSeries = new ObsSeriesImpl(this, recordStructure, recommendedEncoding);
+            dataStores.put(name, newTimeSeries);
+            modify();
+        }
+        finally
+        {
+            unlock();
+        }
     }
 }

@@ -61,8 +61,6 @@ import org.sensorhub.impl.SensorHub;
 import org.sensorhub.impl.module.AbstractModule;
 import org.sensorhub.impl.module.ModuleRegistry;
 import org.sensorhub.utils.MsgUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.vast.swe.SWEHelper;
 import org.vast.swe.ScalarIndexer;
 import org.vast.util.Bbox;
@@ -81,8 +79,6 @@ import org.vast.util.Bbox;
  */
 public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> implements IRecordStorageModule<StreamStorageConfig>, IObsStorage, IEventListener
 {
-    private static final Logger log = LoggerFactory.getLogger(GenericStreamStorage.class);
-    
     IRecordStorageModule<StorageConfig> storage;
     WeakReference<IDataProducerModule<?>> dataSourceRef;
     Map<String, ScalarIndexer> timeStampIndexers = new HashMap<String, ScalarIndexer>();
@@ -138,14 +134,10 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
         IDataProducerModule<?> dataSource = dataSourceRef.get();
         if (dataSource != null)
         {
-            reportStatus("Waiting for data source " + MsgUtils.moduleString(dataSource));
             dataSource.registerListener(this);
+            if (!dataSource.isStarted())
+                reportStatus("Waiting for data source " + MsgUtils.moduleString(dataSource));
         }
-                
-        // set as started only if we already have data in storage
-        // otherwise we have to wait for data source to start
-        if (storage.getLatestDataSourceDescription() != null)
-            setState(ModuleState.STARTED);
     }
     
     
@@ -332,12 +324,19 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
             IModule<?> eventSrc = (IModule<?>)e.getSource();
             ModuleState state = ((ModuleEvent) e).getNewState();
             
-            // connect to data source only when it's started
-            IDataProducerModule<?> dataSource = dataSourceRef.get();
-            if (dataSource == eventSrc)
+            try
             {
-                if (state == ModuleState.STARTED)
-                    connectToDataSource(dataSourceRef.get());
+                // connect to data source only when it's started
+                IDataProducerModule<?> dataSource = dataSourceRef.get();
+                if (dataSource == eventSrc)
+                {
+                    if (state == ModuleState.STARTED)
+                        connectToDataSource(dataSourceRef.get());
+                }
+            }
+            catch (Exception e1)
+            {
+                getLogger().error("Error while connecting to data source");
             }
         }
         
@@ -347,8 +346,6 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
             if (e instanceof DataEvent)
             {
                 DataEvent dataEvent = (DataEvent)e;
-                boolean saveAutoCommitState = storage.isAutoCommit();
-                storage.setAutoCommit(false);
                 
                 // get indexer for looking up time stamp value
                 String outputName = dataEvent.getSource().getName();
@@ -378,8 +375,8 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
                     ObsKey key = new ObsKey(outputName, entityID, foiID, time);                    
                     storage.storeRecord(key, record);
                     
-                    if (log.isTraceEnabled())
-                        log.trace("Storing record " + key.timeStamp + " for output " + outputName);
+                    if (getLogger().isTraceEnabled())
+                        getLogger().trace("Storing record " + key.timeStamp + " for output " + outputName);
                 }
                 
                 // commit only when necessary
@@ -389,8 +386,6 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
                     storage.commit();
                     lastCommitTime = now;
                 }
-                
-                storage.setAutoCommit(saveAutoCommitState);
             }
             
             else if (e instanceof SensorEvent)
@@ -460,22 +455,6 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
     {
         checkStarted();
         storage.restore(is);        
-    }
-
-
-    @Override
-    public void setAutoCommit(boolean autoCommit)
-    {
-        checkStarted();
-        storage.setAutoCommit(autoCommit);        
-    }
-
-
-    @Override
-    public boolean isAutoCommit()
-    {
-        checkStarted();
-        return storage.isAutoCommit();
     }
 
 
@@ -721,7 +700,8 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
     @Override
     protected void setState(ModuleState newState)
     {
-        // we can't start if data source metadata was never fetched
+        // switch to started only if we already have data in storage
+        // otherwise we have to wait for data source to start
         if (newState == ModuleState.STARTED && storage.getLatestDataSourceDescription() == null)
             return;
             

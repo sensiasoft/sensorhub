@@ -50,7 +50,7 @@ import com.vividsolutions.jts.geom.Polygon;
 /**
  * <p>
  * Abstract base for testing implementations of {@link IObsStorage}.
- * The storage needs to be correctly instianted by derived tests in a method
+ * The storage needs to be correctly initialized by derived tests in a method
  * tagged with '@Before'.
  * </p>
  *
@@ -83,7 +83,6 @@ public abstract class AbstractTestObsStorage<StorageType extends IObsStorageModu
     
     protected void addFoisToStorage() throws Exception
     {
-        storage.setAutoCommit(false);
         allFeatures = new LinkedHashMap<String, AbstractFeature>(NUM_FOIS);
         
         for (int foiNum = 1; foiNum <= NUM_FOIS; foiNum++)
@@ -219,7 +218,7 @@ public abstract class AbstractTestObsStorage<StorageType extends IObsStorageModu
         final double timeStep = 0.1;
         final int numRecords = 100;
         List<DataBlock> dataList = new ArrayList<DataBlock>(numRecords);
-        storage.setAutoCommit(false);
+        
         for (int i=0; i<numRecords; i++)
         {
             DataBlock data = recordDef.createDataBlock();

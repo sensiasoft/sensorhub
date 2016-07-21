@@ -40,7 +40,6 @@ public class TestPerstObsStorage extends AbstractTestObsStorage<ObsStorageImpl>
         storage = new ObsStorageImpl();
         storage.init(config);
         storage.start();
-        storage.setAutoCommit(true);
     }
     
 

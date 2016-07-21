@@ -21,10 +21,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Map;
+import java.util.concurrent.ConcurrentSkipListMap;
 import net.opengis.gml.v32.AbstractTimeGeometricPrimitive;
 import net.opengis.gml.v32.TimeInstant;
 import net.opengis.gml.v32.TimePeriod;
@@ -41,8 +40,6 @@ import org.sensorhub.api.persistence.IDataRecord;
 import org.sensorhub.api.persistence.IRecordStoreInfo;
 import org.sensorhub.api.persistence.IStorageModule;
 import org.sensorhub.api.persistence.StorageConfig;
-import org.sensorhub.api.persistence.StorageEvent;
-import org.sensorhub.api.persistence.StorageEvent.Type;
 import org.sensorhub.api.persistence.StorageException;
 import org.sensorhub.impl.module.AbstractModule;
 
@@ -60,7 +57,7 @@ import org.sensorhub.impl.module.AbstractModule;
 public class InMemoryBasicStorage extends AbstractModule<StorageConfig> implements IRecordStorageModule<StorageConfig>
 {
     Map<String, TimeSeriesImpl> dataStores = new LinkedHashMap<String, TimeSeriesImpl>();
-    List<AbstractProcess> dataSourceDescriptions = new ArrayList<AbstractProcess>();
+    ConcurrentSkipListMap<Double, AbstractProcess> dataSourceDescriptions = new ConcurrentSkipListMap<Double, AbstractProcess>();
     
     
     public InMemoryBasicStorage()
@@ -83,10 +80,9 @@ public class InMemoryBasicStorage extends AbstractModule<StorageConfig> implemen
     @Override
     public AbstractProcess getLatestDataSourceDescription()
     {
-        int historySize = dataSourceDescriptions.size();
-        if (historySize == 0)
+        if (dataSourceDescriptions.isEmpty())
             return null;
-        return dataSourceDescriptions.get(historySize - 1);
+        return dataSourceDescriptions.lastEntry().getValue();
     }
 
 
@@ -94,27 +90,7 @@ public class InMemoryBasicStorage extends AbstractModule<StorageConfig> implemen
     public List<AbstractProcess> getDataSourceDescriptionHistory(double startTime, double endTime)
     {
         ArrayList<AbstractProcess> smlList = new ArrayList<AbstractProcess>();
-        
-        for (AbstractProcess sml: dataSourceDescriptions)
-        {
-            AbstractTimeGeometricPrimitive validTime = sml.getValidTimeList().get(0);
-            
-            if (validTime instanceof TimeInstant)
-            {
-                double time = ((TimeInstant)validTime).getTimePosition().getDecimalValue();
-                if (time >= startTime && time <= endTime)
-                    smlList.add(sml);
-            }
-            else if (validTime instanceof TimePeriod)
-            {
-                double beginPeriod = ((TimePeriod)validTime).getBeginPosition().getDecimalValue();
-                double endPeriod = ((TimePeriod)validTime).getBeginPosition().getDecimalValue();
-                if ((beginPeriod >= startTime && beginPeriod <= endTime) ||
-                    (endPeriod >= startTime && endPeriod <= endTime))
-                    smlList.add(sml);
-            }
-        }
-        
+        smlList.addAll(dataSourceDescriptions.subMap(startTime, endTime).values());
         return smlList;
     }
 
@@ -122,55 +98,49 @@ public class InMemoryBasicStorage extends AbstractModule<StorageConfig> implemen
     @Override
     public AbstractProcess getDataSourceDescriptionAtTime(double time)
     {
-        for (AbstractProcess sml: dataSourceDescriptions)
-        {
-            AbstractTimeGeometricPrimitive validTime = sml.getValidTimeList().get(0);
-            
-            if (validTime instanceof TimeInstant)
-            {
-                if (time == ((TimeInstant)validTime).getTimePosition().getDecimalValue())
-                    return sml;
-            }
-            else if (validTime instanceof TimePeriod)
-            {
-                if (time >= ((TimePeriod)validTime).getBeginPosition().getDecimalValue() &&
-                    time <= ((TimePeriod)validTime).getEndPosition().getDecimalValue())
-                    return sml;
-            }
-        }
-        
-        return null;
+        if (dataSourceDescriptions.isEmpty())
+            return null;
+        return dataSourceDescriptions.floorEntry(time).getValue();
     }
 
 
     @Override
     public void storeDataSourceDescription(AbstractProcess process)
     {
-        dataSourceDescriptions.add(process);        
+        double key = System.currentTimeMillis() / 1000.0;
+        
+        if (!process.getValidTimeList().isEmpty())
+        {        
+            AbstractTimeGeometricPrimitive validTime = process.getValidTimeList().get(0);
+            
+            if (validTime instanceof TimeInstant)
+                key = ((TimeInstant)validTime).getTimePosition().getDecimalValue();
+            else if (validTime instanceof TimePeriod)
+                key = ((TimePeriod)validTime).getBeginPosition().getDecimalValue();
+        }
+        
+        dataSourceDescriptions.put(key, process);     
     }
 
 
     @Override
     public void updateDataSourceDescription(AbstractProcess process)
     {
-        int index = dataSourceDescriptions.indexOf(process);
-        dataSourceDescriptions.set(index, process);
+        storeDataSourceDescription(process);
     }
 
 
     @Override
     public void removeDataSourceDescription(double time)
     {
-        AbstractProcess process = getDataSourceDescriptionAtTime(time);
-        if (process != null)
-            dataSourceDescriptions.remove(process);
+        dataSourceDescriptions.remove(time);
     }
 
 
     @Override
     public void removeDataSourceDescriptionHistory(double startTime, double endTime)
     {
-        dataSourceDescriptions.clear();        
+        dataSourceDescriptions.subMap(startTime, endTime).clear();      
     }
 
 
@@ -204,19 +174,6 @@ public class InMemoryBasicStorage extends AbstractModule<StorageConfig> implemen
     @Override
     public void sync(IStorageModule<?> storage)
     {
-    }
-
-
-    @Override
-    public void setAutoCommit(boolean autoCommit)
-    {
-    }
-    
-    
-    @Override
-    public boolean isAutoCommit()
-    {
-        return false;
     }
     
 
@@ -410,7 +367,7 @@ public class InMemoryBasicStorage extends AbstractModule<StorageConfig> implemen
      */
     public class TimeSeriesImpl implements IRecordStoreInfo
     {
-        List<DBRecord> recordList = Collections.synchronizedList(new LinkedList<DBRecord>());
+        ConcurrentSkipListMap<Double, DBRecord> recordList = new ConcurrentSkipListMap<Double, DBRecord>();
         DataComponent recordDescription;
         DataEncoding recommendedEncoding;
         
@@ -473,7 +430,7 @@ public class InMemoryBasicStorage extends AbstractModule<StorageConfig> implemen
 
         public IDataRecord getRecord(DataKey key)
         {
-            Iterator<DBRecord> it = recordList.iterator();
+            Iterator<DBRecord> it = recordList.values().iterator();
             while (it.hasNext())
             {
                 DBRecord rec = it.next();
@@ -498,7 +455,7 @@ public class InMemoryBasicStorage extends AbstractModule<StorageConfig> implemen
         
         public Iterator<DBRecord> getRecordIterator(final IDataFilter filter)
         {
-            final Iterator<DBRecord> it = recordList.iterator();
+            final Iterator<DBRecord> it = recordList.values().iterator();
             return new Iterator<DBRecord>() {
                 DBRecord nextRec;
                 
@@ -542,14 +499,13 @@ public class InMemoryBasicStorage extends AbstractModule<StorageConfig> implemen
 
         public DataKey store(DataKey key, DataBlock data)
         {
-            recordList.add(new DBRecord(key, data));
-            eventHandler.publishEvent(new StorageEvent(System.currentTimeMillis(), InMemoryBasicStorage.this, key.recordType, Type.STORE));
+            recordList.put(key.timeStamp, new DBRecord(key, data));
             return key;
         }
 
         public void update(DataKey key, DataBlock data)
         {
-            ListIterator<DBRecord> it = recordList.listIterator();
+            Iterator<DBRecord> it = recordList.values().iterator();
             while (it.hasNext())
             {
                 DBRecord rec = it.next();                
@@ -560,7 +516,7 @@ public class InMemoryBasicStorage extends AbstractModule<StorageConfig> implemen
 
         public void remove(DataKey key)
         {
-            ListIterator<DBRecord> it = recordList.listIterator();
+            Iterator<DBRecord> it = recordList.values().iterator();
             while (it.hasNext())
             {
                 DBRecord rec = it.next();                
@@ -571,7 +527,7 @@ public class InMemoryBasicStorage extends AbstractModule<StorageConfig> implemen
 
         public int remove(IDataFilter filter)
         {
-            ListIterator<DBRecord> it = recordList.listIterator();
+            Iterator<DBRecord> it = recordList.values().iterator();
             int count = 0;
             while (it.hasNext())
             {
@@ -588,19 +544,10 @@ public class InMemoryBasicStorage extends AbstractModule<StorageConfig> implemen
         
         public double[] getDataTimeRange()
         {
-            double[] period = new double[] { Double.MAX_VALUE, Double.MIN_VALUE};
-            
-            Iterator<DBRecord> it = recordList.iterator();
-            while (it.hasNext())
-            {
-                double timeStamp = it.next().getKey().timeStamp;
-                if (timeStamp < period[0])
-                    period[0] = timeStamp;
-                if (timeStamp > period[1])
-                    period[1] = timeStamp;
-            }
-            
-            return period;
+            if (recordList.isEmpty())
+                return new double[] { Double.NaN, Double.NaN};
+            else
+                return new double[] {recordList.firstKey(), recordList.lastKey()};
         }
     }
 }

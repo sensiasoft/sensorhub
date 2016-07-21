@@ -31,7 +31,6 @@ public class TestPerstBasicStorage extends AbstractTestBasicStorage<BasicStorage
     public void init() throws Exception
     {
         BasicStorageConfig config = new BasicStorageConfig();
-        config.autoStart = true;
         config.memoryCacheSize = 10*1024;
         dbFile = File.createTempFile("testdb", ".dat");
         dbFile.deleteOnExit();
@@ -40,7 +39,6 @@ public class TestPerstBasicStorage extends AbstractTestBasicStorage<BasicStorage
         storage = new BasicStorageImpl();
         storage.init(config);
         storage.start();
-        storage.setAutoCommit(true);
     }
     
 
@@ -53,8 +51,9 @@ public class TestPerstBasicStorage extends AbstractTestBasicStorage<BasicStorage
     
     
     @After
-    public void cleanup()
+    public void cleanup() throws Exception
     {
+        storage.stop();
         dbFile.delete();
     }
     

@@ -55,7 +55,7 @@ public class MultiEntityStorageImpl extends ObsStorageImpl implements IMultiSour
     
     
     @Override
-    public IObsStorage addDataStore(String producerID)
+    public synchronized IObsStorage addDataStore(String producerID)
     {
         IObsStorage dataStore = ((MultiEntityStorageRoot)dbRoot).addDataStore(producerID);
         if (autoCommit)

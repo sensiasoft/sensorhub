@@ -19,13 +19,23 @@ import java.io.BufferedInputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import net.opengis.DateTimeDouble;
 import net.opengis.IDateTime;
+import net.opengis.gml.v32.TimeInstant;
 import net.opengis.gml.v32.TimePeriod;
+import net.opengis.gml.v32.TimePosition;
+import net.opengis.gml.v32.impl.GMLFactory;
 import net.opengis.sensorml.v20.AbstractProcess;
+import net.opengis.sensorml.v20.IdentifierList;
+import net.opengis.sensorml.v20.PhysicalSystem;
+import net.opengis.sensorml.v20.Term;
 import net.opengis.swe.v20.DataArray;
 import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataComponent;
@@ -45,14 +55,17 @@ import org.vast.data.DataRecordImpl;
 import org.vast.data.QuantityImpl;
 import org.vast.data.TextEncodingImpl;
 import org.vast.data.TextImpl;
+import org.vast.sensorML.PhysicalSystemImpl;
+import org.vast.sensorML.SMLFactory;
 import org.vast.sensorML.SMLUtils;
+import org.vast.swe.SWEHelper;
 import org.vast.util.DateTimeFormat;
 
 
 /**
  * <p>
  * Abstract base for testing implementations of IBasicStorage.
- * The storage needs to be correctly instianted by derived tests in a method
+ * The storage needs to be correctly initialized by derived tests in a method
  * tagged with '@Before'.
  * </p>
  *
@@ -256,37 +269,65 @@ public abstract class AbstractTestBasicStorage<StorageType extends IRecordStorag
     }
     
     
-    @Test
-    public void testStoreAndGetMultipleRecordsByKey() throws Exception
+    protected List<DataBlock> writeRecords(DataComponent recordDef, double firstTime, double timeStep, int numRecords) throws Exception
+    {
+        return writeRecords(recordDef, firstTime, timeStep, numRecords, Integer.MAX_VALUE);
+    }
+    
+    
+    protected List<DataBlock> writeRecords(DataComponent recordDef, double firstTime, double timeStep, int numRecords, int maxDuration) throws Exception
     {
         DataBlock data;
-        DataKey key;
+        DataKey key;        
         
-        DataComponent recordDef = createDs2();
+        // write N records or stop after maxDuration
+        long t0 = System.currentTimeMillis();
+        double timeStamp = firstTime;
+        List<DataBlock> dataList = new ArrayList<DataBlock>(1000);
         
-        // write N records
-        double timeStep = 0.1;
-        int numRecords = 100;
-        List<DataBlock> dataList = new ArrayList<DataBlock>(numRecords);
-        storage.setAutoCommit(false);
         for (int i=0; i<numRecords; i++)
         {
             data = recordDef.createDataBlock();
             data.setDoubleValue(0, i + 0.3);
             data.setIntValue(1, 2*i);
             data.setStringValue(2, "test" + i);
-            dataList.add(data);
-            key = new DataKey(recordDef.getName(), producerID, i*timeStep);
+            
+            timeStamp = firstTime + i*timeStep;
+            key = new DataKey(recordDef.getName(), producerID, timeStamp);
+            
             storage.storeRecord(key, data);
+            dataList.add(data);
+            
+            if (Thread.interrupted() || System.currentTimeMillis() - t0 > maxDuration)
+                break;
+            
+            if (i%10 == 0)
+                storage.commit();
+            
+            Thread.sleep(1);
         }
         storage.commit();
+        
+        return dataList;
+    }
+    
+    
+    @Test
+    public void testStoreAndGetMultipleRecordsByKey() throws Exception
+    {
+        DataComponent recordDef = createDs2();
+        
+        // write N records
+        int numRecords = 100;
+        double timeStep = 0.1;
+        List<DataBlock> dataList = writeRecords(recordDef, 0.0, timeStep, numRecords);
         forceReadBackFromStorage();
         
         // retrieve them and check their values
         for (int i=0; i<numRecords; i++)
         {
-            key = new DataKey(recordDef.getName(), producerID, i*timeStep);
-            data = storage.getDataBlock(key);
+            DataKey key = new DataKey(recordDef.getName(), producerID, i*timeStep);
+            DataBlock data = storage.getDataBlock(key);
             TestUtils.assertEquals(dataList.get(i), data);
         }
     }
@@ -295,27 +336,12 @@ public abstract class AbstractTestBasicStorage<StorageType extends IRecordStorag
     @Test
     public void testStoreAndGetMultipleRecordsByFilter() throws Exception
     {
-        DataBlock data;
-        DataKey key;
-        
         DataComponent recordDef = createDs2();
         
         // write N records
-        final double timeStep = 0.1;
         final int numRecords = 100;
-        List<DataBlock> dataList = new ArrayList<DataBlock>(numRecords);
-        storage.setAutoCommit(false);
-        for (int i=0; i<numRecords; i++)
-        {
-            data = recordDef.createDataBlock();
-            data.setDoubleValue(0, i - 0.3);
-            data.setIntValue(1, 3*i);
-            data.setStringValue(2, "testfilter" + i);
-            dataList.add(data);
-            key = new DataKey(recordDef.getName(), producerID, i*timeStep);
-            storage.storeRecord(key, data);
-        }
-        storage.commit();
+        final double timeStep = 0.1;
+        List<DataBlock> dataList = writeRecords(recordDef, 0.0, timeStep, numRecords);
         forceReadBackFromStorage();
         
         // prepare filter
@@ -328,44 +354,34 @@ public abstract class AbstractTestBasicStorage<StorageType extends IRecordStorag
         Iterator<? extends IDataRecord> it = storage.getRecordIterator(filter);
         while (it.hasNext())
         {
+            assertTrue("Wrong number of records returned", i < numRecords);
             TestUtils.assertEquals(dataList.get(i), it.next().getData());
             i++;
         }
+        
+        assertEquals("Wrong number of records returned", numRecords, i);
     }
     
     
     @Test
     public void testStoreAndGetTimeRange() throws Exception
     {
-        DataBlock data;
-        DataKey key;
-        
         DataComponent recordDef = createDs2();
         
         // write N records
-        double timeStamp = 0.0;
-        double timeStep = 0.1;
         int numRecords = 100;
-        List<DataBlock> dataList = new ArrayList<DataBlock>(numRecords);
-        storage.setAutoCommit(false);
-        for (int i=0; i<numRecords; i++)
-        {
-            data = recordDef.createDataBlock();
-            data.setDoubleValue(0, i + 0.3);
-            data.setIntValue(1, 2*i);
-            data.setStringValue(2, "test" + i);
-            dataList.add(data);
-            timeStamp = i*timeStep;
-            key = new DataKey(recordDef.getName(), producerID, timeStamp);
-            storage.storeRecord(key, data);
-        }
-        storage.commit();
+        double timeStep = 0.1;
+        writeRecords(recordDef, 0.0, timeStep, numRecords);
         forceReadBackFromStorage();
         
+        // check number of records
+        int recordCount = storage.getNumRecords(recordDef.getName());
+        assertEquals("Wrong number of records returned", numRecords, recordCount);
+                
         // retrieve them and check their values
         double[] timeRange = storage.getRecordsTimeRange(recordDef.getName());
-        assertEquals("Invalid begin time", 0., timeRange[0], 0.0);
-        assertEquals("Invalid end time", timeStamp, timeRange[1], 0.0);
+        assertEquals("Invalid begin time", 0., timeRange[0], 1e-6);
+        assertEquals("Invalid end time", (numRecords-1)*timeStep, timeRange[1], 1e-6);
     }
     
     
@@ -374,5 +390,359 @@ public abstract class AbstractTestBasicStorage<StorageType extends IRecordStorag
     {
         // TODO check that a datablock that is incompatible with record definition is rejected
     }
+    
+    ///////////////////////
+    // Concurrency Tests //
+    ///////////////////////
+    
+    long refTime;
+    int numWrittenMetadataObj;
+    int numWrittenRecords;
+    volatile int numWriteThreadsRunning;
+    
+    protected void startWriteRecordsThreads(final ExecutorService exec, 
+                                            final int numWriteThreads,
+                                            final DataComponent recordDef,
+                                            final double timeStep,
+                                            final int testDurationMs,
+                                            final Collection<Throwable> errors)
+    {
+        numWriteThreadsRunning = numWriteThreads;
+                
+        for (int i=0; i<numWriteThreads; i++)
+        {
+            final int count = i;
+            exec.submit(new Runnable() {
+                public void run()
+                {
+                    long startTimeOffset = System.currentTimeMillis() - refTime;
+                    System.out.format("Begin Write Records Thread %d @ %dms\n", Thread.currentThread().getId(), startTimeOffset);
+                    
+                    try
+                    {
+                        List<DataBlock> dataList = writeRecords(recordDef, count*10000., timeStep, Integer.MAX_VALUE, testDurationMs);
+                        synchronized(AbstractTestBasicStorage.this) {
+                            numWrittenRecords += dataList.size();
+                        }
+                    }
+                    catch (Throwable e)
+                    {
+                        errors.add(e);
+                        //exec.shutdownNow();
+                    }
+                    
+                    synchronized(AbstractTestBasicStorage.this) {
+                        numWriteThreadsRunning--;
+                    }
+                    
+                    long stopTimeOffset = System.currentTimeMillis() - refTime;
+                    System.out.format("End Write Records Thread %d @ %dms\n", Thread.currentThread().getId(), stopTimeOffset);
+                }
+            });
+        }
+    }
+    
+    
+    protected void startReadRecordsThreads(final ExecutorService exec, 
+                                           final int numReadThreads,
+                                           final DataComponent recordDef,
+                                           final double timeStep,
+                                           final Collection<Throwable> errors)
+    {
+        for (int i=0; i<numReadThreads; i++)
+        {
+            exec.submit(new Runnable() {
+                public void run()
+                {
+                    long startTimeOffset = System.currentTimeMillis() - refTime;
+                    System.out.format("Begin Read Records Thread %d @ %dms\n", Thread.currentThread().getId(), startTimeOffset);
+                    int readCount = 0;
+                    
+                    try
+                    {
+                        while (numWriteThreadsRunning > 0 && !Thread.interrupted())
+                        {
+                            //System.out.println(numWriteThreadsRunning);
+                            double[] timeRange = storage.getRecordsTimeRange(recordDef.getName());
+                            if (Double.isNaN(timeRange[0]))
+                                continue;
+                            
+                            //System.out.format("Read Thread %d, Loop %d\n", Thread.currentThread().getId(), j+1);
+                            final double begin = timeRange[0] + Math.random() * (timeRange[1] - timeRange[0]);
+                            final double end = begin + Math.max(timeStep*100., Math.random() * (timeRange[1] - begin));
+                            
+                            // prepare filter
+                            IDataFilter filter = new DataFilter(recordDef.getName()) {
+                                public double[] getTimeStampRange() { return new double[] {begin, end}; }
+                            };
+                        
+                            // retrieve records
+                            Iterator<? extends IDataRecord> it = storage.getRecordIterator(filter);
+                            readCount++;
+                            
+                            // check records time stamps and order
+                            //System.out.format("Read Thread %d, [%f-%f]\n", Thread.currentThread().getId(), begin, end);
+                            double lastTimeStamp = Double.NEGATIVE_INFINITY;
+                            while (it.hasNext())
+                            {
+                                IDataRecord rec = it.next();
+                                double timeStamp = rec.getKey().timeStamp;
+                                //System.out.format("Read Thread %d, %f\n", Thread.currentThread().getId(), timeStamp);
+                                assertTrue("Time steps are not increasing: " + timeStamp + "<" + lastTimeStamp , timeStamp > lastTimeStamp);
+                                assertTrue("Time stamp lower than begin: " + timeStamp + "<" + begin , timeStamp >= begin);
+                                assertTrue("Time stamp higher than end: " + timeStamp + ">" + end, timeStamp <= end);
+                                lastTimeStamp = timeStamp;
+                            }
+                            
+                            Thread.sleep(1);
+                        }
+                    }
+                    catch (Throwable e)
+                    {
+                        errors.add(e);
+                        //exec.shutdownNow();
+                    }
+                    
+                    long stopTimeOffset = System.currentTimeMillis() - refTime;
+                    System.out.format("End Read Records Thread %d @%dms - %d read ops\n", Thread.currentThread().getId(), stopTimeOffset, readCount);
+                }
+            });
+        }
+    }
+    
+    
+    protected void startWriteMetadataThreads(final ExecutorService exec, 
+                                             final int numWriteThreads,
+                                             final Collection<Throwable> errors)
+    {
+        for (int i=0; i<numWriteThreads; i++)
+        {
+            final int startCount = i*1000000;
+            exec.submit(new Runnable() {
+                public void run()
+                {
+                    long startTimeOffset = System.currentTimeMillis() - refTime;
+                    System.out.format("Begin Write Desc Thread %d @%dms\n", Thread.currentThread().getId(), startTimeOffset);
+                    
+                    try
+                    {
+                        int count = startCount;
+                        while (numWriteThreadsRunning > 0 && !Thread.interrupted())
+                        {
+                            // create description
+                            //SWEHelper helper = new SWEHelper();
+                            SMLFactory smlFac = new SMLFactory();
+                            GMLFactory gmlFac = new GMLFactory();
+                            
+                            PhysicalSystem system = new PhysicalSystemImpl();
+                            system.setUniqueIdentifier("TEST" + count++);
+                            system.setName("blablabla");
+                            system.setDescription("this is the description of my sensor that can be pretty long");
+                            
+                            IdentifierList identifierList = smlFac.newIdentifierList();
+                            system.addIdentification(identifierList);
+                            
+                            Term term;            
+                            term = smlFac.newTerm();
+                            term.setDefinition(SWEHelper.getPropertyUri("Manufacturer"));
+                            term.setLabel("Manufacturer Name");
+                            term.setValue("My manufacturer");
+                            identifierList.addIdentifier2(term);
+                            
+                            term = smlFac.newTerm();
+                            term.setDefinition(SWEHelper.getPropertyUri("ModelNumber"));
+                            term.setLabel("Model Number");
+                            term.setValue("SENSOR_2365");
+                            identifierList.addIdentifier2(term);
+                            
+                            term = smlFac.newTerm();
+                            term.setDefinition(SWEHelper.getPropertyUri("SerialNumber"));
+                            term.setLabel("Serial Number");
+                            term.setValue("FZEFZE154618989");
+                            identifierList.addIdentifier2(term);
+                            
+                            // generate unique time stamp
+                            TimePosition timePos = gmlFac.newTimePosition(startCount + System.currentTimeMillis()/1000.);
+                            TimeInstant validTime = gmlFac.newTimeInstant(timePos);
+                            system.addValidTimeAsTimeInstant(validTime);
+                            
+                            // add to storage
+                            storage.storeDataSourceDescription(system);
+                            //storage.commit();
+                            
+                            synchronized(AbstractTestBasicStorage.this) {
+                                numWrittenMetadataObj++;
+                            }
+                            
+                            Thread.sleep(5);
+                        }
+                    }
+                    catch (Throwable e)
+                    {
+                        errors.add(e);
+                        //exec.shutdownNow();
+                    }
+                    
+                    long stopTimeOffset = System.currentTimeMillis() - refTime;
+                    System.out.format("End Write Desc Thread %d @%dms\n", Thread.currentThread().getId(), stopTimeOffset);
+                }
+            });
+        }
+    }
 
+    
+    protected void checkForAsyncErrors(Collection<Throwable> errors) throws Throwable
+    {
+        // report errors
+        System.out.println(errors.size() + " error(s)");
+        for (Throwable e: errors)
+            e.printStackTrace();
+        if (!errors.isEmpty())
+            throw errors.iterator().next();
+    }
+    
+    
+    protected void checkRecordsInStorage(final DataComponent recordDef) throws Throwable
+    {
+        System.out.println(numWrittenRecords + " records written");
+        
+        // check number of records        
+        int recordCount = storage.getNumRecords(recordDef.getName());
+        assertEquals("Wrong number of records in storage", numWrittenRecords, recordCount);
+        
+        // check number of records returned by iterator
+        recordCount = 0;
+        Iterator<?> it = storage.getRecordIterator(new DataFilter(recordDef.getName()));
+        while (it.hasNext())
+        {
+            it.next();
+            recordCount++;
+        }
+        assertEquals("Wrong number of records returned by iterator", numWrittenRecords, recordCount);
+    }
+    
+    
+    protected void checkMetadataInStorage() throws Throwable
+    {
+        System.out.println(numWrittenMetadataObj + " metadata objects written");
+        
+        int descCount = 0;
+        List<AbstractProcess> descList = storage.getDataSourceDescriptionHistory(Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY);
+        for (AbstractProcess desc: descList)
+        {
+            assertTrue(desc instanceof PhysicalSystem);
+            assertEquals("blablabla", desc.getName());
+            assertTrue(desc.getUniqueIdentifier().startsWith("TEST"));
+            descCount++;
+        }        
+        assertEquals("Wrong number of metadata objects in storage", numWrittenMetadataObj, descCount);
+        
+        AbstractProcess desc = storage.getLatestDataSourceDescription();
+        assertTrue(desc instanceof PhysicalSystem);
+    }
+    
+    
+    @Test
+    public void testConcurrentWriteRecords() throws Throwable
+    {
+        final DataComponent recordDef = createDs2();
+        ExecutorService exec = Executors.newCachedThreadPool();
+        final Collection<Throwable> errors = Collections.synchronizedCollection(new ArrayList<Throwable>());
+        
+        int numWriteThreads = 10;
+        int testDurationMs = 2000;
+        refTime = System.currentTimeMillis();
+        
+        startWriteRecordsThreads(exec, numWriteThreads, recordDef, 0.1, testDurationMs, errors);
+        
+        exec.shutdown();
+        exec.awaitTermination(testDurationMs*2, TimeUnit.MILLISECONDS);
+        
+        forceReadBackFromStorage();
+        checkRecordsInStorage(recordDef);
+        checkForAsyncErrors(errors);
+    }
+    
+    
+    @Test
+    public void testConcurrentWriteMetadata() throws Throwable
+    {
+        ExecutorService exec = Executors.newCachedThreadPool();
+        final Collection<Throwable> errors = Collections.synchronizedCollection(new ArrayList<Throwable>());
+        
+        int numWriteThreads = 10;
+        int testDurationMs = 2000;
+        refTime = System.currentTimeMillis();
+        
+        numWriteThreadsRunning = 1;
+        startWriteMetadataThreads(exec, numWriteThreads, errors);
+      
+        Thread.sleep(testDurationMs);
+        numWriteThreadsRunning = 0;
+        
+        exec.shutdown();
+        exec.awaitTermination(testDurationMs*2, TimeUnit.MILLISECONDS);
+        
+        forceReadBackFromStorage();
+        checkMetadataInStorage();
+        checkForAsyncErrors(errors);
+    }
+    
+    
+    @Test
+    public void testConcurrentReadWriteRecords() throws Throwable
+    {
+        final DataComponent recordDef = createDs2();
+        final ExecutorService exec = Executors.newCachedThreadPool();
+        final Collection<Throwable> errors = Collections.synchronizedCollection(new ArrayList<Throwable>());        
+        
+        int numWriteThreads = 10;
+        int numReadThreads = 10;
+        int testDurationMs = 2000;
+        double timeStep = 0.1;
+        refTime = System.currentTimeMillis();
+        
+        startWriteRecordsThreads(exec, numWriteThreads, recordDef, timeStep, testDurationMs, errors);
+        
+//        exec.shutdown();
+//        exec.awaitTermination(10000, TimeUnit.MILLISECONDS);
+//        exec = Executors.newCachedThreadPool();
+//        numWriteThreadsRunning = 1;
+        
+        startReadRecordsThreads(exec, numReadThreads, recordDef, timeStep, errors);
+        
+        exec.shutdown();
+        exec.awaitTermination(testDurationMs*2, TimeUnit.MILLISECONDS);
+        
+        forceReadBackFromStorage();
+        checkForAsyncErrors(errors);
+        checkRecordsInStorage(recordDef);        
+    }
+    
+    
+    @Test
+    public void testConcurrentReadWriteMetadataAndRecords() throws Throwable
+    {
+        final DataComponent recordDef = createDs2();
+        ExecutorService exec = Executors.newCachedThreadPool();
+        final Collection<Throwable> errors = Collections.synchronizedCollection(new ArrayList<Throwable>());        
+        
+        int numWriteThreads = 10;
+        int numReadThreads = 10;
+        int testDurationMs = 2000;
+        double timeStep = 0.1;
+        refTime = System.currentTimeMillis();
+        
+        startWriteRecordsThreads(exec, numWriteThreads, recordDef, timeStep, testDurationMs, errors);
+        startWriteMetadataThreads(exec, numWriteThreads, errors);     
+        startReadRecordsThreads(exec, numReadThreads, recordDef, timeStep, errors);
+      
+        exec.shutdown();
+        exec.awaitTermination(testDurationMs*2, TimeUnit.MILLISECONDS);
+
+        forceReadBackFromStorage();
+        checkForAsyncErrors(errors);
+        checkRecordsInStorage(recordDef);
+        checkMetadataInStorage();
+    }
 }

@@ -20,7 +20,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import net.opengis.gml.v32.AbstractFeature;
 import org.garret.perst.Index;
-import org.garret.perst.Persistent;
+import org.garret.perst.PersistentResource;
 import org.garret.perst.RectangleRn;
 import org.garret.perst.SpatialIndexRn;
 import org.garret.perst.Storage;
@@ -40,7 +40,7 @@ import com.vividsolutions.jts.geom.Polygon;
  * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @since May 8, 2015
  */
-class FeatureStoreImpl extends Persistent implements IFeatureStorage
+class FeatureStoreImpl extends PersistentResource implements IFeatureStorage
 {
     Index<AbstractFeature> idIndex;
     SpatialIndexRn<AbstractFeature> geoIndex;
@@ -59,18 +59,34 @@ class FeatureStoreImpl extends Persistent implements IFeatureStorage
     
     public int getNumMatchingFeatures(IFeatureFilter filter)
     {
-        return idIndex.size();
+        try
+        {
+            idIndex.sharedLock();            
+            return idIndex.size();
+        }
+        finally
+        {
+            idIndex.unlock();
+        }
     }
     
     
     @Override
     public Bbox getFeaturesSpatialExtent()
     {
-        RectangleRn boundingRect = geoIndex.getWrappingRectangle();
-        if (boundingRect == null)
-            return null;
-        
-        return PerstUtils.toBbox(boundingRect);
+        try
+        {
+            geoIndex.sharedLock();
+            RectangleRn boundingRect = geoIndex.getWrappingRectangle();
+            if (boundingRect == null)
+                return null;
+            
+            return PerstUtils.toBbox(boundingRect);
+        }
+        finally
+        {
+            geoIndex.unlock();
+        }
     }
     
     
@@ -121,13 +137,19 @@ class FeatureStoreImpl extends Persistent implements IFeatureStorage
 
                 public AbstractFeature next()
                 {
-                    AbstractFeature currentFeature = nextFeature;
-                    nextFeature = null;
-                    
-                    while (nextFeature == null && it.hasNext())
-                        nextFeature = idIndex.get(it.next());
-                                        
-                    return currentFeature;
+                    try
+                    {
+                        idIndex.sharedLock();
+                        AbstractFeature currentFeature = nextFeature;
+                        nextFeature = null;                        
+                        while (nextFeature == null && it.hasNext())
+                            nextFeature = idIndex.get(it.next());                                            
+                        return currentFeature;
+                    }
+                    finally
+                    {
+                        idIndex.unlock();
+                    }
                 }
 
                 public void remove()
@@ -166,10 +188,18 @@ class FeatureStoreImpl extends Persistent implements IFeatureStorage
                     
                     while (nextFeature == null && it.hasNext())
                     {
-                        AbstractFeature f = it.next();
-                        Geometry geom = (Geometry)f.getLocation();
-                        if (geom != null && roi.intersects(geom))
-                            nextFeature = f;
+                        try
+                        {
+                            geoIndex.sharedLock();
+                            AbstractFeature f = it.next();
+                            Geometry geom = (Geometry)f.getLocation();
+                            if (geom != null && roi.intersects(geom))
+                                nextFeature = f;
+                        }
+                        finally
+                        {
+                            geoIndex.unlock();
+                        }
                     }
                     
                     return currentFeature;
@@ -192,12 +222,30 @@ class FeatureStoreImpl extends Persistent implements IFeatureStorage
     
     void store(AbstractFeature foi)
     {
-        boolean newFoi = idIndex.put(foi.getUniqueIdentifier(), foi);
+        boolean newFoi = false;
         
-        if (newFoi && foi.getLocation() != null)
+        try
         {
-            RectangleRn rect = PerstUtils.getBoundingRectangle(foi.getLocation());
-            geoIndex.put(rect, foi);
+            idIndex.exclusiveLock();
+            newFoi = idIndex.put(foi.getUniqueIdentifier(), foi);
+        }
+        finally
+        {
+            idIndex.unlock();
+        }
+         
+        try
+        {
+            geoIndex.exclusiveLock();
+            if (newFoi && foi.getLocation() != null)
+            {
+                RectangleRn rect = PerstUtils.getBoundingRectangle(foi.getLocation());
+                geoIndex.put(rect, foi);
+            }
+        }
+        finally
+        {
+            geoIndex.unlock();
         }
     }
 

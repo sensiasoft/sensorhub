@@ -21,7 +21,7 @@ import org.sensorhub.api.persistence.IObsStorageModule;
 /**
  * <p>
  * Abstract base for testing implementations of {@link IMultiSourceStorage}.
- * The storage needs to be correctly instianted by derived tests in a method
+ * The storage needs to be correctly initialized by derived tests in a method
  * tagged with '@Before'.
  * </p>
  *
@@ -46,6 +46,14 @@ public abstract class AbstractTestMultiObsStorage<StorageType extends IObsStorag
             String producerID = SENSOR_UID_PREFIX + i;
             ((IMultiSourceStorage<?>)storage).addDataStore(producerID);
         }
+    }
+
+
+    @Override
+    public void testCreateDataStores() throws Exception
+    {
+        addProducersToStorage();
+        super.testCreateDataStores();
     }
 
 
@@ -178,10 +186,26 @@ public abstract class AbstractTestMultiObsStorage<StorageType extends IObsStorag
 
 
     @Override
-    public void testCreateDataStores() throws Exception
+    public void testConcurrentWriteRecords() throws Throwable
     {
         addProducersToStorage();
-        super.testCreateDataStores();
+        super.testConcurrentWriteRecords();
+    }
+
+
+    @Override
+    public void testConcurrentReadWriteMetadataAndRecords() throws Throwable
+    {
+        addProducersToStorage();
+        super.testConcurrentReadWriteMetadataAndRecords();
+    }
+
+
+    @Override
+    public void testConcurrentReadWriteRecords() throws Throwable
+    {
+        addProducersToStorage();
+        super.testConcurrentReadWriteRecords();
     }
     
 }

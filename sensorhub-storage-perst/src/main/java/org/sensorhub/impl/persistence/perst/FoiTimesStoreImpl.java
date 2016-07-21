@@ -18,9 +18,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import org.garret.perst.IPersistentMap;
 import org.garret.perst.Persistent;
 import org.garret.perst.Storage;
 
@@ -71,7 +71,7 @@ class FoiTimesStoreImpl extends Persistent
     }
         
     
-    Map<String, FeatureEntry> idIndex;
+    IPersistentMap<String, FeatureEntry> idIndex;
     transient String lastFoi;
     
     
@@ -164,6 +164,14 @@ class FoiTimesStoreImpl extends Persistent
     
     void remove(String uid)
     {
-        idIndex.remove(uid);
+        try
+        {
+            idIndex.exclusiveLock();
+            idIndex.remove(uid);
+        }
+        finally
+        {
+            idIndex.unlock();
+        }
     }    
 }

@@ -40,7 +40,6 @@ public class TestPerstMultiObsStorage extends AbstractTestMultiObsStorage<MultiE
         storage = new MultiEntityStorageImpl();
         storage.init(config);
         storage.start();
-        storage.setAutoCommit(true);
     }
     
 

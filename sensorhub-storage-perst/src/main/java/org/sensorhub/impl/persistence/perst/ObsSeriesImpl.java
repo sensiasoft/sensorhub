@@ -77,7 +77,7 @@ public class ObsSeriesImpl extends TimeSeriesImpl
                 // process next time range
                 FoiTimePeriod nextPeriod = periodIt.next();
                 currentFoiID = nextPeriod.uid;
-                recordIt = recordIndex.entryIterator(new Key(nextPeriod.start), new Key(nextPeriod.stop), Index.ASCENT_ORDER);
+                recordIt = getEntryIterator(new Key(nextPeriod.start), new Key(nextPeriod.stop), Index.ASCENT_ORDER);
             }
             
             // continue processing time range

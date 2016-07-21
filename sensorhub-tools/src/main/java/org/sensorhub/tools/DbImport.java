@@ -52,7 +52,6 @@ public class DbImport
         BasicStorageImpl db = new BasicStorageImpl();
         db.init(dbConf);
         db.start();
-        db.setAutoCommit(false);
         
         // read XML metadata file
         File metadataFile = new File(args[0]);

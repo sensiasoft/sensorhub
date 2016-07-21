@@ -31,7 +31,6 @@ public class TestInMemoryBasicStorage extends AbstractTestBasicStorage<InMemoryB
         
         storage = new InMemoryBasicStorage();
         storage.init(config);
-        storage.setAutoCommit(true);
     }
     
 
