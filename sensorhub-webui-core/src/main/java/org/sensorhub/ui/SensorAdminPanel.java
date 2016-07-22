@@ -184,7 +184,13 @@ public class SensorAdminPanel extends DefaultModulePanel<ISensorModule<?>> imple
             statusPanel = newPanel("Status Outputs");
             for (ISensorDataInterface output: module.getStatusOutputs().values())
             {
-                Component sweForm = new SWECommonForm(output.getRecordDescription());
+                DataComponent dataStruct = output.getRecordDescription().copy();
+                DataBlock latestRecord = output.getLatestRecord();
+                if (latestRecord != null)
+                    dataStruct.setData(latestRecord);
+                
+                // data structure
+                Component sweForm = new SWECommonForm(dataStruct);
                 ((Layout)statusPanel.getContent()).addComponent(sweForm);
             }           
 
