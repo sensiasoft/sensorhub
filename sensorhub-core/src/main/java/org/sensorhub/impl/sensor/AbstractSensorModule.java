@@ -18,20 +18,17 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.UUID;
 import net.opengis.OgcProperty;
 import net.opengis.gml.v32.AbstractFeature;
-import net.opengis.gml.v32.AbstractGeometry;
 import net.opengis.gml.v32.Point;
 import net.opengis.gml.v32.TimeIndeterminateValue;
 import net.opengis.gml.v32.TimePosition;
 import net.opengis.gml.v32.impl.GMLFactory;
 import net.opengis.sensorml.v20.AbstractPhysicalProcess;
-import net.opengis.sensorml.v20.AbstractProcess;
 import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataRecord;
 import net.opengis.swe.v20.Vector;
@@ -96,13 +93,13 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
     private Map<String, ISensorDataInterface> statusOutputs = new LinkedHashMap<String, ISensorDataInterface>();
     private Map<String, ISensorControlInterface> controlInputs = new LinkedHashMap<String, ISensorControlInterface>();
         
-    protected DefaultLocationOutput<?> locationOutput;
+    protected DefaultLocationOutput locationOutput;
     protected AbstractPhysicalProcess sensorDescription = new PhysicalSystemImpl();
     protected long lastUpdatedSensorDescription = Long.MIN_VALUE;
     
     protected String xmlID;
     protected String uniqueID;
-    protected boolean saveUniqueID;
+    protected boolean randomUniqueID;
     protected AbstractFeature foi = null;
             
     
@@ -123,20 +120,39 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
     @Override
     public synchronized void init(ConfigType config) throws SensorHubException
     {
+        // this sets config and calls init() of derived class
         super.init(config);
         
+        // generate random unique ID if sensor driver hasn't generated one
+        // if a random UUID has already been generated it will be restored
+        // by loadState() method that is called after init()
         if (this.uniqueID == null)
         {
             String uuid = UUID.randomUUID().toString();
             this.uniqueID = UUID_URI_PREFIX + uuid;
         
             if (this.xmlID == null)
-            {
-                int endIndex = Math.min(8, uuid.length());
-                String shortId = uuid.substring(0, endIndex);
-                this.xmlID = DEFAULT_ID + shortId;
-            }
+                generateXmlIDFromUUID(uuid);
+            
+            this.randomUniqueID = true;
         }
+        
+        // add location output if a location is provided
+        LLALocation loc = config.getLocation();
+        if (loc != null && locationOutput == null)
+        {
+            addLocationOutput(Double.NaN);
+            locationOutput.updateLocation(System.currentTimeMillis()/1000., loc.lon, loc.lat, loc.alt);
+        }
+            
+    }
+    
+    
+    protected void generateXmlIDFromUUID(String uuid)
+    {
+        int endIndex = Math.min(8, uuid.length());
+        String shortId = uuid.substring(0, endIndex);
+        this.xmlID = DEFAULT_ID + shortId;
     }
 
 
@@ -162,7 +178,7 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
     protected void addLocationOutput(double updatePeriod)
     {
         // TODO deal with other CRS than 4979
-        locationOutput = new DefaultLocationOutputLLA<AbstractSensorModule<?>>(this, updatePeriod);
+        locationOutput = new DefaultLocationOutputLLA(this, updatePeriod);
         addOutput(locationOutput, true);
     }
     
@@ -321,19 +337,50 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
             LLALocation loc = config.getLocation();
             if (loc != null)
             {
-                locVector = fac.newLocationVectorLLA(SWEConstants.DEF_SENSOR_LOC);
-                locVector.assignNewDataBlock();
-                locVector.getComponent(0).getData().setDoubleValue(loc.lat);
-                locVector.getComponent(1).getData().setDoubleValue(loc.lon);
-                locVector.getComponent(2).getData().setDoubleValue(loc.alt);
-                locVector.setLocalFrame(localFrameRef);
+                // update GML location if point template was provided
+                if (sensorDescription.getNumPositions() > 0)
+                {
+                    Object smlLoc = sensorDescription.getPositionList().get(0);
+                    if (smlLoc instanceof Point) 
+                    {
+                        Point gmlLoc = (Point)smlLoc;
+                        double[] pos;
+                        
+                        if (Double.isNaN(loc.alt))
+                        {
+                            gmlLoc.setSrsName(SWEHelper.getEpsgUri(4326));
+                            pos = new double[2];
+                        }
+                        else
+                        {
+                            gmlLoc.setSrsName(SWEHelper.getEpsgUri(4979));
+                            pos = new double[3];
+                            pos[2] = loc.alt;
+                        }
+                                        
+                        pos[0] = loc.lat;
+                        pos[1] = loc.lon;
+                        gmlLoc.setPos(pos);
+                    }
+                }
+                
+                // else include location as a SWE vector
+                else
+                {
+                    locVector = fac.newLocationVectorLLA(SWEConstants.DEF_SENSOR_LOC);
+                    locVector.assignNewDataBlock();
+                    locVector.getComponent(0).getData().setDoubleValue(loc.lat);
+                    locVector.getComponent(1).getData().setDoubleValue(loc.lon);
+                    locVector.getComponent(2).getData().setDoubleValue(loc.alt);
+                    locVector.setLocalFrame(localFrameRef);
+                }
             }
             
             // get static orientation from config if available
             EulerOrientation orient = config.getOrientation();
             if (orient != null)
             {
-                orientVector = fac.newEulerOrientationENU(SWEConstants.DEF_SENSOR_ORIENT);
+                orientVector = fac.newEulerOrientationNED(SWEConstants.DEF_SENSOR_ORIENT);
                 orientVector.assignNewDataBlock();
                 orientVector.getComponent(0).getData().setDoubleValue(orient.heading);
                 orientVector.getComponent(1).getData().setDoubleValue(orient.pitch);
@@ -359,13 +406,9 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
             // else reference location output if any
             else if (locationOutput != null)
             {
-                // set ID of reference frame on location output                    
-                ((Vector)locationOutput.getRecordDescription()).setLocalFrame(localFrameRef);
-                
                 // if update rate is high, set sensorML location as link to output
                 if (locationOutput.getAverageSamplingPeriod() < 3600.)
                 {
-                    locationOutput.getRecordDescription().setId(LOCATION_OUTPUT_ID);
                     OgcProperty<?> linkProp = SWEHelper.newLinkProperty("#" + LOCATION_OUTPUT_ID);
                     ((AbstractPhysicalProcess)sensorDescription).getPositionList().add(linkProp);
                 }
@@ -380,105 +423,11 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
         lastUpdatedSensorDescription = updateTime;
         eventHandler.publishEvent(new SensorEvent(updateTime, this, SensorEvent.Type.SENSOR_CHANGED));
     }
-    
-    
-    /**
-     * Updates the sensor location. If a sensor location output is present, the new location
-     * will be send through this interface. The location provided in the SensorML description
-     * will also be updated unless it references the location output. 
-     * @param x
-     * @param y
-     * @param z
-     */
-    protected void updateLocation(double time, double x, double y, double z)
-    {
-        // send new location through output
-        if (locationOutput != null)
-            locationOutput.updateLocation(time, x, y, z);
         
-        // update sensorML description
-        AbstractProcess processDesc = getCurrentDescription();
-        if (processDesc instanceof AbstractPhysicalProcess)
-        {
-            AbstractPhysicalProcess sensorDesc = (AbstractPhysicalProcess)processDesc;
-            
-            // update GML location if point template was provided
-            AbstractGeometry gmlLoc = sensorDesc.getLocation();
-            if (gmlLoc != null && gmlLoc instanceof Point)
-            {
-                double[] pos;
-                
-                if (Double.isNaN(z))
-                {
-                    gmlLoc.setSrsName(SWEHelper.getEpsgUri(4326));
-                    pos = new double[2];
-                }
-                else
-                {
-                    gmlLoc.setSrsName(SWEHelper.getEpsgUri(4979));
-                    pos = new double[3];
-                    pos[2] = z;
-                }
-                                
-                pos[0] = y;
-                pos[1] = x;
-                ((Point)gmlLoc).setPos(pos);
-            }
-            
-            // else update SWE structure for sensor position
-            else
-            {
-                // update location vector
-                GeoPosHelper fac = new GeoPosHelper();
-                Vector locVector = fac.newLocationVectorLLA(SWEConstants.DEF_SENSOR_LOC);
-                locVector.setLocalFrame('#' + getLocalFrameID());
-                updateSensorPosition(sensorDesc, locVector, null);
-            }
-            
-            // send sensorML changed event
-            long now = System.currentTimeMillis();
-            notifyNewDescription(now);
-        }
-    }
-    
     
     protected String getLocalFrameID()
     {
         return "REF_FRAME_" + xmlID;
-    }
-    
-    
-    /**
-     * Updates the sensor location and orientation in the SensorML document
-     * @param sensorDesc
-     * @param newLoc new location vector or null if location shouldn't be updated
-     * @param newOrient new orientation vector or null if location shouldn't be updated
-     */
-    protected void updateSensorPosition(AbstractPhysicalProcess sensorDesc, Vector newLoc, Vector newOrient)
-    {
-        String localFrameRef = '#' + getLocalFrameID();
-        Iterator<Object> it = sensorDesc.getPositionList().iterator();
-        int i = 0;
-        while (it.hasNext())
-        {
-            Object obj = it.next();
-            
-            if (obj instanceof Vector)
-            {
-                if (newLoc != null && ((Vector) obj).getLocalFrame().equals(localFrameRef))
-                {
-                    sensorDesc.getPositionList().set(i, newLoc);
-                    break;
-                }
-            }
-            
-            else if (obj instanceof DataRecord)
-            {
-                // TODO add both location and orientation
-            }
-            
-            i++;
-        }
     }
 
 
@@ -521,7 +470,7 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
         if (foi == null && loc != null)
         {            
             SamplingPoint sf = new SamplingPoint();
-            sf.setId(xmlID + "_FOI");
+            sf.setId("FOI_" + xmlID);
             sf.setUniqueIdentifier(uniqueID + "-foi");
             if (config.name != null)
                 sf.setName(config.name);
@@ -559,8 +508,11 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
         
         // set unique ID to the one previously saved
         String uniqueID = loader.getAsString(STATE_UNIQUE_ID);
-        if (uniqueID != null && this.uniqueID.startsWith(UUID_URI_PREFIX))
+        if (uniqueID != null && randomUniqueID)
+        {
             this.uniqueID = uniqueID;
+            this.generateXmlIDFromUUID(uniqueID);
+        }
         
         Long lastUpdateTime = loader.getAsLong(STATE_LAST_SML_UPDATE);
         if (lastUpdateTime != null)
@@ -574,7 +526,7 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
         super.saveState(saver);
         
         // save unique ID if it was automatically generated as UUID
-        if (uniqueID != null && uniqueID.startsWith(UUID_URI_PREFIX))
+        if (uniqueID != null && randomUniqueID)
             saver.put(STATE_UNIQUE_ID, this.uniqueID);
         
         saver.put(STATE_LAST_SML_UPDATE, this.lastUpdatedSensorDescription);

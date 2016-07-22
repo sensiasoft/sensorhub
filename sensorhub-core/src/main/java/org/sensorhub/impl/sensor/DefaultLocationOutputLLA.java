@@ -15,9 +15,8 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 package org.sensorhub.impl.sensor;
 
 import net.opengis.swe.v20.DataBlock;
-import org.sensorhub.api.sensor.ISensorModule;
+import net.opengis.swe.v20.Vector;
 import org.sensorhub.api.sensor.SensorDataEvent;
-import org.sensorhub.api.sensor.SensorException;
 import org.vast.swe.SWEConstants;
 import org.vast.swe.helper.GeoPosHelper;
 
@@ -29,22 +28,22 @@ import org.vast.swe.helper.GeoPosHelper;
  * </p>
  *
  * @author Alex Robin <alex.robin@sensiasoftware.com>
- * @param <SensorType> 
  * @since May 19, 2015
  */
-public class DefaultLocationOutputLLA<SensorType extends ISensorModule<?>> extends DefaultLocationOutput<SensorType>
+public class DefaultLocationOutputLLA extends DefaultLocationOutput
 {
     
-    public DefaultLocationOutputLLA(SensorType parentSensor, double updatePeriod)
+    public DefaultLocationOutputLLA(AbstractSensorModule<?> parentSensor, double updatePeriod)
     {
         super(parentSensor, updatePeriod);
-    }
-
-    
-    protected void init() throws SensorException
-    {
+        
         GeoPosHelper fac = new GeoPosHelper();
-        outputStruct = fac.newLocationVectorLLA(SWEConstants.DEF_SENSOR_LOC);
+        Vector locVector = fac.newLocationVectorLLA(SWEConstants.DEF_SENSOR_LOC);
+        locVector.setName("location");
+        locVector.setLocalFrame('#' + parentSensor.getLocalFrameID());
+        outputStruct = fac.wrapWithTimeStampUTC(locVector);
+        outputStruct.setName(getName());
+        outputStruct.setId(AbstractSensorModule.LOCATION_OUTPUT_ID);
         outputEncoding = fac.newTextEncoding();
     }
     

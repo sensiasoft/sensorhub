@@ -87,10 +87,6 @@ public interface ISensorDataInterface extends IStreamingDataInterface
      */
     @Override
     public DataBlock getLatestRecord();
-    
-    
-    @Override
-    public long getLatestRecordTime();
 
 
     /**

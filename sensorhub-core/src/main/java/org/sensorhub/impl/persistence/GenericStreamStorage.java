@@ -150,7 +150,7 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
             throw new RuntimeException("Storage " + MsgUtils.moduleString(storage) + " is already configured");
         
         // copy data source description
-        storage.storeDataSourceDescription(dataSource.getCurrentDescription());
+        storage.updateDataSourceDescription(dataSource.getCurrentDescription());
             
         // for multi-source producers, prepare data stores for all entities
         if (dataSource instanceof IMultiSourceDataProducer && storage instanceof IMultiSourceStorage)
@@ -226,7 +226,7 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
         
         // otherwise just get the latest sensor description in case we were down during the last update
         else if (dataSource.getLastDescriptionUpdate() != Long.MIN_VALUE)
-            storage.storeDataSourceDescription(dataSource.getCurrentDescription());
+            storage.updateDataSourceDescription(dataSource.getCurrentDescription());
         
         // also init current FOI
         if (dataSource instanceof IMultiSourceDataProducer)

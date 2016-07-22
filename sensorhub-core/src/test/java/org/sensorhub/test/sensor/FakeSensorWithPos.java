@@ -60,13 +60,6 @@ public class FakeSensorWithPos extends AbstractSensorModule<SensorConfigWithPos>
     public void updateConfig(SensorConfigWithPos config) throws SensorHubException
     {
     }
-    
-    
-    @Override
-    public void updateLocation(double time, double lat, double lon, double alt)
-    {
-        super.updateLocation(time, lon, lat, alt);
-    }
 
 
     @Override

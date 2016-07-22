@@ -83,6 +83,7 @@ public class TestSensorPosition
     public void testStaticLocation() throws Exception
     {
         SensorConfigWithPos config = new SensorConfigWithPos();
+        config.id = "TEST_SENSOR";
         config.name = "Temp Sensor";
         config.setLocation(lat, lon, alt);
         sensor.init(config);
@@ -104,6 +105,7 @@ public class TestSensorPosition
     public void testStaticOrientation() throws Exception
     {
         SensorConfigWithPos config = new SensorConfigWithPos();
+        config.id = "TEST_SENSOR";
         config.name = "Temp Sensor";
         config.setOrientation(heading, pitch, roll);
         sensor.init(config);
@@ -125,6 +127,7 @@ public class TestSensorPosition
     public void testStaticLocationAndOrientation() throws Exception
     {
         SensorConfigWithPos config = new SensorConfigWithPos();
+        config.id = "TEST_SENSOR";
         config.name = "Video Camera";        
         config.setLocation(lat, lon, alt);
         config.setOrientation(heading, pitch, roll);

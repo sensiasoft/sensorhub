@@ -16,7 +16,6 @@ package org.sensorhub.impl.sensor;
 
 import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataEncoding;
-import org.sensorhub.api.sensor.ISensorModule;
 
 
 /**
@@ -25,17 +24,16 @@ import org.sensorhub.api.sensor.ISensorModule;
  * </p>
  *
  * @author Alex Robin <alex.robin@sensiasoftware.com>
- * @param <SensorType> 
  * @since May 19, 2015
  */
-public abstract class DefaultLocationOutput<SensorType extends ISensorModule<?>> extends AbstractSensorOutput<SensorType>
+public abstract class DefaultLocationOutput extends AbstractSensorOutput<AbstractSensorModule<?>>
 {
     protected DataComponent outputStruct;
     DataEncoding outputEncoding;
     protected double updatePeriod;
 
 
-    public DefaultLocationOutput(SensorType parentSensor, double updatePeriod)
+    public DefaultLocationOutput(AbstractSensorModule<?> parentSensor, double updatePeriod)
     {
         super(parentSensor);
         this.updatePeriod = updatePeriod;

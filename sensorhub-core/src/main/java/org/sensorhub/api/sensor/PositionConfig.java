@@ -59,10 +59,10 @@ public class PositionConfig
         @DisplayInfo(desc="Heading (or yaw) angle about Z axis in degrees")
         public double heading;
         
-        @DisplayInfo(desc="Pitch angle about X axis, in degrees")
+        @DisplayInfo(desc="Pitch angle about Y axis, in degrees")
         public double pitch;
         
-        @DisplayInfo(desc="Roll angle about Y axis, in degrees")
+        @DisplayInfo(desc="Roll angle about X axis, in degrees")
         public double roll;
     }
     
@@ -71,7 +71,7 @@ public class PositionConfig
     public LLALocation location;
     
     
-    @DisplayInfo(desc="Orientation as Euler angles in ENU coordinate reference frame.\nOrder of rotations is z-x’-y\" (in rotating frame) or y-x-z (in fixed frame)")
+    @DisplayInfo(desc="Orientation as Euler angles in NED coordinate reference frame.\nOrder of rotations is z-y’-x\" (in rotating frame) or x-y-z (in fixed frame)")
     public EulerOrientation orientation;
     
     

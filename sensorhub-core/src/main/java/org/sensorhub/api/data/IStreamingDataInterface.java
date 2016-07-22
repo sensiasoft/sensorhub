@@ -92,8 +92,11 @@ public interface IStreamingDataInterface extends IEventProducer
     
     
     /**
-     * Gets the average rate at which this interface produces data.
-     * @return sampling period in seconds
+     * Gets the average rate at which this interface produces data.<br/>
+     * This can be {@link Double#NaN} if the data is not streamed regularly 
+     * (e.g. case of a sensor/process that is triggered manually or by another unpredictable
+     * external stimulus)
+     * @return sampling period in seconds or {@link Double#NaN} if unknown
      */
     public double getAverageSamplingPeriod();
 }
