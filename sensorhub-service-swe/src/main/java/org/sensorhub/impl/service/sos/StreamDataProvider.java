@@ -102,17 +102,20 @@ public abstract class StreamDataProvider implements ISOSDataProvider, IEventList
         // if everything went well listen for events on the selected outputs
         for (final IStreamingDataInterface outputInterface: sourceOutputs)
         {
-            // case of time instant = now, just return latest record
+            // always send latest record if available
+            DataBlock data = outputInterface.getLatestRecord();
+            if (data != null)
+                eventQueue.offerLast(new DataEvent(System.currentTimeMillis(), outputInterface, data));
+            
+            // don't register and use time out in case of time instant = now
             if (isNowTimeInstant(filter.getTimeRange()))
             {
-                DataBlock data = outputInterface.getLatestRecord();
-                eventQueue.offerLast(new DataEvent(System.currentTimeMillis(), outputInterface, data));
                 stopTime = Long.MAX_VALUE; // make sure stoptime does not cause us to return null
                 timeOut = 0L;
                 latestRecordOnly = true;
             }
             
-            // otherwise register listener
+            // otherwise register listener to stream next records
             else
                 outputInterface.registerListener(this);
         }
