@@ -278,6 +278,12 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
             timeStampIndexers.put(outputName, timeStampIndexer);
         }
         
+        // fetch latest record
+        DataBlock rec = output.getLatestRecord();
+        if (rec != null)
+            this.handleEvent(new DataEvent(System.currentTimeMillis(), output, rec));
+            
+        // register to receive future events
         output.registerListener(this);
     }
     
