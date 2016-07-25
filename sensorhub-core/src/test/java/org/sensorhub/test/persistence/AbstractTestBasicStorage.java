@@ -454,8 +454,9 @@ public abstract class AbstractTestBasicStorage<StorageType extends IRecordStorag
             exec.submit(new Runnable() {
                 public void run()
                 {
+                    long tid = Thread.currentThread().getId();
                     long startTimeOffset = System.currentTimeMillis() - refTime;
-                    System.out.format("Begin Read Records Thread %d @ %dms\n", Thread.currentThread().getId(), startTimeOffset);
+                    System.out.format("Begin Read Records Thread %d @ %dms\n", tid, startTimeOffset);
                     int readCount = 0;
                     
                     try
@@ -487,8 +488,9 @@ public abstract class AbstractTestBasicStorage<StorageType extends IRecordStorag
                             {
                                 IDataRecord rec = it.next();
                                 double timeStamp = rec.getKey().timeStamp;
+                                
                                 //System.out.format("Read Thread %d, %f\n", Thread.currentThread().getId(), timeStamp);
-                                assertTrue("Time steps are not increasing: " + timeStamp + "<" + lastTimeStamp , timeStamp > lastTimeStamp);
+                                assertTrue(tid + ": Time steps are not increasing: " + timeStamp + "<" + lastTimeStamp , timeStamp > lastTimeStamp);
                                 assertTrue("Time stamp lower than begin: " + timeStamp + "<" + begin , timeStamp >= begin);
                                 assertTrue("Time stamp higher than end: " + timeStamp + ">" + end, timeStamp <= end);
                                 lastTimeStamp = timeStamp;
@@ -690,29 +692,59 @@ public abstract class AbstractTestBasicStorage<StorageType extends IRecordStorag
     
     
     @Test
+    public void testConcurrentWriteThenReadRecords() throws Throwable
+    {
+        DataComponent recordDef = createDs2();
+        ExecutorService exec = Executors.newCachedThreadPool();
+        Collection<Throwable> errors = Collections.synchronizedCollection(new ArrayList<Throwable>());        
+        
+        int numWriteThreads = 10;
+        int numReadThreads = 10;
+        int testDurationMs = 2000;
+        double timeStep = 0.1;
+        refTime = System.currentTimeMillis();
+        
+        startWriteRecordsThreads(exec, numWriteThreads, recordDef, timeStep, testDurationMs, errors);
+        
+        exec.shutdown();
+        exec.awaitTermination(testDurationMs*2, TimeUnit.MILLISECONDS);
+        exec = Executors.newCachedThreadPool();
+        numWriteThreadsRunning = 1;
+        
+        checkForAsyncErrors(errors);
+        forceReadBackFromStorage();
+        
+        errors.clear();
+        startReadRecordsThreads(exec, numReadThreads, recordDef, timeStep, errors);
+        
+        Thread.sleep(testDurationMs);
+        numWriteThreadsRunning = 0; // manually stop reading after sleep period
+        exec.shutdown();
+        exec.awaitTermination(1000, TimeUnit.MILLISECONDS);
+        
+        checkForAsyncErrors(errors);
+        checkRecordsInStorage(recordDef);        
+    }
+    
+    
+    @Test
     public void testConcurrentReadWriteRecords() throws Throwable
     {
         final DataComponent recordDef = createDs2();
         final ExecutorService exec = Executors.newCachedThreadPool();
         final Collection<Throwable> errors = Collections.synchronizedCollection(new ArrayList<Throwable>());        
         
-        int numWriteThreads = 10;
+        int numWriteThreads = 1;
         int numReadThreads = 10;
-        int testDurationMs = 3000;
+        int testDurationMs = 2000;
         double timeStep = 0.1;
         refTime = System.currentTimeMillis();
         
-        startWriteRecordsThreads(exec, numWriteThreads, recordDef, timeStep, testDurationMs, errors);
-        
-//        exec.shutdown();
-//        exec.awaitTermination(10000, TimeUnit.MILLISECONDS);
-//        exec = Executors.newCachedThreadPool();
-//        numWriteThreadsRunning = 1;
-        
+        startWriteRecordsThreads(exec, numWriteThreads, recordDef, timeStep, testDurationMs, errors);       
         startReadRecordsThreads(exec, numReadThreads, recordDef, timeStep, errors);
         
         exec.shutdown();
-        exec.awaitTermination(testDurationMs*2, TimeUnit.MILLISECONDS);
+        exec.awaitTermination(testDurationMs*200, TimeUnit.MILLISECONDS);
         
         forceReadBackFromStorage();
         checkForAsyncErrors(errors);
@@ -727,7 +759,7 @@ public abstract class AbstractTestBasicStorage<StorageType extends IRecordStorag
         ExecutorService exec = Executors.newCachedThreadPool();
         final Collection<Throwable> errors = Collections.synchronizedCollection(new ArrayList<Throwable>());        
         
-        int numWriteThreads = 10;
+        int numWriteThreads = 1;
         int numReadThreads = 10;
         int testDurationMs = 3000;
         double timeStep = 0.1;

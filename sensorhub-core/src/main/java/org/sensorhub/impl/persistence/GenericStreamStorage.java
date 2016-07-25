@@ -340,9 +340,9 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
                         connectToDataSource(dataSourceRef.get());
                 }
             }
-            catch (Exception e1)
+            catch (Exception ex)
             {
-                getLogger().error("Error while connecting to data source");
+                getLogger().error("Error while connecting to data source", ex);
             }
         }
         

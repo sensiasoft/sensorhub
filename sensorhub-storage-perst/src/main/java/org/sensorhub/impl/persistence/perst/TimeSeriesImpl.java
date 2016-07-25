@@ -16,6 +16,7 @@ package org.sensorhub.impl.persistence.perst;
 
 import java.nio.ByteOrder;
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 import java.util.Map.Entry;
 import net.opengis.swe.v20.BinaryEncoding;
 import net.opengis.swe.v20.DataBlock;
@@ -240,7 +241,7 @@ class TimeSeriesImpl extends Persistent implements IRecordStoreInfo
     /*
      * Gets an entry iterator over the recordIndex protected by a shared lock
      */
-    protected IterableIterator<Entry<Object,DataBlock>> getEntryIterator(Key keyFirst, Key keyLast, int order)
+    IterableIterator<Entry<Object,DataBlock>> getEntryIterator(Key keyFirst, Key keyLast, int order)
     {
         try
         {
@@ -248,33 +249,37 @@ class TimeSeriesImpl extends Persistent implements IRecordStoreInfo
             IterableIterator<Entry<Object,DataBlock>> it = recordIndex.entryIterator(keyFirst, keyLast, order);
             return new IteratorWrapper<Entry<Object,DataBlock>>(it)
             {
+                Entry<Object,DataBlock> tmpEntry;                
+                
                 public final boolean hasNext()
                 {
                     try
                     {
                         recordIndex.sharedLock();
-                        return super.hasNext();
+                        boolean hasNext = super.hasNext();
+                        if (hasNext)
+                            tmpEntry = super.next();
+                        return hasNext;
                     }
                     finally
                     {
                         recordIndex.unlock();
                     }
-                }
-                
+                }                
                 
                 public final Entry<Object,DataBlock> next()
                 {
-                    try
+                    if (this.tmpEntry == null)
                     {
-                        recordIndex.sharedLock();
-                        return super.next();
+                        if (!hasNext())
+                            throw new NoSuchElementException();
                     }
-                    finally
-                    {
-                        recordIndex.unlock();
-                    }
-                }
-                
+                                        
+                    Entry<Object,DataBlock> nextEntry = this.tmpEntry;
+                    this.tmpEntry = null;
+                    
+                    return nextEntry;
+                }                
                 
                 public final void remove()
                 {
@@ -302,7 +307,7 @@ class TimeSeriesImpl extends Persistent implements IRecordStoreInfo
         try
         {
             recordIndex.exclusiveLock();
-            recordIndex.put(new Key(key.timeStamp), data);            
+            recordIndex.put(new Key(key.timeStamp), data);
         }
         finally
         {

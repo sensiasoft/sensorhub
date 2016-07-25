@@ -30,4 +30,8 @@ public class BasicStorageConfig extends org.sensorhub.api.persistence.ObsStorage
     
     @DisplayInfo(desc="Memory cache size in kilobytes")
     public int memoryCacheSize = 1024;
+    
+    
+    @DisplayInfo(desc="Size of LRU object cache size (this is the maximum number of objects that are pinned in memory and don't require reload from DB)")
+    public int objectCacheSize = 100;
 }
