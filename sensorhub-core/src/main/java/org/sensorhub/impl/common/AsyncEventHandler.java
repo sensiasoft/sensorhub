@@ -45,6 +45,7 @@ public class AsyncEventHandler implements IEventHandler
     private ExecutorService threadPool;
     private Queue<Event<?>> eventQueue;
     private Set<IEventListener> listeners;
+    private int dispatchLeft = 0;
     
     
     public AsyncEventHandler(ExecutorService threadPool)
@@ -58,9 +59,9 @@ public class AsyncEventHandler implements IEventHandler
     @Override
     public void publishEvent(final Event<?> e)
     {
+        // do nothing if we have no listeners
         synchronized (listeners)
         {
-            // don't even create a task if we have no listeners
             if (listeners.isEmpty())
                 return;
         }
@@ -69,36 +70,56 @@ public class AsyncEventHandler implements IEventHandler
         if (!eventQueue.offer(e))
             throw new RuntimeException("Max event queue size reached");
         
-        // relaunch task if not already running
-        if (eventQueue.size() <= 1)
+        dispatchNextEvent();
+    }
+    
+    
+    protected synchronized void dispatchNextEvent()
+    {
+        // do nothing if we're still dispatching previous event
+        if (dispatchLeft > 0)
+            return;
+        
+        // dispatch next event from queue
+        final Event<?> e = eventQueue.poll();        
+        if (e != null)
         {
-            // although we use a thread pool, we ensure the order of
-            // event delivery by maintaining our own queue in this class
-            threadPool.execute(new Runnable() {
-                public void run()
+            synchronized (listeners)
+            {
+                dispatchLeft = listeners.size();
+                
+                // call all listeners
+                for (final IEventListener listener: listeners)
                 {
-                    Event<?> e;
-                    while ((e = eventQueue.poll()) != null)
-                    {
-                        synchronized (listeners)
+                    threadPool.execute(new Runnable() {
+                        public void run()
                         {
-                            // call all listeners
-                            for (IEventListener listener: listeners)
+                            try
                             {
-                                try
-                                {
-                                    listener.handleEvent(e);
-                                }
-                                catch (Exception ex)
-                                {
-                                    log.error("Uncaught exception while dispatching event", e);
-                                }
+                                long dispatchDelay = System.currentTimeMillis()-e.getTimeStamp();
+                                if (dispatchDelay > 100)
+                                    log.warn("{} Event from {} @ {}, dispatch delay={}, queue size={}", e.getType(), e.getSource().getClass().getSimpleName(), e.getTimeStamp(), dispatchDelay, eventQueue.size());
+                                
+                                dispatchDone(); // call that before so we don't delay other listeners
+                                listener.handleEvent(e);
                             }
-                        }
-                    }
+                            catch (Exception ex)
+                            {
+                                log.error("Uncaught exception while dispatching event", ex);
+                            }                        
+                        }                        
+                    });
                 }
-            });
+            }
         }
+    }
+    
+    
+    protected synchronized void dispatchDone()
+    {
+        dispatchLeft--;
+        if (dispatchLeft == 0)
+            dispatchNextEvent();
     }
    
 

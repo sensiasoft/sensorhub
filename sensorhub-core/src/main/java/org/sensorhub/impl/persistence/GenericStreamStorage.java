@@ -323,7 +323,7 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
     
     
     @Override
-    public void handleEvent(Event<?> e)
+    public synchronized void handleEvent(Event<?> e)
     {
         if (e instanceof ModuleEvent)
         {

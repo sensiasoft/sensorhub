@@ -49,7 +49,7 @@ public class EventBus
         eventHandlers = new HashMap<String, IEventHandler>();
         
         // create thread pool that will be used by all asynchronous event handlers
-        threadPool = new ThreadPoolExecutor(0, Integer.MAX_VALUE,
+        threadPool = new ThreadPoolExecutor(0, 100,
                                             10L, TimeUnit.SECONDS,
                                             new SynchronousQueue<Runnable>(),
                                             new DefaultThreadFactory("EventBus"));
