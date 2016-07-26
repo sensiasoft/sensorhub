@@ -118,7 +118,7 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
     
     
     @Override
-    public synchronized void init(ConfigType config) throws SensorHubException
+    public final synchronized void init(ConfigType config) throws SensorHubException
     {
         // this sets config and calls init() of derived class
         super.init(config);

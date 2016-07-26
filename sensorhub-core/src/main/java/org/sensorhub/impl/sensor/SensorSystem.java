@@ -57,14 +57,14 @@ public class SensorSystem extends AbstractSensorModule<SensorSystemConfig>
     
     
     @Override
-    public void init(SensorSystemConfig config) throws SensorHubException
+    public void init() throws SensorHubException
     {
-        super.init(config);
+        super.init();
         
         // generate XML ID
         this.xmlID.replace(DEFAULT_ID, "SYSTEM_");
         
-        // set unique ID
+        // generate unique ID
         if (config.uniqueID != null && !config.uniqueID.equals(AUTO_ID))
         {
             if (config.uniqueID.startsWith(HTTP_PREFIX) || config.uniqueID.startsWith(URN_PREFIX))
