@@ -191,6 +191,14 @@ public abstract class AbstractTestMultiObsStorage<StorageType extends IObsStorag
         addProducersToStorage();
         super.testConcurrentWriteRecords();
     }
+    
+    
+    @Override
+    public void testConcurrentWriteThenReadRecords() throws Throwable
+    {
+        addProducersToStorage();
+        super.testConcurrentWriteThenReadRecords();
+    }
 
 
     @Override

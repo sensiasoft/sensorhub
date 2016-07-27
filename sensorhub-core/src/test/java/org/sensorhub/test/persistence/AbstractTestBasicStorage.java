@@ -294,7 +294,7 @@ public abstract class AbstractTestBasicStorage<StorageType extends IRecordStorag
             
             timeStamp = firstTime + i*timeStep;
             key = new DataKey(recordDef.getName(), producerID, timeStamp);
-            
+          
             storage.storeRecord(key, data);
             dataList.add(data);
             
@@ -467,6 +467,7 @@ public abstract class AbstractTestBasicStorage<StorageType extends IRecordStorag
                             double[] timeRange = storage.getRecordsTimeRange(recordDef.getName());
                             if (Double.isNaN(timeRange[0]))
                                 continue;
+                            //double[] timeRange = new double[] {0.0, 110000.0};
                             
                             //System.out.format("Read Thread %d, Loop %d\n", Thread.currentThread().getId(), j+1);
                             final double begin = timeRange[0] + Math.random() * (timeRange[1] - timeRange[0]);
@@ -491,8 +492,8 @@ public abstract class AbstractTestBasicStorage<StorageType extends IRecordStorag
                                 
                                 //System.out.format("Read Thread %d, %f\n", Thread.currentThread().getId(), timeStamp);
                                 assertTrue(tid + ": Time steps are not increasing: " + timeStamp + "<" + lastTimeStamp , timeStamp > lastTimeStamp);
-                                assertTrue("Time stamp lower than begin: " + timeStamp + "<" + begin , timeStamp >= begin);
-                                assertTrue("Time stamp higher than end: " + timeStamp + ">" + end, timeStamp <= end);
+                                assertTrue(tid + ": Time stamp lower than begin: " + timeStamp + "<" + begin , timeStamp >= begin);
+                                assertTrue(tid + ": Time stamp higher than end: " + timeStamp + ">" + end, timeStamp <= end);
                                 lastTimeStamp = timeStamp;
                             }
                             
@@ -700,7 +701,7 @@ public abstract class AbstractTestBasicStorage<StorageType extends IRecordStorag
         
         int numWriteThreads = 10;
         int numReadThreads = 10;
-        int testDurationMs = 2000;
+        int testDurationMs = 1000;
         double timeStep = 0.1;
         refTime = System.currentTimeMillis();
         
@@ -734,7 +735,7 @@ public abstract class AbstractTestBasicStorage<StorageType extends IRecordStorag
         final ExecutorService exec = Executors.newCachedThreadPool();
         final Collection<Throwable> errors = Collections.synchronizedCollection(new ArrayList<Throwable>());        
         
-        int numWriteThreads = 1;
+        int numWriteThreads = 10;
         int numReadThreads = 10;
         int testDurationMs = 2000;
         double timeStep = 0.1;
@@ -759,7 +760,7 @@ public abstract class AbstractTestBasicStorage<StorageType extends IRecordStorag
         ExecutorService exec = Executors.newCachedThreadPool();
         final Collection<Throwable> errors = Collections.synchronizedCollection(new ArrayList<Throwable>());        
         
-        int numWriteThreads = 1;
+        int numWriteThreads = 10;
         int numReadThreads = 10;
         int testDurationMs = 3000;
         double timeStep = 0.1;

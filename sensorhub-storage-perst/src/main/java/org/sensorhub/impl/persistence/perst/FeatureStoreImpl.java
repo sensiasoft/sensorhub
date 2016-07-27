@@ -20,6 +20,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import net.opengis.gml.v32.AbstractFeature;
 import org.garret.perst.Index;
+import org.garret.perst.IteratorWrapper;
 import org.garret.perst.PersistentResource;
 import org.garret.perst.RectangleRn;
 import org.garret.perst.SpatialIndexRn;
@@ -57,7 +58,8 @@ class FeatureStoreImpl extends PersistentResource implements IFeatureStorage
     }
     
     
-    public int getNumMatchingFeatures(IFeatureFilter filter)
+    @Override
+    public int getNumFeatures()
     {
         try
         {
@@ -68,6 +70,20 @@ class FeatureStoreImpl extends PersistentResource implements IFeatureStorage
         {
             idIndex.unlock();
         }
+    }
+    
+    
+    @Override
+    public int getNumMatchingFeatures(IFeatureFilter filter)
+    {
+        int count = 0;
+        Iterator<String> it = getFeatureIDs(filter);
+        while (it.hasNext())
+        {
+            it.next();
+            count++;
+        }
+        return count;
     }
     
     
@@ -110,7 +126,8 @@ class FeatureStoreImpl extends PersistentResource implements IFeatureStorage
             }
 
             public void remove()
-            {   
+            {
+                throw new UnsupportedOperationException();
             }            
         };
     }
@@ -118,15 +135,18 @@ class FeatureStoreImpl extends PersistentResource implements IFeatureStorage
     
     public Iterator<AbstractFeature> getFeatures(IFeatureFilter filter)
     {        
+        // TODO handle ROI + IDs but it's not very useful in practice 
+                
         // case of requesting by IDs
         Collection<String> foiIDs = filter.getFeatureIDs();
         if (foiIDs != null && !foiIDs.isEmpty())
         {
             final Set<String> ids = new LinkedHashSet<String>();
             ids.addAll(filter.getFeatureIDs());
-            final Iterator<String> it = ids.iterator();
+            final Iterator<String> idsIt = ids.iterator();
             
-            Iterator<AbstractFeature> it2 = new Iterator<AbstractFeature>()
+            // return iterator protected against concurrent writes
+            Iterator<AbstractFeature> it = new Iterator<AbstractFeature>()
             {
                 AbstractFeature nextFeature;
                 
@@ -142,8 +162,8 @@ class FeatureStoreImpl extends PersistentResource implements IFeatureStorage
                         idIndex.sharedLock();
                         AbstractFeature currentFeature = nextFeature;
                         nextFeature = null;                        
-                        while (nextFeature == null && it.hasNext())
-                            nextFeature = idIndex.get(it.next());                                            
+                        while (nextFeature == null && idsIt.hasNext())
+                            nextFeature = idIndex.get(idsIt.next());                                            
                         return currentFeature;
                     }
                     finally
@@ -153,26 +173,30 @@ class FeatureStoreImpl extends PersistentResource implements IFeatureStorage
                 }
 
                 public void remove()
-                {                    
+                {
+                    throw new UnsupportedOperationException();
                 }
             };
             
-            it2.next();
-            return it2;
+            it.next();
+            return it;
         }
             
         // case of ROI
-        if (filter.getRoi() != null)
+        else if (filter.getRoi() != null)
         {
             final Polygon roi = filter.getRoi();
             
             // iterate through spatial index using bounding rectangle
             Envelope env = roi.getEnvelopeInternal();
             double[] coords = new double[] {env.getMinX(), env.getMinY(), Double.NEGATIVE_INFINITY, env.getMaxX(), env.getMaxY(), Double.POSITIVE_INFINITY};
-            final Iterator<AbstractFeature> it = geoIndex.iterator(new RectangleRn(coords));
+            final Iterator<AbstractFeature> geoIt = geoIndex.iterator(new RectangleRn(coords));
+            
+            // geoIndex iterator cannot be read concurrently with writes
+            // thus when iterating using geo filter, care must be taken to synchronize on the storage
             
             // wrap with iterator to filter on exact polygon geometry using JTS
-            Iterator<AbstractFeature> it2 =  new Iterator<AbstractFeature>()
+            Iterator<AbstractFeature> it =  new Iterator<AbstractFeature>()
             {
                 AbstractFeature nextFeature;
                 
@@ -186,57 +210,89 @@ class FeatureStoreImpl extends PersistentResource implements IFeatureStorage
                     AbstractFeature currentFeature = nextFeature;
                     nextFeature = null;
                     
-                    while (nextFeature == null && it.hasNext())
+                    while (nextFeature == null && geoIt.hasNext())
                     {
-                        try
-                        {
-                            geoIndex.sharedLock();
-                            AbstractFeature f = it.next();
-                            Geometry geom = (Geometry)f.getLocation();
-                            if (geom != null && roi.intersects(geom))
-                                nextFeature = f;
-                        }
-                        finally
-                        {
-                            geoIndex.unlock();
-                        }
+                        AbstractFeature f = geoIt.next();
+                        Geometry geom = (Geometry)f.getLocation();
+                        if (geom != null && roi.intersects(geom))
+                            nextFeature = f;
                     }
                     
                     return currentFeature;
                 }
 
                 public void remove()
-                {                    
+                {
+                    throw new UnsupportedOperationException();
                 } 
             };
             
-            it2.next();
-            return it2;
+            it.next();
+            return it;
         }
-        
-        // TODO handle ROI + IDs but it's not very useful in practice 
-        
-        return idIndex.iterator();
+                
+        // else return all features
+        else
+        {
+            try
+            {
+                idIndex.sharedLock();
+                
+                // return iterator protected against concurrent writes
+                Iterator<AbstractFeature> it = new IteratorWrapper<AbstractFeature>(idIndex.iterator())
+                {
+                    AbstractFeature nextFeature;
+                    
+                    public boolean hasNext()
+                    {
+                        return (nextFeature != null);
+                    }
+    
+                    public AbstractFeature next()
+                    {
+                        try
+                        {
+                            idIndex.sharedLock();
+                            AbstractFeature currentFeature = nextFeature;
+                            if (super.hasNext())
+                                nextFeature = super.next();
+                            else
+                                nextFeature = null;
+                            return currentFeature;
+                        }
+                        finally
+                        {
+                            idIndex.unlock();
+                        }
+                    }
+                    
+                    public final void remove()
+                    {
+                        throw new UnsupportedOperationException();
+                    }
+                };
+                
+                it.next();
+                return it;
+            }
+            finally
+            {
+                idIndex.unlock();
+            }
+        }
     }
     
     
     void store(AbstractFeature foi)
     {
-        boolean newFoi = false;
+        boolean newFoi;
         
         try
         {
             idIndex.exclusiveLock();
-            newFoi = idIndex.put(foi.getUniqueIdentifier(), foi);
-        }
-        finally
-        {
-            idIndex.unlock();
-        }
-         
-        try
-        {
             geoIndex.exclusiveLock();
+            
+            newFoi = idIndex.put(foi.getUniqueIdentifier(), foi);
             if (newFoi && foi.getLocation() != null)
             {
                 RectangleRn rect = PerstUtils.getBoundingRectangle(foi.getLocation());
@@ -245,6 +301,29 @@ class FeatureStoreImpl extends PersistentResource implements IFeatureStorage
         }
         finally
         {
+            idIndex.unlock();
+            geoIndex.unlock();
+        }
+    }
+    
+    
+    void remove(String fid)
+    {
+        try
+        {
+            idIndex.exclusiveLock();
+            geoIndex.exclusiveLock();
+            
+            AbstractFeature oldFoi = idIndex.remove(fid);
+            if (oldFoi != null)
+            {
+                geoIndex.remove(oldFoi);
+                getStorage().deallocate(oldFoi);
+            }
+        }
+        finally
+        {
+            idIndex.unlock();
             geoIndex.unlock();
         }
     }

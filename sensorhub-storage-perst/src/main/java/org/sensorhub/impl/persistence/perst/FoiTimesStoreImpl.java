@@ -88,77 +88,95 @@ class FoiTimesStoreImpl extends Persistent
     
     Set<FoiTimePeriod> getSortedFoiTimes(Collection<String> uids)
     {
-        // create set with custom comparator for sorting FoiTimePeriod objects
-        TreeSet<FoiTimePeriod> foiTimes = new TreeSet<FoiTimePeriod>(new FoiTimePeriodComparator());
-        
-        // TODO handle case of overlaping FOI periods?
-        
-        if (uids != null)
+        try
         {
-            for (String uid: uids)
+            idIndex.sharedLock();
+            
+            // create set with custom comparator for sorting FoiTimePeriod objects
+            TreeSet<FoiTimePeriod> foiTimes = new TreeSet<FoiTimePeriod>(new FoiTimePeriodComparator());
+            
+            // TODO handle case of overlaping FOI periods?
+            
+            if (uids != null)
             {
-                FeatureEntry fEntry = idIndex.get(uid);
-                if (fEntry == null)
-                    continue;
-                
-                // add each period to sorted set
-                for (double[] timePeriod: fEntry.timePeriods)
-                    foiTimes.add(new FoiTimePeriod(uid, timePeriod[0], timePeriod[1]));
+                for (String uid: uids)
+                {
+                    FeatureEntry fEntry = idIndex.get(uid);
+                    if (fEntry == null)
+                        continue;
+                    
+                    // add each period to sorted set
+                    for (double[] timePeriod: fEntry.timePeriods)
+                        foiTimes.add(new FoiTimePeriod(uid, timePeriod[0], timePeriod[1]));
+                }
             }
+            else // no filtering on FOI ID -> select them all
+            {
+                for (FeatureEntry fEntry: idIndex.values())
+                {
+                    String uid = fEntry.uid;
+                    
+                    // add each period to sorted set
+                    for (double[] timePeriod: fEntry.timePeriods)
+                        foiTimes.add(new FoiTimePeriod(uid, timePeriod[0], timePeriod[1]));
+                }
+            }
+            
+            return foiTimes;
         }
-        else // no filtering on FOI ID -> select them all
+        finally
         {
-            for (FeatureEntry fEntry: idIndex.values())
-            {
-                String uid = fEntry.uid;
-                
-                // add each period to sorted set
-                for (double[] timePeriod: fEntry.timePeriods)
-                    foiTimes.add(new FoiTimePeriod(uid, timePeriod[0], timePeriod[1]));
-            }
+            idIndex.unlock();
         }
-        
-        return foiTimes;
     }
     
     
     void updateFoiPeriod(String uid, double timeStamp)
     {
-        // if lastFoi is null (after restart), set to the one for which we last received data
-        if (lastFoi == null)
+        try
         {
-            double latestTime = Double.NEGATIVE_INFINITY;
-            for (FeatureEntry entry: idIndex.values())
+            idIndex.exclusiveLock();
+            
+            // if lastFoi is null (after restart), set to the one for which we last received data
+            if (lastFoi == null)
             {
-                int nPeriods = entry.timePeriods.size();
-                if (entry.timePeriods.get(nPeriods-1)[1] > latestTime)
-                    lastFoi = entry.uid;
+                double latestTime = Double.NEGATIVE_INFINITY;
+                for (FeatureEntry entry: idIndex.values())
+                {
+                    int nPeriods = entry.timePeriods.size();
+                    if (entry.timePeriods.get(nPeriods-1)[1] > latestTime)
+                        lastFoi = entry.uid;
+                }
             }
+            
+            FeatureEntry entry = idIndex.get(uid);
+            if (entry == null)
+            {
+                entry = new FeatureEntry(uid);
+                idIndex.put(uid, entry);
+            }
+            
+            // if same foi, keep growing period
+            if (uid.equals(lastFoi))
+            {
+                int numPeriods = entry.timePeriods.size();
+                entry.timePeriods.get(numPeriods-1)[1] = timeStamp;
+            }
+            
+            // otherwise start new period
+            else
+                entry.timePeriods.add(new double[] {timeStamp, timeStamp});
+            
+            // mark entry as modified so changes can be commited
+            getStorage().modify(entry);
+            
+            // remember current FOI
+            lastFoi = uid;
         }
-        
-        FeatureEntry entry = idIndex.get(uid);
-        if (entry == null)
+        finally
         {
-            entry = new FeatureEntry(uid);
-            idIndex.put(uid, entry);
+            idIndex.unlock();
         }
-        
-        // if same foi, keep growing period
-        if (uid.equals(lastFoi))
-        {
-            int numPeriods = entry.timePeriods.size();
-            entry.timePeriods.get(numPeriods-1)[1] = timeStamp;
-        }
-        
-        // otherwise start new period
-        else
-            entry.timePeriods.add(new double[] {timeStamp, timeStamp});
-        
-        // mark entry as modified so changes can be commited
-        getStorage().modify(entry);
-        
-        // remember current FOI
-        lastFoi = uid;
     }
     
     

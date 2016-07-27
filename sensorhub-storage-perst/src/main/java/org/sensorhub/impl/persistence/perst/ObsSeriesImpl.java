@@ -56,10 +56,12 @@ public class ObsSeriesImpl extends TimeSeriesImpl
         Iterator<Entry<Object, DataBlock>> recordIt;
         Entry<Object,DataBlock> nextRecord;
         String currentFoiID;
+        boolean preloadValue;
         
-        IteratorWithFoi(Set<FoiTimePeriod>foiTimePeriods)
+        IteratorWithFoi(Set<FoiTimePeriod>foiTimePeriods, boolean preloadValue)
         {
-            periodIt = foiTimePeriods.iterator();
+            this.periodIt = foiTimePeriods.iterator();
+            this.preloadValue = preloadValue;
             next();
         }
 
@@ -77,7 +79,7 @@ public class ObsSeriesImpl extends TimeSeriesImpl
                 // process next time range
                 FoiTimePeriod nextPeriod = periodIt.next();
                 currentFoiID = nextPeriod.uid;
-                recordIt = getEntryIterator(new Key(nextPeriod.start), new Key(nextPeriod.stop), Index.ASCENT_ORDER);
+                recordIt = getEntryIterator(new Key(nextPeriod.start), new Key(nextPeriod.stop), Index.ASCENT_ORDER, preloadValue);
             }
             
             // continue processing time range
@@ -197,7 +199,7 @@ public class ObsSeriesImpl extends TimeSeriesImpl
         // here, even when IObsFilter is not used we scan through FOIs time periods 
         // because we need to read the FOI ID anyway
         
-        final IteratorWithFoi it = getEntryIterator(filter);
+        final IteratorWithFoi it = getEntryIterator(filter, true);
         
         return new Iterator<DBRecord>()
         {
@@ -222,7 +224,8 @@ public class ObsSeriesImpl extends TimeSeriesImpl
     }
     
     
-    protected IteratorWithFoi getEntryIterator(IDataFilter filter)
+    @Override
+    IteratorWithFoi getEntryIterator(IDataFilter filter, boolean preloadValue)
     {
         // get time periods for matching FOIs
         Set<FoiTimePeriod> foiTimePeriods = getFoiTimePeriods(filter);
@@ -245,7 +248,7 @@ public class ObsSeriesImpl extends TimeSeriesImpl
         
         // scan through each time range sequentially
         // but wrap the process with a single iterator
-        return new IteratorWithFoi(foiTimePeriods);
+        return new IteratorWithFoi(foiTimePeriods, preloadValue);
     }
 
 

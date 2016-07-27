@@ -32,6 +32,12 @@ public interface IFeatureStorage
 {
     
     /**
+     * @return The total number of features in this storage
+     */
+    public int getNumFeatures();
+    
+    
+    /**
      * @param filter filtering parameters
      * @return Number of features matching the filter
      */

@@ -16,8 +16,9 @@ package org.sensorhub.impl.persistence.perst;
 
 import java.nio.ByteOrder;
 import java.util.Iterator;
-import java.util.NoSuchElementException;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.NoSuchElementException;
 import net.opengis.swe.v20.BinaryEncoding;
 import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataComponent;
@@ -81,6 +82,43 @@ class TimeSeriesImpl extends Persistent implements IRecordStoreInfo
         {
             return this.value;
         }     
+    }
+    
+    /*
+     * This class is used to wrap a PERST index entry so we can preload the key and value
+     * when necessary. Indeed, using the live entry during concurrent read/write ops doesn't
+     * lead the right result because the BTree page may have changed before getKey() or
+     * getValue() are called.
+     */
+    class CachedEntry<T> implements Map.Entry<Object, T>
+    {
+        Entry<Object, T> liveEntry;
+        Object key;
+        T value;
+        
+        CachedEntry(Entry<Object,T> liveEntry)
+        {
+            this.liveEntry = liveEntry;
+        }
+        
+        public Object getKey()
+        {
+            if (key == null)
+                key = liveEntry.getKey();
+            return key;
+        }
+
+        public T getValue()
+        {
+            if (value == null)
+                value = liveEntry.getValue();
+            return value;
+        }
+
+        public T setValue(T value)
+        {
+            return null;
+        }        
     }
     
 
@@ -164,7 +202,7 @@ class TimeSeriesImpl extends Persistent implements IRecordStoreInfo
 
     Iterator<DataBlock> getDataBlockIterator(IDataFilter filter)
     {
-        final Iterator<Entry<Object, DataBlock>> it = getEntryIterator(filter);
+        final Iterator<Entry<Object, DataBlock>> it = getEntryIterator(filter, true);
         
         return new Iterator<DataBlock>()
         {
@@ -190,7 +228,7 @@ class TimeSeriesImpl extends Persistent implements IRecordStoreInfo
     int getNumMatchingRecords(IDataFilter filter, long maxCount)
     {
         // use entry iterator so datablocks are not loaded during scan
-        IterableIterator<Entry<Object, DataBlock>> it = getEntryIterator(filter);
+        IterableIterator<Entry<Object, DataBlock>> it = getEntryIterator(filter, false);
         
         int count = 0;
         while (it.hasNext() && count <= maxCount)
@@ -205,7 +243,7 @@ class TimeSeriesImpl extends Persistent implements IRecordStoreInfo
 
     Iterator<DBRecord> getRecordIterator(IDataFilter filter)
     {
-        final Iterator<Entry<Object, DataBlock>> it = getEntryIterator(filter);
+        final Iterator<Entry<Object, DataBlock>> it = getEntryIterator(filter, true);
         
         return new Iterator<DBRecord>()
         {
@@ -226,22 +264,75 @@ class TimeSeriesImpl extends Persistent implements IRecordStoreInfo
                 it.remove();
             }
         };
+        
+        /*double[] timeRange = filter.getTimeStampRange();
+        Key from = new Key(timeRange == null ? Double.NEGATIVE_INFINITY : timeRange[0]);
+        Key till = new Key(timeRange == null ? Double.POSITIVE_INFINITY : timeRange[1]);        
+        final Iterator<Entry<Object, DataBlock>> it = recordIndex.entryIterator(from, till, Index.ASCENT_ORDER);
+        
+        // return iterator protected by a shared lock
+        return new Iterator<DBRecord>()
+        {
+            DBRecord tmpRecord;
+            
+            public final boolean hasNext()
+            {
+                if (tmpRecord != null)
+                    return true;
+                
+                try
+                {    
+                    recordIndex.sharedLock();
+                    boolean hasNext = it.hasNext();
+                    if (hasNext)
+                    {
+                        Entry<Object, DataBlock> entry = it.next();
+                        DataKey key = new DataKey(recordDescription.getName(), (double)entry.getKey());
+                        tmpRecord = new DBRecord(key, entry.getValue());
+                    }
+                    
+                    return hasNext;
+                }
+                finally
+                {
+                    recordIndex.unlock();
+                }
+            }                
+            
+            public final DBRecord next()
+            {
+                if (this.tmpRecord == null)
+                {
+                    if (!hasNext())
+                        throw new NoSuchElementException();
+                }
+                                    
+                DBRecord next = this.tmpRecord;
+                this.tmpRecord = null;                
+                return next;
+            }
+
+            public final void remove()
+            {
+                it.remove();
+            }
+        };*/
     }
     
     
-    protected IterableIterator<Entry<Object,DataBlock>> getEntryIterator(IDataFilter filter)
+    IterableIterator<Entry<Object,DataBlock>> getEntryIterator(IDataFilter filter, boolean preloadValue)
     {
         double[] timeRange = filter.getTimeStampRange();
         Key keyFirst = new Key(timeRange == null ? Double.NEGATIVE_INFINITY : timeRange[0]);
         Key keyLast = new Key(timeRange == null ? Double.POSITIVE_INFINITY : timeRange[1]);
-        return getEntryIterator(keyFirst, keyLast, Index.ASCENT_ORDER);
+        return getEntryIterator(keyFirst, keyLast, Index.ASCENT_ORDER, preloadValue);
     }
     
         
     /*
      * Gets an entry iterator over the recordIndex protected by a shared lock
      */
-    IterableIterator<Entry<Object,DataBlock>> getEntryIterator(Key keyFirst, Key keyLast, int order)
+    IterableIterator<Entry<Object,DataBlock>> getEntryIterator(Key keyFirst, Key keyLast, int order, final boolean preloadValue)
     {
         try
         {
@@ -249,16 +340,24 @@ class TimeSeriesImpl extends Persistent implements IRecordStoreInfo
             IterableIterator<Entry<Object,DataBlock>> it = recordIndex.entryIterator(keyFirst, keyLast, order);
             return new IteratorWrapper<Entry<Object,DataBlock>>(it)
             {
-                Entry<Object,DataBlock> tmpEntry;                
+                CachedEntry<DataBlock> tmpEntry;                
                 
                 public final boolean hasNext()
                 {
+                    if (tmpEntry != null)
+                        return true;
+                    
                     try
-                    {
+                    {    
                         recordIndex.sharedLock();
                         boolean hasNext = super.hasNext();
                         if (hasNext)
-                            tmpEntry = super.next();
+                        {
+                            tmpEntry = new CachedEntry<DataBlock>(super.next());
+                            tmpEntry.getKey(); // preload key
+                            if (preloadValue)
+                                tmpEntry.getValue(); // preload value
+                        }
                         return hasNext;
                     }
                     finally
@@ -279,7 +378,7 @@ class TimeSeriesImpl extends Persistent implements IRecordStoreInfo
                     this.tmpEntry = null;
                     
                     return nextEntry;
-                }                
+                }
                 
                 public final void remove()
                 {
@@ -352,7 +451,7 @@ class TimeSeriesImpl extends Persistent implements IRecordStoreInfo
         
         Key keyFirst = new Key(filter.getTimeStampRange()[0]);
         Key keyLast = new Key(filter.getTimeStampRange()[1]);
-        Iterator<Entry<Object,DataBlock>> it = getEntryIterator(keyFirst, keyLast, Index.ASCENT_ORDER);
+        Iterator<Entry<Object,DataBlock>> it = getEntryIterator(keyFirst, keyLast, Index.ASCENT_ORDER, false);
             
         while (it.hasNext())
         {
@@ -392,7 +491,7 @@ class TimeSeriesImpl extends Persistent implements IRecordStoreInfo
     public Iterator<double[]> getRecordsTimeClusters(String recordType)
     {
         final IterableIterator<Entry<Object, DataBlock>> it;
-        it = getEntryIterator(KEY_DATA_START_ALL_TIME, KEY_DATA_END_ALL_TIME, Index.ASCENT_ORDER);
+        it = getEntryIterator(KEY_DATA_START_ALL_TIME, KEY_DATA_END_ALL_TIME, Index.ASCENT_ORDER, false);
         
         return new Iterator<double[]>()
         {
