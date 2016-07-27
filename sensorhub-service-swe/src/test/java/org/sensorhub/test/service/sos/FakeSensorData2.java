@@ -181,7 +181,7 @@ public class FakeSensorData2 extends AbstractSensorOutput<FakeSensorNetWithFoi> 
                     }
                     
                     eventHandler.publishEvent(new SensorDataEvent(latestRecordTime, FakeSensorData2.this, latestRecord)); 
-                    System.out.println("Record #" + sampleCount + " generated");
+                    System.out.println("Record #" + sampleCount + " generated @ " + latestRecordTime/1000.);
                     
                     if (sampleCount >= maxSampleCount)
                         cancel();

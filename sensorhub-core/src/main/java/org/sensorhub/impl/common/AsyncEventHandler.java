@@ -100,13 +100,16 @@ public class AsyncEventHandler implements IEventHandler
                                 if (dispatchDelay > 100)
                                     log.warn("{} Event from {} @ {}, dispatch delay={}, queue size={}", e.getType(), e.getSource().getClass().getSimpleName(), e.getTimeStamp(), dispatchDelay, eventQueue.size());
                                 
-                                dispatchDone(); // call that before so we don't delay other listeners
                                 listener.handleEvent(e);
                             }
                             catch (Exception ex)
                             {
                                 log.error("Uncaught exception while dispatching event", ex);
-                            }                        
+                            }   
+                            finally
+                            {
+                                dispatchDone();                                
+                            }
                         }                        
                     });
                 }
