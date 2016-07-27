@@ -636,7 +636,7 @@ public class TestSOSService
         FakeSensor sensor1 = getSensorModule(1);
         while (sensor1.getAllOutputs().get(NAME_OUTPUT1).isEnabled())
             Thread.sleep((long)(SAMPLING_PERIOD*1000));
-        Thread.sleep((long)((SAMPLING_PERIOD+provider1.liveDataTimeout)*1000));
+        Thread.sleep((long)((SAMPLING_PERIOD+provider1.liveDataTimeout*2)*1000));
         InputStream is = new URL(HTTP_ENDPOINT + GETCAPS_REQUEST).openStream();
         DOMHelper dom = checkOfferings(is, new String[] {UID_SENSOR2, UID_SENSOR1});
         String currentIsoTime = new DateTimeFormat().formatIso(System.currentTimeMillis()/1000., 0);
