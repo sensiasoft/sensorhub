@@ -17,6 +17,7 @@ package org.sensorhub.impl.sensor;
 import java.util.ArrayList;
 import java.util.List;
 import org.sensorhub.api.config.DisplayInfo;
+import org.sensorhub.api.config.DisplayInfo.Required;
 import org.sensorhub.api.processing.ProcessConfig;
 import org.sensorhub.api.sensor.PositionConfig;
 import org.sensorhub.api.sensor.PositionConfig.CartesianLocation;
@@ -52,6 +53,7 @@ public class SensorSystemConfig extends SensorConfig
     }
     
         
+    @Required
     @DisplayInfo(desc="Unique ID (full URN or only suffix) to use for the sensor system or 'auto' to use the UUID randomly generated the first time the module is initialized")
     public String uniqueID;
     

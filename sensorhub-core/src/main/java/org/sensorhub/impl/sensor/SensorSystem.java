@@ -48,8 +48,8 @@ import org.sensorhub.utils.MsgUtils;
  */
 public class SensorSystem extends AbstractSensorModule<SensorSystemConfig>
 {
-    public final static String AUTO_ID = "auto";    
-    private final static String HTTP_PREFIX = "http://";
+    public final static String DEFAULT_XMLID_PREFIX = "SYSTEM_";
+    public final static String AUTO_ID = "auto";
     private final static String URN_PREFIX = "urn:";
     
     Map<String, ISensorModule<?>> sensors;
@@ -61,16 +61,20 @@ public class SensorSystem extends AbstractSensorModule<SensorSystemConfig>
     {
         super.init();
         
-        // generate XML ID
-        this.xmlID.replace(DEFAULT_ID, "SYSTEM_");
-        
         // generate unique ID
         if (config.uniqueID != null && !config.uniqueID.equals(AUTO_ID))
         {
-            if (config.uniqueID.startsWith(HTTP_PREFIX) || config.uniqueID.startsWith(URN_PREFIX))
+            if (config.uniqueID.startsWith(URN_PREFIX))
+            {
                 this.uniqueID = config.uniqueID;
+                String suffix = config.uniqueID.replace(URN_PREFIX, "");
+                generateXmlID(DEFAULT_XMLID_PREFIX, suffix);
+            }
             else
+            {
                 this.uniqueID = URN_PREFIX + "osh:system:" + config.uniqueID;
+                generateXmlID(DEFAULT_XMLID_PREFIX, config.uniqueID);
+            }
         }
         
         // load all sensor modules        
@@ -268,6 +272,14 @@ public class SensorSystem extends AbstractSensorModule<SensorSystemConfig>
     public Map<String, IProcessModule<?>> getProcesses()
     {
         return processes;
+    }
+
+
+    @Override
+    protected void generateXmlIDFromUUID(String uuid)
+    {
+        super.generateXmlIDFromUUID(uuid);
+        this.xmlID.replace(AbstractSensorModule.DEFAULT_XMLID_PREFIX, DEFAULT_XMLID_PREFIX);
     }
 
 }
