@@ -32,6 +32,8 @@ import org.eclipse.jetty.security.authentication.DigestAuthenticator;
 import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.eclipse.jetty.servlets.DoSFilter;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.handler.AllowSymLinkAliasChecker;
+import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.server.handler.HandlerList;
 import org.eclipse.jetty.server.handler.ResourceHandler;
 import org.eclipse.jetty.servlet.FilterHolder;
@@ -108,9 +110,19 @@ public class HttpServer extends AbstractModule<HttpServerConfig>
             // static content
             if (config.staticDocRootUrl != null)
             {
-                ResourceHandler resourceHandler = new ResourceHandler();
-                resourceHandler.setResourceBase(config.staticDocRootUrl);
-                handlers.addHandler(resourceHandler);
+                ResourceHandler fileResourceHandler = new ResourceHandler();
+                fileResourceHandler.setEtags(true);
+                
+                ContextHandler fileResourceContext = new ContextHandler();
+                fileResourceContext.setContextPath("/");
+                //fileResourceContext.setAllowNullPathInfo(true);
+                fileResourceContext.setHandler(fileResourceHandler);
+                fileResourceContext.setResourceBase(config.staticDocRootUrl);
+
+                //fileResourceContext.clearAliasChecks();
+                fileResourceContext.addAliasCheck(new AllowSymLinkAliasChecker());
+                
+                handlers.addHandler(fileResourceContext);
                 log.info("Static resources root is " + config.staticDocRootUrl);
             }
             
