@@ -96,6 +96,7 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
     protected DefaultLocationOutput locationOutput;
     protected AbstractPhysicalProcess sensorDescription = new PhysicalSystemImpl();
     protected long lastUpdatedSensorDescription = Long.MIN_VALUE;
+    protected Object sensorDescLock = new Object();
     
     protected String xmlID;
     protected String uniqueID;
@@ -214,7 +215,7 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
     @Override
     public AbstractPhysicalProcess getCurrentDescription()
     {
-        synchronized (sensorDescription)
+        synchronized (sensorDescLock)
         {
             if (sensorDescription == null || !sensorDescription.isSetIdentifier())
                 updateSensorDescription();
@@ -241,7 +242,7 @@ public abstract class AbstractSensorModule<ConfigType extends SensorConfig> exte
      */
     protected void updateSensorDescription()
     {
-        synchronized (sensorDescription)
+        synchronized (sensorDescLock)
         {
             // by default we return the static description provided in config
             String smlUrl = config.getSensorDescriptionURL();

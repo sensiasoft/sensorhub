@@ -88,7 +88,7 @@ public class FakeSensor extends AbstractSensorModule<SensorConfig>
     @Override
     protected void updateSensorDescription()
     {
-        synchronized (sensorDescription)
+        synchronized (sensorDescLock)
         {
             super.updateSensorDescription();
             sensorDescription.setUniqueIdentifier(sensorUID);

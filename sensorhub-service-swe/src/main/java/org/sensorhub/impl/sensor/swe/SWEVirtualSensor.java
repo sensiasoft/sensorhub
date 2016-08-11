@@ -211,7 +211,7 @@ public class SWEVirtualSensor extends AbstractSensorModule<SWEVirtualSensorConfi
     @Override
     protected void updateSensorDescription()
     {
-        synchronized (sensorDescription)
+        synchronized (sensorDescLock)
         {
             super.updateSensorDescription();
             

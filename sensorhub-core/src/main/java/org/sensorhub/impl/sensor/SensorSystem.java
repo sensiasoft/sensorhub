@@ -133,7 +133,7 @@ public class SensorSystem extends AbstractSensorModule<SensorSystemConfig>
     @Override
     protected void updateSensorDescription()
     {
-        synchronized (sensorDescription)
+        synchronized (sensorDescLock)
         {
             super.updateSensorDescription();
             PhysicalSystem system = (PhysicalSystem)sensorDescription;

@@ -65,7 +65,7 @@ public class FakeSensorWithPos extends AbstractSensorModule<SensorConfigWithPos>
     @Override
     protected void updateSensorDescription()
     {
-        synchronized (sensorDescription)
+        synchronized (sensorDescLock)
         {
             super.updateSensorDescription();
             
