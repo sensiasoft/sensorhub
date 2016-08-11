@@ -16,8 +16,10 @@ package org.sensorhub.ui;
 
 import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -102,7 +104,7 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener, UIConst
     
     AdminUIConfig uiConfig;
     VerticalLayout configArea;
-    List<Table> moduleTables = new ArrayList<Table>();
+    Map<Class<?>, TreeTable> moduleTables = new HashMap<Class<?>, TreeTable>();
     
     
     @Override
@@ -436,29 +438,11 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener, UIConst
         table.addContainerProperty(PROP_MODULE_OBJECT, IModule.class, null);
         table.setColumnWidth(PROP_STATE, 100);
         table.setColumnHeaderMode(ColumnHeaderMode.HIDDEN);
-        moduleTables.add(table);
+        moduleTables.put(configType, table);
         
         // add modules info as table items       
         for (IModule<?> module: moduleList)
-        {
-            ModuleConfig config = module.getConfiguration();
-            table.addItem(new Object[] {config.name, module.getCurrentState(), module}, config.id);
-            
-            // add submodules
-            if (module instanceof SensorSystem)
-            {
-                for (ISensorModule<?> sensor: ((SensorSystem) module).getSensors().values())
-                {
-                    ModuleConfig subConfig = sensor.getConfiguration();
-                    table.addItem(new Object[] {subConfig.name, sensor.getCurrentState(), sensor}, subConfig.id);
-                    table.setParent(subConfig.id, config.id);
-                }
-            }
-            else
-            {
-                table.setChildrenAllowed(config.id, false);
-            }
-        }
+            addModuleToTable(module, table);
         
         // hide module object column!
         table.setVisibleColumns(PROP_NAME, PROP_STATE);
@@ -628,13 +612,10 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener, UIConst
                                 return;
                             }
                             
-                            // add new table row
-                            Item newItem = table.addItem(config.id);
-                            newItem.getItemProperty(PROP_NAME).setValue(config.name);
-                            newItem.getItemProperty(PROP_STATE).setValue(module.getCurrentState());
-                            newItem.getItemProperty(PROP_MODULE_OBJECT).setValue(module);
-                            table.setChildrenAllowed(config.id, false);
+                            // add module to table
+                            addModuleToTable(module, table);
                             
+                            // show new module config panel
                             MyBeanItem<ModuleConfig> newBeanItem = new MyBeanItem<ModuleConfig>(config);
                             openModuleInfo(newBeanItem, module);
                         }
@@ -661,8 +642,8 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener, UIConst
                                 {                    
                                     try
                                     {
-                                        registry.destroyModule(moduleId);
                                         table.removeItem(selectedId);
+                                        registry.destroyModule(moduleId);                                        
                                     }
                                     catch (SensorHubException ex)
                                     {                        
@@ -784,6 +765,33 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener, UIConst
         
         layout.setSizeFull();
     }
+    
+    
+    protected void addModuleToTable(IModule<?> module, TreeTable table)
+    {
+        ModuleConfig config = module.getConfiguration();
+                
+        Item newItem = table.addItem(config.id);
+        newItem.getItemProperty(PROP_NAME).setValue(config.name);
+        newItem.getItemProperty(PROP_STATE).setValue(module.getCurrentState());
+        newItem.getItemProperty(PROP_MODULE_OBJECT).setValue(module);
+        table.setChildrenAllowed(config.id, false);        
+        
+        // add submodules
+        if (module instanceof SensorSystem)
+        {
+            for (ISensorModule<?> sensor: ((SensorSystem) module).getSensors().values())
+            {
+                ModuleConfig subConfig = sensor.getConfiguration();
+                table.addItem(new Object[] {subConfig.name, sensor.getCurrentState(), sensor}, subConfig.id);
+                table.setParent(subConfig.id, config.id);
+            }
+        }
+        else
+        {
+            table.setChildrenAllowed(config.id, false);
+        }
+    }
         
     
     protected void openModuleInfo(MyBeanItem<ModuleConfig> beanItem, IModule<?> module)
@@ -805,43 +813,72 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener, UIConst
     {
         if (e instanceof ModuleEvent)
         {
-            String moduleID = ((IModule<?>)e.getSource()).getLocalID();
+            final IModule<?> module = (IModule<?>)e.getSource();
+            final ModuleConfig config = module.getConfiguration();
             
-            // find table item corresponding to module
+            // find table and item corresponding to module
+            TreeTable table = null;
             Item item = null;
-            for (Table table: moduleTables)
+            for (Class<?> configClass: moduleTables.keySet())
             {
-                item = table.getItem(moduleID);
-                if (item != null)
+                if (config != null && configClass.isAssignableFrom(config.getClass()))
+                {
+                    table = moduleTables.get(configClass);          
+                    item = table.getItem(module.getLocalID());
                     break;
+                }
             }
             
-            // update item
+            // update table according to event type
+            final TreeTable foundTable = table;
             final Item foundItem = item;
-            if (foundItem != null)
+            switch (((ModuleEvent)e).getType())
             {
-                access(new Runnable() {
-                    public void run()
+                case LOADED:
+                    if (foundTable != null)
                     {
-                        switch (((ModuleEvent)e).getType())
-                        {
-                            case CONFIG_CHANGED:
-                                ModuleConfig config = ((IModule<?>)e.getSource()).getConfiguration();
+                        access(new Runnable() {
+                            public void run()
+                            {
+                                // add module to table
+                                addModuleToTable(module, foundTable);
+                                push();
+                            }
+                        });
+                    }
+                    break;
+                    
+                case CONFIG_CHANGED:
+                    if (foundItem != null)
+                    {
+                        access(new Runnable() {
+                            public void run()
+                            {
+                                // update module name
                                 foundItem.getItemProperty(PROP_NAME).setValue(config.name);
                                 push();
-                                break;
-                                
-                            case STATE_CHANGED:
-                            case ERROR:
+                            }
+                        });
+                    }
+                    break;
+                    
+                case STATE_CHANGED:
+                case ERROR:
+                    if (foundItem != null)
+                    {
+                        access(new Runnable() {
+                            public void run()
+                            {
+                                // update module state
                                 ModuleState state = ((IModule<?>)e.getSource()).getCurrentState();
                                 foundItem.getItemProperty(PROP_STATE).setValue(state);
                                 push();
-                                break;                                
-                                
-                            default:  
-                        }
-                    }
-                });
+                            }
+                        });
+                    }                    
+                    break;                                
+                    
+                default:  
             }
         }     
     }

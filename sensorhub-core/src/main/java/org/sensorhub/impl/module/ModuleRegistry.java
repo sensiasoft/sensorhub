@@ -186,7 +186,10 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
                 module.registerListener(listener);
             
             // keep track of what modules are loaded
-            loadedModules.put(config.id, module);            
+            loadedModules.put(config.id, module);
+            
+            // send event
+            eventHandler.publishEvent(new ModuleEvent(module, Type.LOADED));
         }
         catch (Exception e)
         {

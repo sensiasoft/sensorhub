@@ -51,7 +51,6 @@ public class ModuleEvent extends Event<Type>
          * Some modules may never generate this event
          */
         DISCONNECTED,
-
         
         /**
          * when a new status message is published
@@ -61,11 +60,12 @@ public class ModuleEvent extends Event<Type>
         /**
          * when an error occurs during asynchronous module execution
          */
-        ERROR,
+        ERROR,        
         
-        
-        // the items below cannot be module states because the module object
-        // doesn't even exist anymore when these events are generated
+        /**
+         * after module is loaded by registry
+         */
+        LOADED,
         
         /**
          * after module is unloaded from registry
@@ -82,7 +82,7 @@ public class ModuleEvent extends Event<Type>
     public enum ModuleState 
     {
         /**
-         * after module class is first instantiated and init() has been called
+         * after module class is first instantiated and added to the registry
          */
         LOADED,
         
