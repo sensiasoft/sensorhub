@@ -601,6 +601,13 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener, UIConst
             {
                 final Object selectedId = table.getValue();
                 
+                // retrieve selected module
+                final IModule<?> selectedModule;
+                if (selectedId != null)
+                    selectedModule = (IModule<?>)table.getItem(selectedId).getItemProperty(PROP_MODULE_OBJECT).getValue();
+                else
+                    selectedModule = null;
+                
                 if (action == ADD_MODULE_ACTION)
                 {
                     // show popup to select among available module types
@@ -679,8 +686,11 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener, UIConst
                                 {                    
                                     try 
                                     {
-                                        IModule<?> module = registry.startModuleAsync(moduleId, null);
-                                        openModuleInfo((MyBeanItem<ModuleConfig>)item, module);
+                                        if (selectedModule != null)
+                                        {
+                                            registry.startModuleAsync(selectedModule);
+                                            openModuleInfo((MyBeanItem<ModuleConfig>)item, selectedModule);
+                                        }
                                     }
                                     catch (SensorHubException ex)
                                     {
@@ -704,7 +714,8 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener, UIConst
                                 {                    
                                     try 
                                     {
-                                        registry.stopModuleAsync(moduleId, null);
+                                        if (selectedModule != null)
+                                            registry.stopModuleAsync(selectedModule);
                                     }
                                     catch (SensorHubException ex)
                                     {
@@ -728,7 +739,8 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener, UIConst
                                 {                    
                                     try 
                                     {
-                                        registry.restartModuleAsync(moduleId, null);
+                                        if (selectedModule != null)
+                                            registry.restartModuleAsync(selectedModule);
                                     }
                                     catch (SensorHubException ex)
                                     {
@@ -752,7 +764,8 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener, UIConst
                                 {                    
                                     try 
                                     {
-                                        registry.initModuleAsync(moduleId, true, null);
+                                        if (selectedModule != null)
+                                            registry.initModuleAsync(selectedModule, true);
                                     }
                                     catch (SensorHubException ex)
                                     {

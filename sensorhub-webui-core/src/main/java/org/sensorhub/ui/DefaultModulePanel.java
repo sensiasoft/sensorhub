@@ -98,7 +98,7 @@ public class DefaultModulePanel<ModuleType extends IModule<? extends ModuleConfi
                     form.commit();
                     if (module != null)
                     {
-                        SensorHub.getInstance().getModuleRegistry().updateModuleConfigAsync(beanItem.getBean());
+                        SensorHub.getInstance().getModuleRegistry().updateModuleConfigAsync(module, beanItem.getBean());
                         DisplayUtils.showOperationSuccessful("Module Configuration Updated");
                     }
                 }

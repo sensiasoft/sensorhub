@@ -318,13 +318,27 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
      * @return the module instance (may not yet be initialized when this method returns)
      * @throws SensorHubException if no module with given ID can be found
      */
-    public IModule<?> initModuleAsync(final String moduleID, final boolean force, IEventListener listener) throws SensorHubException
+    public IModule<?> initModuleAsync(String moduleID, boolean force, IEventListener listener) throws SensorHubException
     {
         @SuppressWarnings("rawtypes")
         final IModule module = getModuleById(moduleID);
         if (listener != null)
             module.registerListener(listener);
         
+        initModuleAsync(module, force);
+        return module;
+    }
+    
+    
+    
+    /**
+     * Inits the module asynchronously in a separate thread
+     * @param module module instance to initialize
+     * @param force set to true to force a reinit, even if module was already initialized
+     * @throws SensorHubException
+     */
+    public void initModuleAsync(final IModule<?> module, final boolean force) throws SensorHubException
+    {   
         try
         {
             // init module in separate thread
@@ -361,8 +375,6 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
         {
             throw new SensorHubException(REGISTRY_SHUTDOWN_MSG, e);
         }
-        
-        return module;
     }
         
     
@@ -418,7 +430,12 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
     }
     
     
-    protected void startModuleAsync(final IModule<?> module) throws SensorHubException
+    /**
+     * Starts the module asynchronously in a separate thread
+     * @param module module instance to start
+     * @throws SensorHubException
+     */
+    public void startModuleAsync(final IModule<?> module) throws SensorHubException
     {        
         try
         {
@@ -510,7 +527,12 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
     }
     
     
-    protected void stopModuleAsync(final IModule<?> module) throws SensorHubException
+    /**
+     * Stops the module asynchronously in a separate thread
+     * @param module module instance to stop
+     * @throws SensorHubException
+     */
+    public void stopModuleAsync(final IModule<?> module) throws SensorHubException
     {        
         try
         {
@@ -539,12 +561,32 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
     }
     
     
+    /**
+     * Restarts the module with the given local ID<br/>
+     * This method is asynchronous so it returns immediately and the listener will be notified
+     * when the module is actually restarted
+     * @param moduleID Local ID of module to restart
+     * @param listener Listener to register for receiving the module's events
+     * @throws SensorHubException if no module with given ID can be found
+     */
     public void restartModuleAsync(final String moduleID, IEventListener listener) throws SensorHubException
     {        
         final IModule<?> module = getModuleById(moduleID);
         if (listener != null)
             module.registerListener(listener);
         
+        restartModuleAsync(module);
+    }
+    
+    
+    /**
+     * Restarts the module asynchronously in a separate thread<br/>
+     * This will actually called requestStop() and then requestStart()
+     * @param module module instance to restart
+     * @throws SensorHubException
+     */
+    public void restartModuleAsync(final IModule<?> module) throws SensorHubException
+    {        
         try
         {
             // restart module in separate thread
@@ -573,11 +615,28 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
     }
     
     
+    /**
+     * Updates the configuration of the module with the given local ID<br/>
+     * @param config new configuration (must contain the valid local ID of the module to update)
+     * @throws SensorHubException if no module with given ID can be found
+     */
     public void updateModuleConfigAsync(final ModuleConfig config) throws SensorHubException
     {
         @SuppressWarnings("rawtypes")
-        final IModule module = getModuleById(config.id);
+        IModule module = getModuleById(config.id);
+        updateModuleConfigAsync(module, config);
+    }
         
+        
+    /**
+     * Updates the module configuration asynchronously in a separate thread
+     * @param module module instance to update
+     * @param config new module configuration
+     * @throws SensorHubException
+     */
+    @SuppressWarnings("rawtypes")
+    public void updateModuleConfigAsync(final IModule module, final ModuleConfig config) throws SensorHubException
+    {
         try
         {
             // stop module in separate thread
