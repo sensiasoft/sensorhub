@@ -612,8 +612,8 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener, UIConst
                                 return;
                             }
                             
-                            // add module to table
-                            addModuleToTable(module, table);
+                            // no need to add module to table here
+                            // it will be loaded when the LOADED event is received
                             
                             // show new module config panel
                             MyBeanItem<ModuleConfig> newBeanItem = new MyBeanItem<ModuleConfig>(config);
