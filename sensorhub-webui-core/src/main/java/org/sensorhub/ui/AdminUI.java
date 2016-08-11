@@ -772,10 +772,12 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener, UIConst
         ModuleConfig config = module.getConfiguration();
                 
         Item newItem = table.addItem(config.id);
+        if (newItem == null) // in case module was already added
+            return;
+        
         newItem.getItemProperty(PROP_NAME).setValue(config.name);
         newItem.getItemProperty(PROP_STATE).setValue(module.getCurrentState());
-        newItem.getItemProperty(PROP_MODULE_OBJECT).setValue(module);
-        table.setChildrenAllowed(config.id, false);        
+        newItem.getItemProperty(PROP_MODULE_OBJECT).setValue(module);   
         
         // add submodules
         if (module instanceof SensorSystem)
