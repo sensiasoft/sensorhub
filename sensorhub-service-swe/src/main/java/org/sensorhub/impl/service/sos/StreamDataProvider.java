@@ -16,8 +16,8 @@ package org.sensorhub.impl.service.sos;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.BlockingDeque;
-import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import net.opengis.gml.v32.AbstractFeature;
 import net.opengis.swe.v20.DataBlock;
@@ -53,7 +53,7 @@ public abstract class StreamDataProvider implements ISOSDataProvider, IEventList
 {
     IDataProducerModule<?> dataSource;
     List<IStreamingDataInterface> sourceOutputs;
-    BlockingDeque<DataEvent> eventQueue;
+    BlockingQueue<DataEvent> eventQueue;
     long timeOut;
     long stopTime;
     boolean latestRecordOnly;
@@ -66,7 +66,7 @@ public abstract class StreamDataProvider implements ISOSDataProvider, IEventList
     {
         this.dataSource = dataSource;
         this.sourceOutputs = new ArrayList<IStreamingDataInterface>();
-        this.eventQueue = new LinkedBlockingDeque<DataEvent>(1);
+        this.eventQueue = new LinkedBlockingQueue<DataEvent>(1000);
         
         // figure out stop time (if any)
         stopTime = ((long)filter.getTimeRange().getStopTime()) * 1000L;
@@ -105,7 +105,7 @@ public abstract class StreamDataProvider implements ISOSDataProvider, IEventList
             // always send latest record if available
             DataBlock data = outputInterface.getLatestRecord();
             if (data != null)
-                eventQueue.offerLast(new DataEvent(System.currentTimeMillis(), outputInterface, data));
+                eventQueue.offer(new DataEvent(System.currentTimeMillis(), outputInterface, data));
             
             // don't register and use time out in case of time instant = now
             if (isNowTimeInstant(filter.getTimeRange()))
@@ -216,7 +216,7 @@ public abstract class StreamDataProvider implements ISOSDataProvider, IEventList
             // only poll next event from queue once we have returned all records associated to last event
             if (lastDataEvent == null || nextEventRecordIndex >= lastDataEvent.getRecords().length)
             {
-                lastDataEvent = eventQueue.pollFirst(timeOut, TimeUnit.MILLISECONDS);
+                lastDataEvent = eventQueue.poll(timeOut, TimeUnit.MILLISECONDS);
                 if (lastDataEvent == null)
                     return null;
                 
@@ -284,11 +284,9 @@ public abstract class StreamDataProvider implements ISOSDataProvider, IEventList
         {
             if (((DataEvent) e).getType() == DataEvent.Type.NEW_DATA_AVAILABLE)
             {
-                // TODO there is no guarantee that records are processed in chronological order
-                // this is because events may not be received in chronological order in the 1st place
-                // it's not as simple as using a sorting queue because we never know when is the next event!
-                // we could use the average sampling period to decide how much to wait to confirm the order
-                eventQueue.offer((DataEvent)e);
+                if (!eventQueue.offer((DataEvent)e))
+                    throw new RuntimeException("Maximum queue size reached while streaming data from " + dataSource + ". "
+                            + "This can be due to insufficient bandwidth");
             }
         }
     }

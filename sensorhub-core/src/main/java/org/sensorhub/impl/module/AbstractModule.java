@@ -577,4 +577,11 @@ public abstract class AbstractModule<ConfigType extends ModuleConfig> implements
         
         return logger;
     }
+    
+    
+    @Override
+    public String toString()
+    {
+        return MsgUtils.moduleString(this);
+    }
 }
