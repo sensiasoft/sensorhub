@@ -31,6 +31,8 @@ import org.sensorhub.api.data.IDataProducerModule;
 import org.sensorhub.api.data.IMultiSourceDataProducer;
 import org.sensorhub.api.data.IStreamingDataInterface;
 import org.sensorhub.api.service.ServiceException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.vast.data.DataIterator;
 import org.vast.ogc.def.DefinitionRef;
 import org.vast.ogc.gml.FeatureRef;
@@ -51,11 +53,14 @@ import org.vast.util.TimeExtent;
  */
 public abstract class StreamDataProvider implements ISOSDataProvider, IEventListener
 {
+    private static final Logger log = LoggerFactory.getLogger(StreamDataProvider.class);
+    
     IDataProducerModule<?> dataSource;
     List<IStreamingDataInterface> sourceOutputs;
     BlockingQueue<DataEvent> eventQueue;
     long timeOut;
     long stopTime;
+    long lastQueueErrorTime = Long.MIN_VALUE;
     boolean latestRecordOnly;
     
     DataEvent lastDataEvent;
@@ -66,7 +71,7 @@ public abstract class StreamDataProvider implements ISOSDataProvider, IEventList
     {
         this.dataSource = dataSource;
         this.sourceOutputs = new ArrayList<IStreamingDataInterface>();
-        this.eventQueue = new LinkedBlockingQueue<DataEvent>(1000);
+        this.eventQueue = new LinkedBlockingQueue<DataEvent>(200);
         
         // figure out stop time (if any)
         stopTime = ((long)filter.getTimeRange().getStopTime()) * 1000L;
@@ -285,8 +290,15 @@ public abstract class StreamDataProvider implements ISOSDataProvider, IEventList
             if (((DataEvent) e).getType() == DataEvent.Type.NEW_DATA_AVAILABLE)
             {
                 if (!eventQueue.offer((DataEvent)e))
-                    throw new RuntimeException("Maximum queue size reached while streaming data from " + dataSource + ". "
-                            + "This can be due to insufficient bandwidth");
+                {
+                    long now = System.currentTimeMillis();
+                    if (now - lastQueueErrorTime > 10000)
+                    {
+                        log.warn("Maximum queue size reached while streaming data from " + dataSource + ". "
+                               + "Some records will be discarded. This is often due to insufficient bandwidth");
+                        lastQueueErrorTime = now;
+                    }
+                }
             }
         }
     }
