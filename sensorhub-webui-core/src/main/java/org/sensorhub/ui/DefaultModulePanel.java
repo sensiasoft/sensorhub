@@ -14,6 +14,8 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.ui;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.module.IModule;
 import org.sensorhub.api.module.ModuleConfig;
@@ -163,27 +165,15 @@ public class DefaultModulePanel<ModuleType extends IModule<? extends ModuleConfi
             errorBtn.addClickListener(new ClickListener() {
                 public void buttonClick(ClickEvent event)
                 {
-                    /*StringWriter writer = new StringWriter();
+                    StringWriter writer = new StringWriter();
                     errorObj.printStackTrace(new PrintWriter(writer));
-                    String stackTrace = writer.toString();
-                    stackTrace.replace("Caused By:", "\nCaused By:");
-                    Notification.show("Error\n", writer.toString(), Notification.Type.ERROR_MESSAGE);*/
-                    StringBuilder buf = new StringBuilder();
-                    Throwable ex = errorObj;
-                    do {
-                        String msg = ex.getMessage();
-                        if (msg != null)
-                        {
-                            msg = msg.trim();
-                            buf.append(msg);
-                            if (!msg.endsWith("."))
-                                buf.append('.');
-                            buf.append('\n');
-                        }
-                        ex = ex.getCause();
-                    }
-                    while (ex != null);
-                    Notification.show("Error\n\n", buf.toString(), Notification.Type.ERROR_MESSAGE);
+                    String stackTrace = "<pre>" + writer.toString() + "</pre>";
+                    
+                    new Notification(
+                            "Error<br/>",
+                            stackTrace,
+                            Notification.Type.ERROR_MESSAGE, true)
+                            .show(Page.getCurrent());
                 }
             });
             

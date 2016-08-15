@@ -127,6 +127,12 @@ $v-layout-margin-top: 25px;
       display: block;
    }
    
+   .v-Notification.error pre {
+      display: block;
+      text-align: left;
+      color: white;
+   }
+   
    img.logo {
       margin-left: 10px;
    }

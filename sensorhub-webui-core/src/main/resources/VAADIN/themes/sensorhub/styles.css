@@ -12807,6 +12807,12 @@ div.v-layout.v-horizontal.v-widget {
 	display: block;
 }
 
+.sensorhub .v-Notification.error pre {
+	display: block;
+	text-align: left;
+	color: white;
+}
+
 .sensorhub img.logo {
 	margin-left: 10px;
 }
