@@ -53,7 +53,6 @@ import org.vast.ows.sos.InsertResultRequest;
 import org.vast.ows.sos.InsertResultTemplateRequest;
 import org.vast.ows.sos.InsertResultTemplateResponse;
 import org.vast.ows.sos.InsertSensorRequest;
-import org.vast.ows.sos.SOSException;
 import org.vast.ows.sos.SOSInsertionCapabilities;
 import org.vast.ows.sos.SOSServiceCapabilities;
 import org.vast.ows.sos.SOSUtils;
@@ -179,7 +178,7 @@ public class SOSTClient extends AbstractModule<SOSTClientConfig> implements ICli
                     for (String opName: neededOps)
                     {
                         if (!caps.getPostServers().containsKey(opName))
-                            throw new SOSException(opName + " operation not supported by this SOS endpoint");
+                            throw new ClientException(opName + " operation not supported by this SOS endpoint");
                     }
                 }
                 
@@ -188,10 +187,10 @@ public class SOSTClient extends AbstractModule<SOSTClientConfig> implements ICli
                 if (insertCaps != null)
                 {
                     if (!insertCaps.getProcedureFormats().contains(InsertSensorRequest.DEFAULT_PROCEDURE_FORMAT))
-                        throw new SOSException("SensorML v2.0 format not supported by this SOS endpoint");
+                        throw new ClientException("SensorML v2.0 format not supported by this SOS endpoint");
                     
                     if (!insertCaps.getObservationTypes().contains(IObservation.OBS_TYPE_RECORD))
-                        throw new SOSException("DataRecord observation type not supported by this SOS endpoint");
+                        throw new ClientException("DataRecord observation type not supported by this SOS endpoint");
                 }
                 
                 return true;
@@ -234,18 +233,28 @@ public class SOSTClient extends AbstractModule<SOSTClientConfig> implements ICli
             // register sensor
             registerSensor(sensor);
             getLogger().info("Sensor " + MsgUtils.moduleString(sensor) + " registered with SOS");
-            
-            // register all stream templates
-            for (ISensorDataInterface o: sensor.getAllOutputs().values())
-                registerDataStream(o);
-            getLogger().info("Result templates registered with SOS");
-            
-            setState(ModuleState.STARTED);
         }
         catch (Exception e)
         {
             throw new ClientException("Error while registering sensor with remote SOS", e);
         }
+        
+        
+        // register all stream templates
+        for (ISensorDataInterface o: sensor.getAllOutputs().values())
+        {
+            try
+            {
+                registerDataStream(o);
+            }
+            catch (Exception e)
+            {
+                throw new ClientException("Error while registering " + o.getName() + " data stream with remote SOS", e);
+            }
+        }
+        
+        getLogger().info("Result templates registered with SOS");            
+        setState(ModuleState.STARTED);        
     }
     
     
@@ -399,7 +408,7 @@ public class SOSTClient extends AbstractModule<SOSTClientConfig> implements ICli
                 }
                 catch (SensorHubException ex)
                 {
-                    reportError("SOS-T client could not start", ex);
+                    reportError("Could not start SOS-T Client", ex);
                     setState(ModuleState.STOPPED);
                 }
             }

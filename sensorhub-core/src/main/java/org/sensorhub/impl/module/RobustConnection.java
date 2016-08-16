@@ -94,14 +94,19 @@ public abstract class RobustConnection
                     }
                     catch (Exception e)
                     {
-                        throw new ClientException("Cannot connect to " + remoteServiceName, e);
+                        throw new ClientException(e.getMessage(), e.getCause());
                     }
                     
                     // abort if too many attempts
                     numAttempts++;
                     if (!isConnected() && numAttempts > connectConfig.reconnectAttempts)
-                        throw new ClientException("Maximum number of connection attempts reached", module.getCurrentError());
-                                        
+                    {
+                        if (connectConfig.reconnectAttempts == 0)
+                            throw new ClientException(module.getCurrentError().getMessage(), module.getCurrentError().getCause());
+                        else
+                            throw new ClientException("Maximum number of connection attempts reached", module.getCurrentError());
+                    }
+                    
                     // wait before trying again
                     long nextAttemptTime = System.currentTimeMillis() + connectConfig.reconnectPeriod;
                     while (!isConnected() && System.currentTimeMillis() < nextAttemptTime)
