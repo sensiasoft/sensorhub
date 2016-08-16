@@ -94,7 +94,7 @@ public abstract class RobustConnection
                     }
                     catch (Exception e)
                     {
-                        throw new ClientException(e.getMessage(), e.getCause());
+                        throw new ClientException(e.getMessage(), e);
                     }
                     
                     // abort if too many attempts

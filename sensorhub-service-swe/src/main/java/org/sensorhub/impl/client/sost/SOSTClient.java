@@ -208,6 +208,7 @@ public class SOSTClient extends AbstractModule<SOSTClientConfig> implements ICli
             {
                 // register to sensor events            
                 sensor.registerListener(this);
+                reportStatus("Waiting for data source " + MsgUtils.moduleString(sensor));
                 
                 // we'll actually start when we receive sensor STARTED event
             }
