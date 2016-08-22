@@ -14,9 +14,9 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.impl.common;
 
-import java.util.Collections;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Queue;
-import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
@@ -30,10 +30,10 @@ import org.slf4j.LoggerFactory;
 /**
  * <p>
  * Asynchronous event handler implementation.<br/>
- * This basic implementation just collects events into a queue and dispatch 
- * them to all listeners in a separate thread.<br/>
- * The queue size is set to {@link Integer#MAX_VALUE} so memory consumption can be
- * very high if events are not processed fast enough.
+ * This implementation keeps one queue per listener to avoid slowing down dispatching
+ * events to other listeners in case one listener has a higher processing time.
+ * It also ensures that events are delivered to each listener in the order they
+ * were received.
  * </p>
  *
  * @author Alex Robin <alex.robin@sensiasoftware.com>
@@ -42,87 +42,100 @@ import org.slf4j.LoggerFactory;
 public class AsyncEventHandler implements IEventHandler
 {
     private static final Logger log = LoggerFactory.getLogger(AsyncEventHandler.class);
+    private Map<IEventListener, ListenerQueue> listeners;
     private ExecutorService threadPool;
-    private Queue<Event<?>> eventQueue;
-    private Set<IEventListener> listeners;
-    private int dispatchLeft = 0;
+    
+    
+    // helper class to use one queue per listener so they don't slow down each other
+    class ListenerQueue
+    {
+        Queue<Event<?>> eventQueue = new ConcurrentLinkedQueue<Event<?>>();
+        volatile boolean dispatching = false;
+        
+        void dispatchNextEvent(final IEventListener listener)
+        {
+            // dispatch next event from queue
+            final Event<?> e = eventQueue.poll();
+            if (e != null)
+            {
+                dispatching = true;
+                
+                threadPool.execute(new Runnable() {
+                    public void run()
+                    {
+                        try
+                        {
+                            long dispatchDelay = System.currentTimeMillis() - e.getTimeStamp();
+                            if (dispatchDelay > 100)
+                            {
+                                String srcName = e.getSource().getClass().getSimpleName();
+                                String destName = listener.getClass().getSimpleName();
+                                log.warn("{} Event from {} to {} @ {}, dispatch delay={}, queue size={}", e.getType(), srcName, destName, e.getTimeStamp(), dispatchDelay, eventQueue.size());
+                            }                            
+                            
+                            //String srcName = e.getSource().getClass().getSimpleName();
+                            //String destName = listener.getClass().getSimpleName();
+                            //log.debug("Thread {}: Dispatching {} event from {} to {} @ {}, dispatch delay={}, queue size={}", Thread.currentThread().getId(), e.getType(), srcName, destName, e.getTimeStamp(), dispatchDelay, eventQueue.size());
+                            
+                            listener.handleEvent(e);
+                        }
+                        catch (Exception ex)
+                        {
+                            String srcName = e.getSource().getClass().getSimpleName();
+                            String destName = listener.getClass().getSimpleName();
+                            log.error("Uncaught exception while dispatching event from {} to {}", srcName, destName, ex);
+                        }   
+                        finally
+                        {
+                            dispatchNextEvent(listener);                                
+                        }
+                    }                        
+                });
+            }
+            else
+                dispatching = false;
+        }
+        
+        boolean pushEvent(final Event<?> e)
+        {
+            return eventQueue.offer(e);                
+        }
+    }
     
     
     public AsyncEventHandler(ExecutorService threadPool)
     {
         this.threadPool = threadPool;
-        this.eventQueue = new ConcurrentLinkedQueue<Event<?>>();
-        this.listeners = Collections.newSetFromMap(new WeakHashMap<IEventListener, Boolean>());
+        this.listeners = new WeakHashMap<IEventListener, ListenerQueue>();
     }
     
     
     @Override
     public void publishEvent(final Event<?> e)
     {
-        // do nothing if we have no listeners
         synchronized (listeners)
         {
-            if (listeners.isEmpty())
-                return;
-        }
-            
-        // add event to queue
-        if (!eventQueue.offer(e))
-            throw new RuntimeException("Max event queue size reached");
-        
-        dispatchNextEvent();
-    }
-    
-    
-    protected synchronized void dispatchNextEvent()
-    {
-        // do nothing if we're still dispatching previous event
-        if (dispatchLeft > 0)
-            return;
-        
-        // dispatch next event from queue
-        final Event<?> e = eventQueue.poll();        
-        if (e != null)
-        {
-            synchronized (listeners)
+            // add event to queue of each listener
+            for (Entry<IEventListener, ListenerQueue> entry: listeners.entrySet())
             {
-                dispatchLeft = listeners.size();
+                IEventListener listener = entry.getKey();
+                ListenerQueue queue = entry.getValue();
                 
-                // call all listeners
-                for (final IEventListener listener: listeners)
+                // add event to each listener queue
+                if (!queue.pushEvent(e))
                 {
-                    threadPool.execute(new Runnable() {
-                        public void run()
-                        {
-                            try
-                            {
-                                long dispatchDelay = System.currentTimeMillis()-e.getTimeStamp();
-                                if (dispatchDelay > 100)
-                                    log.warn("{} Event from {} @ {}, dispatch delay={}, queue size={}", e.getType(), e.getSource().getClass().getSimpleName(), e.getTimeStamp(), dispatchDelay, eventQueue.size());
-                                
-                                listener.handleEvent(e);
-                            }
-                            catch (Exception ex)
-                            {
-                                log.error("Uncaught exception while dispatching event", ex);
-                            }   
-                            finally
-                            {
-                                dispatchDone();                                
-                            }
-                        }                        
-                    });
+                    String srcName = e.getSource().getClass().getSimpleName();
+                    String destName = listener.getClass().getSimpleName();
+                    log.error("Max queue size reached when dispatching event from {} to {}. Clearing queue", srcName, destName);
+                    queue.eventQueue.clear();
+                    return;
                 }
+                
+                // dispatch next event
+                if (!queue.dispatching)
+                    queue.dispatchNextEvent(listener);
             }
         }
-    }
-    
-    
-    protected synchronized void dispatchDone()
-    {
-        dispatchLeft--;
-        if (dispatchLeft == 0)
-            dispatchNextEvent();
     }
    
 
@@ -131,7 +144,7 @@ public class AsyncEventHandler implements IEventHandler
     {
         synchronized (listeners)
         {
-            listeners.add(listener);
+            listeners.put(listener, new ListenerQueue());
         }
     }
 
