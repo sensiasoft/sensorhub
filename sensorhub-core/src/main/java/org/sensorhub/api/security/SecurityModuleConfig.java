@@ -14,17 +14,19 @@ Copyright (C) 2012-2016 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.api.security;
 
+import org.sensorhub.api.module.ModuleConfig;
+
 
 /**
  * <p>
- * Common interface for all authorization providers allowing to check 
- * permissions for a given user
+ * Tagging interface to be extended by config classes of security related
+ * modules
  * </p>
  *
- * @author Alex Robin <alex.robin@sensiasoftware.com>
- * @since Feb 23, 2016
+ * @author Alex Robin
+ * @since Apr 2, 2016
  */
-public interface IAuthorizer
+public class SecurityModuleConfig extends ModuleConfig
 {
-    public boolean isAuthorized(IUserInfo user, IPermissionPath request);
+    
 }

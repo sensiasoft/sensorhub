@@ -17,14 +17,20 @@ package org.sensorhub.api.security;
 
 /**
  * <p>
- * Common interface for all authorization providers allowing to check 
- * permissions for a given user
+ * Interface for permissions parameterized with a value.<br/>
+ * This is used for temporal and geofencing for instance.
  * </p>
  *
- * @author Alex Robin <alex.robin@sensiasoftware.com>
- * @since Feb 23, 2016
+ * @author Alex Robin
+ * @param <ValueType> Type of the parameter value
+ * @since Aug 30, 2016
  */
-public interface IAuthorizer
+public interface IParameterizedPermission<ValueType> extends IPermission, Cloneable
 {
-    public boolean isAuthorized(IUserInfo user, IPermissionPath request);
+
+    public ValueType getValue();
+    
+    public void setValue(ValueType val);
+    
+    public IParameterizedPermission<ValueType> clone();
 }

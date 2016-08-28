@@ -14,7 +14,7 @@ Copyright (C) 2012-2016 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.api.security;
 
-import org.sensorhub.api.module.ModuleConfig;
+import org.sensorhub.api.config.DisplayInfo;
 
 
 /**
@@ -25,7 +25,18 @@ import org.sensorhub.api.module.ModuleConfig;
  * @author Alex Robin
  * @since Apr 2, 2016
  */
-public class SecurityConfig extends ModuleConfig
+public class SecurityConfig
 {
+    
+    @DisplayInfo(label="Module alias", desc="Module alias that can be used in permission specs instead of module ID")
+    public String alias;
+    
+    
+    @DisplayInfo(label="Require Authentication", desc="Set to require users to be authentified before they can use this module")
+    public boolean requireAuth = false;
+    
+    
+    @DisplayInfo(desc="Enables fine-grained permission-based access control for this module")
+    public boolean enableAccessControl = false;
     
 }

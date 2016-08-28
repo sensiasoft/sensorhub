@@ -14,17 +14,27 @@ Copyright (C) 2012-2016 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.api.security;
 
+import java.util.Map;
 
-/**
- * <p>
- * Base interface for objects representing subjects (e.g. users) in the
- * security API
- * </p>
- *
- * @author Alex Robin <alex.robin@sensiasoftware.com>
- * @since Feb 23, 2016
- */
-public interface ISubject
+
+public interface IPermission
 {
-    public String getId();
+    
+    public IPermission getParent();
+    
+    
+    public boolean hasChildren();
+    
+    
+    public Map<String, IPermission> getChildren();
+    
+    
+    public String getName();
+    
+    
+    public String getErrorMessage();
+    
+    
+    public boolean implies(IPermission perm);
+
 }

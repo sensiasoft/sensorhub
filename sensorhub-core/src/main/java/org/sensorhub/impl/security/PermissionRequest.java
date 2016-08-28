@@ -12,16 +12,32 @@ Copyright (C) 2012-2016 Sensia Software LLC. All Rights Reserved.
  
 ******************************* END LICENSE BLOCK ***************************/
 
-package org.sensorhub.api.security;
+package org.sensorhub.impl.security;
+
+import java.util.ArrayDeque;
+import org.sensorhub.api.security.IPermission;
+import org.sensorhub.api.security.IPermissionPath;
 
 
-public class SecurityContext
+public class PermissionRequest extends ArrayDeque<IPermission> implements IPermissionPath
 {
-    
-    
-    
-    public static ISubject getSubject()
+    private static final long serialVersionUID = 7266587754134674522L;
+
+
+    public PermissionRequest(IPermission perm)
     {
-        return null;
+        super(10);
+        
+        // add all ancestor permissions to list
+        do { addFirst(perm); }
+        while ((perm = perm.getParent()) != null);
     }
+    
+    
+    @Override
+    public boolean implies(IPermissionPath permList)
+    {
+        return false;        
+    }
+
 }

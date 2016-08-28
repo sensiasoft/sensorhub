@@ -12,19 +12,38 @@ Copyright (C) 2012-2016 Sensia Software LLC. All Rights Reserved.
  
 ******************************* END LICENSE BLOCK ***************************/
 
-package org.sensorhub.api.security;
+package org.sensorhub.impl.security;
+
+import org.sensorhub.api.security.IPermission;
 
 
 /**
  * <p>
- * Common interface for all authorization providers allowing to check 
- * permissions for a given user
+ * Wildcard permission used for "Allow All" and "Deny All" patterns
  * </p>
  *
- * @author Alex Robin <alex.robin@sensiasoftware.com>
- * @since Feb 23, 2016
+ * @author Alex Robin
+ * @since Aug 23, 2016
  */
-public interface IAuthorizer
+public class WildcardPermission extends AbstractPermission
 {
-    public boolean isAuthorized(IUserInfo user, IPermissionPath request);
+    
+    public WildcardPermission()
+    {
+        this(null);
+    }
+    
+    
+    public WildcardPermission(AbstractPermission parent)
+    {
+        super(parent, "*", null);
+    }
+
+
+    @Override
+    public boolean implies(IPermission perm)
+    {
+        return true;
+    }
+
 }

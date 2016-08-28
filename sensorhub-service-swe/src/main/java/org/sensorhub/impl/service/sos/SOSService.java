@@ -58,10 +58,18 @@ public class SOSService extends AbstractModule<SOSServiceConfig> implements ISer
     
     
     @Override
+    public void setConfiguration(SOSServiceConfig config)
+    {
+        super.setConfiguration(config);
+        this.securityHandler = new SOSSecurity(this);
+    }
+    
+    
+    @Override
     public void start() throws SensorHubException
     {
         // deploy servlet
-        servlet = new SOSServlet(config, getLogger());
+        servlet = new SOSServlet(config, (SOSSecurity)this.securityHandler, getLogger());
         servlet.start();
         deploy();
         
@@ -90,7 +98,7 @@ public class SOSService extends AbstractModule<SOSServiceConfig> implements ISer
         
         // deploy ourself to HTTP server
         httpServer.deployServlet(servlet, config.endPoint);
-        httpServer.addServletSecurity(config.endPoint, "admin", "sos");
+        httpServer.addServletSecurity(config.endPoint, "*");
     }
     
     

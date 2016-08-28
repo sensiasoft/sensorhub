@@ -77,6 +77,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
     Map<String, IModule<?>> loadedModules;
     IEventHandler eventHandler;
     ExecutorService asyncExec;
+    volatile boolean allModulesLoaded;
     volatile boolean shutdownCalled;
     
     
@@ -108,6 +109,28 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
             catch (Exception e)
             {
                 // continue loading other modules
+            }
+        }
+        
+        synchronized (loadedModules)
+        {
+            this.allModulesLoaded = true;
+            this.notifyAll();
+        }
+    }
+    
+    
+    public void waitForAllModulesLoaded()
+    {
+        synchronized (loadedModules)
+        {
+            try
+            {
+                while (!allModulesLoaded)                
+                    loadedModules.wait();
+            }
+            catch (InterruptedException e)
+            {
             }
         }
     }
@@ -366,6 +389,10 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
                     {
                         module.requestInit(force);
                     }
+                    catch (SecurityException e)
+                    {
+                        log.error(e.getMessage());
+                    }
                     catch (Exception e)
                     {
                         // just log simple message here; exception is already logged by module
@@ -452,6 +479,10 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
                     {
                         if (!module.isInitialized())
                             module.requestInit(false);
+                    }
+                    catch (SecurityException e)
+                    {
+                        log.error(e.getMessage());
                     }
                     catch (Exception e)
                     {

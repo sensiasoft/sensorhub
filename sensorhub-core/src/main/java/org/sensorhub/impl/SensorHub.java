@@ -19,6 +19,7 @@ import org.sensorhub.api.config.IGlobalConfig;
 import org.sensorhub.api.module.IModuleConfigRepository;
 import org.sensorhub.api.persistence.IPersistenceManager;
 import org.sensorhub.api.processing.IProcessingManager;
+import org.sensorhub.api.security.ISecurityManager;
 import org.sensorhub.api.sensor.ISensorManager;
 import org.sensorhub.impl.comm.NetworkManagerImpl;
 import org.sensorhub.impl.common.EventBus;
@@ -28,6 +29,7 @@ import org.sensorhub.impl.module.ModuleRegistry;
 import org.sensorhub.impl.persistence.PersistenceManagerImpl;
 import org.sensorhub.impl.processing.ProcessingManagerImpl;
 import org.sensorhub.impl.security.ClientAuth;
+import org.sensorhub.impl.security.SecurityManagerImpl;
 import org.sensorhub.impl.sensor.SensorManagerImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,6 +52,11 @@ public class SensorHub
     private IGlobalConfig config;
     private EventBus eventBus;
     private ModuleRegistry registry;
+    private INetworkManager networkManager;
+    private ISecurityManager securityManager;
+    private ISensorManager sensorManager;
+    private IPersistenceManager persistenceManager;
+    private IProcessingManager processingManager;
     private volatile boolean stopped;
     
     
@@ -194,25 +201,41 @@ public class SensorHub
     
     public INetworkManager getNetworkManager()
     {
-        return new NetworkManagerImpl(registry);
+        if (networkManager == null)
+            networkManager = new NetworkManagerImpl(registry);
+        return networkManager;
+    }
+    
+    
+    public ISecurityManager getSecurityManager()
+    {
+        if (securityManager == null)
+            securityManager = new SecurityManagerImpl(registry);
+        return securityManager;
     }
     
     
     public ISensorManager getSensorManager()
     {
-        return new SensorManagerImpl(registry);
+        if (sensorManager == null)
+            sensorManager = new SensorManagerImpl(registry);
+        return sensorManager;
     }
     
     
     public IPersistenceManager getPersistenceManager()
     {
-        return new PersistenceManagerImpl(registry, config.getBaseStoragePath());
+        if (persistenceManager == null)
+            persistenceManager = new PersistenceManagerImpl(registry, config.getBaseStoragePath());
+        return persistenceManager;
     }
     
     
     public IProcessingManager getProcessingManager()
     {
-        return new ProcessingManagerImpl(registry);
+        if (processingManager == null)
+            processingManager = new ProcessingManagerImpl(registry);
+        return processingManager;
     }
     
     

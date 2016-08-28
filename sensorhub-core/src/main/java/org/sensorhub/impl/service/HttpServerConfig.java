@@ -14,7 +14,6 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.impl.service;
 
-import java.util.List;
 import org.sensorhub.api.config.DisplayInfo;
 import org.sensorhub.api.module.ModuleConfig;
 
@@ -29,9 +28,17 @@ import org.sensorhub.api.module.ModuleConfig;
  */
 public class HttpServerConfig extends ModuleConfig
 {
-     
-    @DisplayInfo(desc="TCP port where HTTP server will listen")
+    public enum AuthMethod
+    {
+        BASIC, DIGEST, CERT, OAUTH
+    }
+    
+    @DisplayInfo(label="HTTP Port", desc="TCP port where server will listen for unsecure HTTP connections (use 0 to disable HTTP).")
     public int httpPort = 8080;
+    
+    
+    @DisplayInfo(label="HTTPS Port", desc="TCP port where server will listen for secure HTTP (HTTPS) connections (use 0 to disable HTTPS).")
+    public int httpsPort = 0;
     
     
     @DisplayInfo(desc="Root URL where static web content will be served.")
@@ -46,8 +53,16 @@ public class HttpServerConfig extends ModuleConfig
     public int maxRequestsPerSecond = 20;
     
     
-    @DisplayInfo(desc="List of users with passwords and roles (format is user: password[, role1, role2 ...]")
-    public List<String> users;
+    @DisplayInfo(label="Authentication Method", desc="Method used to authenticate users on this server")
+    public AuthMethod authMethod = AuthMethod.DIGEST;
+    
+    
+    @DisplayInfo(desc="Path to SSL key store")
+    public String keyStorePath = ".keystore/ssl_keys";
+    
+    
+    @DisplayInfo(desc="Path to SSL trust store")
+    public String trustStorePath = ".keystore/ssl_trust";
     
 
     public HttpServerConfig()

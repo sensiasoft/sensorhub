@@ -14,8 +14,8 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.impl.service;
 
+import java.io.File;
 import java.io.IOException;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
@@ -25,13 +25,21 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.eclipse.jetty.http.HttpVersion;
+import org.eclipse.jetty.security.Authenticator;
 import org.eclipse.jetty.security.ConstraintMapping;
 import org.eclipse.jetty.security.ConstraintSecurityHandler;
-import org.eclipse.jetty.security.HashLoginService;
+import org.eclipse.jetty.security.authentication.BasicAuthenticator;
+import org.eclipse.jetty.security.authentication.ClientCertAuthenticator;
 import org.eclipse.jetty.security.authentication.DigestAuthenticator;
 import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.eclipse.jetty.servlets.DoSFilter;
+import org.eclipse.jetty.server.HttpConfiguration;
+import org.eclipse.jetty.server.HttpConnectionFactory;
+import org.eclipse.jetty.server.SecureRequestCustomizer;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.server.SslConnectionFactory;
 import org.eclipse.jetty.server.handler.AllowSymLinkAliasChecker;
 import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.server.handler.HandlerList;
@@ -42,10 +50,12 @@ import org.eclipse.jetty.servlet.ServletHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.servlet.ServletMapping;
 import org.eclipse.jetty.util.security.Constraint;
-import org.eclipse.jetty.util.security.Credential;
+import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.module.ModuleEvent.ModuleState;
+import org.sensorhub.impl.SensorHub;
 import org.sensorhub.impl.module.AbstractModule;
+import org.sensorhub.impl.service.HttpServerConfig.AuthMethod;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,13 +71,14 @@ import org.slf4j.LoggerFactory;
 public class HttpServer extends AbstractModule<HttpServerConfig>
 {
     private static final Logger log = LoggerFactory.getLogger(HttpServer.class);
-    public static String TEST_MSG = "SensorHub web server is up";
+    private static final String DEFAULT_KEYSTORE_PWD = "osh2016";
+    private static final String CERT_ALIAS = "jetty";
+    public final static String TEST_MSG = "SensorHub web server is up";
     private static HttpServer instance;
         
     Server server;
     ServletContextHandler servletHandler;
     ConstraintSecurityHandler securityHandler;
-    HashLoginService loginService;
     
     
     public HttpServer()
@@ -99,13 +110,42 @@ public class HttpServer extends AbstractModule<HttpServerConfig>
     {
         try
         {
-            server = new Server(config.httpPort);
+            server = new Server();
             HandlerList handlers = new HandlerList();
             
-            // load user list
-            loginService = new HashLoginService();
-            loginService.setName("Authentication Required");
-            loadUsers();
+            // HTTP connector
+            HttpConfiguration http_config = new HttpConfiguration();
+            http_config.setSecureScheme("https");
+            http_config.setSecurePort(config.httpsPort);
+            if (config.httpPort > 0)
+            {
+                ServerConnector http = new ServerConnector(server,
+                        new HttpConnectionFactory(http_config));
+                http.setPort(config.httpPort);
+                http.setIdleTimeout(30000);
+                server.addConnector(http);
+            }
+            
+            // HTTPS connector
+            if (config.httpsPort > 0)
+            {
+                SslContextFactory sslContextFactory = new SslContextFactory();
+                sslContextFactory.setKeyStorePath(new File(config.keyStorePath).getAbsolutePath());
+                sslContextFactory.setKeyStorePassword(DEFAULT_KEYSTORE_PWD);
+                sslContextFactory.setKeyManagerPassword(DEFAULT_KEYSTORE_PWD);
+                sslContextFactory.setCertAlias(CERT_ALIAS);
+                sslContextFactory.setTrustStorePath(new File(config.trustStorePath).getAbsolutePath());
+                sslContextFactory.setTrustStorePassword(DEFAULT_KEYSTORE_PWD);
+                sslContextFactory.setWantClientAuth(true);
+                HttpConfiguration https_config = new HttpConfiguration(http_config);
+                https_config.addCustomizer(new SecureRequestCustomizer());
+                ServerConnector https = new ServerConnector(server, 
+                        new SslConnectionFactory(sslContextFactory, HttpVersion.HTTP_1_1.asString()),
+                        new HttpConnectionFactory(https_config));
+                https.setPort(config.httpsPort);
+                https.setIdleTimeout(30000);
+                server.addConnector(https);
+            }
             
             // static content
             if (config.staticDocRootUrl != null)
@@ -130,7 +170,7 @@ public class HttpServer extends AbstractModule<HttpServerConfig>
             if (config.servletsRootUrl != null)
             {
                 // create servlet handler
-                this.servletHandler = new ServletContextHandler(ServletContextHandler.SESSIONS);                
+                this.servletHandler = new ServletContextHandler(ServletContextHandler.SESSIONS);
                 servletHandler.setContextPath(config.servletsRootUrl);
                 handlers.addHandler(servletHandler);
                 log.info("Servlets root is " + config.servletsRootUrl);
@@ -143,11 +183,22 @@ public class HttpServer extends AbstractModule<HttpServerConfig>
                 holder.setInitParameter("maxRequestMs", Long.toString(24*3600*1000L)); // we need persistent requests!
                 
                 // security handler
-                if (config.users != null && !config.users.isEmpty())
+                if (SensorHub.getInstance().getSecurityManager().isAccessControlEnabled())
                 {
                     securityHandler = new ConstraintSecurityHandler();
-                    securityHandler.setAuthenticator(new DigestAuthenticator());
-                    //securityHandler.setAuthenticator((Authenticator)Class.forName("org.sensorhub.impl.security.oauth.OAuthAuthenticator").newInstance());
+                    
+                    // load user list
+                    OshLoginService loginService = new OshLoginService(SensorHub.getInstance().getSecurityManager());
+                    
+                    if (config.authMethod == AuthMethod.BASIC)
+                        securityHandler.setAuthenticator(new BasicAuthenticator());
+                    else if (config.authMethod == AuthMethod.DIGEST)
+                        securityHandler.setAuthenticator(new DigestAuthenticator());
+                    else if (config.authMethod == AuthMethod.CERT)
+                        securityHandler.setAuthenticator(new ClientCertAuthenticator());
+                    else if (config.authMethod == AuthMethod.OAUTH)
+                        securityHandler.setAuthenticator((Authenticator)Class.forName("org.sensorhub.impl.security.oauth.OAuthAuthenticator").newInstance());
+                    
                     securityHandler.setLoginService(loginService);
                     servletHandler.setSecurityHandler(securityHandler);
                 }
@@ -162,7 +213,6 @@ public class HttpServer extends AbstractModule<HttpServerConfig>
                     {
                         try
                         {
-                            log.debug("user = " + req.getRemoteUser() + ", admin = " + req.isUserInRole("admin"));
                             resp.getOutputStream().print(TEST_MSG);
                         }
                         catch (IOException e)
@@ -186,26 +236,6 @@ public class HttpServer extends AbstractModule<HttpServerConfig>
     }
     
     
-    private void loadUsers() throws ParseException
-    {
-        if (config.users != null)
-        {            
-            for (String userSpec: config.users)
-            {
-                String[] tokens = userSpec.split(":|,");
-                if (tokens.length < 2)
-                    throw new ParseException("Invalid user spec: " + userSpec, 0);
-                String username = tokens[0].trim();
-                String password = tokens[1].trim();
-                String[] roles = new String[tokens.length-2];
-                for (int i = 0; i < roles.length; i++)
-                    roles[i] = tokens[i+2].trim();
-                loginService.putUser(username, Credential.getCredential(password), roles);
-            }
-        }
-    }
-    
-    
     @Override
     public void stop() throws SensorHubException
     {
@@ -214,7 +244,7 @@ public class HttpServer extends AbstractModule<HttpServerConfig>
             if (server != null)
             {
                 server.stop();
-                servletHandler = null;
+                securityHandler = null;
             }
         }
         catch (Exception e)
@@ -299,16 +329,21 @@ public class HttpServer extends AbstractModule<HttpServerConfig>
     }
     
     
-    public void addServletSecurity(String pathSpec, String... roles)
+    public void addServletSecurity(String pathSpec, boolean requireAuth)
+    {
+        addServletSecurity(pathSpec, requireAuth, Constraint.ANY_AUTH);
+    }
+    
+    
+    public void addServletSecurity(String pathSpec, boolean requireAuth, String... roles)
     {
         checkStarted();
         
         if (securityHandler != null)
         {
             Constraint constraint = new Constraint();
-            constraint.setName(Constraint.__DIGEST_AUTH);
             constraint.setRoles(roles);
-            constraint.setAuthenticate(true);         
+            constraint.setAuthenticate(true);//requireAuth);
             ConstraintMapping cm = new ConstraintMapping();
             cm.setConstraint(constraint);
             cm.setPathSpec(pathSpec);

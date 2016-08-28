@@ -17,14 +17,18 @@ package org.sensorhub.api.security;
 
 /**
  * <p>
- * Common interface for all authorization providers allowing to check 
- * permissions for a given user
+ * Base interface for object representing roles in the security API.<br/>
+ * Roles are sets of allowed and denied permissions that are associated to users
  * </p>
  *
- * @author Alex Robin <alex.robin@sensiasoftware.com>
- * @since Feb 23, 2016
+ * @author Alex Robin
+ * @since Aug 22, 2016
  */
-public interface IAuthorizer
-{
-    public boolean isAuthorized(IUserInfo user, IPermissionPath request);
+public interface IUserRole extends IUserPermissions
+{    
+    public String getId();
+    
+    public String getName();
+    
+    public String getDescription();
 }

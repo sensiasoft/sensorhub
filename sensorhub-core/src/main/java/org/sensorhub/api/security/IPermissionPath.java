@@ -14,30 +14,10 @@ Copyright (C) 2012-2016 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.api.security;
 
-import org.sensorhub.api.config.DisplayInfo;
+import java.util.Collection;
 
 
-/**
- * <p>
- * Basic security config group to be used within module configurations
- * </p>
- *
- * @author Alex Robin
- * @since Apr 2, 2016
- */
-public class ModuleSecurityConfig
+public interface IPermissionPath extends Collection<IPermission>
 {
-    
-    @DisplayInfo(label="Instance ID", desc="Module instance ID (i.e. used in permission strings)")
-    public String instanceID;
-    
-    
-    public String authenticatorClass;
-    
-    
-    public boolean enableAccessControl;
-    
-    
-    public boolean enableEncryption; // e.g. SSL
-    
+    public boolean implies(IPermissionPath permList);
 }

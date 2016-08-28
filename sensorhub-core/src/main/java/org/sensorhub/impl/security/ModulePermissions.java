@@ -12,19 +12,32 @@ Copyright (C) 2012-2016 Sensia Software LLC. All Rights Reserved.
  
 ******************************* END LICENSE BLOCK ***************************/
 
-package org.sensorhub.api.security;
+package org.sensorhub.impl.security;
 
 
 /**
  * <p>
- * Common interface for all authorization providers allowing to check 
- * permissions for a given user
+ * Top level permission for a module.
+ * This permission can match either a module ID or a module class.
  * </p>
  *
- * @author Alex Robin <alex.robin@sensiasoftware.com>
- * @since Feb 23, 2016
+ * @author Alex Robin
+ * @since Aug 22, 2016
  */
-public interface IAuthorizer
+public class ModulePermissions extends AbstractPermission
 {
-    public boolean isAuthorized(IUserInfo user, IPermissionPath request);
+    Class<?> moduleType;
+
+    
+    public ModulePermissions(String moduleID, Class<?> moduleType)
+    {
+        super(null, moduleID, null);
+        this.moduleType = moduleType;
+    }
+    
+    
+    public ModulePermissions(String moduleID)
+    {
+        super(null, moduleID, null);
+    }
 }

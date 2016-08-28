@@ -12,19 +12,14 @@ Copyright (C) 2012-2016 Sensia Software LLC. All Rights Reserved.
  
 ******************************* END LICENSE BLOCK ***************************/
 
-package org.sensorhub.api.security;
+package org.sensorhub.impl.security;
+
+import java.util.HashMap;
+import org.sensorhub.api.security.SecurityModuleConfig;
 
 
-/**
- * <p>
- * Common interface for all authorization providers allowing to check 
- * permissions for a given user
- * </p>
- *
- * @author Alex Robin <alex.robin@sensiasoftware.com>
- * @since Feb 23, 2016
- */
-public interface IAuthorizer
+public class BasicSecurityRealmConfig extends SecurityModuleConfig
 {
-    public boolean isAuthorized(IUserInfo user, IPermissionPath request);
+    public HashMap<String, String> users = new HashMap<String, String>();
+    public HashMap<String, String[]> roles = new HashMap<String, String[]>();
 }

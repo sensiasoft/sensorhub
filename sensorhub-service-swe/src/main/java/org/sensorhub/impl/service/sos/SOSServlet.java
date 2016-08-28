@@ -154,6 +154,7 @@ public class SOSServlet extends org.vast.ows.sos.SOSServlet
     private static final QName EXT_REPLAY = new QName("replayspeed"); // kvp params are always lower case
     
     SOSServiceConfig config;
+    SOSSecurity securityHandler;
     Logger log;
     String endpointUrl;
     ReentrantReadWriteLock capabilitiesLock = new ReentrantReadWriteLock();
@@ -165,11 +166,13 @@ public class SOSServlet extends org.vast.ows.sos.SOSServlet
     Map<String, ISOSDataConsumer> dataConsumers;
     Map<String, ISOSCustomSerializer> customFormats = new HashMap<String, ISOSCustomSerializer>();
     boolean needCapabilitiesTimeUpdate = false;
-
+    SOSSecurity sosSecurity;
     
-    protected SOSServlet(SOSServiceConfig config, Logger log)
+    
+    protected SOSServlet(SOSServiceConfig config, SOSSecurity securityHandler, Logger log)
     {
         this.config = config;
+        this.securityHandler = securityHandler;
         this.log = log;
     }
     
@@ -438,48 +441,58 @@ public class SOSServlet extends org.vast.ows.sos.SOSServlet
     @Override
     protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException
     {
-        // check if we have an upgrade request for websockets
-        if (factory.isUpgradeRequest(req, resp))
+        // set current user name
+        securityHandler.setCurrentUser(req.getRemoteUser());
+        
+        try
         {
-            // parse request
-            OWSRequest owsReq = null;
-            try
+            // check if we have an upgrade request for websockets
+            if (factory.isUpgradeRequest(req, resp))
             {
-                owsReq = this.parseRequest(req, resp, false);
-                
-                if (owsReq != null)
+                // parse request
+                OWSRequest owsReq = null;
+                try
                 {
-                    // send error if request is not supported via websockets
-                    if (!(owsReq instanceof GetResultRequest))
+                    owsReq = this.parseRequest(req, resp, false);
+                    
+                    if (owsReq != null)
                     {
-                        String errorMsg = INVALID_WS_REQ_MSG + owsReq.getOperation() + " is not supported via this protocol.";
-                        resp.sendError(400, errorMsg);
-                        log.trace(errorMsg);
-                        owsReq = null;
+                        // send error if request is not supported via websockets
+                        if (!(owsReq instanceof GetResultRequest))
+                        {
+                            String errorMsg = INVALID_WS_REQ_MSG + owsReq.getOperation() + " is not supported via this protocol.";
+                            resp.sendError(400, errorMsg);
+                            log.trace(errorMsg);
+                            owsReq = null;
+                        }
                     }
                 }
-            }
-            catch (Exception e)
-            {
+                catch (Exception e)
+                {
+                }
+                
+                // if SOS request was accepted, create websocket instance
+                // and start streaming / accepting incoming stream
+                if (owsReq != null)
+                {
+                    SOSWebSocket socketCreator = new SOSWebSocket(this, owsReq);                
+                    if (factory.acceptWebSocket(socketCreator, req, resp))
+                    {
+                        // We have a socket instance created
+                        return;
+                    }
+                }
+
+                return;
             }
             
-            // if SOS request was accepted, create websocket instance
-            // and start streaming / accepting incoming stream
-            if (owsReq != null)
-            {
-                SOSWebSocket socketCreator = new SOSWebSocket(this, owsReq);                
-                if (factory.acceptWebSocket(socketCreator, req, resp))
-                {
-                    // We have a socket instance created
-                    return;
-                }
-            }
-
-            return;
+            // otherwise process as classical HTTP request
+            super.service(req, resp);
         }
-        
-        // otherwise process as classical HTTP request
-        super.service(req, resp);
+        finally
+        {
+            securityHandler.clearCurrentUser();
+        }
     }
 
 
@@ -496,6 +509,9 @@ public class SOSServlet extends org.vast.ows.sos.SOSServlet
         
         // set selected version
         request.setVersion(DEFAULT_VERSION);
+        
+        // security check
+        securityHandler.check(securityHandler.sos_read_caps);
         
         // make sure capabilities are up to date
         try
@@ -544,6 +560,9 @@ public class SOSServlet extends org.vast.ows.sos.SOSServlet
     {
         String sensorID = request.getProcedureID();
                 
+        // security check
+        securityHandler.check(securityHandler.sos_read_sensor);
+        
         // check query parameters
         OWSExceptionReport report = new OWSExceptionReport();        
         checkQueryProcedure(sensorID, report);
@@ -644,6 +663,10 @@ public class SOSServlet extends org.vast.ows.sos.SOSServlet
             for (String offering: selectedOfferings)
                 checkQueryFormat(offering, request.getFormat(), report);
             report.process();
+            
+            // security check
+            for (String offering: selectedOfferings)
+                securityHandler.check(offering, securityHandler.sos_read_obs);
             
             // prepare obs stream writer for requested O&M version
             String format = request.getFormat();
@@ -769,6 +792,9 @@ public class SOSServlet extends org.vast.ows.sos.SOSServlet
             checkQueryObservables(request.getOffering(), request.getObservables(), report);
             report.process();
             
+            // security check
+            securityHandler.check(request.getOffering(), securityHandler.sos_read_obs);
+            
             // setup data provider
             SOSDataFilter filter = new SOSDataFilter(request.getObservables().get(0));
             dataProvider = getDataProvider(request.getOffering(), filter);
@@ -795,7 +821,7 @@ public class SOSServlet extends org.vast.ows.sos.SOSServlet
     protected void handleRequest(GetResultRequest request) throws Exception
     {
         ISOSDataProvider dataProvider = null;
-                
+        
         try
         {
             // check query parameters
@@ -804,6 +830,9 @@ public class SOSServlet extends org.vast.ows.sos.SOSServlet
             checkQueryProcedures(request.getOffering(), request.getProcedures(), report);
             checkQueryTime(request.getOffering(), request.getTime(), report);
             report.process();
+            
+            // security check
+            securityHandler.check(request.getOffering(), securityHandler.sos_read_obs);
             
             // setup data filter (including extensions)
             SOSDataFilter filter = new SOSDataFilter(request.getFoiIDs(), request.getObservables(), request.getTime());
@@ -1044,6 +1073,9 @@ public class SOSServlet extends org.vast.ows.sos.SOSServlet
             checkSensorML(request.getProcedureDescription(), report);
             report.process();
             
+            // security check
+            securityHandler.check(securityHandler.sos_insert_sensor);
+           
             // choose offering name (here derived from sensor ID)
             String sensorUID = request.getProcedureDescription().getUniqueIdentifier();
             if (sensorUID == null)
@@ -1368,10 +1400,13 @@ public class SOSServlet extends org.vast.ows.sos.SOSServlet
         {
             checkTransactionalSupport(request);
             String offering = request.getOffering();
+            ISOSDataConsumer consumer = getDataConsumerByOfferingID(offering);
+            
+            // security check
+            securityHandler.check(offering, securityHandler.sos_insert_obs);
             
             // get template ID
-            // the same template ID is always returned for a given observable
-            ISOSDataConsumer consumer = getDataConsumerByOfferingID(offering);
+            // the same template ID is always returned for a given observable            
             String templateID = consumer.newResultTemplate(request.getResultStructure(),
                                                            request.getResultEncoding(),
                                                            request.getObservationTemplate());

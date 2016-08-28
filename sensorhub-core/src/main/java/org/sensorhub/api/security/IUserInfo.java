@@ -14,17 +14,27 @@ Copyright (C) 2012-2016 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.api.security;
 
+import java.util.Collection;
+import java.util.Map;
+
 
 /**
  * <p>
- * Common interface for all authorization providers allowing to check 
- * permissions for a given user
+ * Base interface for objects representing users in the security API
  * </p>
  *
  * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @since Feb 23, 2016
  */
-public interface IAuthorizer
+public interface IUserInfo extends IUserPermissions
 {
-    public boolean isAuthorized(IUserInfo user, IPermissionPath request);
+    public String getId();
+    
+    public String getName();
+    
+    public String getPassword();
+    
+    public Collection<String> getRoles();
+    
+    public Map<String, Object> getAttributes();
 }
