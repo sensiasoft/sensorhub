@@ -256,7 +256,7 @@ public class DefaultModulePanel<ModuleType extends IModule<? extends ModuleConfi
                     });  
                     break;
                     
-                case CONFIG_CHANGED:
+                /*case CONFIG_CHANGED:
                     getUI().access(new Runnable() {
                         public void run()
                         {
@@ -265,7 +265,7 @@ public class DefaultModulePanel<ModuleType extends IModule<? extends ModuleConfi
                             getUI().push();
                         }
                     });  
-                    break;
+                    break;*/
                     
                 default:
                     return;
