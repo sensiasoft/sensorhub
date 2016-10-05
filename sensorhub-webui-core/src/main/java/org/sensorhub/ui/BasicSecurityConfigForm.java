@@ -25,7 +25,6 @@ import org.sensorhub.impl.SensorHub;
 import org.sensorhub.impl.security.BasicSecurityRealmConfig;
 import org.sensorhub.impl.security.BasicSecurityRealmConfig.RoleConfig;
 import org.sensorhub.impl.security.PermissionSetting;
-import org.sensorhub.impl.security.WildcardPermission;
 import org.sensorhub.ui.ValueEntryPopup.ValueCallback;
 import org.sensorhub.ui.data.ContainerProperty;
 import org.sensorhub.ui.data.MyBeanItem;
@@ -438,13 +437,13 @@ public class BasicSecurityConfigForm extends GenericConfigForm
     private PermState getState(IPermission perm)
     {
         PermissionSetting permSetting = new PermissionSetting(perm);
-        int permPathLength = getPermPathLength(permSetting);
+        int permPathLength = permSetting.size();
         PermState permState = PermState.UNSET;
         
         // check allow list        
         for (IPermissionPath fromConfig: roleConfig.getAllowList())
         {
-            int configPermPathLength = getPermPathLength(fromConfig);
+            int configPermPathLength = fromConfig.size();
             
             if (fromConfig.implies(permSetting))
             {
@@ -461,7 +460,7 @@ public class BasicSecurityConfigForm extends GenericConfigForm
         // check deny list
         for (IPermissionPath fromConfig: roleConfig.getDenyList())
         {
-            int configPermPathLength = getPermPathLength(fromConfig);
+            int configPermPathLength = fromConfig.size();
             
             if (fromConfig.implies(permSetting) && permPathLength >= configPermPathLength)
             {
@@ -476,14 +475,5 @@ public class BasicSecurityConfigForm extends GenericConfigForm
         }
         
         return permState;
-    }
-    
-    
-    private int getPermPathLength(IPermissionPath permSetting)
-    {
-        int size = permSetting.size();
-        if (((PermissionSetting)permSetting).getLast() instanceof WildcardPermission)
-            size--;
-        return size;
     }
 }

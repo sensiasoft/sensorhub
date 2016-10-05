@@ -39,6 +39,10 @@ public class PermissionFactory
             permSetting.add(perm);
         }
         
+        // remove trailing wildcards
+        while (permSetting.size() > 1 && permSetting.getLast() instanceof WildcardPermission)
+            permSetting.removeLast();
+        
         return permSetting;
     }
     

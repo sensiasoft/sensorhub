@@ -17,7 +17,7 @@ package org.sensorhub.impl.security;
 import java.lang.ref.WeakReference;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import org.sensorhub.api.module.IModule;
 import org.sensorhub.api.module.ModuleEvent.ModuleState;
@@ -39,7 +39,7 @@ public class SecurityManagerImpl implements ISecurityManager
     private static final Logger log = LoggerFactory.getLogger(SecurityManagerImpl.class);
     
     ModuleRegistry moduleRegistry;
-    Map<String, IPermission> modulePermissions = new HashMap<String, IPermission>();
+    Map<String, IPermission> modulePermissions = new LinkedHashMap<String, IPermission>();
     WeakReference<IUserRegistry> users;
     WeakReference<IAuthorizer> authz;
     
