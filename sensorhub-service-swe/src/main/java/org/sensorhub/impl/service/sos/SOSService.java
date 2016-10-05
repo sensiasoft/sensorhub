@@ -61,7 +61,7 @@ public class SOSService extends AbstractModule<SOSServiceConfig> implements ISer
     public void setConfiguration(SOSServiceConfig config)
     {
         super.setConfiguration(config);
-        this.securityHandler = new SOSSecurity(this);
+        this.securityHandler = new SOSSecurity(this, config.security.enableAccessControl);
     }
     
     
@@ -98,7 +98,7 @@ public class SOSService extends AbstractModule<SOSServiceConfig> implements ISer
         
         // deploy ourself to HTTP server
         httpServer.deployServlet(servlet, config.endPoint);
-        httpServer.addServletSecurity(config.endPoint, "*");
+        httpServer.addServletSecurity(config.endPoint, config.security.requireAuth);
     }
     
     

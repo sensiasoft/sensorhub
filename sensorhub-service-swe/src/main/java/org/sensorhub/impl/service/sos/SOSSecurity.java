@@ -18,10 +18,16 @@ import org.sensorhub.api.security.IPermission;
 import org.sensorhub.impl.SensorHub;
 import org.sensorhub.impl.module.ModuleSecurity;
 import org.sensorhub.impl.security.ItemPermission;
+import org.sensorhub.impl.security.ModulePermissions;
 
 
 public class SOSSecurity extends ModuleSecurity
 {    
+    private final static String LABEL_CAPS = "Capabilities";
+    private final static String LABEL_SENSOR = "Sensor Descriptions";
+    private final static String LABEL_FOI = "Features of Interest";
+    private final static String LABEL_OBS = "Observations";    
+    
     public final IPermission sos_read;
     public final IPermission sos_read_caps;
     public final IPermission sos_read_sensor;
@@ -38,34 +44,40 @@ public class SOSSecurity extends ModuleSecurity
     public final IPermission sos_delete_obs;
     
     
-    public SOSSecurity(SOSService sos)
+    public SOSSecurity(SOSService sos, boolean enable)
     {
-        super(sos);
+        super(sos, "sos", enable);
         
         // register permission structure
-        sos_read = new ItemPermission(rootPerm, "read");
-        sos_read_caps = new ItemPermission(sos_read, "caps");
-        sos_read_sensor = new ItemPermission(sos_read, "sensor");
-        sos_read_foi = new ItemPermission(sos_read, "foi");
-        sos_read_obs = new ItemPermission(sos_read, "obs");
+        sos_read = new ItemPermission(rootPerm, "get");
+        sos_read_caps = new ItemPermission(sos_read, "caps", LABEL_CAPS);
+        sos_read_sensor = new ItemPermission(sos_read, "sensor", LABEL_SENSOR);
+        sos_read_foi = new ItemPermission(sos_read, "foi", LABEL_FOI);
+        sos_read_obs = new ItemPermission(sos_read, "obs", LABEL_OBS);
         
         sos_insert = new ItemPermission(rootPerm, "insert");
-        sos_insert_sensor = new ItemPermission(sos_insert, "sensor");
-        sos_insert_obs = new ItemPermission(sos_insert, "obs");
+        sos_insert_sensor = new ItemPermission(sos_insert, "sensor", LABEL_SENSOR);
+        sos_insert_obs = new ItemPermission(sos_insert, "obs", LABEL_OBS);
         
         sos_update = new ItemPermission(rootPerm, "update");
-        sos_update_sensor = new ItemPermission(sos_update, "sensor");
-        sos_update_obs = new ItemPermission(sos_update, "obs");
+        sos_update_sensor = new ItemPermission(sos_update, "sensor", LABEL_SENSOR);
+        sos_update_obs = new ItemPermission(sos_update, "obs", LABEL_OBS);
         
         sos_delete = new ItemPermission(rootPerm, "delete");
-        sos_delete_sensor = new ItemPermission(sos_delete, "sensor");
-        sos_delete_obs = new ItemPermission(sos_delete, "obs");
+        sos_delete_sensor = new ItemPermission(sos_delete, "sensor", LABEL_SENSOR);
+        sos_delete_obs = new ItemPermission(sos_delete, "obs", LABEL_OBS);
         
+        // register wildcard permission tree usable for all SOS services
+        // do it at this point so we don't include specific offering permissions
+        ModulePermissions templatePerm = rootPerm.cloneAsTemplatePermission("SOS Services");
+        SensorHub.getInstance().getSecurityManager().registerModulePermissions(templatePerm);
+                
         // create permissions for each offering
         for (SOSProviderConfig offering: sos.getConfiguration().dataProviders)
         {
             String permName = getOfferingPermissionName(offering.uri);
             new ItemPermission(sos_read_caps, permName);
+            new ItemPermission(sos_read_sensor, permName);
             new ItemPermission(sos_read_obs, permName);
             new ItemPermission(sos_insert_obs, permName);
             new ItemPermission(sos_update_obs, permName);
@@ -74,14 +86,15 @@ public class SOSSecurity extends ModuleSecurity
             new ItemPermission(sos_delete_sensor, permName);
         }
         
-        SensorHub.getInstance().getSecurityManager().registerModulePermissions(sos.getLocalID(), rootPerm);
+        // register this instance permission tree
+        SensorHub.getInstance().getSecurityManager().registerModulePermissions(rootPerm);
     }
     
     
-    public void check(String offeringUri, IPermission perm) throws SecurityException
+    public void checkPermission(String offeringUri, IPermission perm) throws SecurityException
     {
         String permName = getOfferingPermissionName(offeringUri);
-        check(perm.getChildren().get(permName));
+        checkPermission(perm.getChildren().get(permName));
     }
     
     

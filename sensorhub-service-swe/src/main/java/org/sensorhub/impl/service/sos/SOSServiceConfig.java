@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.sensorhub.api.config.DisplayInfo;
 import org.sensorhub.api.persistence.StorageConfig;
+import org.sensorhub.api.security.SecurityConfig;
 import org.sensorhub.impl.service.ogc.OGCServiceConfig;
 
 
@@ -58,6 +59,10 @@ public class SOSServiceConfig extends OGCServiceConfig
     
     @DisplayInfo(desc="Mapping of custom formats mime-types to custom serializer classes")
     public List<SOSCustomFormatConfig> customFormats = new ArrayList<SOSCustomFormatConfig>();
+    
+    
+    @DisplayInfo(desc="Security related options")
+    public SecurityConfig security = new SecurityConfig();
     
     
     public SOSServiceConfig()

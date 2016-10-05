@@ -71,6 +71,7 @@ import org.sensorhub.api.module.ModuleConfig;
 import org.sensorhub.api.persistence.FoiFilter;
 import org.sensorhub.api.persistence.IFoiFilter;
 import org.sensorhub.api.persistence.StorageConfig;
+import org.sensorhub.api.security.ISecurityManager;
 import org.sensorhub.api.service.ServiceException;
 import org.sensorhub.impl.SensorHub;
 import org.sensorhub.impl.module.ModuleRegistry;
@@ -166,7 +167,6 @@ public class SOSServlet extends org.vast.ows.sos.SOSServlet
     Map<String, ISOSDataConsumer> dataConsumers;
     Map<String, ISOSCustomSerializer> customFormats = new HashMap<String, ISOSCustomSerializer>();
     boolean needCapabilitiesTimeUpdate = false;
-    SOSSecurity sosSecurity;
     
     
     protected SOSServlet(SOSServiceConfig config, SOSSecurity securityHandler, Logger log)
@@ -441,8 +441,11 @@ public class SOSServlet extends org.vast.ows.sos.SOSServlet
     @Override
     protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException
     {
-        // set current user name
-        securityHandler.setCurrentUser(req.getRemoteUser());
+        // set current authentified user
+        if (req.getRemoteUser() != null)
+            securityHandler.setCurrentUser(req.getRemoteUser());
+        else
+            securityHandler.setCurrentUser(ISecurityManager.ANONYMOUS_USER);
         
         try
         {
@@ -511,7 +514,7 @@ public class SOSServlet extends org.vast.ows.sos.SOSServlet
         request.setVersion(DEFAULT_VERSION);
         
         // security check
-        securityHandler.check(securityHandler.sos_read_caps);
+        securityHandler.checkPermission(securityHandler.sos_read_caps);
         
         // make sure capabilities are up to date
         try
@@ -560,14 +563,15 @@ public class SOSServlet extends org.vast.ows.sos.SOSServlet
     {
         String sensorID = request.getProcedureID();
                 
-        // security check
-        securityHandler.check(securityHandler.sos_read_sensor);
-        
         // check query parameters
         OWSExceptionReport report = new OWSExceptionReport();        
         checkQueryProcedure(sensorID, report);
-        checkQueryProcedureFormat(procedureToOfferingMap.get(sensorID), request.getFormat(), report);
+        String offeringID = procedureToOfferingMap.get(sensorID);
+        checkQueryProcedureFormat(offeringID, request.getFormat(), report);
         report.process();
+        
+        // security check
+        securityHandler.checkPermission(offeringID, securityHandler.sos_read_sensor);
         
         // get procedure description
         AbstractProcess processDesc = generateSensorML(sensorID, request.getTime());
@@ -665,8 +669,8 @@ public class SOSServlet extends org.vast.ows.sos.SOSServlet
             report.process();
             
             // security check
-            for (String offering: selectedOfferings)
-                securityHandler.check(offering, securityHandler.sos_read_obs);
+            for (String offeringID: selectedOfferings)
+                securityHandler.checkPermission(offeringID, securityHandler.sos_read_obs);
             
             // prepare obs stream writer for requested O&M version
             String format = request.getFormat();
@@ -793,7 +797,7 @@ public class SOSServlet extends org.vast.ows.sos.SOSServlet
             report.process();
             
             // security check
-            securityHandler.check(request.getOffering(), securityHandler.sos_read_obs);
+            securityHandler.checkPermission(request.getOffering(), securityHandler.sos_read_obs);
             
             // setup data provider
             SOSDataFilter filter = new SOSDataFilter(request.getObservables().get(0));
@@ -832,7 +836,7 @@ public class SOSServlet extends org.vast.ows.sos.SOSServlet
             report.process();
             
             // security check
-            securityHandler.check(request.getOffering(), securityHandler.sos_read_obs);
+            securityHandler.checkPermission(request.getOffering(), securityHandler.sos_read_obs);
             
             // setup data filter (including extensions)
             SOSDataFilter filter = new SOSDataFilter(request.getFoiIDs(), request.getObservables(), request.getTime());
@@ -977,6 +981,13 @@ public class SOSServlet extends org.vast.ows.sos.SOSServlet
         // if errors were detected, send them now
         report.process();
         
+        // security check
+        for (String procID: selectedProcedures)
+        {
+            String offeringID = procedureToOfferingMap.get(procID);
+            securityHandler.checkPermission(offeringID, securityHandler.sos_read_foi);
+        }
+        
         // prepare feature filter
         final Polygon poly;
         if (request.getSpatialFilter() != null)
@@ -1074,7 +1085,7 @@ public class SOSServlet extends org.vast.ows.sos.SOSServlet
             report.process();
             
             // security check
-            securityHandler.check(securityHandler.sos_insert_sensor);
+            securityHandler.checkPermission(securityHandler.sos_insert_sensor);
            
             // choose offering name (here derived from sensor ID)
             String sensorUID = request.getProcedureDescription().getUniqueIdentifier();
@@ -1321,6 +1332,10 @@ public class SOSServlet extends org.vast.ows.sos.SOSServlet
             OWSExceptionReport report = new OWSExceptionReport();
             checkQueryProcedure(sensorUID, report);
             report.process();
+            
+            // security check
+            String offeringID = procedureToOfferingMap.get(sensorUID);
+            securityHandler.checkPermission(offeringID, securityHandler.sos_delete_sensor);            
 
             // destroy associated virtual sensor
             String offering = procedureToOfferingMap.get(sensorUID);
@@ -1353,8 +1368,12 @@ public class SOSServlet extends org.vast.ows.sos.SOSServlet
             // check query parameters
             OWSExceptionReport report = new OWSExceptionReport();
             checkQueryProcedure(sensorUID, report);
-            checkQueryProcedureFormat(procedureToOfferingMap.get(sensorUID), request.getProcedureDescriptionFormat(), report);
+            String offeringID = procedureToOfferingMap.get(sensorUID);
+            checkQueryProcedureFormat(offeringID, request.getProcedureDescriptionFormat(), report);
             report.process();
+            
+            // security check
+            securityHandler.checkPermission(offeringID, securityHandler.sos_update_sensor);
             
             // get consumer and update
             ISOSDataConsumer consumer = getDataConsumerBySensorID(request.getProcedureId());                
@@ -1379,6 +1398,10 @@ public class SOSServlet extends org.vast.ows.sos.SOSServlet
         {
             checkTransactionalSupport(request);
             
+            // security check
+            securityHandler.checkPermission(request.getOffering(), securityHandler.sos_insert_obs);
+            
+            // retrieve consumer for selected offering
             ISOSDataConsumer consumer = getDataConsumerByOfferingID(request.getOffering());
             consumer.newObservation(request.getObservations().toArray(new IObservation[0]));            
             
@@ -1399,12 +1422,14 @@ public class SOSServlet extends org.vast.ows.sos.SOSServlet
         try
         {
             checkTransactionalSupport(request);
-            String offering = request.getOffering();
-            ISOSDataConsumer consumer = getDataConsumerByOfferingID(offering);
             
             // security check
-            securityHandler.check(offering, securityHandler.sos_insert_obs);
+            String offeringID = request.getOffering();
+            securityHandler.checkPermission(offeringID, securityHandler.sos_insert_obs);
             
+            // retrieve consumer for selected offering
+            ISOSDataConsumer consumer = getDataConsumerByOfferingID(offeringID);
+                        
             // get template ID
             // the same template ID is always returned for a given observable            
             String templateID = consumer.newResultTemplate(request.getResultStructure(),
@@ -1414,15 +1439,15 @@ public class SOSServlet extends org.vast.ows.sos.SOSServlet
             // only continue of template was not already registered
             if (!templateToOfferingMap.containsKey(templateID))
             {
-                templateToOfferingMap.put(templateID, offering);
+                templateToOfferingMap.put(templateID, offeringID);
                 
                 // re-generate capabilities
-                ISOSDataProviderFactory provider = getDataProviderFactoryByOfferingID(offering);
+                ISOSDataProviderFactory provider = getDataProviderFactoryByOfferingID(offeringID);
                 SOSOfferingCapabilities newCaps = provider.generateCapabilities();
                 int oldIndex = 0;
                 for (OWSLayerCapabilities offCaps: capabilities.getLayers())
                 {
-                    if (offCaps.getIdentifier().equals(offering))
+                    if (offCaps.getIdentifier().equals(offeringID))
                         break; 
                     oldIndex++;
                 }
@@ -1452,6 +1477,12 @@ public class SOSServlet extends org.vast.ows.sos.SOSServlet
         
         // retrieve consumer based on template id
         ISOSDataConsumer consumer = (ISOSDataConsumer)getDataConsumerByTemplateID(templateID);
+        
+        // security check
+        String offeringID = templateToOfferingMap.get(templateID);
+        securityHandler.checkPermission(offeringID, securityHandler.sos_insert_obs);
+        
+        // get template info
         Template template = consumer.getTemplate(templateID);
         DataComponent dataStructure = template.component;
         DataEncoding encoding = template.encoding;
@@ -1788,7 +1819,7 @@ public class SOSServlet extends org.vast.ows.sos.SOSServlet
             
             String offering = templateToOfferingMap.get(templateID);
             ISOSDataConsumer consumer = dataConsumers.get(offering);
-            if (consumer == null)
+            if (offering == null || consumer == null)
                 throw new SOSException(SOSException.invalid_param_code, "template", templateID, "Invalid template ID");
             
             return consumer;
