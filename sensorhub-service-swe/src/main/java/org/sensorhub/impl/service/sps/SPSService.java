@@ -55,6 +55,14 @@ public class SPSService extends AbstractModule<SPSServiceConfig> implements ISer
             // we actually start in the handleEvent() method when
             // a STARTED event is received from HTTP server
         }
+    }    
+    
+    
+    @Override
+    public void setConfiguration(SPSServiceConfig config)
+    {
+        super.setConfiguration(config);
+        this.securityHandler = new SPSSecurity(this, config.security.enableAccessControl);
     }
     
     
@@ -62,7 +70,7 @@ public class SPSService extends AbstractModule<SPSServiceConfig> implements ISer
     public void start() throws SensorHubException
     {
         // deploy servlet
-        servlet = new SPSServlet(config, getLogger());
+        servlet = new SPSServlet(config, (SPSSecurity)this.securityHandler, getLogger());
         servlet.start();
         deploy();
         
@@ -91,7 +99,7 @@ public class SPSService extends AbstractModule<SPSServiceConfig> implements ISer
         
         // deploy ourself to HTTP server
         httpServer.deployServlet(servlet, config.endPoint);
-        httpServer.addServletSecurity(config.endPoint, "admin", "sps");
+        httpServer.addServletSecurity(config.endPoint, true);
     }
     
     

@@ -16,6 +16,7 @@ package org.sensorhub.impl.service.sps;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.HashMap;
@@ -24,6 +25,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import net.opengis.swe.v20.DataBlock;
@@ -31,6 +33,7 @@ import net.opengis.swe.v20.DataComponent;
 import org.sensorhub.api.common.IEventHandler;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.module.ModuleEvent.ModuleState;
+import org.sensorhub.api.security.ISecurityManager;
 import org.sensorhub.impl.service.ogc.OGCServiceConfig.CapabilitiesInfo;
 import org.slf4j.Logger;
 import org.vast.data.DataBlockList;
@@ -62,7 +65,10 @@ import org.w3c.dom.Element;
 @SuppressWarnings("serial")
 public class SPSServlet extends OWSServlet
 {
+    protected static final String DEFAULT_VERSION = "2.0.0";
+    
     SPSServiceConfig config;
+    SPSSecurity securityHandler;
     Logger log;
     String endpointUrl;
     ReentrantReadWriteLock capabilitiesLock = new ReentrantReadWriteLock();
@@ -79,9 +85,10 @@ public class SPSServlet extends OWSServlet
     ModuleState state;
     
     
-    public SPSServlet(SPSServiceConfig config, Logger log)
+    public SPSServlet(SPSServiceConfig config, SPSSecurity securityHandler, Logger log)
     {
         this.config = config;
+        this.securityHandler = securityHandler;
         this.log = log;
         this.owsUtils = new SPSUtils();
     }
@@ -248,7 +255,27 @@ public class SPSServlet extends OWSServlet
             capabilitiesLock.writeLock().unlock();
         }
     }
-
+    
+    
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException
+    {
+        // set current authentified user
+        if (req.getRemoteUser() != null)
+            securityHandler.setCurrentUser(req.getRemoteUser());
+        else
+            securityHandler.setCurrentUser(ISecurityManager.ANONYMOUS_USER);
+        
+        try
+        {
+            super.service(req, resp);
+        }
+        finally
+        {
+            securityHandler.clearCurrentUser();
+        }
+    }
+    
     
     @Override
     protected OWSRequest parseRequest(HttpServletRequest req, HttpServletResponse resp, boolean post) throws Exception
@@ -348,6 +375,20 @@ public class SPSServlet extends OWSServlet
     
     protected void handleRequest(GetCapabilitiesRequest request) throws Exception
     {
+        /*// check that version 2.0.0 is supported by client
+        if (!request.getAcceptedVersions().isEmpty())
+        {
+            if (!request.getAcceptedVersions().contains(DEFAULT_VERSION))
+                throw new SOSException(SOSException.version_nego_failed_code, "AcceptVersions", null,
+                        "Only version " + DEFAULT_VERSION + " is supported by this server");
+        }
+        
+        // set selected version
+        request.setVersion(DEFAULT_VERSION);*/
+        
+        // security check
+        securityHandler.checkPermission(securityHandler.sps_read_caps);
+        
         // update operation URLs
         if (endpointUrl == null)
         {
@@ -381,12 +422,15 @@ public class SPSServlet extends OWSServlet
     
     protected void handleRequest(DescribeSensorRequest request) throws Exception
     {
-        String procedureID = request.getProcedureID();
+        String procID = request.getProcedureID();
         
         OWSExceptionReport report = new OWSExceptionReport();
-        ISPSConnector connector = getConnectorByProcedureID(procedureID, report);
-        checkQueryProcedureFormat(procedureID, request.getFormat(), report);
+        ISPSConnector connector = getConnectorByProcedureID(procID, report);
+        checkQueryProcedureFormat(procID, request.getFormat(), report);
         report.process();
+        
+        // security check
+        securityHandler.checkPermission(getOfferingID(procID), securityHandler.sps_read_sensor);
         
         // serialize and send SensorML description
         OutputStream os = new BufferedOutputStream(request.getResponseStream());
@@ -399,10 +443,13 @@ public class SPSServlet extends OWSServlet
         String procID = request.getProcedureID();
         SPSOfferingCapabilities offering = procedureToOfferingMap.get(procID);
         
-        if (offering != null)
-            sendResponse(request, offering.getParametersDescription());
-        else
+        if (offering == null)
             throw new SPSException(SPSException.invalid_param_code, "procedure", procID);
+        
+        // security check
+        securityHandler.checkPermission(offering.getIdentifier(), securityHandler.sps_read_params);
+        
+        sendResponse(request, offering.getParametersDescription());
     }
     
     
@@ -421,6 +468,10 @@ public class SPSServlet extends OWSServlet
     {
         ITask task = findTask(request.getTaskID());
         StatusReport status = task.getStatusReport();
+        
+        // security check
+        String procID = task.getRequest().getProcedureID();
+        securityHandler.checkPermission(getOfferingID(procID), securityHandler.sps_read_task);
         
         GetStatusResponse gsResponse = new GetStatusResponse();
         gsResponse.setVersion("2.0.0");
@@ -473,14 +524,18 @@ public class SPSServlet extends OWSServlet
         // validate task parameters
         request.validate();
         
+        // retrieve connector instance
+        OWSExceptionReport report = new OWSExceptionReport();
+        String procID = request.getProcedureID();
+        ISPSConnector conn = getConnectorByProcedureID(procID, report);
+        report.process();
+        
+        // security check
+        securityHandler.checkPermission(getOfferingID(procID), securityHandler.sps_task_submit);
+        
         // create task in DB
         ITask newTask = taskDB.createNewTask(request);
         final String taskID = newTask.getID();
-        
-        // retrieve connector instance
-        OWSExceptionReport report = new OWSExceptionReport();
-        ISPSConnector conn = getConnectorByProcedureID(request.getProcedureID(), report);
-        report.process();
         
         // send command through connector
         DataBlockList dataBlockList = (DataBlockList)request.getParameters().getData();
@@ -554,6 +609,12 @@ public class SPSServlet extends OWSServlet
         {            
             capabilitiesLock.readLock().unlock();
         }
+    }
+    
+    
+    protected final String getOfferingID(String procedureID)
+    {
+        return procedureToOfferingMap.get(procedureID).getIdentifier();
     }
     
     

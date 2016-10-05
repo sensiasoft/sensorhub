@@ -16,6 +16,8 @@ package org.sensorhub.impl.service.sps;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.sensorhub.api.config.DisplayInfo;
+import org.sensorhub.api.security.SecurityConfig;
 import org.sensorhub.impl.service.ogc.OGCServiceConfig;
 
 
@@ -34,5 +36,9 @@ public class SPSServiceConfig extends OGCServiceConfig
      * Consumers configurations 
      */
     public List<SPSConnectorConfig> connectors = new ArrayList<SPSConnectorConfig>();
+    
+    
+    @DisplayInfo(desc="Security related options")
+    public SecurityConfig security = new SecurityConfig();
 
 }
