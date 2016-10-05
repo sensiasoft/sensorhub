@@ -20,7 +20,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
-import org.sensorhub.api.config.DisplayInfo.IdField;
 import com.vaadin.data.Property;
 import com.vaadin.data.util.AbstractInMemoryContainer;
 
@@ -102,12 +101,7 @@ public class MyBeanItemContainer<BeanType> extends AbstractInMemoryContainer<Obj
     public MyBeanItem<BeanType> addBean(BeanType bean, String prefix)
     {
         MyBeanItem<BeanType> newItem = new MyBeanItem<BeanType>(bean, prefix);
-        
-        // try to get item ID from property, or use hashcode
-        Object newItemId = getBeanItemId(bean, newItem, prefix);
-        if (newItemId == null)
-            newItemId = (Integer)bean.hashCode();
-        
+        Integer newItemId = bean.hashCode();        
         internalAddItemAtEnd(newItemId, newItem, false);
         fireItemAdded(indexOfId(newItem), newItemId, newItem);
         return newItem;
@@ -188,20 +182,6 @@ public class MyBeanItemContainer<BeanType> extends AbstractInMemoryContainer<Obj
         itemIdToItem.clear();
         this.fireItemsRemoved(0, firstItemId(), size());
         return true;
-    }
-    
-    
-    private String getBeanItemId(BeanType bean, MyBeanItem<BeanType> item, String prefix)
-    {
-        IdField ann = bean.getClass().getAnnotation(IdField.class);
-        if (ann != null && ann.value().length() > 0)
-        {
-            Property<?> prop = item.getItemProperty(prefix + ann.value());
-            if (prop != null)
-                return prop.getValue().toString();
-        }
-        
-        return null;
     }
     
 }

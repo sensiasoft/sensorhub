@@ -934,23 +934,11 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
         final MyBeanItemContainer<Object> container = prop.getValue();
         final TabSheet tabs = new TabSheet();
         tabs.setSizeFull();
-        int i = 1;
+        int tabIndex = 0;
         for (Object itemId: container.getItemIds())
         {
             MyBeanItem<Object> childBeanItem = (MyBeanItem<Object>)container.getItem(itemId);
-            IModuleConfigForm subform = AdminUIModule.getInstance().generateForm(childBeanItem.getBean().getClass());
-            subform.build(null, null, childBeanItem, true);
-            subform.setParentForm(this);
-            ((MarginHandler)subform).setMargin(new MarginInfo(false, false, true, false));
-            allForms.add(subform);
-            
-            // generate tab label
-            String tabName = (itemId instanceof String) ? (String)itemId : "Item #" + (i++);
-            Tab tab = tabs.addTab(subform, tabName);
-            tab.setClosable(true);
-            
-            // store item id so we can map the tab with the corresponding bean item
-            ((AbstractComponent)subform).setData(itemId);
+            addTab(tabs, itemId, childBeanItem, tabIndex++);
         }
         
         // add fake tab with icon to add new items
@@ -1036,17 +1024,8 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
                                 try
                                 {
                                     // add new item to container
-                                    MyBeanItem<Object> childBeanItem = container.addBean(objectType.newInstance(), ((String)propId) + PROP_SEP);
-                                                                        
-                                    // generate form for new item
-                                    IModuleConfigForm subform = AdminUIModule.getInstance().generateForm(childBeanItem.getBean().getClass());
-                                    subform.build(null, null, childBeanItem, true);
-                                    ((MarginHandler)subform).setMargin(new MarginInfo(false, false, true, false));
-                                    allForms.add(subform);
-                                    
-                                    // add new tab and select it
-                                    Tab newTab = tabs.addTab(subform, "Item #" + (selectedTabPos+1), null, selectedTabPos);
-                                    newTab.setClosable(true);
+                                    MyBeanItem<Object> childBeanItem = container.addBean(objectType.newInstance(), ((String)propId) + PROP_SEP);                                                                        
+                                    Tab newTab = addTab(tabs, container.lastItemId(), childBeanItem, selectedTabPos);
                                     tabs.setSelectedTab(newTab);
                                 }
                                 catch (Exception e)
@@ -1105,6 +1084,40 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
         
         layout.addComponent(tabs);
         return layout;
+    }
+    
+    
+    protected Tab addTab(TabSheet tabs, final Object itemId, final MyBeanItem<?> beanItem, final int tabIndex)
+    {
+        // generate subform
+        IModuleConfigForm subform = AdminUIModule.getInstance().generateForm(beanItem.getBean().getClass());
+        subform.build(null, null, beanItem, true);
+        subform.setParentForm(this);
+        ((MarginHandler)subform).setMargin(new MarginInfo(false, false, true, false));
+        allForms.add(subform);
+        
+        // create tab
+        String caption = getTabCaption(itemId, beanItem, tabIndex);
+        final Tab tab = tabs.addTab(subform, caption, null, tabIndex);
+        tab.setClosable(true);
+        
+        // store item id so we can map the tab with the corresponding bean item
+        ((AbstractComponent)subform).setData(itemId);
+        
+        return tab;
+    }
+    
+    
+    protected String getTabCaption(Object itemId, MyBeanItem<?> beanItem, int tabIndex)
+    {
+        if (itemId instanceof String)
+            return (String)itemId;
+        
+        String beanItemId = beanItem.getItemId();
+        if (beanItemId != null)
+            return beanItemId;
+        
+        return "Item #" + (tabIndex+1);
     }
     
     

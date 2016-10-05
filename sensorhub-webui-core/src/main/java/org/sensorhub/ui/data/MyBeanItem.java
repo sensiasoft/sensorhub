@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import org.sensorhub.api.config.DisplayInfo.IdField;
 import com.vaadin.data.Item;
 import com.vaadin.data.Property;
 import com.vaadin.data.util.MethodProperty;
@@ -50,6 +51,7 @@ public class MyBeanItem<BeanType> implements Item
     
     BeanType bean;
     Map<Object, Property<?>> properties = new LinkedHashMap<Object, Property<?>>();
+    String prefix = NO_PREFIX;
     
     
     public MyBeanItem(BeanType bean)
@@ -62,6 +64,7 @@ public class MyBeanItem<BeanType> implements Item
     public MyBeanItem(BeanType bean, String prefix)
     {
         this.bean = bean;
+        this.prefix = prefix;
         addProperties(prefix, bean);
     }
     
@@ -238,6 +241,20 @@ public class MyBeanItem<BeanType> implements Item
     public boolean removeItemProperty(Object id) throws UnsupportedOperationException
     {
         return (properties.remove(id) != null);
+    }
+    
+    
+    public String getItemId()
+    {
+        IdField ann = bean.getClass().getAnnotation(IdField.class);
+        if (ann != null && ann.value().length() > 0)
+        {
+            Property<?> prop = getItemProperty(prefix + ann.value());
+            if (prop != null && prop.getValue() != null)
+                return prop.getValue().toString();
+        }
+        
+        return null;
     }
 
     

@@ -40,6 +40,7 @@ public class ValueEntryPopup extends Window
     {
         super("Enter New Value");
         VerticalLayout layout = new VerticalLayout();
+        layout.setMargin(true);
         
         Field<?> input = null;
         if (possibleValues != null && !possibleValues.isEmpty())
