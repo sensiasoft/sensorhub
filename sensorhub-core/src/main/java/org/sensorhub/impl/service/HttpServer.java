@@ -53,6 +53,7 @@ import org.eclipse.jetty.util.security.Constraint;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.module.ModuleEvent.ModuleState;
+import org.sensorhub.api.service.ServiceException;
 import org.sensorhub.impl.SensorHub;
 import org.sensorhub.impl.module.AbstractModule;
 import org.sensorhub.impl.service.HttpServerConfig.AuthMethod;
@@ -96,6 +97,20 @@ public class HttpServer extends AbstractModule<HttpServerConfig>
     }
 
     
+    @Override
+    public synchronized void updateConfig(HttpServerConfig config) throws SensorHubException
+    {
+        boolean accessControlEnabled = SensorHub.getInstance().getSecurityManager().isAccessControlEnabled();
+        if (!accessControlEnabled && config.authMethod != null && config.authMethod != AuthMethod.NONE)
+        {
+            reportError("Cannot enable authentication if no user registry is setup", null);
+            return;
+        }
+        
+        super.updateConfig(config);
+    }
+
+
     @Override
     public void start() throws SensorHubException
     {
@@ -174,8 +189,7 @@ public class HttpServer extends AbstractModule<HttpServerConfig>
                 holder.setInitParameter("maxRequestMs", Long.toString(24*3600*1000L)); // we need persistent requests!
                 
                 // security handler
-                boolean accessControlEnabled = SensorHub.getInstance().getSecurityManager().ensureAccessControlEnabled();
-                if (config.authMethod != null && config.authMethod != AuthMethod.NONE && accessControlEnabled)
+                if (config.authMethod != null && config.authMethod != AuthMethod.NONE)
                 {
                     securityHandler = new ConstraintSecurityHandler();
                     

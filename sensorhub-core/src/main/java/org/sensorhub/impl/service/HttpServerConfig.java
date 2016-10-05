@@ -54,7 +54,7 @@ public class HttpServerConfig extends ModuleConfig
     
     
     @DisplayInfo(label="Authentication Method", desc="Method used to authenticate users on this server")
-    public AuthMethod authMethod = AuthMethod.DIGEST;
+    public AuthMethod authMethod = AuthMethod.NONE;
     
     
     @DisplayInfo(desc="Path to SSL key store")

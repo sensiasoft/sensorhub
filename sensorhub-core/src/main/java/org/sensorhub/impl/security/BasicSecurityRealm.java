@@ -23,6 +23,7 @@ import org.sensorhub.api.security.IRoleRegistry;
 import org.sensorhub.api.security.IUserInfo;
 import org.sensorhub.api.security.IUserRegistry;
 import org.sensorhub.api.security.IUserRole;
+import org.sensorhub.impl.SensorHub;
 import org.sensorhub.impl.module.AbstractModule;
 import org.sensorhub.impl.security.BasicSecurityRealmConfig.RoleConfig;
 import org.sensorhub.impl.security.BasicSecurityRealmConfig.UserConfig;
@@ -35,6 +36,29 @@ public class BasicSecurityRealm extends AbstractModule<BasicSecurityRealmConfig>
     IAuthorizer authz = new DefaultAuthorizerImpl(this);
     
 
+
+    @Override
+    public void setConfiguration(BasicSecurityRealmConfig config)
+    {
+        super.setConfiguration(config);
+        
+        // add default admin user and role if none are set
+        if (config.users.isEmpty() && config.roles.isEmpty())
+        {
+            RoleConfig role = new RoleConfig();
+            role.roleID = "admin";
+            role.allow.add("*");
+            config.roles.add(role);
+            
+            UserConfig user = new UserConfig();
+            user.userID = "admin";
+            user.password = "admin";
+            user.roles.add("admin");
+            config.users.add(user);
+        }
+    }
+    
+    
     public void init() throws SensorHubException
     {
         // build user map
@@ -50,20 +74,19 @@ public class BasicSecurityRealm extends AbstractModule<BasicSecurityRealmConfig>
             roles.put(role.roleID, role);
         }
     }
-    
-    
+
+
     @Override
     public void start() throws SensorHubException
     {
-        // TODO Auto-generated method stub
-        
+        SensorHub.getInstance().getSecurityManager().registerUserRegistry(this);
+        SensorHub.getInstance().getSecurityManager().registerAuthorizer(this);        
     }
     
 
     @Override
     public void stop() throws SensorHubException
     {
-        // TODO Auto-generated method stub
         
     }
     
