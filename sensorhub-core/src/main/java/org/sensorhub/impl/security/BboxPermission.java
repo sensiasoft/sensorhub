@@ -35,7 +35,8 @@ public class BboxPermission extends AbstractPermission implements IParameterized
     
     protected BboxPermission(AbstractPermission parent)
     {
-        super(parent, "BBOX", "Unallowed access to geographical region ");
+        super(parent, "BBOX");
+        setErrorMessage("Unallowed access to geographical region");
     }
     
 

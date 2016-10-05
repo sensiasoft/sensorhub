@@ -33,6 +33,14 @@ public @interface DisplayInfo
     
     
     @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.TYPE)
+    public @interface IdField
+    {
+        public String value() default "id";    
+    }
+    
+    
+    @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.FIELD)
     public @interface Required {}
     
@@ -103,7 +111,13 @@ public @interface DisplayInfo
             /**
              * Path on the local file system
              */
-            FILESYSTEM_PATH
+            FILESYSTEM_PATH,
+            
+            /**
+             * To render the field as table of items.<br/>
+             * The field must be a map or collection
+             */
+            TABLE
         }
     }
     

@@ -33,7 +33,7 @@ import org.sensorhub.api.module.ModuleEvent;
 import org.sensorhub.api.module.ModuleEvent.ModuleState;
 import org.sensorhub.api.persistence.StorageConfig;
 import org.sensorhub.api.processing.ProcessConfig;
-import org.sensorhub.api.security.SecurityConfig;
+import org.sensorhub.api.security.SecurityModuleConfig;
 import org.sensorhub.api.sensor.ISensorModule;
 import org.sensorhub.api.sensor.SensorConfig;
 import org.sensorhub.api.service.ServiceConfig;
@@ -220,7 +220,7 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener, UIConst
         tab = stack.addTab(layout, "Security");
         //tab.setIcon(ACC_TAB_ICON);
         tab.setIcon(FontAwesome.LOCK);
-        buildModuleList(layout, SecurityConfig.class);
+        buildModuleList(layout, SecurityModuleConfig.class);
         
         leftPane.addComponent(stack);        
         leftPane.setExpandRatio(stack, 1);
@@ -546,6 +546,7 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener, UIConst
                 catch (Exception e)
                 {
                     String msg = "Unexpected error when selecting module";
+                    AdminUIModule.log.error(msg, e);
                     Notification.show("Error", msg + '\n' + e.getMessage(), Notification.Type.ERROR_MESSAGE);
                 }
             }            

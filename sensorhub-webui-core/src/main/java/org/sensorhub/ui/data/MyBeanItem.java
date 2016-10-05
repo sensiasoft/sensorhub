@@ -69,7 +69,7 @@ public class MyBeanItem<BeanType> implements Item
     protected void addProperties(String prefix, Object bean)
     {
         // special case for String
-        if (!isSimpleType(bean.getClass()))
+        if (!BeanUtils.isSimpleType(bean.getClass()))
         {
             addFieldProperties(prefix, bean);
             addMethodProperties(prefix, bean);
@@ -97,7 +97,7 @@ public class MyBeanItem<BeanType> implements Item
             }
             
             // case of simple types or enum instances
-            if (isSimpleType(f) || fieldVal instanceof Enum<?>)
+            if (BeanUtils.isSimpleType(f) || fieldVal instanceof Enum<?>)
             {
                 //System.out.println("field " + fullName);
                 addItemProperty(fullName, new FieldProperty(bean, f));
@@ -121,22 +121,22 @@ public class MyBeanItem<BeanType> implements Item
             }
             
             // case of maps
-            /*else if (Map.class.isAssignableFrom(fieldType))
+            else if (Map.class.isAssignableFrom(fieldType))
             {
                 try
                 {
-                    Class<Object> beanType = Object.class;//f.getType().getTypeParameters()
-                    MyBeanItemContainer<Object> container = new MyBeanItemContainer<Object>(beanType);
-                    Map<?,?> mapObj = (Map<?,?>)f.get(bean);
-                    for (Object o: mapObj.values())
-                        container.addBean(o);
-                    addItemProperty(fullName, new ContainerProperty(bean, f, container));
+                    ParameterizedType mapType = (ParameterizedType)f.getGenericType();
+                    Class<?> eltType = (Class<?>)mapType.getActualTypeArguments()[1];
+                    
+                    Map<String, ?> mapObj = (Map<String, ?>)fieldVal;
+                    MyBeanItemContainer<Object> container = new MyBeanItemContainer<Object>(mapObj, eltType, fullName + PROP_SEPARATOR);
+                    addItemProperty(fullName, new MapProperty(bean, f, container));
                 }
                 catch (Exception e)
                 {
                     e.printStackTrace();
                 }
-            }*/
+            }
             
             // case of nested objects
             else
@@ -167,31 +167,6 @@ public class MyBeanItem<BeanType> implements Item
             //System.out.println(prop.getName() + ", get=" + prop.getReadMethod() + ", set=" + prop.getWriteMethod() + ", hidden=" + prop.isHidden());
             addItemProperty(fullName, new MethodProperty(prop.getPropertyType(), bean, prop.getReadMethod(), prop.getWriteMethod()));
         }
-    }
-    
-    
-    protected boolean isSimpleType(Field f)
-    {
-        Class<?> fType = f.getType();
-        return isSimpleType(fType);
-    }
-    
-    
-    protected boolean isSimpleType(Class<?> type)
-    {
-         if (type.isPrimitive())
-            return true;
-        
-        if (type == String.class)
-            return true;
-        
-        if (Number.class.isAssignableFrom(type))
-            return true;
-        
-        if (Enum.class.isAssignableFrom(type))
-            return true;
-        
-        return false;
     }
     
     

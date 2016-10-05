@@ -54,6 +54,18 @@ public interface IModuleConfigForm extends ComponentContainer, Layout.MarginHand
     public void build(String title, String popupText, MyBeanItem<? extends Object> beanItem, boolean includeSubForms);
     
     
+    /**
+     * @return the parent form or null if non exists
+     */
+    public IModuleConfigForm getParentForm();
+    
+    
+    public void setParentForm(IModuleConfigForm parentForm);
+    
+    
+    /**
+     * @return list of subforms included into this form
+     */
     public List<Component> getSubForms();
     
     
@@ -70,6 +82,14 @@ public interface IModuleConfigForm extends ComponentContainer, Layout.MarginHand
      * @return map of names to types assignable to that property
      */
     public Map<String, Class<?>> getPossibleTypes(String propId);
+    
+    
+    /**
+     * Return possible values for the given property ID
+     * @param propId property ID
+     * @return list of values allowed for that property
+     */
+    public List<Object> getPossibleValues(String propId);
     
     
     /**

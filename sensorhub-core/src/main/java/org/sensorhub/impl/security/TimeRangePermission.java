@@ -34,7 +34,8 @@ public class TimeRangePermission extends AbstractPermission implements IParamete
     
     protected TimeRangePermission(AbstractPermission parent)
     {
-        super(parent, "TIME", "Unallowed access to time extent ");
+        super(parent, "TIME");
+        setErrorMessage("Unallowed access to time extent");
     }
     
 

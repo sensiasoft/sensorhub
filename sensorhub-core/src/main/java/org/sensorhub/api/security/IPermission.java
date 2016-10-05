@@ -19,6 +19,17 @@ import java.util.Map;
 
 public interface IPermission
 {
+    public final static String WILDCARD = "*";
+    
+    
+    public String getName();
+    
+    
+    public String getLabel();
+    
+    
+    public String getDescription();
+    
     
     public IPermission getParent();
     
@@ -29,7 +40,10 @@ public interface IPermission
     public Map<String, IPermission> getChildren();
     
     
-    public String getName();
+    /**
+     * @return the full path of permission as a string
+     */
+    public String getFullName();
     
     
     public String getErrorMessage();

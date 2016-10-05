@@ -39,5 +39,4 @@ public class PermissionRequest extends ArrayDeque<IPermission> implements IPermi
     {
         return false;        
     }
-
 }

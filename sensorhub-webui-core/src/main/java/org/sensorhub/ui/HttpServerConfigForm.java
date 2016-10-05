@@ -25,6 +25,7 @@ public class HttpServerConfigForm extends GenericConfigForm
     private static final long serialVersionUID = 3934416218769947436L;
     protected static final String PROP_SERVLET_ROOT = "servletsRootUrl";
     protected static final String PROP_HTTP_PORT = "httpPort";
+    protected static final String PROP_HTTPS_PORT = "httpsPort";
     
     
     @Override
@@ -36,10 +37,8 @@ public class HttpServerConfigForm extends GenericConfigForm
         {
             field.addValidator(new StringLengthValidator(MSG_REQUIRED_FIELD, 2, 256, false));
         }
-        else if (propId.equals(PROP_HTTP_PORT))
+        else if (propId.equals(PROP_HTTP_PORT) || propId.equals(PROP_HTTPS_PORT))
         {
-            field.setWidth(100, Unit.PIXELS);
-            //((TextField)field).getConverter().
             field.addValidator(new Validator() {
                 private static final long serialVersionUID = 1L;
                 public void validate(Object value) throws InvalidValueException

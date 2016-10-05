@@ -27,24 +27,26 @@ import org.sensorhub.impl.security.PermissionRequest;
 public class ModuleSecurity
 {    
     protected final ModulePermissions rootPerm;
+    protected boolean enable = true;
     public final IPermission module_init;
     public final IPermission module_start;
     public final IPermission module_stop;
     public final IPermission module_update;
     ThreadLocal<IUserInfo> currentUser = new ThreadLocal<IUserInfo>();
+        
     
-    
-    public ModuleSecurity(IModule<?> module)
+    public ModuleSecurity(IModule<?> module, String moduleTypeAlias, boolean enable)
     {
-        rootPerm = new ModulePermissions(module.getLocalID(), module.getClass());
+        this.rootPerm = new ModulePermissions(module, moduleTypeAlias);
+        this.enable = enable;
         
         // register basic module permissions        
-        module_init = new ItemPermission(rootPerm, "init", "Unallowed to initialize module");
-        module_start = new ItemPermission(rootPerm, "start", "Unallowed to start module");
-        module_stop = new ItemPermission(rootPerm, "stop", "Unallowed to stop module");
-        module_update = new ItemPermission(rootPerm, "update", "Unallowed to update module configuration");
+        module_init = new ItemPermission(rootPerm, "init", "Initialize Module");
+        module_start = new ItemPermission(rootPerm, "start", "Start Module");
+        module_stop = new ItemPermission(rootPerm, "stop", "Stop Module");
+        module_update = new ItemPermission(rootPerm, "update_config", "Update Module Configuration");        
         
-        SensorHub.getInstance().getSecurityManager().registerModulePermissions(module.getLocalID(), rootPerm);
+        //SensorHub.getInstance().getSecurityManager().registerModulePermissions(rootPerm);
     }
     
     
@@ -55,6 +57,9 @@ public class ModuleSecurity
      */
     public boolean hasPermission(IPermission perm)
     {
+        if (!enable)
+            return true;
+            
         // retrieve currently logged in user
         IUserInfo user = currentUser.get();
         if (user == null)
@@ -72,7 +77,7 @@ public class ModuleSecurity
      * @param perm
      * @throws SecurityException
      */
-    public void check(IPermission perm) throws SecurityException
+    public void checkPermission(IPermission perm) throws SecurityException
     {
         // retrieve currently logged in user
         IUserInfo user = currentUser.get();

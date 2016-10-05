@@ -12794,6 +12794,47 @@ div.v-layout.v-horizontal.v-widget {
 	text-indent: 20px;
 }
 
+.sensorhub .v-table .v-table-cell-content-green {
+	background-image: url("icons/enabled.gif");
+	background-repeat: no-repeat;
+	background-position: 5px;
+	text-indent: 20px;
+}
+
+.sensorhub .v-table .v-table-cell-content-perm-allow .v-table-cell-wrapper:before {
+	font-family: FontAwesome;
+	content: "\f00C";
+	display: inline-block;
+	padding-right: 6px;
+	vertical-align: middle;
+	color: #40d600;
+}
+
+.sensorhub .v-table .v-table-cell-content-perm-allow-gray .v-table-cell-wrapper:before {
+	font-family: FontAwesome;
+	content: "\f00C";
+	display: inline-block;
+	padding-right: 6px;
+	vertical-align: middle;
+}
+
+.sensorhub .v-table .v-table-cell-content-perm-deny .v-table-cell-wrapper:before {
+	font-family: FontAwesome;
+	content: "\f05E";
+	display: inline-block;
+	padding-right: 6px;
+	vertical-align: middle;
+	color: red;
+}
+
+.sensorhub .v-table .v-table-cell-content-perm-deny-gray .v-table-cell-wrapper:before {
+	font-family: FontAwesome;
+	content: "\f05E";
+	display: inline-block;
+	padding-right: 6px;
+	vertical-align: middle;
+}
+
 .sensorhub .v-tooltip {
 	background-color: rgba(255, 255, 255, 0.9);
 	color: black;

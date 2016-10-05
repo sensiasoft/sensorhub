@@ -30,13 +30,19 @@ public class WildcardPermission extends AbstractPermission
     
     public WildcardPermission()
     {
-        this(null);
+        super(null, WILDCARD);
+    }
+    
+    
+    public WildcardPermission(String label)
+    {
+        super(null, WILDCARD, label, null);
     }
     
     
     public WildcardPermission(AbstractPermission parent)
     {
-        super(parent, "*", null);
+        super(parent, WILDCARD);
     }
 
 

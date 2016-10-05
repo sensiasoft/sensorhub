@@ -31,7 +31,7 @@ public class ValueEnumPopup extends Window
     @SuppressWarnings({ "serial", "rawtypes" })
     public ValueEnumPopup(int width, final ValueCallback callback, final Enum[] allowedValues)
     {
-        super("New Value");
+        super("Select New Value");
         VerticalLayout layout = new VerticalLayout();
         
         final ListSelect listBox = new ListSelect();

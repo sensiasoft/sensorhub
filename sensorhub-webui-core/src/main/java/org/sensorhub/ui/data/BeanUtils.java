@@ -12,37 +12,35 @@ Copyright (C) 2012-2016 Sensia Software LLC. All Rights Reserved.
  
 ******************************* END LICENSE BLOCK ***************************/
 
-package org.sensorhub.impl.security;
+package org.sensorhub.ui.data;
 
-import org.sensorhub.api.security.IPermission;
+import java.lang.reflect.Field;
 
 
-/**
- * <p>
- * Basic named permission used to build hierarchical permission sets 
- * </p>
- *
- * @author Alex Robin
- * @since Aug 22, 2016
- */
-public class ItemPermission extends AbstractPermission
+public class BeanUtils
 {
 
-    public ItemPermission(IPermission parent, String name)
+    public static boolean isSimpleType(Field f)
     {
-        super(parent, name, null, null);
+        Class<?> fType = f.getType();
+        return isSimpleType(fType);
     }
     
     
-    public ItemPermission(IPermission parent, String name, String label)
+    public static boolean isSimpleType(Class<?> type)
     {
-        super(parent, name, label, null);
+        if (type.isPrimitive())
+            return true;
+        
+        if (type == String.class)
+            return true;
+        
+        if (Number.class.isAssignableFrom(type))
+            return true;
+        
+        if (Enum.class.isAssignableFrom(type))
+            return true;
+        
+        return false;
     }
-    
-    
-    public ItemPermission(IPermission parent, String name, String label, String description)
-    {
-        super(parent, name, label, description);
-    }
-    
 }

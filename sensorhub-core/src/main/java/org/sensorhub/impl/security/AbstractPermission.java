@@ -14,7 +14,7 @@ Copyright (C) 2012-2016 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.impl.security;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import org.sensorhub.api.security.IPermission;
 
@@ -29,19 +29,53 @@ import org.sensorhub.api.security.IPermission;
  */
 public abstract class AbstractPermission implements IPermission
 {
-    protected String name;
+    protected String name, label, description;
     protected IPermission parent;
     protected Map<String, IPermission> children;
     protected String errorMsg;
     
     
-    protected AbstractPermission(IPermission parent, String name, String errorMsg)
+    protected AbstractPermission()
+    {        
+    }
+    
+    
+    public AbstractPermission(IPermission parent, String name)
+    {
+        this(parent, name, null, null);
+    }
+    
+    
+    public AbstractPermission(IPermission parent, String name, String label, String description)
     {
         this.parent = parent;
         if (parent != null)
             parent.getChildren().put(name, this);
         this.name = name;
-        this.errorMsg = errorMsg;
+        this.label = label;
+        this.description = description;
+    }
+    
+    
+    @Override
+    public String getName()
+    {
+        return this.name;
+    }
+    
+    
+    public String getLabel()
+    {
+        if (label != null)
+            return label;
+        
+        return name;
+    }
+
+
+    public String getDescription()
+    {
+        return description;
     }
     
     
@@ -56,7 +90,7 @@ public abstract class AbstractPermission implements IPermission
     public Map<String, IPermission> getChildren()
     {
         if (children == null)
-            children = new HashMap<String, IPermission>();
+            children = new LinkedHashMap<String, IPermission>();
         
         return children;
     }
@@ -67,23 +101,23 @@ public abstract class AbstractPermission implements IPermission
     {
         return (children != null && !children.isEmpty());
     }
-    
-    
+
+
     @Override
-    public String getName()
+    public String getFullName()
     {
-        return this.name;
+        StringBuilder buf = new StringBuilder(name);
+        IPermission perm = this;
+        while ((perm = perm.getParent()) != null)
+            buf.insert(0, perm.getName() + "/");
+        return buf.toString();
     }
     
     
     @Override
     public String toString()
     {
-        StringBuilder buf = new StringBuilder(name);
-        IPermission perm = this;
-        while ((perm = perm.getParent()) != null)
-            buf.insert(0, perm.getName() + ":");
-        return buf.toString();
+        return (label != null) ? label : name;
     }
     
     
@@ -100,7 +134,13 @@ public abstract class AbstractPermission implements IPermission
         if (errorMsg != null)
             return this.errorMsg;
         else
-            return "Permission denied: " + toString();
+            return "Permission denied: " + getFullName();
+    }
+    
+    
+    public void setErrorMessage(String msg)
+    {
+        this.errorMsg = msg;
     }
 
 

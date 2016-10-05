@@ -77,7 +77,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
     Map<String, IModule<?>> loadedModules;
     IEventHandler eventHandler;
     ExecutorService asyncExec;
-    volatile boolean allModulesLoaded;
+    volatile boolean allModulesLoaded = true;
     volatile boolean shutdownCalled;
     
     
@@ -99,6 +99,8 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
      */
     public synchronized void loadAllModules()
     {
+        allModulesLoaded = false;
+                
         List<ModuleConfig> moduleConfs = configRepos.getAllModulesConfigurations();
         for (ModuleConfig config: moduleConfs)
         {

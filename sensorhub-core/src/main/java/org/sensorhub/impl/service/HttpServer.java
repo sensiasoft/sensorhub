@@ -183,7 +183,7 @@ public class HttpServer extends AbstractModule<HttpServerConfig>
                 holder.setInitParameter("maxRequestMs", Long.toString(24*3600*1000L)); // we need persistent requests!
                 
                 // security handler
-                if (SensorHub.getInstance().getSecurityManager().isAccessControlEnabled())
+                if (config.authMethod != null && config.authMethod != AuthMethod.NONE && SensorHub.getInstance().getSecurityManager().isAccessControlEnabled())
                 {
                     securityHandler = new ConstraintSecurityHandler();
                     
@@ -221,6 +221,7 @@ public class HttpServer extends AbstractModule<HttpServerConfig>
                         }
                     }
                 }),"/test");
+                addServletSecurity("/test", true);
             }
             
             server.setHandler(handlers);
@@ -337,8 +338,6 @@ public class HttpServer extends AbstractModule<HttpServerConfig>
     
     public void addServletSecurity(String pathSpec, boolean requireAuth, String... roles)
     {
-        checkStarted();
-        
         if (securityHandler != null)
         {
             Constraint constraint = new Constraint();

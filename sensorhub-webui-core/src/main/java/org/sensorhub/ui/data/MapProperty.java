@@ -15,29 +15,16 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 package org.sensorhub.ui.data;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Collection;
+import java.util.Map;
 
 
 @SuppressWarnings({ "serial", "rawtypes" })
-public class ContainerProperty extends BaseProperty<MyBeanItemContainer>
+public class MapProperty extends ContainerProperty
 {
-    Object instance;
-    MyBeanItemContainer container;
     
-
-    public ContainerProperty(Object instance, Field f, MyBeanItemContainer container)
+    public MapProperty(Object instance, Field f, MyBeanItemContainer container)
     {
-        this.instance = instance;
-        this.f = f;
-        this.container = container;
-    }
-
-
-    @Override
-    public MyBeanItemContainer getValue()
-    {
-        return container;
+        super(instance, f, container);
     }
 
 
@@ -46,38 +33,18 @@ public class ContainerProperty extends BaseProperty<MyBeanItemContainer>
     {
         try
         {
-            Collection list = (Collection)f.get(instance);
-            
-            if (list == null)
-            {
-                list = new ArrayList<Object>();
-                f.set(instance, list);
-            }
-            else
-                list.clear();                
+            Map map = (Map)f.get(instance);
+            map.clear();
             
             for (Object itemId: container.getItemIds())
             {
                 Object bean = container.getUnfilteredItem(itemId).getBean();
-                list.add(bean);
+                map.put((String)itemId, bean);
             }
         }
         catch (Exception e)
         {
-            throw new RuntimeException("Error while updating collection", e);
+            throw new RuntimeException("Error while updating collection");
         }
-    }
-
-
-    @Override
-    public Class<? extends MyBeanItemContainer> getType()
-    {
-        return container.getClass();
-    }
-
-
-    public Field getField()
-    {
-        return f;
     }
 }

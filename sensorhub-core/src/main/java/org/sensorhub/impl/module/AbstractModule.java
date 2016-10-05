@@ -96,7 +96,7 @@ public abstract class AbstractModule<ConfigType extends ModuleConfig> implements
             this.eventHandler = SensorHub.getInstance().getEventBus().registerProducer(config.id, EventBus.MAIN_TOPIC);
             
             // set default security handler
-            this.securityHandler = new ModuleSecurity(this);
+            this.securityHandler = new ModuleSecurity(this, "all", false);
         }
     }
     
@@ -108,7 +108,7 @@ public abstract class AbstractModule<ConfigType extends ModuleConfig> implements
     public synchronized void updateConfig(ConfigType config) throws SensorHubException
     {
         // check permission
-        securityHandler.check(securityHandler.module_update);
+        securityHandler.checkPermission(securityHandler.module_update);
         
         boolean wasStarted = isStarted();
         
@@ -358,7 +358,7 @@ public abstract class AbstractModule<ConfigType extends ModuleConfig> implements
     protected boolean canInit(boolean force) throws SensorHubException
     {
         // check permission
-        securityHandler.check(securityHandler.module_init);
+        securityHandler.checkPermission(securityHandler.module_init);
         
         synchronized (stateLock)
         {
@@ -416,7 +416,7 @@ public abstract class AbstractModule<ConfigType extends ModuleConfig> implements
     protected boolean canStart() throws SensorHubException
     {
         // check permission
-        securityHandler.check(securityHandler.module_start);
+        securityHandler.checkPermission(securityHandler.module_start);
                     
         synchronized (stateLock)
         {
@@ -470,7 +470,7 @@ public abstract class AbstractModule<ConfigType extends ModuleConfig> implements
     protected boolean canStop() throws SensorHubException
     {
         // check permission
-        securityHandler.check(securityHandler.module_stop);
+        securityHandler.checkPermission(securityHandler.module_stop);
         
         synchronized (stateLock)
         {

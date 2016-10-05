@@ -15,11 +15,14 @@ Copyright (C) 2012-2016 Sensia Software LLC. All Rights Reserved.
 package org.sensorhub.impl.security;
 
 import java.lang.ref.WeakReference;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import org.sensorhub.api.module.IModule;
 import org.sensorhub.api.module.ModuleEvent.ModuleState;
 import org.sensorhub.api.security.IAuthorizer;
+import org.sensorhub.api.security.IPermission;
 import org.sensorhub.api.security.IPermissionPath;
 import org.sensorhub.api.security.ISecurityManager;
 import org.sensorhub.api.security.IUserInfo;
@@ -36,7 +39,7 @@ public class SecurityManagerImpl implements ISecurityManager
     private static final Logger log = LoggerFactory.getLogger(SecurityManagerImpl.class);
     
     ModuleRegistry moduleRegistry;
-    Map<String, ModulePermissions> modulePermissions = new HashMap<String, ModulePermissions>();
+    Map<String, IPermission> modulePermissions = new HashMap<String, IPermission>();
     WeakReference<IUserRegistry> users;
     WeakReference<IAuthorizer> authz;
     
@@ -119,16 +122,26 @@ public class SecurityManagerImpl implements ISecurityManager
 
 
     @Override
-    public void registerModulePermissions(String moduleID, ModulePermissions perm)
+    public void registerModulePermissions(IPermission perm)
     {
-        modulePermissions.put(moduleID, perm);
+        modulePermissions.put(perm.getName(), perm);
     }
 
 
     @Override
-    public ModulePermissions getModulePermissions(String moduleID)
+    public IPermission getModulePermissions(String moduleIdString)
     {
-        return modulePermissions.get(moduleID);
+        if (IPermission.WILDCARD.equals(moduleIdString))
+            return new WildcardPermission("All Modules");
+        
+        return modulePermissions.get(moduleIdString);
+    }
+    
+    
+    @Override
+    public Collection<IPermission> getAllModulePermissions()
+    {
+        return Collections.unmodifiableCollection(modulePermissions.values());
     }
 
 }

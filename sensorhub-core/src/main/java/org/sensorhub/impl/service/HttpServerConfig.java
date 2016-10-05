@@ -30,7 +30,7 @@ public class HttpServerConfig extends ModuleConfig
 {
     public enum AuthMethod
     {
-        BASIC, DIGEST, CERT, OAUTH
+        NONE, BASIC, DIGEST, CERT, OAUTH
     }
     
     @DisplayInfo(label="HTTP Port", desc="TCP port where server will listen for unsecure HTTP connections (use 0 to disable HTTP).")

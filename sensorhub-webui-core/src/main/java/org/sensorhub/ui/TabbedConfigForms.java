@@ -16,6 +16,7 @@ package org.sensorhub.ui;
 
 import org.sensorhub.ui.api.IModuleConfigForm;
 import org.sensorhub.ui.api.UIConstants;
+import com.vaadin.ui.AbstractComponent;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.TabSheet;
@@ -47,6 +48,7 @@ public class TabbedConfigForms extends VerticalLayout implements UIConstants
         {
             Tab tab = configTabs.addTab(subForm, subForm.getCaption());
             tab.setDescription(subForm.getDescription());
+            ((AbstractComponent)subForm).setDescription(null);
         }
         
         addComponent(configTabs);

@@ -40,6 +40,10 @@ public class DefaultAuthorizerImpl implements IAuthorizer
         {
             IUserPermissions role = roles.getRoleInfo(roleName);
             
+            // skip if role doesn't exist
+            if (role == null)
+                continue;
+            
             // stop here if this role allows access
             if (hasPermission(role, requestedPerm))
                 return true;

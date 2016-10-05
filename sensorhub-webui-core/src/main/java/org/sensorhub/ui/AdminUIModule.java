@@ -29,6 +29,7 @@ import org.sensorhub.api.sensor.SensorConfig;
 import org.sensorhub.api.service.ServiceException;
 import org.sensorhub.impl.module.AbstractModule;
 import org.sensorhub.impl.persistence.StreamStorageConfig;
+import org.sensorhub.impl.security.BasicSecurityRealmConfig;
 import org.sensorhub.impl.service.HttpServer;
 import org.sensorhub.impl.service.HttpServerConfig;
 import org.sensorhub.ui.api.IModuleAdminPanel;
@@ -81,6 +82,7 @@ public class AdminUIModule extends AbstractModule<AdminUIConfig>
             customForms.put(HttpServerConfig.class.getCanonicalName(), HttpServerConfigForm.class);
             customForms.put(StreamStorageConfig.class.getCanonicalName(), GenericStorageConfigForm.class);
             customForms.put(CommProviderConfig.class.getCanonicalName(), CommProviderConfigForm.class);
+            customForms.put(BasicSecurityRealmConfig.RoleConfig.class.getCanonicalName(), BasicSecurityConfigForm.class);
             customForms.put(SOSConfigForm.SOS_PACKAGE + "SOSServiceConfig", SOSConfigForm.class);
             customForms.put(SPSConfigForm.SPS_PACKAGE + "SPSServiceConfig", SPSConfigForm.class);
             
@@ -154,7 +156,7 @@ public class AdminUIModule extends AbstractModule<AdminUIConfig>
         System.setErr(oldStdErr);
         
         // setup security
-        httpServer.addServletSecurity("/admin/*", "admin");
+        httpServer.addServletSecurity("/admin/*", true);
     }
     
 

@@ -114,6 +114,47 @@ $v-layout-margin-top: 25px;
       text-indent: 20px;
    }
    
+   .v-table .v-table-cell-content-green {
+      background-image: url("icons/enabled.gif");
+      background-repeat: no-repeat;
+      background-position: 5px;
+      text-indent: 20px;
+   }
+   
+   .v-table .v-table-cell-content-perm-allow .v-table-cell-wrapper:before {
+      font-family: FontAwesome;
+      content: "\f00C";
+      display: inline-block;
+      padding-right: 6px;
+      vertical-align: middle;
+      color: rgb(64,214,0);
+   }
+   
+   .v-table .v-table-cell-content-perm-allow-gray .v-table-cell-wrapper:before {
+      font-family: FontAwesome;
+      content: "\f00C";
+      display: inline-block;
+      padding-right: 6px;
+      vertical-align: middle;
+   }
+   
+   .v-table .v-table-cell-content-perm-deny .v-table-cell-wrapper:before {
+      font-family: FontAwesome;
+      content: "\f05E";
+      display: inline-block;
+      padding-right: 6px;
+      vertical-align: middle;
+      color: red;
+   }
+   
+   .v-table .v-table-cell-content-perm-deny-gray .v-table-cell-wrapper:before {
+      font-family: FontAwesome;
+      content: "\f05E";
+      display: inline-block;
+      padding-right: 6px;
+      vertical-align: middle;
+   }
+   
    .v-tooltip {
       background-color: rgba(255, 255, 255, 0.9);
       color: black;

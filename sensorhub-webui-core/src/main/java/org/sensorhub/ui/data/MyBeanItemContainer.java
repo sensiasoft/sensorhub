@@ -19,6 +19,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
+import org.sensorhub.api.config.DisplayInfo.IdField;
 import com.vaadin.data.Property;
 import com.vaadin.data.util.AbstractInMemoryContainer;
 
@@ -33,7 +35,7 @@ public class MyBeanItemContainer<BeanType> extends AbstractInMemoryContainer<Obj
     
     public MyBeanItemContainer(Class<BeanType> beanType) throws IllegalArgumentException
     {
-        this(null, beanType, MyBeanItem.NO_PREFIX);
+        this((Collection<?>)null, beanType, MyBeanItem.NO_PREFIX);
     }
     
     
@@ -61,6 +63,30 @@ public class MyBeanItemContainer<BeanType> extends AbstractInMemoryContainer<Obj
     }
     
     
+    public MyBeanItemContainer(Map<String, ?> beanMap, Class<? extends BeanType> beanType, String prefix) throws IllegalArgumentException
+    {
+        try
+        {
+            this.actualBeanType = beanType;
+            if ((beanType.getModifiers() & Modifier.ABSTRACT) == 0 && !Enum.class.isAssignableFrom(beanType))
+                this.templateItem = new MyBeanItem<BeanType>(beanType.newInstance());
+            else
+                this.templateItem = null;
+            
+            // add map entries as bean items
+            if (beanMap != null)
+            {
+                for (Entry<String, ?> entry: beanMap.entrySet())
+                    addBean(entry.getKey(), (BeanType)entry.getValue(), prefix);
+            }
+        }
+        catch (Exception e)
+        {
+            throw new RuntimeException(e);
+        }
+    }
+    
+    
     public Class<? extends BeanType> getBeanType()
     {
         return actualBeanType;
@@ -76,9 +102,23 @@ public class MyBeanItemContainer<BeanType> extends AbstractInMemoryContainer<Obj
     public MyBeanItem<BeanType> addBean(BeanType bean, String prefix)
     {
         MyBeanItem<BeanType> newItem = new MyBeanItem<BeanType>(bean, prefix);
-        Integer newItemId = (Integer)bean.hashCode();
+        
+        // try to get item ID from property, or use hashcode
+        Object newItemId = getBeanItemId(bean, newItem, prefix);
+        if (newItemId == null)
+            newItemId = (Integer)bean.hashCode();
+        
         internalAddItemAtEnd(newItemId, newItem, false);
         fireItemAdded(indexOfId(newItem), newItemId, newItem);
+        return newItem;
+    }
+    
+    
+    public MyBeanItem<BeanType> addBean(String itemId, BeanType bean, String prefix)
+    {
+        MyBeanItem<BeanType> newItem = new MyBeanItem<BeanType>(bean, prefix);
+        internalAddItemAtEnd(itemId, newItem, false);
+        fireItemAdded(indexOfId(newItem), itemId, newItem);
         return newItem;
     }
 
@@ -148,6 +188,20 @@ public class MyBeanItemContainer<BeanType> extends AbstractInMemoryContainer<Obj
         itemIdToItem.clear();
         this.fireItemsRemoved(0, firstItemId(), size());
         return true;
+    }
+    
+    
+    private String getBeanItemId(BeanType bean, MyBeanItem<BeanType> item, String prefix)
+    {
+        IdField ann = bean.getClass().getAnnotation(IdField.class);
+        if (ann != null && ann.value().length() > 0)
+        {
+            Property<?> prop = item.getItemProperty(prefix + ann.value());
+            if (prop != null)
+                return prop.getValue().toString();
+        }
+        
+        return null;
     }
     
 }

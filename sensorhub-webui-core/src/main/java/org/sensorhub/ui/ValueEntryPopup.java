@@ -14,8 +14,11 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.ui;
 
+import java.util.Collection;
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
+import com.vaadin.ui.ComboBox;
+import com.vaadin.ui.Field;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
@@ -33,22 +36,50 @@ public class ValueEntryPopup extends Window
     
     
     @SuppressWarnings("serial")
-    public ValueEntryPopup(int width, final ValueCallback callback)
+    public ValueEntryPopup(int width, final ValueCallback callback, final Collection<?> possibleValues)
     {
-        super("New Value");
+        super("Enter New Value");
         VerticalLayout layout = new VerticalLayout();
         
-        TextField text = new TextField();
-        text.setWidth(width, Unit.PIXELS);
-        layout.addComponent(text);
-        text.focus();
+        Field<?> input = null;
+        if (possibleValues != null && !possibleValues.isEmpty())
+        {
+            ComboBox select = new ComboBox();
+            select.setWidth(width, Unit.PIXELS);
+            select.setNullSelectionAllowed(false);
+            
+            for (Object val: possibleValues)
+            {
+                // when null is included in the list it means we also
+                // accept new values entered by the user
+                if (val == null)
+                {
+                    select.setNewItemsAllowed(true);
+                    select.setImmediate(true);
+                }
+                else
+                    select.addItem(val);
+            }
+            
+            layout.addComponent(select);
+            select.focus();
+            input = select;
+        }
+        else
+        {
+            TextField text = new TextField();
+            text.setWidth(width, Unit.PIXELS);
+            layout.addComponent(text);
+            text.focus();
+            input = text;
+        }
         
-        text.addValueChangeListener(new ValueChangeListener() {
+        input.addValueChangeListener(new ValueChangeListener() {
             @Override
             public void valueChange(ValueChangeEvent event)
             {
                 ValueEntryPopup.this.close();
-                callback.newValue((String)event.getProperty().getValue());
+                callback.newValue(event.getProperty().getValue());
             }
         });
         

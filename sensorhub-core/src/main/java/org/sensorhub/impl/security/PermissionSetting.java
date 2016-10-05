@@ -25,6 +25,11 @@ public class PermissionSetting extends ArrayDeque<IPermission> implements IPermi
     private static final long serialVersionUID = 7266587754134674522L;
 
 
+    public PermissionSetting()
+    {        
+    }
+    
+    
     public PermissionSetting(IPermission perm)
     {
         super(10);
@@ -42,6 +47,9 @@ public class PermissionSetting extends ArrayDeque<IPermission> implements IPermi
         
         for (IPermission perm: this)
         {
+            if (!otherIt.hasNext())
+                return true;
+            
             IPermission requested = otherIt.next();
             if (!perm.implies(requested))
                 return false;

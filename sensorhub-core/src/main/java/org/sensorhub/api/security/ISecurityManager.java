@@ -14,7 +14,7 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.api.security;
 
-import org.sensorhub.impl.security.ModulePermissions;
+import java.util.Collection;
 
 
 /**
@@ -33,8 +33,11 @@ public interface ISecurityManager extends IUserRegistry, IAuthorizer
     public boolean isAccessControlEnabled();
     
     
-    public void registerModulePermissions(String moduleID, ModulePermissions perm);
+    public void registerModulePermissions(IPermission perm);
     
     
-    public ModulePermissions getModulePermissions(String moduleID);
+    public IPermission getModulePermissions(String moduleIdString);
+    
+    
+    public Collection<IPermission> getAllModulePermissions();
 }

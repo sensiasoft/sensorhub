@@ -36,9 +36,11 @@ import org.sensorhub.ui.ValueEntryPopup.ValueCallback;
 import org.sensorhub.ui.api.IModuleConfigForm;
 import org.sensorhub.ui.api.UIConstants;
 import org.sensorhub.ui.data.BaseProperty;
+import org.sensorhub.ui.data.BeanUtils;
 import org.sensorhub.ui.data.ComplexProperty;
 import org.sensorhub.ui.data.ContainerProperty;
 import org.sensorhub.ui.data.FieldProperty;
+import org.sensorhub.ui.data.MapProperty;
 import org.sensorhub.ui.data.MyBeanItem;
 import org.sensorhub.ui.data.MyBeanItemContainer;
 import com.vaadin.data.Buffered.SourceException;
@@ -75,6 +77,7 @@ import com.vaadin.ui.TabSheet.CloseHandler;
 import com.vaadin.ui.TabSheet.SelectedTabChangeEvent;
 import com.vaadin.ui.TabSheet.SelectedTabChangeListener;
 import com.vaadin.ui.TabSheet.Tab;
+import com.vaadin.ui.Table;
 import com.vaadin.ui.Window;
 import com.vaadin.ui.Window.CloseEvent;
 import com.vaadin.ui.Window.CloseListener;
@@ -97,11 +100,18 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
     private static final long serialVersionUID = 3491784756273165916L;
     protected static final String MAIN_CONFIG = "General";
     
-    protected FieldGroup fieldGroup;
-    protected List<IModuleConfigForm> allForms = new ArrayList<IModuleConfigForm>();
+    protected List<Field<?>> labels = new ArrayList<Field<?>>();
+    protected List<Field<?>> textBoxes = new ArrayList<Field<?>>();
+    protected List<Field<?>> listBoxes = new ArrayList<Field<?>>();
+    protected List<Field<?>> numberBoxes = new ArrayList<Field<?>>();
+    protected List<Field<?>> checkBoxes = new ArrayList<Field<?>>();
     protected List<Component> subForms = new ArrayList<Component>();
+    
+    protected List<IModuleConfigForm> allForms = new ArrayList<IModuleConfigForm>();
+    protected FieldGroup fieldGroup;
     protected boolean tabJustRemoved;
-        
+    protected IModuleConfigForm parentForm;
+    
     
     @Override
     public void build(String propId, ComplexProperty prop, boolean includeSubForms)
@@ -117,11 +127,12 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
     @Override
     public void build(String title, String popupText, MyBeanItem<? extends Object> beanItem, boolean includeSubForms)
     {
-        List<Field<?>> labels = new ArrayList<Field<?>>();
-        List<Field<?>> textBoxes = new ArrayList<Field<?>>();
-        List<Field<?>> listBoxes = new ArrayList<Field<?>>();
-        List<Field<?>> numberBoxes = new ArrayList<Field<?>>();
-        List<Field<?>> checkBoxes = new ArrayList<Field<?>>();
+        labels.clear();
+        textBoxes.clear();
+        listBoxes.clear();
+        numberBoxes.clear();
+        checkBoxes.clear();
+        subForms.clear();
         
         // prepare header and form layout
         setSpacing(false);
@@ -146,30 +157,7 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
                 
                 // sub objects with multiplicity > 1
                 if (prop instanceof ContainerProperty)
-                {
-                    Class<?> eltType = ((ContainerProperty)prop).getValue().getBeanType();
-                    if (eltType == SensorMember.class || eltType == ProcessMember.class)
-                        continue;
-                    
-                    // use simple table for string lists
-                    if (eltType == String.class || Enum.class.isAssignableFrom(eltType))
-                    {
-                        Component list = buildSimpleTable((String)propId, (ContainerProperty)prop, eltType);
-                        if (list == null)
-                            continue;
-                        fieldGroup.bind((Field<?>)list, propId);
-                        listBoxes.add((Field<?>)list);
-                    }
-                    
-                    // else use tab sheet
-                    else
-                    {
-                        Component subform = buildTabs((String)propId, (ContainerProperty)prop, fieldGroup);
-                        if (subform == null)
-                            continue;
-                        subForms.add(subform);
-                    }
-                }
+                    buildListComponent((String)propId, (ContainerProperty)prop, fieldGroup);
                 
                 // sub object
                 else if (prop instanceof ComplexProperty)
@@ -223,7 +211,7 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
                             textBoxes.add(field);
                     }
                     else if (Enum.class.isAssignableFrom(propType))
-                        numberBoxes.add(field);
+                        listBoxes.add(field);
                     else if (Number.class.isAssignableFrom(propType))
                         numberBoxes.add(field);
                     else if (field instanceof CheckBox)
@@ -297,13 +285,23 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
         
         // size depending on field type
         if (propType.equals(String.class))
+        {
             field.setWidth(500, Unit.PIXELS);
+        }
         else if (propType.equals(int.class) || propType.equals(Integer.class) ||
-                propType.equals(float.class) || propType.equals(Float.class) ||
-                propType.equals(double.class) || propType.equals(Double.class))
-            field.setWidth(200, Unit.PIXELS);
+                propType.equals(float.class) || propType.equals(Float.class))
+        {
+            field.setWidth(100, Unit.PIXELS);
+        }
+        else if (propType.equals(double.class) || propType.equals(Double.class))
+        {
+            field.setWidth(150, Unit.PIXELS);
+        }
         else if (Enum.class.isAssignableFrom(propType))
+        {
             ((ListSelect)field).setRows(3);
+            field.setWidth(200, Unit.PIXELS);
+        }
         
         if (field instanceof TextField) {
             ((TextField)field).setImmediate(true);
@@ -540,6 +538,7 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
         else
             subform = AdminUIModule.getInstance().generateForm(beanType);
         subform.build(propId, prop, true);
+        subform.setParentForm(this);
         
         // add change button if property is changeable module config
         Class<?> changeableBeanType = subform.getPolymorphicBeanParentType();
@@ -670,7 +669,44 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
     }
     
     
-    protected Component buildSimpleTable(final String propId, final ContainerProperty prop, final Class<?> eltType)
+    protected void buildListComponent(final String propId, final ContainerProperty prop, final FieldGroup fieldGroup)
+    {
+        // skip SensorSystem members since they are already shown in the tree
+        Class<?> eltType = ((ContainerProperty)prop).getValue().getBeanType();
+        if (eltType == SensorMember.class || eltType == ProcessMember.class)
+            return;
+        
+        // use simple list for string lists
+        if (!(prop instanceof MapProperty) && BeanUtils.isSimpleType(eltType))
+        {
+            Component list = buildSimpleList((String)propId, prop, eltType);
+            if (list == null)
+                return;
+            fieldGroup.bind((Field<?>)list, propId);
+            listBoxes.add((Field<?>)list);
+        }
+        
+        // use multi column table if collection contains only simple elements
+        else if (BeanUtils.isSimpleType(eltType) || prop.getFieldType() == Type.TABLE)
+        {
+            Component table = buildTable((String)propId, prop, eltType);
+            if (table == null)
+                return;
+            subForms.add(table);
+        }
+        
+        // else use tab sheet
+        else
+        {
+            Component subform = buildTabs(propId, prop, fieldGroup);
+            if (subform == null)
+                return;
+            subForms.add(subform);
+        }
+    }
+    
+    
+    protected Component buildSimpleList(final String propId, final ContainerProperty prop, final Class<?> eltType)
     {
         String label = prop.getLabel();
         if (label == null)
@@ -710,6 +746,9 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
                     private static final long serialVersionUID = 1L;
                     public void buttonClick(ClickEvent event)
                     {
+                        List<Object> valueList = GenericConfigForm.this.getPossibleValues(propId);
+                        
+                        // create callback to add new value
                         ValueCallback callback = new ValueCallback() {
                             @Override
                             public void newValue(Object value)
@@ -724,7 +763,7 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
                         if (Enum.class.isAssignableFrom(eltType))
                             popup = new ValueEnumPopup(500, callback, ((Class<Enum<?>>)eltType).getEnumConstants());
                         else
-                            popup = new ValueEntryPopup(500, callback);
+                            popup = new ValueEntryPopup(500, callback, valueList);
                                     
                         popup.setModal(true);
                         getUI().addWindow(popup);
@@ -761,6 +800,124 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
     }
     
     
+    protected Component buildTable(final String propId, final ContainerProperty prop, final Class<?> eltType)
+    {
+        final MyBeanItemContainer<Object> container = prop.getValue();
+        final Table table = new Table();
+        table.setSizeFull();
+        table.setSelectable(true);
+        table.setNullSelectionAllowed(false);
+        table.setImmediate(true);
+        table.setColumnReorderingAllowed(false);
+        table.setContainerDataSource(container);
+        
+        FieldWrapper<Object> wrapper = new FieldWrapper<Object>(table) {
+            private static final long serialVersionUID = 1499878131611223989L;
+            protected Component initContent()
+            {
+                HorizontalLayout layout = new HorizontalLayout();
+                layout.setSpacing(true);
+                
+                // inner field
+                layout.addComponent(innerField);
+                layout.setComponentAlignment(innerField, Alignment.MIDDLE_LEFT);
+                
+                VerticalLayout buttons = new VerticalLayout();
+                layout.addComponent(buttons);
+                
+                // add button
+                Button addBtn = new Button(ADD_ICON);
+                addBtn.addStyleName(STYLE_QUIET);
+                addBtn.addStyleName(STYLE_SMALL);
+                buttons.addComponent(addBtn);
+                addBtn.addClickListener(new ClickListener() {
+                    private static final long serialVersionUID = 1L;
+                    public void buttonClick(ClickEvent event)
+                    {
+                        try
+                        {
+                            Map<String, Class<?>> typeList = GenericConfigForm.this.getPossibleTypes(propId);
+                            
+                            // create callback to add table item
+                            ObjectTypeSelectionCallback callback = new ObjectTypeSelectionCallback() {
+                                public void onSelected(Class<?> objectType)
+                                {
+                                    try
+                                    {
+                                        // add new item to container
+                                        container.addBean(objectType.newInstance(), ((String)propId) + PROP_SEP);
+                                    }
+                                    catch (Exception e)
+                                    {
+                                        Notification.show("Error", e.getMessage(), Notification.Type.ERROR_MESSAGE);
+                                    }
+                                }
+                            };
+                            
+                            if (typeList == null || typeList.isEmpty())
+                            {
+                                // we use the declared type
+                                callback.onSelected(container.getBeanType());
+                            }
+                            else if (typeList.size() == 1)
+                            {
+                                // we automatically use the only type in the list
+                                Class<?> firstType = typeList.values().iterator().next();
+                                callback.onSelected(firstType);
+                            }
+                            else
+                            {
+                                // we popup the list so the user can select what he wants
+                                String title = "Please select the desired option";
+                                ObjectTypeSelectionPopup popup = new ObjectTypeSelectionPopup(title, typeList, callback);
+                                popup.setModal(true);
+                                getUI().addWindow(popup);
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            e.printStackTrace();
+                        }
+                    }
+                });
+                
+                // remove button
+                Button delBtn = new Button(DEL_ICON);
+                delBtn.addStyleName(STYLE_QUIET);
+                delBtn.addStyleName(STYLE_SMALL);
+                buttons.addComponent(delBtn);
+                delBtn.addClickListener(new ClickListener() {
+                    private static final long serialVersionUID = 1L;
+                    public void buttonClick(ClickEvent event)
+                    {
+                        Object itemId = table.getValue();
+                        container.removeItem(itemId);
+                    }
+                });
+                                
+                return layout;
+            }
+            
+            @Override
+            public void commit() throws SourceException, InvalidValueException
+            {
+                // override commit here because the ListSelect setValue() method
+                // only sets the index of the selected item, and not the list content
+                prop.setValue(container);
+            }             
+        };
+        
+        // set title and popup
+        String title = prop.getLabel();
+        if (title == null)
+            title = DisplayUtils.getPrettyName((String)propId);                
+        wrapper.setCaption(title);
+        wrapper.setDescription(prop.getDescription());
+        
+        return wrapper;
+    }
+    
+    
     protected Component buildTabs(final String propId, final ContainerProperty prop, final FieldGroup fieldGroup)
     {
         GridLayout layout = new GridLayout();
@@ -783,12 +940,16 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
             MyBeanItem<Object> childBeanItem = (MyBeanItem<Object>)container.getItem(itemId);
             IModuleConfigForm subform = AdminUIModule.getInstance().generateForm(childBeanItem.getBean().getClass());
             subform.build(null, null, childBeanItem, true);
+            subform.setParentForm(this);
             ((MarginHandler)subform).setMargin(new MarginInfo(false, false, true, false));
             allForms.add(subform);
-            Tab tab = tabs.addTab(subform, "Item #" + (i++));
+            
+            // generate tab label
+            String tabName = (itemId instanceof String) ? (String)itemId : "Item #" + (i++);
+            Tab tab = tabs.addTab(subform, tabName);
             tab.setClosable(true);
             
-            // store item id so we can map a tab with the corresponding bean item
+            // store item id so we can map the tab with the corresponding bean item
             ((AbstractComponent)subform).setData(itemId);
         }
         
@@ -919,7 +1080,7 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
                     {
                         e.printStackTrace();
                     }
-                } 
+                }
                 
                 // reset flag to allow adding
                 tabJustRemoved = false;
@@ -967,11 +1128,32 @@ public class GenericConfigForm extends VerticalLayout implements IModuleConfigFo
     {
         return Collections.EMPTY_MAP;
     }
+    
+    
+    @Override
+    public List<Object> getPossibleValues(String propId)
+    {
+        return Collections.EMPTY_LIST;
+    }
 
 
     @Override
     public Class<?> getPolymorphicBeanParentType()
     {
         return null;
+    }
+    
+    
+    @Override
+    public IModuleConfigForm getParentForm()
+    {
+        return this.parentForm;
+    }
+
+
+    @Override
+    public void setParentForm(IModuleConfigForm parentForm)
+    {
+        this.parentForm = parentForm;        
     }
 }
