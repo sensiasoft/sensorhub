@@ -94,15 +94,6 @@ public class HttpServer extends AbstractModule<HttpServerConfig>
     {
         return instance;
     }
-    
-
-    @Override
-    public void updateConfig(HttpServerConfig config) throws SensorHubException
-    {
-        stop();
-        init(config);
-        start();
-    }
 
     
     @Override
@@ -183,7 +174,8 @@ public class HttpServer extends AbstractModule<HttpServerConfig>
                 holder.setInitParameter("maxRequestMs", Long.toString(24*3600*1000L)); // we need persistent requests!
                 
                 // security handler
-                if (config.authMethod != null && config.authMethod != AuthMethod.NONE && SensorHub.getInstance().getSecurityManager().isAccessControlEnabled())
+                boolean accessControlEnabled = SensorHub.getInstance().getSecurityManager().ensureAccessControlEnabled();
+                if (config.authMethod != null && config.authMethod != AuthMethod.NONE && accessControlEnabled)
                 {
                     securityHandler = new ConstraintSecurityHandler();
                     

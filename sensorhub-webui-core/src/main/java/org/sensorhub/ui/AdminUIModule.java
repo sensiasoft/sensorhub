@@ -21,12 +21,14 @@ import java.util.Map;
 import java.util.logging.LogManager;
 import org.sensorhub.api.comm.CommProviderConfig;
 import org.sensorhub.api.comm.NetworkConfig;
+import org.sensorhub.api.common.Event;
+import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.module.IModule;
+import org.sensorhub.api.module.ModuleEvent;
 import org.sensorhub.api.module.ModuleEvent.ModuleState;
 import org.sensorhub.api.persistence.StorageConfig;
 import org.sensorhub.api.sensor.SensorConfig;
-import org.sensorhub.api.service.ServiceException;
 import org.sensorhub.impl.module.AbstractModule;
 import org.sensorhub.impl.persistence.StreamStorageConfig;
 import org.sensorhub.impl.security.BasicSecurityRealmConfig;
@@ -39,7 +41,7 @@ import org.slf4j.LoggerFactory;
 import com.vaadin.server.VaadinServlet;
 
 
-public class AdminUIModule extends AbstractModule<AdminUIConfig>
+public class AdminUIModule extends AbstractModule<AdminUIConfig> implements IEventListener
 {
     protected static final Logger log = LoggerFactory.getLogger(AdminUI.class);
     protected final static String SERVLET_PARAM_UI_CLASS = "UI";
@@ -64,6 +66,24 @@ public class AdminUIModule extends AbstractModule<AdminUIConfig>
     public static AdminUIModule getInstance()
     {
         return singleton;
+    }
+    
+    
+    @Override
+    public void requestStart() throws SensorHubException
+    {
+        if (canStart())
+        {
+            HttpServer httpServer = HttpServer.getInstance();
+            if (httpServer == null)
+                throw new SensorHubException("HTTP server module is not loaded");
+            
+            // subscribe to server lifecycle events
+            httpServer.registerListener(this);
+            
+            // we actually start in the handleEvent() method when
+            // a STARTED event is received from HTTP server
+        }
     }
     
     
@@ -142,8 +162,8 @@ public class AdminUIModule extends AbstractModule<AdminUIConfig>
         
         // get HTTP server instance
         HttpServer httpServer = HttpServer.getInstance();
-        if (!httpServer.waitForState(ModuleState.STARTED, 10000))
-            throw new ServiceException("HTTP server hasn't started before timeout");
+        if (httpServer == null || !httpServer.isStarted())
+            throw new SensorHubException("An HTTP server instance must be started");
         
         // deploy servlet
         // HACK: we have to disable std err to hide message due to Vaadin duplicate implementation of SL4J
@@ -157,14 +177,21 @@ public class AdminUIModule extends AbstractModule<AdminUIConfig>
         
         // setup security
         httpServer.addServletSecurity("/admin/*", true);
+        
+        setState(ModuleState.STARTED);
     }
     
 
     @Override
-    public void stop() throws SensorHubException
+    public void stop()
     {
         if (vaadinServlet != null)
+        {
             HttpServer.getInstance().undeployServlet(vaadinServlet);
+            vaadinServlet.destroy();
+        }
+        
+        setState(ModuleState.STOPPED);
     }
     
     
@@ -219,6 +246,34 @@ public class AdminUIModule extends AbstractModule<AdminUIConfig>
     @Override
     public void cleanup() throws SensorHubException
     {        
+    }
+    
+    
+    @Override
+    public void handleEvent(Event<?> e)
+    {
+        // catch HTTP server lifecycle events
+        if (e instanceof ModuleEvent && e.getSource() == HttpServer.getInstance())
+        {
+            ModuleState newState = ((ModuleEvent) e).getNewState();
+            
+            // start when HTTP server is enabled
+            if (newState == ModuleState.STARTED)
+            {
+                try
+                {
+                    start();
+                }
+                catch (SensorHubException ex)
+                {
+                    reportError("Admin UI could not start", ex);
+                }
+            }
+            
+            // stop when HTTP server is disabled
+            else if (newState == ModuleState.STOPPED)
+                stop();
+        }
     }
 
 }

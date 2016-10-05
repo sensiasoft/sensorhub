@@ -53,6 +53,14 @@ public class SecurityManagerImpl implements ISecurityManager
     @Override
     public boolean isAccessControlEnabled()
     {        
+        return (users != null && users.get() != null &&
+                authz != null && authz.get() != null);
+    }
+    
+    
+    @Override
+    public boolean ensureAccessControlEnabled()
+    {        
         if (users == null || users.get() == null)
         {
             // wait for all osh modules to be loaded by registry
@@ -90,8 +98,7 @@ public class SecurityManagerImpl implements ISecurityManager
             }
         }
         
-        return (users != null && users.get() != null &&
-                authz != null && authz.get() != null);
+        return isAccessControlEnabled();
     }
         
     
@@ -111,7 +118,7 @@ public class SecurityManagerImpl implements ISecurityManager
     @Override
     public boolean isAuthorized(IUserInfo user, IPermissionPath request)
     {
-        Asserts.checkNotNull(users, "No IAuthorizer implementation registered");
+        Asserts.checkNotNull(authz, "No IAuthorizer implementation registered");
         
         IAuthorizer authz = this.authz.get();
         if (authz != null)

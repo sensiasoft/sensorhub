@@ -97,6 +97,10 @@ public class ModuleSecurity
      */
     public void setCurrentUser(String userID)
     {
+        // do nothing if access control is not available (e.g. no realm was setup)
+        if (!SensorHub.getInstance().getSecurityManager().isAccessControlEnabled())
+            return;
+        
         // lookup user info 
         IUserInfo user = SensorHub.getInstance().getSecurityManager().getUserInfo(userID);
         if (user == null)

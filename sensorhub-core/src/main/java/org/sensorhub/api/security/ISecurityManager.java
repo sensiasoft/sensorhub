@@ -33,6 +33,9 @@ public interface ISecurityManager extends IUserRegistry, IAuthorizer
     public boolean isAccessControlEnabled();
     
     
+    public boolean ensureAccessControlEnabled();
+    
+    
     public void registerModulePermissions(IPermission perm);
     
     
