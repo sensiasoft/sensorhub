@@ -106,7 +106,9 @@ public class TestModuleConfigJsonFile
         config4.moduleClass = "org.sensorhub.persistence.FeatureStorage";
         configDb.add(config4);
         
-        displayFile();
+        // read back
+        configDb.close();        
+        configDb = new ModuleConfigJsonFile(configFile.getAbsolutePath());
         
         storedConf = configDb.get(config1.id);
         assertTrue(storedConf.id.equals(config1.id));
@@ -127,6 +129,35 @@ public class TestModuleConfigJsonFile
         assertTrue(storedConf.id.equals(config4.id));
         assertTrue(storedConf.name.equals(config4.name));
         assertTrue(storedConf.moduleClass.equals(config4.moduleClass));
+    }
+    
+    
+    @Test
+    public void testRemoveAndReadBack() throws Exception
+    {
+        ProcessConfig config1 = new ProcessConfig();
+        config1.id = UUID.randomUUID().toString();
+        config1.name = "Process1";
+        config1.moduleClass = "org.sensorhub.process.ProcessModel";
+        configDb.add(config1);
+        
+        ServiceConfig config2 = new ServiceConfig();
+        config2.id = UUID.randomUUID().toString();
+        config2.name = "Service1";
+        config2.moduleClass = "org.sensorhub.service.SosService";
+        configDb.add(config2);
+        
+        assertTrue(configDb.contains(config1.id));
+        assertTrue(configDb.contains(config2.id));
+        
+        // remove one config
+        configDb.remove(config1.id);
+        
+        // read back and check it's not there
+        configDb.close();
+        configDb = new ModuleConfigJsonFile(configFile.getAbsolutePath());
+        
+        assertFalse(configDb.contains(config1.id));
     }
     
     

@@ -74,7 +74,13 @@ public interface IModuleConfigRepository
     
     
     /**
-     * Closes the database and release all resources associated to it
+     * Commits last configuration changes to the persistent store (if any)
+     */
+    public void commit();
+    
+    
+    /**
+     * Closes the module config registry and release all resources associated to it
      */
     public void close();
     

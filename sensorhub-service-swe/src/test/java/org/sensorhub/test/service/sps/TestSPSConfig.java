@@ -45,6 +45,7 @@ public class TestSPSConfig
         config.ogcCapabilitiesInfo.keywords = new String[] {"OGC", "sensors", "control"};
         config.ogcCapabilitiesInfo.serviceProvider.setCity("Toulouse");
         db.add(config);
+        db.close();
         
         // display stored file
         BufferedReader reader = new BufferedReader(new FileReader(configFile));

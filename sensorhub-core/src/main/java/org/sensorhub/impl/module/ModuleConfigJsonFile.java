@@ -187,9 +187,6 @@ public class ModuleConfigJsonFile implements IModuleConfigRepository
     @Override
     public synchronized void add(ModuleConfig... configList)
     {
-        // need to read again to get last saved version
-        readJSON();
-        
         for (ModuleConfig config: configList)
         {        
             ModuleConfig conf = configMap.get(config.id);
@@ -198,17 +195,12 @@ public class ModuleConfigJsonFile implements IModuleConfigRepository
             
             configMap.put(config.id, config);
         }
-        
-        writeJSON();
     }
     
     
     @Override
     public synchronized void update(ModuleConfig... configList)
     {
-        // need to read again to get last saved version
-        readJSON();
-        
         for (ModuleConfig config: configList)
         {
             // generate a new ID if non was provided
@@ -217,23 +209,23 @@ public class ModuleConfigJsonFile implements IModuleConfigRepository
             
             configMap.put(config.id, config); 
         }
-        
-        writeJSON();
     }
     
     
     @Override
     public synchronized void remove(String... moduleIDs)
     {
-        // need to read again to get last saved version
-        readJSON();
-        
         for (String moduleID: moduleIDs)
         {
             get(moduleID); // check if module exists
             configMap.remove(moduleID);
         }
-            
+    }
+    
+    
+    @Override
+    public synchronized void commit()
+    {
         writeJSON();
     }
     
@@ -241,7 +233,7 @@ public class ModuleConfigJsonFile implements IModuleConfigRepository
     @Override
     public synchronized void close()
     {
-        // nothing to do
+        commit();
     }
     
     

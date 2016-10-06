@@ -73,7 +73,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
     public static final String ID = "MODULE_REGISTRY";
     public static final long SHUTDOWN_TIMEOUT_MS = 10000L;
     
-    IModuleConfigRepository configRepos;
+    IModuleConfigRepository configRepo;
     Map<String, IModule<?>> loadedModules;
     IEventHandler eventHandler;
     ExecutorService asyncExec;
@@ -83,7 +83,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
     
     public ModuleRegistry(IModuleConfigRepository configRepos, EventBus eventBus)
     {
-        this.configRepos = configRepos;
+        this.configRepo = configRepos;
         this.loadedModules = Collections.synchronizedMap(new LinkedHashMap<String, IModule<?>>());
         this.eventHandler = eventBus.registerProducer(ID);
         this.asyncExec = new ThreadPoolExecutor(0, Integer.MAX_VALUE,
@@ -101,7 +101,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
     {
         allModulesLoaded = false;
                 
-        List<ModuleConfig> moduleConfs = configRepos.getAllModulesConfigurations();
+        List<ModuleConfig> moduleConfs = configRepo.getAllModulesConfigurations();
         for (ModuleConfig config: moduleConfs)
         {
             try
@@ -709,7 +709,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
     public void destroyModule(String moduleID) throws SensorHubException
     {
         // we check both in live table and in config repository
-        if (!loadedModules.containsKey(moduleID) && !configRepos.contains(moduleID))
+        if (!loadedModules.containsKey(moduleID) && !configRepo.contains(moduleID))
             throw new SensorHubException("Unknown module " + moduleID);
         
         try
@@ -722,10 +722,6 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
                 module.cleanup();
                 getStateManager(moduleID).cleanup();
             }
-            
-            // remove conf from repo if it was saved 
-            if (configRepos.contains(moduleID))
-                configRepos.remove(moduleID);
             
             eventHandler.publishEvent(new ModuleEvent(module, Type.DELETED));
             log.debug("Module " + MsgUtils.moduleString(module) +  " removed");
@@ -745,17 +741,18 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
     {
         try
         {
-            int numModules = loadedModules.size();
-            ModuleConfig[] configList = new ModuleConfig[numModules];
-            
-            int i = 0;
+            // update config of loaded modules
             for (IModule<?> module: loadedModules.values())
+                configRepo.update(module.getConfiguration());    
+            
+            // remove configs that have been deleted 
+            for (ModuleConfig moduleConf: configRepo.getAllModulesConfigurations())
             {
-                configList[i] = module.getConfiguration();
-                i++;
+                if (!loadedModules.containsKey(moduleConf.id))
+                    configRepo.remove(moduleConf.id);
             }
             
-            configRepos.update(configList);
+            configRepo.commit();
         }
         catch (Exception e)
         {
@@ -772,7 +769,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
     public synchronized void saveConfiguration(ModuleConfig... configList)
     {
         for (ModuleConfig config: configList)
-            configRepos.update(config);
+            configRepo.update(config);
     }
     
     
@@ -789,8 +786,8 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
         // load module if necessary
         if (!loadedModules.containsKey(moduleID))
         {
-            if (configRepos.contains(moduleID))
-                loadModuleAsync(configRepos.get(moduleID), null);
+            if (configRepo.contains(moduleID))
+                loadModuleAsync(configRepo.get(moduleID), null);
             else
                 throw new SensorHubException("Unknown module " + moduleID);
         }
@@ -809,7 +806,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
     @Override
     public synchronized Collection<ModuleConfig> getAvailableModules()
     {
-        return Collections.unmodifiableCollection(configRepos.getAllModulesConfigurations());
+        return Collections.unmodifiableCollection(configRepo.getAllModulesConfigurations());
     }
     
     
@@ -882,7 +879,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
             {
                 // save config if requested
                 if (saveConfig)
-                    configRepos.update(module.getConfiguration());
+                    configRepo.update(module.getConfiguration());
                 
                 // save state if requested
                 if (saveState)
@@ -965,7 +962,7 @@ public class ModuleRegistry implements IModuleManager<IModule<?>>, IEventProduce
         eventHandler.clearAllListeners();
         
         // properly close config database
-        configRepos.close();
+        configRepo.close();
     }
     
     
