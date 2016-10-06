@@ -289,7 +289,7 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
     
         
     @Override
-    public void stop() throws SensorHubException
+    public synchronized void stop() throws SensorHubException
     {
         if (dataSourceRef != null)
         {

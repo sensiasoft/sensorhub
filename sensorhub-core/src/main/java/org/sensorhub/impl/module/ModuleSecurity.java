@@ -19,7 +19,6 @@ import org.sensorhub.api.module.IModule;
 import org.sensorhub.api.security.IPermission;
 import org.sensorhub.api.security.IUserInfo;
 import org.sensorhub.impl.SensorHub;
-import org.sensorhub.impl.security.ItemPermission;
 import org.sensorhub.impl.security.ModulePermissions;
 import org.sensorhub.impl.security.PermissionRequest;
 
@@ -28,10 +27,6 @@ public class ModuleSecurity
 {    
     protected final ModulePermissions rootPerm;
     protected boolean enable = true;
-    public final IPermission module_init;
-    public final IPermission module_start;
-    public final IPermission module_stop;
-    public final IPermission module_update;
     ThreadLocal<IUserInfo> currentUser = new ThreadLocal<IUserInfo>();
         
     
@@ -41,10 +36,10 @@ public class ModuleSecurity
         this.enable = enable;
         
         // register basic module permissions        
-        module_init = new ItemPermission(rootPerm, "init", "Initialize Module");
-        module_start = new ItemPermission(rootPerm, "start", "Start Module");
-        module_stop = new ItemPermission(rootPerm, "stop", "Stop Module");
-        module_update = new ItemPermission(rootPerm, "update_config", "Update Module Configuration");        
+        //module_init = new ItemPermission(rootPerm, "init", "Initialize Module");
+        //module_start = new ItemPermission(rootPerm, "start", "Start Module");
+        //module_stop = new ItemPermission(rootPerm, "stop", "Stop Module");
+        //module_update = new ItemPermission(rootPerm, "update_config", "Update Module Configuration");       
         
         //SensorHub.getInstance().getSecurityManager().registerModulePermissions(rootPerm);
     }
@@ -63,8 +58,7 @@ public class ModuleSecurity
         // retrieve currently logged in user
         IUserInfo user = currentUser.get();
         if (user == null)
-            //throw new SecurityException(perm.getErrorMessage() + ": No user specified");
-            return true;
+            throw new SecurityException(perm.getErrorMessage() + ": No user specified");
         
         // request authorization
         return SensorHub.getInstance().getSecurityManager().isAuthorized(user, new PermissionRequest(perm));
@@ -79,15 +73,17 @@ public class ModuleSecurity
      */
     public void checkPermission(IPermission perm) throws SecurityException
     {
+        if (!enable)
+            return;
+        
         // retrieve currently logged in user
         IUserInfo user = currentUser.get();
         if (user == null)
-            //throw new SecurityException(perm.getErrorMessage() + ": No user specified");
-            return;
+            throw new SecurityException(perm.getErrorMessage() + ": No user specified");
         
         // request authorization
         if (!hasPermission(perm))
-            throw new AccessControlException(perm.getErrorMessage() + ": User=" + user.getId());
+            throw new AccessControlException("User " + user.getId() + ", " + perm.getErrorMessage());
     }
     
     

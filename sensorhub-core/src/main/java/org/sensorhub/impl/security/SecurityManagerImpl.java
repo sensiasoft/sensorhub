@@ -59,6 +59,7 @@ public class SecurityManagerImpl implements ISecurityManager
     public void registerUserRegistry(IUserRegistry userRegistry)
     {
         this.users = new WeakReference<IUserRegistry>(userRegistry);
+        log.info("User registry provided by module " + userRegistry.toString());        
     }
     
     
@@ -66,6 +67,7 @@ public class SecurityManagerImpl implements ISecurityManager
     public void registerAuthorizer(IAuthorizer authz)
     {
         this.authz = new WeakReference<IAuthorizer>(authz);
+        log.info("Authorization realm provided by module " + authz.toString());        
     }
         
     

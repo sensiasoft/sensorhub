@@ -53,7 +53,6 @@ import org.eclipse.jetty.util.security.Constraint;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.module.ModuleEvent.ModuleState;
-import org.sensorhub.api.service.ServiceException;
 import org.sensorhub.impl.SensorHub;
 import org.sensorhub.impl.module.AbstractModule;
 import org.sensorhub.impl.service.HttpServerConfig.AuthMethod;
@@ -112,7 +111,7 @@ public class HttpServer extends AbstractModule<HttpServerConfig>
 
 
     @Override
-    public void start() throws SensorHubException
+    public synchronized void start() throws SensorHubException
     {
         try
         {
@@ -244,13 +243,14 @@ public class HttpServer extends AbstractModule<HttpServerConfig>
     
     
     @Override
-    public void stop() throws SensorHubException
+    public synchronized void stop() throws SensorHubException
     {
         try
         {
             if (server != null)
             {
                 server.stop();
+                servletHandler = null;
                 securityHandler = null;
             }
         }
@@ -342,7 +342,7 @@ public class HttpServer extends AbstractModule<HttpServerConfig>
     }
     
     
-    public void addServletSecurity(String pathSpec, boolean requireAuth, String... roles)
+    public synchronized void addServletSecurity(String pathSpec, boolean requireAuth, String... roles)
     {
         if (securityHandler != null)
         {
@@ -358,7 +358,7 @@ public class HttpServer extends AbstractModule<HttpServerConfig>
 
 
     @Override
-    public void cleanup() throws SensorHubException
+    public synchronized void cleanup() throws SensorHubException
     {
         server = null;
         instance = null;

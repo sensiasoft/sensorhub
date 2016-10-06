@@ -107,9 +107,6 @@ public abstract class AbstractModule<ConfigType extends ModuleConfig> implements
     @Override
     public synchronized void updateConfig(ConfigType config) throws SensorHubException
     {
-        // check permission
-        securityHandler.checkPermission(securityHandler.module_update);
-        
         boolean wasStarted = isStarted();
         
         if (wasStarted)
@@ -357,9 +354,6 @@ public abstract class AbstractModule<ConfigType extends ModuleConfig> implements
     
     protected boolean canInit(boolean force) throws SensorHubException
     {
-        // check permission
-        securityHandler.checkPermission(securityHandler.module_init);
-        
         synchronized (stateLock)
         {
             // error if config hasn't been set
@@ -415,9 +409,6 @@ public abstract class AbstractModule<ConfigType extends ModuleConfig> implements
 
     protected boolean canStart() throws SensorHubException
     {
-        // check permission
-        securityHandler.checkPermission(securityHandler.module_start);
-                    
         synchronized (stateLock)
         {
             // error if we were never initialized
@@ -469,9 +460,6 @@ public abstract class AbstractModule<ConfigType extends ModuleConfig> implements
     
     protected boolean canStop() throws SensorHubException
     {
-        // check permission
-        securityHandler.checkPermission(securityHandler.module_stop);
-        
         synchronized (stateLock)
         {
             // do nothing if we're already stopping
