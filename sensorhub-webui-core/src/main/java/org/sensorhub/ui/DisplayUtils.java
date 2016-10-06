@@ -54,4 +54,14 @@ public class DisplayUtils
         notif.setHtmlContentAllowed(true);
         notif.show(UI.getCurrent().getPage());
     }
+    
+    
+    public static void showUnauthorizedAccess(String text)
+    {
+        Notification notif = new Notification(
+                "<span style=\"color:white\">" + FontAwesome.MINUS_CIRCLE.getHtml() +
+                "</span>&nbsp;&nbsp;" + text, Notification.Type.ERROR_MESSAGE);
+        notif.setHtmlContentAllowed(true);
+        notif.show(UI.getCurrent().getPage());
+    }
 }

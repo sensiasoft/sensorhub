@@ -103,6 +103,7 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener, UIConst
     private static final String PROP_MODULE_OBJECT = "module";
     
     AdminUIConfig uiConfig;
+    AdminUISecurity securityHandler;
     VerticalLayout configArea;
     Map<Class<?>, TreeTable> moduleTables = new HashMap<Class<?>, TreeTable>();
     
@@ -115,11 +116,21 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener, UIConst
         {
             Properties initParams = request.getService().getDeploymentConfiguration().getInitParameters();
             String moduleID = initParams.getProperty(AdminUIModule.SERVLET_PARAM_MODULE_ID);
-            uiConfig = (AdminUIConfig)SensorHub.getInstance().getModuleRegistry().getModuleById(moduleID).getConfiguration();
+            AdminUIModule module = (AdminUIModule)SensorHub.getInstance().getModuleRegistry().getModuleById(moduleID);
+            uiConfig = module.getConfiguration();
+            securityHandler = module.securityHandler;
         }
         catch (Exception e)
         {
             throw new RuntimeException("Cannot get UI module configuration", e);
+        }
+        
+        // security check
+        if (!securityHandler.hasPermission(securityHandler.admin_access))
+        {
+            DisplayUtils.showUnauthorizedAccess(securityHandler.admin_access.getErrorMessage());
+            securityHandler.clearCurrentUser();
+            return;
         }
         
         // register new field converter for integer numbers
@@ -273,6 +284,13 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener, UIConst
         shutdownButton.addClickListener(new Button.ClickListener() {
             public void buttonClick(ClickEvent event)
             {
+                // security check
+                if (!securityHandler.hasPermission(securityHandler.osh_shutdown))
+                {
+                    DisplayUtils.showUnauthorizedAccess(securityHandler.osh_shutdown.getErrorMessage());
+                    return;
+                }
+                
                 final ConfirmDialog popup = new ConfirmDialog("Are you sure you want to shutdown the sensor hub?");
                 popup.addCloseListener(new CloseListener() {
                     @Override
@@ -315,6 +333,13 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener, UIConst
         restartButton.addClickListener(new Button.ClickListener() {
             public void buttonClick(ClickEvent event)
             {
+                // security check
+                if (!securityHandler.hasPermission(securityHandler.osh_restart))
+                {
+                    DisplayUtils.showUnauthorizedAccess(securityHandler.osh_restart.getErrorMessage());
+                    return;
+                }
+                
                 final ConfirmDialog popup = new ConfirmDialog("Are you sure you want to restart the sensor hub?");
                 popup.addCloseListener(new CloseListener() {
                     @Override
@@ -357,6 +382,13 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener, UIConst
         saveButton.addClickListener(new Button.ClickListener() {
             public void buttonClick(ClickEvent event)
             {
+                // security check
+                if (!securityHandler.hasPermission(securityHandler.osh_saveconfig))
+                {
+                    DisplayUtils.showUnauthorizedAccess(securityHandler.osh_saveconfig.getErrorMessage());
+                    return;
+                }
+                
                 final ConfirmDialog popup = new ConfirmDialog("Are you sure you want to save the configuration (and override the previous one)?");
                 popup.addCloseListener(new CloseListener() {
                     @Override
@@ -585,7 +617,7 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener, UIConst
             public void handleAction(Action action, Object sender, Object target)
             {
                 final Object selectedId = table.getValue();
-                
+
                 // retrieve selected module
                 final IModule<?> selectedModule;
                 if (selectedId != null)
@@ -595,6 +627,13 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener, UIConst
                 
                 if (action == ADD_MODULE_ACTION)
                 {
+                    // security check
+                    if (!securityHandler.hasPermission(securityHandler.module_add))
+                    {
+                        DisplayUtils.showUnauthorizedAccess(securityHandler.module_add.getErrorMessage());
+                        return;
+                    }
+                    
                     // show popup to select among available module types
                     ModuleTypeSelectionPopup popup = new ModuleTypeSelectionPopup(configType, new ModuleTypeSelectionCallback() {
                         public void onSelected(Class<?> moduleType, ModuleConfig config)
@@ -634,6 +673,13 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener, UIConst
                     
                     if (action == REMOVE_MODULE_ACTION)
                     {
+                        // security check
+                        if (!securityHandler.hasPermission(securityHandler.module_remove))
+                        {
+                            DisplayUtils.showUnauthorizedAccess(securityHandler.module_remove.getErrorMessage());
+                            return;
+                        }
+                        
                         final ConfirmDialog popup = new ConfirmDialog("Are you sure you want to remove module " + moduleName + "?</br>All settings will be lost.");
                         popup.addCloseListener(new CloseListener() {
                             @Override
@@ -659,6 +705,13 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener, UIConst
                     }
                     else if (action == START_MODULE_ACTION)
                     {
+                        // security check
+                        if (!securityHandler.hasPermission(securityHandler.module_start))
+                        {
+                            DisplayUtils.showUnauthorizedAccess(securityHandler.module_start.getErrorMessage());
+                            return;
+                        }
+                        
                         final ConfirmDialog popup = new ConfirmDialog("Are you sure you want to start module " + moduleName + "?");
                         popup.addCloseListener(new CloseListener() {
                             @Override
@@ -687,6 +740,13 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener, UIConst
                     }
                     else if (action == STOP_MODULE_ACTION)
                     {
+                        // security check
+                        if (!securityHandler.hasPermission(securityHandler.module_stop))
+                        {
+                            DisplayUtils.showUnauthorizedAccess(securityHandler.module_stop.getErrorMessage());
+                            return;
+                        }
+                        
                         final ConfirmDialog popup = new ConfirmDialog("Are you sure you want to stop module " + moduleName + "?");
                         popup.addCloseListener(new CloseListener() {
                             @Override
@@ -712,6 +772,13 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener, UIConst
                     }
                     else if (action == RESTART_MODULE_ACTION)
                     {
+                        // security check
+                        if (!securityHandler.hasPermission(securityHandler.module_restart))
+                        {
+                            DisplayUtils.showUnauthorizedAccess(securityHandler.module_restart.getErrorMessage());
+                            return;
+                        }
+                        
                         final ConfirmDialog popup = new ConfirmDialog("Are you sure you want to restart module " + moduleName + "?");
                         popup.addCloseListener(new CloseListener() {
                             @Override
@@ -737,6 +804,13 @@ public class AdminUI extends com.vaadin.ui.UI implements IEventListener, UIConst
                     }
                     else if (action == REINIT_MODULE_ACTION)
                     {
+                        // security check
+                        if (!securityHandler.hasPermission(securityHandler.module_init))
+                        {
+                            DisplayUtils.showUnauthorizedAccess(securityHandler.module_init.getErrorMessage());
+                            return;
+                        }
+                        
                         final ConfirmDialog popup = new ConfirmDialog("Are you sure you want to force re-init module " + moduleName + "?");
                         popup.addCloseListener(new CloseListener() {
                             @Override

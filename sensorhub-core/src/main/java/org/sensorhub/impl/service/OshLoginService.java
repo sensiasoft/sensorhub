@@ -14,7 +14,6 @@ Copyright (C) 2012-2016 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.impl.service;
 
-import java.security.AccessControlException;
 import java.security.Principal;
 import javax.security.auth.Subject;
 import org.eclipse.jetty.security.DefaultIdentityService;
@@ -84,7 +83,7 @@ public class OshLoginService implements LoginService
         
         IUserInfo user = users.getUserInfo(username);
         if (user == null)
-            throw new AccessControlException("Unknown user: " + username);
+            return null;
         
         UserIdentity identity = null;        
         if (!isCert)

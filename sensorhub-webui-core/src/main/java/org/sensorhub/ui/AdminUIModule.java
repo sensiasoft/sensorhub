@@ -50,6 +50,7 @@ public class AdminUIModule extends AbstractModule<AdminUIConfig> implements IEve
     
     private static AdminUIModule singleton;
     VaadinServlet vaadinServlet;
+    AdminUISecurity securityHandler;
     Map<String, Class<? extends IModuleConfigForm>> customForms = new HashMap<String, Class<? extends IModuleConfigForm>>();
     Map<String, Class<? extends IModuleAdminPanel<?>>> customPanels = new HashMap<String, Class<? extends IModuleAdminPanel<?>>>();
     
@@ -91,6 +92,9 @@ public class AdminUIModule extends AbstractModule<AdminUIConfig> implements IEve
     public void setConfiguration(AdminUIConfig config)
     {
         super.setConfiguration(config);
+        
+        // set security handler
+        this.securityHandler = new AdminUISecurity(this, true);        
         String configClass = null;
         
         // load custom forms
@@ -153,7 +157,7 @@ public class AdminUIModule extends AbstractModule<AdminUIConfig> implements IEve
         // reset java util logging config so we don't get annoying atmosphere logs
         LogManager.getLogManager().reset();//.getLogger("org.atmosphere").setLevel(Level.OFF);
         
-        vaadinServlet = new VaadinServlet();
+        vaadinServlet = new AdminUIServlet(securityHandler);
         Map<String, String> initParams = new HashMap<String, String>();
         initParams.put(SERVLET_PARAM_UI_CLASS, AdminUI.class.getCanonicalName());
         initParams.put(SERVLET_PARAM_MODULE_ID, getLocalID());
