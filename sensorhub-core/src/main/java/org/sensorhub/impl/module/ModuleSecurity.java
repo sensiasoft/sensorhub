@@ -45,6 +45,12 @@ public class ModuleSecurity
     }
     
     
+    private final boolean isAccessControlEnabled()
+    {
+        return SensorHub.getInstance().getSecurityManager().isAccessControlEnabled();
+    }
+    
+    
     /**
      * Checks if the current user has the given permission
      * @param perm
@@ -52,7 +58,7 @@ public class ModuleSecurity
      */
     public boolean hasPermission(IPermission perm)
     {
-        if (!enable)
+        if (!enable || !isAccessControlEnabled())
             return true;
             
         // retrieve currently logged in user
@@ -73,7 +79,7 @@ public class ModuleSecurity
      */
     public void checkPermission(IPermission perm) throws SecurityException
     {
-        if (!enable)
+        if (!enable || !isAccessControlEnabled())
             return;
         
         // retrieve currently logged in user
@@ -93,8 +99,8 @@ public class ModuleSecurity
      */
     public void setCurrentUser(String userID)
     {
-        // do nothing if access control is not available (e.g. no realm was setup)
-        if (!SensorHub.getInstance().getSecurityManager().isAccessControlEnabled())
+        // do nothing if access control is not enabled (e.g. no realm was setup)
+        if (!isAccessControlEnabled())
             return;
         
         // lookup user info 
