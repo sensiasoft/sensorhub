@@ -41,4 +41,7 @@ public class TCPConfig extends IPConfig
     @FieldType(Type.PASSWORD)
     public String password;
     
+    @DisplayInfo(desc="Secure communications with SSL/TLS")
+    public boolean enableTLS;
+    
 }
