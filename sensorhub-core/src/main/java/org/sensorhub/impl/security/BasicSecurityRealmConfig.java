@@ -20,6 +20,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import org.sensorhub.api.config.DisplayInfo;
+import org.sensorhub.api.config.DisplayInfo.FieldType;
 import org.sensorhub.api.config.DisplayInfo.IdField;
 import org.sensorhub.api.security.IPermissionPath;
 import org.sensorhub.api.security.IUserInfo;
@@ -44,6 +45,7 @@ public class BasicSecurityRealmConfig extends SecurityModuleConfig
         @DisplayInfo(label="User ID")
         public String userID;
         public String name;
+        @FieldType(FieldType.Type.PASSWORD)
         public String password;
         //public String certificate;
         public List<String> roles = new ArrayList<String>();
