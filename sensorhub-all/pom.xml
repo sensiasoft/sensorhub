@@ -3,10 +3,10 @@
    <groupId>org.sensorhub</groupId>
    <artifactId>sensorhub-all</artifactId>
    <packaging>pom</packaging>
-   <name>SensorHub</name>
-   <version>1.1-SNAPSHOT</version>
+   <name>OpenSensorHub</name>
+   <version>1.1-beta1</version>
    <url>http://docs.opensensorhub.org</url>
-   <description>SensorHub software allows one to easily build sensor networks that use standard formats to exchange measurements data, commands and events/alarms. These standard formats are mostly OGC standards from the Sensor Web Enablement (SWE) initiative and are key to design sensor networks that can largely evolve with time (addition of new types of sensors, reconfigurations, etc.). </description>
+   <description>OpenSensorHub (OSH) software allows one to easily build sensor networks that use standard formats to exchange measurements data, commands and events/alarms. These standard formats are mostly OGC standards from the Sensor Web Enablement (SWE) initiative and are key to design sensor networks that can largely evolve with time (addition of new types of sensors, reconfigurations, etc.).</description>
    <properties>
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
       <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -22,9 +22,14 @@
       <name>Sensia Software LLC</name>
       <url>http://www.sensiasoftware.com</url>
    </organization>
+   <scm>
+      <url>https://github.com/opensensorhub/osh-core</url>
+      <connection>scm:git:git://github.com/opensensorhub/osh-core.git</connection>
+      <developerConnection>scm:git:git@github.com:opensensorhub/osh-core.git</developerConnection>
+   </scm>
    <issueManagement>
-      <url>https://github.com/opensensorhub/core/issues</url>
-      <system>GitHub</system>
+      <url>https://github.com/opensensorhub/osh-core/issues</url>
+      <system>GitHub Issues</system>
    </issueManagement>
    <dependencies>
       <dependency>

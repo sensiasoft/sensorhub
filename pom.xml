@@ -3,43 +3,30 @@
    <parent>
       <groupId>org.sensorhub</groupId>
       <artifactId>sensorhub-all</artifactId>
-      <version>1.1-SNAPSHOT</version>
+      <version>1.1-beta1</version>
       <relativePath>sensorhub-all/pom.xml</relativePath>
    </parent>
    <artifactId>sensorhub-build</artifactId>
    <packaging>pom</packaging>
    <name>SensorHub Build</name>
+   <modules>
+      <module>lib-swe-common/swe-common-all</module>
+      <module>lib-swe-common/swe-common-core</module>
+      <module>lib-swe-common/swe-common-om</module>
+      <module>lib-swe-common/swe-common-video</module>
+      <module>lib-sensorml/sensorml-all</module>
+      <module>lib-sensorml/sensorml-core</module>
+      <module>lib-ows/ows-framework-all</module>
+      <module>lib-ows/ows-framework-bindings</module>
+      <module>sensorhub-all</module>
+      <module>sensorhub-core</module>
+      <module>sensorhub-storage-perst</module>
+      <module>sensorhub-service-swe</module>
+      <module>sensorhub-tools</module>
+      <module>sensorhub-webui-core</module>
+      <module>sensorhub-webui-core/widgetset</module>
+   </modules>
    <profiles>
-      <profile>
-         <id>core</id>
-         <activation>
-            <property>
-	       <name>!skipCore</name>
-	    </property>
-         </activation>
-         <modules>
-            <module>lib-swe-common/swe-common-all</module>
-            <module>lib-swe-common/swe-common-core</module>
-            <module>lib-swe-common/swe-common-om</module>
-            <module>lib-swe-common/swe-common-video</module>
-            <module>lib-sensorml/sensorml-all</module>
-            <module>lib-sensorml/sensorml-core</module>
-            <module>lib-ows/ows-framework-all</module>
-            <module>lib-ows/ows-framework-bindings</module>
-            <module>sensorhub-all</module>
-            <module>sensorhub-core</module>
-            <module>sensorhub-storage-perst</module>
-            <module>sensorhub-service-swe</module>
-            <module>sensorhub-tools</module>
-         </modules>
-      </profile>
-      <profile>
-         <id>webui</id>
-         <modules>
-            <module>sensorhub-webui-core/widgetset</module>
-            <module>sensorhub-webui-core</module>
-         </modules>
-      </profile>
       <profile>
          <id>doclint-java8-disable</id>
          <activation>
