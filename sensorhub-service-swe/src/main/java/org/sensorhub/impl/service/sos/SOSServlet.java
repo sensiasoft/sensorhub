@@ -1178,6 +1178,9 @@ public class SOSServlet extends org.vast.ows.sos.SOSServlet
                 ISOSDataConsumer consumer = consumerConfig.getConsumerInstance();
                 dataConsumers.put(offeringID, consumer);
                 
+                // add new permissions for this offering
+                securityHandler.addOfferingPermissions(offeringID);
+                
                 // create offering only if not already done when registering
                 // the provider factory listener (if data source was in STARTED
                 // state it can automatically trigger a call to showProviderCaps).

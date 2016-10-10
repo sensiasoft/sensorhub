@@ -74,17 +74,7 @@ public class SOSSecurity extends ModuleSecurity
                 
         // create permissions for each offering
         for (SOSProviderConfig offering: sos.getConfiguration().dataProviders)
-        {
-            String permName = getOfferingPermissionName(offering.uri);
-            new ItemPermission(sos_read_caps, permName);
-            new ItemPermission(sos_read_sensor, permName);
-            new ItemPermission(sos_read_obs, permName);
-            new ItemPermission(sos_insert_obs, permName);
-            new ItemPermission(sos_update_obs, permName);
-            new ItemPermission(sos_delete_obs, permName);
-            new ItemPermission(sos_update_sensor, permName);
-            new ItemPermission(sos_delete_sensor, permName);
-        }
+            addOfferingPermissions(offering.uri);
         
         // register this instance permission tree
         SensorHub.getInstance().getSecurityManager().registerModulePermissions(rootPerm);
@@ -101,5 +91,19 @@ public class SOSSecurity extends ModuleSecurity
     protected String getOfferingPermissionName(String offeringUri)
     {
         return "offering[" + offeringUri + "]";
+    }
+    
+    
+    protected void addOfferingPermissions(String offeringUri)
+    {
+        String permName = getOfferingPermissionName(offeringUri);
+        new ItemPermission(sos_read_caps, permName);
+        new ItemPermission(sos_read_sensor, permName);
+        new ItemPermission(sos_read_obs, permName);
+        new ItemPermission(sos_insert_obs, permName);
+        new ItemPermission(sos_update_obs, permName);
+        new ItemPermission(sos_delete_obs, permName);
+        new ItemPermission(sos_update_sensor, permName);
+        new ItemPermission(sos_delete_sensor, permName);
     }
 }
