@@ -70,7 +70,7 @@ public class FileUtils
             return false;
         
         Pattern regex = Pattern.compile("[" + ALLOWED_FILE_CHARS + "]*");
-        String[] parts = path.split(File.separator);
+        String[] parts = path.split("/|" + Pattern.quote(File.separator));
         
         for (int i = 0; i < parts.length; i++)
         {
