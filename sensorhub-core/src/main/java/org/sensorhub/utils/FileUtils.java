@@ -34,7 +34,7 @@ import java.util.regex.Pattern;
  */
 public class FileUtils
 {
-    private static String ALLOWED_FILE_CHARS = "a-zA-Z0-9\\.\\-_";
+    private static String ALLOWED_FILE_CHARS = "a-zA-Z0-9_.-";
     
     
     /**
