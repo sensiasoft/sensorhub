@@ -4,7 +4,7 @@
    <artifactId>sensorhub-all</artifactId>
    <packaging>pom</packaging>
    <name>OpenSensorHub</name>
-   <version>1.1-beta1</version>
+   <version>1.1.0</version>
    <url>http://docs.opensensorhub.org</url>
    <description>OpenSensorHub (OSH) software allows one to easily build sensor networks that use standard formats to exchange measurements data, commands and events/alarms. These standard formats are mostly OGC standards from the Sensor Web Enablement (SWE) initiative and are key to design sensor networks that can largely evolve with time (addition of new types of sensors, reconfigurations, etc.).</description>
    <properties>
