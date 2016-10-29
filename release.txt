@@ -1,0 +1,41 @@
+Release Process
+===========================================================
+
+## Update OSH Core release version
+
+in osh-core folder:
+
+```bash
+mvn release:update-versions -DautoVersionSubmodules=true
+```
+
+## Create Tag on GitHub
+
+Push latest changes + create new tag
+
+
+## Deploy to Maven repo
+
+```bash
+mvn deploy -
+```
+
+## build osh-base distro
+
+Update dependencies to core to new version (in sensor drivers)
+by doing global file replace of <version>1.X-SNAPSHOT</version> to <version>1.X</version>
+
+
+
+## Compile Android App
+
+
+ 
+## Update dependency to core in other modules
+
+- sensor drivers
+- 
+
+do this manually?
+use script?
+
