@@ -283,7 +283,7 @@ class FeatureStoreImpl extends PersistentResource implements IFeatureStorage
     }
     
     
-    void store(AbstractFeature foi)
+    public void store(AbstractFeature foi)
     {
         boolean newFoi;
         

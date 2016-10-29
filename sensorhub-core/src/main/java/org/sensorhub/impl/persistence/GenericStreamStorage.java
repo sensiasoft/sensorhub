@@ -150,7 +150,7 @@ public class GenericStreamStorage extends AbstractModule<StreamStorageConfig> im
             throw new RuntimeException("Storage " + MsgUtils.moduleString(storage) + " is already configured");
         
         // copy data source description
-        storage.updateDataSourceDescription(dataSource.getCurrentDescription());
+        storage.storeDataSourceDescription(dataSource.getCurrentDescription());
             
         // for multi-source producers, prepare data stores for all entities
         if (dataSource instanceof IMultiSourceDataProducer && storage instanceof IMultiSourceStorage)

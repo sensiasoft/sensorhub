@@ -64,4 +64,11 @@ public interface IFeatureStorage
      * @return an iterator over features matching the filter, sorted by ID
      */
     public Iterator<AbstractFeature> getFeatures(IFeatureFilter filter);
+    
+    
+    /**
+     * Stores a new feature object in this data store
+     * @param f feature object
+     */
+    void store(AbstractFeature f);
 }

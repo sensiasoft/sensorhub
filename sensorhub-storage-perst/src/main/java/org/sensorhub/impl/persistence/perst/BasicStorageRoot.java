@@ -319,7 +319,7 @@ class BasicStorageRoot extends PersistentResource implements IBasicStorage
     @Override
     public Iterator<double[]> getRecordsTimeClusters(String recordType)
     {
-        return getRecordStore(recordType).getRecordsTimeClusters(recordType);
+        return getRecordStore(recordType).getRecordsTimeClusters();
     }
     
     

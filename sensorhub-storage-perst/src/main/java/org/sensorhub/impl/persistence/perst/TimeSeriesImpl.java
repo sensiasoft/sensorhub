@@ -488,7 +488,7 @@ class TimeSeriesImpl extends Persistent implements IRecordStoreInfo
     }
     
     
-    public Iterator<double[]> getRecordsTimeClusters(String recordType)
+    public Iterator<double[]> getRecordsTimeClusters()
     {
         final IterableIterator<Entry<Object, DataBlock>> it;
         it = getEntryIterator(KEY_DATA_START_ALL_TIME, KEY_DATA_END_ALL_TIME, Index.ASCENT_ORDER, false);
