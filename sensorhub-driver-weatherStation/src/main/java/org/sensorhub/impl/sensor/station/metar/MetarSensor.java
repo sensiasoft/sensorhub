@@ -142,7 +142,7 @@ public class MetarSensor extends AbstractSensorModule<MetarConfig> implements IM
     @Override
     public AbstractFeature getCurrentFeatureOfInterest()
     {
-        return null;
+        return null;  // or throw unsupported exception/ or aggregate of all FOI
     }
 
 

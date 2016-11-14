@@ -86,6 +86,11 @@
         <version>0.1.5</version>
      </dependency>
      <dependency>
+<<<<<<< HEAD
+     	<groupId>org.sensorhub</groupId>
+     	<artifactId>sensorhub-driver-weatherStation</artifactId>
+     	<version>0.1</version>
+=======
         <groupId>org.sensorhub</groupId>
         <artifactId>sensorhub-process-sat</artifactId>
         <version>0.1-SNAPSHOT</version>
@@ -104,6 +109,7 @@
         <groupId>org.sensorhub</groupId>
         <artifactId>sensorhub-service-sensorthings</artifactId>
         <version>0.1-SNAPSHOT</version>
+>>>>>>> 209fd0c688502a09146dd294679463e87e6157b0
      </dependency>
      <dependency>
         <groupId>org.sensorhub</groupId>

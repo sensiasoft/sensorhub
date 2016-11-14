@@ -1,0 +1,87 @@
+[
+  {
+    "objClass": "org.sensorhub.impl.service.HttpServerConfig",
+    "id": "5cb05c9c-9e08-4fa1-8731-ffaa5846bdc1",
+    "name": "HTTP Server",
+    "moduleClass": "org.sensorhub.impl.service.HttpServer",
+    "httpPort": 8181,
+    "servletsRootUrl": "/sensorhub",
+    "staticDocRootUrl": "web"
+  },
+  {
+    "objClass": "org.sensorhub.ui.AdminUIConfig",
+    "id": "5cb05c9c-9123-4fa1-8731-ffaa51489678",
+    "moduleClass": "org.sensorhub.ui.AdminUIModule",
+    "enabled": true
+  },
+  {
+    "objClass": "org.sensorhub.impl.sensor.nexrad.NexradConfig",
+    "id": "8b1572d0-47a0-4530-895c-d9c6ee3f4c31",
+    "name": "Nexrad 88D Network",
+    "moduleClass": "org.sensorhub.impl.sensor.nexrad.NexradSensor",
+    "enabled": true,
+    "sensorML": "nexrad.xml",
+    "stationIDs": [ "KHTX", "KFWS" ]
+  },
+  {
+    "objClass": "org.sensorhub.impl.persistence.StreamStorageConfig",
+    "id": "b0986ecc-0aae-4375-9d29-d8e9fb3c2d0b",
+    "name": "Nexrad Level II Data Storage",
+    "moduleClass": "org.sensorhub.impl.persistence.GenericStreamStorage",
+    "enabled": true,
+    "dataSourceID": "8b1572d0-47a0-4530-895c-d9c6ee3f4c31",
+    "storageConfig":    
+    {
+      "objClass": "org.sensorhub.impl.persistence.perst.BasicStorageConfig",
+      "moduleClass": "org.sensorhub.impl.persistence.perst.MultiEntityStorageImpl",
+      "memoryCacheSize": 1024,
+      "storagePath": "nexrad.dat"
+    }
+  }, 
+  {
+    "objClass": "org.sensorhub.impl.service.sos.SOSServiceConfig",
+    "id": "5cb05c9c-9e08-4fa1-8731-ff41e246bdc1",
+    "name": "SOS Service",
+    "moduleClass": "org.sensorhub.impl.service.sos.SOSService",
+    "enabled": true,
+    "endPoint": "/sos",
+    "enableHttpGET": true,
+    "enableHttpPOST": true,
+    "enableSOAP": true,
+    "dataProviders" : [
+       {
+           "objClass": "org.sensorhub.impl.service.sos.SensorDataProviderConfig",
+           "enabled": true,
+           "name": "Nexrad Stations",
+           "description": "Live/Archive stream from Nexrad 88D Radar network",
+           "uri": "urn:mysos:nexradTest",
+           "sensorID": "8b1572d0-47a0-4530-895c-d9c6ee3f4c311",
+           "liveDataTimeout": 3600.0,
+           "maxFois": 10
+       }
+    ],
+    "ogcCapabilitiesInfo": {
+      "title": "Test SOS Service",
+      "description": "An SOS service automatically deployed by SensorHub",
+      "keywords": ["SensorHub", "Weather", "METAR"],
+      "fees": "NONE",
+      "accessConstraints": "NONE",
+      "serviceProvider": {
+        "individualName": "Alex Robin",
+        "organizationName": "Sensia Software LLC",
+        "positionName": "Engineer",
+        "voiceNumber": "+33 5 23 56 89 78",
+        "faxNumber": "+33 5 23 56 89 77",
+        "deliveryPoint": "12 rue Voltaire",
+        "city": "Toulouse",
+        "administrativeArea": null,
+        "postalCode": "30000",
+        "country": "France",
+        "email": "admin@sensiasoft.com",
+        "website": null,
+        "hoursOfService": null,
+        "contactInstructions": null
+      }
+    }
+  }
+]

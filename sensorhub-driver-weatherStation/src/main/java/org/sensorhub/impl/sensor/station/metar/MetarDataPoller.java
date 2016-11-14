@@ -20,11 +20,13 @@ public class MetarDataPoller implements StationDataPoller {
 	//Air Pressure (inches HG),Precipitation (inches),Heat Index (degreesF),Wind Chill (degreesF),Heating Degree Days,Cooling Degree Days,Wind Gust (mph),
 	//Rainfaill last 3 hours (inches),Rainfaill last 6 hours (inches),Rainfaill last 24 hours (inches),Max Temperature last 24 hours (degreesF),Min Temperature last 24 hours (degreesF),
 	//cloud Ceiling (feet),visibility (feet),PresentWeather,SkyConditions
+
+	//  CHANGE to call Gustnado!
 	private static final String server = "webservices.anythingweather.com";
 	private static final String path = "/CurrentObs/GetCurrentObs";
 
 	/**
-	 * 
+	 *
 	 * @return the last available data record
 	 */
 	public MetarDataRecord pullStationData(String stationID) {
@@ -88,7 +90,7 @@ public class MetarDataPoller implements StationDataPoller {
 			}
 		} catch (URISyntaxException|IOException e) {
 			e.printStackTrace();
-		} 
+		}
 		return null;
 	}
 
